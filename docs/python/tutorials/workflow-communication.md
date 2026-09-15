@@ -67,7 +67,7 @@ def checkout_workflow():
 An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```python
-@app.post("/payment_webhook/{workflow_id}/{payment_status}")
+@app.post("/payment_webhook/{payment_id}/{payment_status}")
 def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     # Send the payment status to the checkout workflow.
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)

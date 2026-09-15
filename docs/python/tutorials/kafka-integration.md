@@ -26,8 +26,8 @@ Then, annotate your function with a [`@DBOS.kafka_consumer`](../reference/decora
 Configuration setting details are available from the 
 [Confluent Kafka API docs](https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#pythonclient-configuration) and the
 [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
-At a minimum, you must specify [`bootstrap.servers`](https://kafka.apache.org/documentation/#consumerconfigs_bootstrap.servers) and
-[`group.id`](https://kafka.apache.org/documentation/#consumerconfigs_group.id) configuration settings.
+At a minimum, you must specify the [`bootstrap.servers`](https://kafka.apache.org/documentation/#consumerconfigs_bootstrap.servers) configuration setting.
+We also recommend setting [`group.id`](https://kafka.apache.org/documentation/#consumerconfigs_group.id); if you omit it, DBOS generates one from the function name and topics and logs a warning.
 
 
 ```python

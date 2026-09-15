@@ -71,7 +71,7 @@ DBOS.listen_queues(
 
 Configure this DBOS process to only listen to (dequeue workflows from) specific queues.
 If this is not used, DBOS will listen to all registered queues.
-Must be called before DBOS is launched.
+Must be called after DBOS is constructed and before it is launched, and may be called at most once.
 
 **Parameters:**
 - `queues`: The names of the queues to listen to.
@@ -86,7 +86,8 @@ DBOS.destroy(
 )
 ```
 
-Destroy the DBOS singleton, terminating all active workflows and closing database connections.
+Destroy the DBOS singleton, stopping its background threads (such as queue polling and the scheduler) and closing database connections.
+`destroy` waits up to `workflow_completion_timeout_sec` for active workflows to complete and cancels executor tasks that have not yet started; it does not interrupt workflows that are still running, but they can no longer checkpoint their progress.
 After this completes, the singleton can be re-initialized: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
 Useful for testing.
 

@@ -171,7 +171,6 @@ Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
  ```python
-from fastapi import FastAPI
 from dbos import DBOS
 
 DBOS.register_queue("in_order_queue", global_concurrency=1)
@@ -320,7 +319,7 @@ Each per-partition concurrency limit must be less than or equal to its queue-wid
 
 You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -337,6 +336,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
         handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
+        ...
 ```
 
 ## Singleton Workflows

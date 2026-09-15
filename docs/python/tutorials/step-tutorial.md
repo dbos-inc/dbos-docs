@@ -53,7 +53,7 @@ def example_step():
     return requests.get("https://example.com").text
 ```
 
-If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesExceeded`) to the calling workflow.
+If a step fails on all `max_attempts` attempts, it throws an exception (`DBOSMaxStepRetriesExceeded`) to the calling workflow.
 If that exception is not caught, the workflow [terminates](./workflow-tutorial.md).
 
 #### Filtering Retries With `should_retry`

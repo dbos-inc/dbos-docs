@@ -162,14 +162,14 @@ DBOS Cloud executes this command to start your app.
 Initialize the local directory with a DBOS template application.
 
 **Arguments:**
-- `<application-name>`: The name of your application. If not specified, will be prompted for.
+- `<application-name>`: The name of your application. If not specified, will be prompted for (the `dbos-toolbox` and `dbos-app-starter` templates instead default to the template name).
 - `-t, --template TEXT`: Specify a template to use. ("dbos-toolbox", "dbos-app-starter", "dbos-db-starter")
 - `--config, -c`: If this flag is set, only the `dbos-config.yaml` file is added from the template. Useful to add DBOS to an existing project.
 
 ### dbos reset
 
 Reset your DBOS [system database](../../explanations/system-tables.md), deleting metadata about past workflows and steps.
-No application data is affected by this.
+This drops the entire system database (for SQLite, it deletes the database file), including any application data stored in that database; data in other databases is not affected.
 
 **Arguments:**
 * `--yes, -y`: Skip confirmation prompt.
@@ -187,6 +187,6 @@ Prints the number of rows transferred, by table.
 - `-f, --from TEXT`: The application's previous name. Omit to only adopt rows owned by no application (requires `--adopt-unclaimed-rows`).
 - `-t, --to TEXT`: The application that ends up owning the rows. Required.
 - `--adopt-unclaimed-rows`: Also transfer rows owned by no application.
-- `--batch-size INTEGER`: The number of completed workflows and steps transferred per transaction [default: 10000]
+- `--batch-size INTEGER`: The number of workflows per batch when transferring completed workflows and steps [default: 10000]
 - `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 - `-y, --yes`: Skip confirmation prompt.

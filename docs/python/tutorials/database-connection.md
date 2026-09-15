@@ -73,5 +73,6 @@ ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"
 ```
 
 The datasource manages its own connection pool and can point to any PostgreSQL or SQLite database.
+To use an async datasource with SQLite, use an async driver URL such as `sqlite+aiosqlite:///app.sqlite`.
 Your application database does not need to be the same database (or even on the same server) as your system database, and no additional DBOS configuration is needed.
 See the [datasources tutorial](./transaction-tutorial.md#datasources) for full usage details.

@@ -509,8 +509,8 @@ def process_input(user_input):
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
-debouncer = Debouncer.create(process_input)
 # then process the last input submitted.
+debouncer = Debouncer.create(process_input)
 def on_user_input_submit(user_id, user_input):
     debounce_key = user_id
     debounce_period_sec = 60
@@ -547,7 +547,7 @@ Async version of `debouncer.debounce`.
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
 Coroutine workflows may invoke coroutine steps via await expressions.
 You should start coroutine workflows using `DBOS.start_workflow_async` and enqueue them using `DBOS.enqueue_workflow_async`.
-Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `DBOS.enqueue_workflow_async` starts the workflow in a different event loop.
+Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but a workflow enqueued with `DBOS.enqueue_workflow_async` is started by DBOS in the event loop in which `DBOS.launch()` was called (if that loop is still running) or otherwise in a separate background event loop.
 Additionally, coroutine workflows should use the asynchronous versions of the workflow communication context methods.
 Many synchronous DBOS methods (such as `DBOS.sleep`, `DBOS.recv`, `DBOS.send`, `DBOS.set_event`, `DBOS.get_event`, and `DBOS.register_queue`) raise a `RuntimeError` when called while an event loop is running; you MUST use their `_async` variants (such as `await DBOS.sleep_async(...)`) in async code.
 
@@ -694,7 +694,7 @@ def checkout_workflow():
 An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```python
-@app.post("/payment_webhook/{workflow_id}/{payment_status}")
+@app.post("/payment_webhook/{payment_id}/{payment_status}")
 def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     # Send the payment status to the checkout workflow.
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
@@ -875,6 +875,7 @@ Retries are configurable through arguments to the step decorator:
 
 ```python
 DBOS.step(
+    *,
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,
@@ -942,7 +943,7 @@ class QueueRateLimit(TypedDict):
 ```
 
 **Parameters:**
-- `name`: The name of the queue. Must be unique among all queues in the application. Names starting with `_dbos_` are reserved.
+- `name`: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved.
 - `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
@@ -1070,7 +1071,6 @@ Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
  ```python
-from fastapi import FastAPI
 from dbos import DBOS
 
 DBOS.register_queue("in_order_queue", global_concurrency=1)
@@ -1222,6 +1222,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
         handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
+        ...
 ```
 
 ## Priority
@@ -1310,9 +1311,9 @@ This `config_name` should be a unique identifier of the instance.
 Additionally, all DBOS-decorated classes must be instantiated before `DBOS.launch()` is called.
 
 The reason for these requirements is to enable workflow recovery.
-When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by `config_name`.
+When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by its class name and `config_name`.
 When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `config_name` so it can run the workflow using the right instance of its class.
-If `config_name` is not supplied, or if DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
+If DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
 
 
 ### Testing DBOS Functions
@@ -1385,6 +1386,8 @@ def workflow():
 ```
 
 Now, new workflows will run `baz()`, while old workflows will safely continue through `foo()`.
+
+In coroutine workflows, you MUST use `await DBOS.patch_async()` and `await DBOS.deprecate_patch_async()` instead, as `DBOS.patch()` and `DBOS.deprecate_patch()` raise an error when called from a running event loop.
 
 #### Deprecating and Removing Patches
 
@@ -1506,7 +1509,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name.
+- **name**: Retrieve workflows with this name.
 - **app_version**: Retrieve workflows tagged with this application version.
 - **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
@@ -1555,7 +1558,7 @@ Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `DELAYED
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name.
+- **name**: Retrieve workflows with this name.
 - **app_version**: Retrieve workflows tagged with this application version.
 - **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
@@ -1590,7 +1593,7 @@ This is a list of `StepInfo` objects, with the following structure:
 class StepInfo(TypedDict):
     # The unique ID of the step in the workflow. One-indexed.
     function_id: int
-    # The (fully qualified) name of the step
+    # The name of the step
     function_name: str
     # The step's output, if any
     output: Optional[Any]
@@ -1793,7 +1796,7 @@ class DBOSConfig(TypedDict):
 - **system_database_url**: A connection string to your system database.
 This is the database in which DBOS stores workflow and step state.
 This may be either Postgres or SQLite, though Postgres is recommended for production.
-DBOS uses this connection string, unmodified, to create a SQLAlchemy Engine
+DBOS uses this connection string to create a SQLAlchemy Engine (for Postgres, DBOS always uses the psycopg driver).
 A valid connection string looks like:
 
 ```
@@ -1935,6 +1938,7 @@ def greeting_workflow(name: str, note: str) -> None:
 #### Asynchronous datasource
 
 `AsyncSQLAlchemyDatasource.create` is a coroutine and it ONLY accepts `async def` transaction functions. Because Python does NOT allow `await` at module scope, create the datasource with `asyncio.run` so it is a module-level global that the `@ads.transaction()` decorators can use. Only use `await ...create(...)` if you are already inside a coroutine.
+To use `AsyncSQLAlchemyDatasource` with SQLite, you MUST use an async driver URL such as `sqlite+aiosqlite:///app.sqlite` (install the driver with `pip install "dbos[aiosqlite]"`); a plain `sqlite:///` URL raises an error.
 
 ```python
 import asyncio

@@ -34,20 +34,22 @@ from dbos import AsyncSQLAlchemyDatasource
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
+To use `AsyncSQLAlchemyDatasource` with SQLite, you must use an async driver URL such as `sqlite+aiosqlite:///app.sqlite` (install the driver with `pip install "dbos[aiosqlite]"`); a plain `sqlite:///` URL raises an error.
+
 :::warning
 
 Due to the nature of SQLAlchemy's object model, `AsyncSQLAlchemyDatasource` only supports coroutine functions (`async def`) and `SQLAlchemyDatasource` only supports regular synchronous functions. Decorating the wrong function type raises a `DBOSException` at decoration time.
 
 :::
 
-Both `create` methods accept optional keyword arguments for advanced configuration:
+Both `create` methods take a required `database_url` and accept optional arguments for advanced configuration:
 
 | Parameter | Type | Description |
 |---|---|---|
-| `database_url` | `str` | SQLAlchemy-compatible database URL |
+| `database_url` | `str` | SQLAlchemy-compatible database URL (required). DBOS connects to Postgres with the psycopg driver. |
 | `engine_kwargs` | `dict` | Extra kwargs forwarded to SQLAlchemy's `create_engine` / `create_async_engine` |
 | `engine` | `Engine` / `AsyncEngine` | Provide your own SQLAlchemy engine instead of creating one |
-| `schema` | `str` | Schema name for the `datasource_outputs` table (defaults to `"dbos"`) |
+| `schema` | `str` | Postgres schema name for the `datasource_outputs` table (defaults to `"dbos"`; ignored for SQLite) |
 | `serializer` | `Serializer` | Custom serializer for transaction outputs |
 
 ### Using a Datasource

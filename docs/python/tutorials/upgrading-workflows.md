@@ -52,6 +52,8 @@ def workflow():
 
 Now, new workflows will run `baz()`, while old workflows will safely continue through `foo()`.
 
+In [coroutine workflows](./workflow-tutorial.md#coroutine-async-workflows), use `await DBOS.patch_async()` and `await DBOS.deprecate_patch_async()` instead, as `DBOS.patch()` and `DBOS.deprecate_patch()` raise an error when called from a running event loop.
+
 ### Deprecating and Removing Patches
 
 Patches don't need to stay in your code forever.

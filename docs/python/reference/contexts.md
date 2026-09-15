@@ -346,7 +346,7 @@ It checkpoints which futures are done vs. pending so the result is deterministic
 When called outside a workflow, it falls back to regular `asyncio.wait`.
 
 **Parameters:**
-- **fs**: An list of awaitables (coroutines, tasks, or futures) to wait on.
+- **fs**: A list of awaitables (coroutines, tasks, or futures) to wait on.
 - **timeout**: Maximum number of seconds to wait. If `None` (the default), wait until the `return_when` condition is met.
 - **return_when**: Controls when the function returns. Must be one of the following constants:
   - `asyncio.FIRST_COMPLETED`: The function will return when any future finishes or is cancelled.
@@ -600,6 +600,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 
@@ -660,6 +661,7 @@ Use this when you want one specific value instead of iterating the whole stream&
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 
@@ -697,8 +699,10 @@ DBOS.patch(
 ) -> bool
 ```
 
-Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted and `False` if there is already a checkpoint present at this point in history.
+Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted (or this patch marker is already present) and `False` if a different checkpoint is already present at this point in history.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
+The `patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`patch_async`](#patch_async) should be used instead.
 
 **Parameters:**
 - `patch_name`: The name to give the patch marker that will be inserted into workflow history.
@@ -723,7 +727,9 @@ DBOS.deprecate_patch(
 
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `True`.
-Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
+The `deprecate_patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`deprecate_patch_async`](#deprecate_patch_async) should be used instead.
 
 **Parameters:**
 - `patch_name`: The name of the patch marker to be bypassed.
@@ -769,7 +775,7 @@ DBOS must be launched before calling `register_queue`.
 If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
 
 **Parameters:**
-- `name`: The name of the queue. Must be unique among all queues in the application. Names starting with `_dbos_` are reserved for DBOS.
+- `name`: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
 - `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
@@ -1008,7 +1014,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -1076,7 +1082,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -1120,7 +1126,7 @@ This is a list of `StepInfo` objects, with the following structure:
 class StepInfo(TypedDict):
     # The unique ID of the step in the workflow. One-indexed.
     function_id: int
-    # The (fully qualified) name of the step
+    # The name of the step
     function_name: str
     # The step's output, if any
     output: Optional[Any]
@@ -1239,6 +1245,7 @@ You can use this to resume workflows that are cancelled or have exceeded their m
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Raises `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 ### resume_workflow_async
 
@@ -1255,6 +1262,7 @@ DBOS.resume_workflows(
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` without resuming any of them.
 
 ### resume_workflows_async
 
@@ -1278,6 +1286,7 @@ DBOS.fork_workflow(
 Start a new execution of a workflow from a specific step.
 The input step ID must match the `function_id` of the step returned by `list_workflow_steps`.
 The specified `start_step` is the step from which the new workflow will start, so any steps whose ID is less than `start_step` will not be re-executed.
+Raises `DBOSNonExistentWorkflowError` if the workflow identified by `workflow_id` does not exist.
 
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
@@ -1620,7 +1629,7 @@ class WorkflowStatus:
     was_forked_from: bool
     # If this workflow was started as a child of another workflow, that workflow's ID.
     parent_workflow_id: Optional[str]
-    # The Unix epoch timestamp at which the workflow was last dequeued, if it had been enqueued
+    # The Unix epoch timestamp in ms at which the workflow was last dequeued, if it had been enqueued
     dequeued_at: Optional[int]
     # The Unix epoch timestamp in ms before which the workflow should not be dequeued, if it was delayed
     delay_until_epoch_ms: Optional[int]
@@ -1826,6 +1835,8 @@ When the workflow eventually executes, it uses the **last** set of inputs passed
 
 After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
+`debounce` raises `DBOSException` if it is called inside a [`SetEnqueueOptions`](./queues.md#setenqueueoptions) block that sets `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`, because the debouncer controls these options itself.
+
 **Parameters:**
 - `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
 - `debounce_period_sec`: Delay this workflow's execution by this period.
@@ -1870,7 +1881,7 @@ debouncer.debounce_async(
     debounce_period_sec: float,
     *args: P.args,
     **kwargs: P.kwargs,
-) -> WorkflowHandleAsync[R]:
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
 ```
 
 Async version of `debouncer.debounce`.
@@ -2146,6 +2157,6 @@ from dbos import WorkflowSerializationFormat
 
 The available strategies are:
 
-- **`WorkflowSerializationFormat.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./configuration.md) (defaults to pickle). When called from a workflow that uses portable serialization, uses the portable format instead.
+- **`WorkflowSerializationFormat.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./configuration.md) (defaults to pickle). When called from within a workflow, uses that workflow's serialization format instead (for example, the portable format for a workflow that uses portable serialization).
 - **`WorkflowSerializationFormat.PORTABLE`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
 - **`WorkflowSerializationFormat.NATIVE`**: Explicitly uses the native Python pickle serializer (`py_pickle`).

@@ -111,3 +111,5 @@ The user and roles can then be used in decorated DBOS workflow and step function
         #     roles are not set.
         pass
 ```
+
+When a call is not authorized, DBOS raises a `DBOSNotAuthorizedError`.

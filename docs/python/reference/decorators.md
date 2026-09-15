@@ -28,7 +28,7 @@ def greeting_workflow(name: str, note: str):
 ```
 
 **Parameters:**
-- `name`: A name for this workflow. If not provided, the function's fully qualified name is used. Workflow names must be unique: registering workflows with the same name from different modules raises a `DBOSException`.
+- `name`: A name for this workflow. If not provided, the function's qualified name (`__qualname__`, which does not include its module) is used. Workflow names must be unique: registering workflows with the same name from different modules raises a `DBOSException`.
 - `max_recovery_attempts`: The maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
@@ -65,10 +65,10 @@ def example_step():
 ```
 
 **Parameters:**
-- `name`: A name for this step. If not provided, the function's fully qualified name is used.
+- `name`: A name for this step. If not provided, the function's qualified name (`__qualname__`) is used.
 - `retries_allowed`: Whether to retry the step if it throws an exception.
 - `interval_seconds`: How long to wait before the initial retry.
-- `max_attempts`: How many times to retry a step that is throwing exceptions.
+- `max_attempts`: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
 - `backoff_rate`: How much to multiplicatively increase `interval_seconds` between retries.
 - `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Async predicates are only supported for async steps.
 - `preemptible`: If `True`, the step is cancelled immediately when its workflow is cancelled, rather than running to completion. Only supported for async steps.
@@ -116,10 +116,11 @@ Takes a configuration dictionary and a list of topics to consume.
 The decorated function must take a KafkaMessage as its only parameter.
 
 **Parameters:**
-- `config`: a dictionary of config settings. Information on required settings follows with full configuration setting details available in the [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
+- `config`: a dictionary of config settings. Information on key settings follows with full configuration setting details available in the [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
   - `bootstrap.servers`: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
     This list should be in the form host1:port1,host2:port2,...
   - `group.id`: A unique string that identifies the consumer group this consumer belongs to.
+    Setting it is recommended: if it is omitted, DBOS generates one from the function name and topics and logs a warning.
 - `topics`: a list of Kafka topics to subscribe to. A topic prefixed with `^` is treated as a regular expression.
 - `ordering`: Controls how messages are processed. See [In-Order Processing](../tutorials/kafka-integration.md#in-order-processing).
   - `"none"` (default): messages are processed in parallel.

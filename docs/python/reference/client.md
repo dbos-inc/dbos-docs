@@ -8,7 +8,7 @@ title: DBOS Client
 such as [`enqueue`](./queues.md#enqueue) or [`get_event`](./contexts.md#get_event).
 
 :::note 
-`DBOSClient` is included in the `dbos` package, the same package that used by DBOS applications.
+`DBOSClient` is included in the `dbos` package, the same package used by DBOS applications.
 Where DBOS applications use the [`DBOS` methods](./contexts.md),
 external applications use `DBOSClient` instead.
 :::
@@ -226,6 +226,8 @@ The enqueue cannot atomically span a separate application database.
 ```python
 import sqlalchemy as sa
 
+# For Postgres, use a postgresql+psycopg:// URL: DBOS installs the psycopg (v3) driver,
+# while SQLAlchemy uses psycopg2 for a plain postgresql:// URL.
 engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
 
 options: EnqueueOptions = {
@@ -269,6 +271,9 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 **Returns:**
 - The [WorkflowHandle](./workflow_handles.md#workflowhandle) of the workflow whose ID is `workflow_id`.
 
+**Raises:**
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
+
 ### retrieve_workflow_async
 
 ```python
@@ -285,6 +290,9 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 
 **Returns:**
 - The [WorkflowHandleAsync](./workflow_handles.md#workflowhandleasync) of the workflow whose ID is `workflow_id`.
+
+**Raises:**
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 ### wait_first
 
@@ -403,6 +411,7 @@ The send cannot atomically span a separate application database.
 ```python
 import sqlalchemy as sa
 
+# For Postgres, use a postgresql+psycopg:// URL (see the enqueue_in_transaction example)
 engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
 
 with engine.connect() as conn:
@@ -590,6 +599,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client rea
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 ```python
@@ -646,6 +656,7 @@ Similar to [`DBOS.read_stream_offset`](contexts.md#read_stream_offset).
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 ```python
@@ -877,7 +888,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -978,7 +989,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -1074,7 +1085,7 @@ client.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
 Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 
 **Parameters:**
@@ -1139,7 +1150,7 @@ client.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandle[Any]
 ```
 
 Resume a workflow.
@@ -1147,6 +1158,7 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 
 ### resume_workflow_async
@@ -1156,7 +1168,7 @@ client.resume_workflow_async(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
-) -> WorkflowHandleAsync[R]
+) -> WorkflowHandleAsync[Any]
 ```
 
 Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
@@ -1172,6 +1184,7 @@ client.resume_workflows(
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` and resumes none of them.
 Similar to [`DBOS.resume_workflows`](./contexts.md#resume_workflows).
 
 ### resume_workflows_async
@@ -1190,10 +1203,11 @@ client.fork_workflow(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandle[Any]
 ```
 
 Similar to [`DBOS.fork_workflow`](./contexts.md#fork_workflow).
+Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 
 ### fork_workflow_async
 
@@ -1207,7 +1221,7 @@ client.fork_workflow_async(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
-) -> WorkflowHandleAsync[R]
+) -> WorkflowHandleAsync[Any]
 ```
 
 Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
@@ -1348,7 +1362,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 
 **Parameters:**
 - **schedule_name**: Unique name identifying this schedule.
-- **workflow_name**: Fully-qualified name of the workflow function to invoke.
+- **workflow_name**: Registered name of the workflow function to invoke.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **workflow_class_name**: The registered class name if the workflow is a class method (`@classmethod`) on a [DBOS class](../tutorials/classes.md).
@@ -1506,6 +1520,7 @@ client.get_latest_application_version() -> VersionInfo
 ```
 
 Return the latest application version (the one with the highest timestamp).
+Like [`list_application_versions`](#list_application_versions), if the client has an [`application_name`](#constructor), only versions registered by that application (plus versions owned by no application) are considered.
 Raises `DBOSException` if no versions are registered.
 Similar to [`DBOS.get_latest_application_version`](./contexts.md#get_latest_application_version).
 
@@ -1572,7 +1587,7 @@ Every workflow, step, queue, schedule, and application version is owned by the a
 After renaming an application, use this method (or the [`dbos rename-application`](./cli.md#dbos-rename-application) CLI command) to transfer everything owned by the old name to the new name.
 Returns the number of rows transferred, by table.
 
-Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and their steps are then transferred in batches of `batch_size`.
+Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and then all workflow steps are transferred in batches of `batch_size` workflows.
 The operation is idempotent: if interrupted, running it again resumes where it left off.
 
 :::warning
@@ -1583,7 +1598,7 @@ A running application would race the rename, creating new work under its old nam
 **Parameters:**
 - `old_name`: The application's previous name. If `None`, nothing is transferred except rows owned by no application, so `adopt_unclaimed_rows` must be set.
 - `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 256 characters, containing only lowercase letters, numbers, dashes, and underscores).
-- `batch_size`: The number of completed workflows and steps transferred per transaction. Pass `None` to transfer everything in a single transaction.
+- `batch_size`: The number of workflows per batch when transferring completed workflows and steps. Pass `None` to transfer them without batching.
 - `adopt_unclaimed_rows`: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `False`.
 
 ### rename_application_async

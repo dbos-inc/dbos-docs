@@ -55,10 +55,10 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 - `class_name`: The class name of workflow to enqueue. Defaults to null.
 - `config_name`: The config name of workflow to enqueue. For languages that support it, this is usually exposed as workflow class instance name. Defaults to null.
 - `workflow_id`: Specify the idempotency ID to assign to the enqueued workflow. If left undefined, a random UUID is generated.
-- `app_version`: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued.
+- `app_version`: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued by a process running the latest application version.
 - `timeout_ms`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution. 
 - `deadline_epoch_ms`: Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status ENQUEUED or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status ENQUEUED, DELAYED, or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 1 to 2,147,483,647, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned. Partitioned queues apply their per-partition flow control limits (concurrency and rate limits) to each partition separately.
 - `authenticated_user`: The authenticated user to associate with the enqueued workflow. Defaults to null.
@@ -73,7 +73,7 @@ CREATE FUNCTION dbos.send_message(
     destination_id TEXT,
     message JSON,
     topic TEXT DEFAULT NULL,
-    idempotency_key TEXT DEFAULT NULL
+    message_id TEXT DEFAULT NULL
 ) RETURNS VOID
 ```
 
@@ -84,7 +84,7 @@ Messages can optionally be associated with a topic.
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must use [Portable JSON Format](portable-workflows.md#portable-json-format).
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- `message_id`: A unique ID for the message. If a message ID is set, the message will only be sent once no matter how many times `send_message` is called with this ID.
 
 ## System Database Tables
 
@@ -96,7 +96,7 @@ Each row represents a different workflow execution.
 **Columns:**
 - **workflow_uuid**: The unique identifier of the workflow execution.
 - **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`.
-- **name**: The name (in Python, fully qualified name) of the workflow function.
+- **name**: The name of the workflow function.
 - **authenticated_user**: The user who ran the workflow. Empty string if not set.
 - **assumed_role**: The role used to run this workflow.  Empty string if authorization is not required.
 - **authenticated_roles**: All roles the authenticated user has, if any.
@@ -122,7 +122,7 @@ Each row represents a different workflow execution.
 - **application_id**: Internal field used only in DBOS Cloud.
 - **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
 - **rate_limited**: Whether this workflow was dequeued from a rate-limited queue.
-- **completed_at**: The epoch timestamp (in milliseconds) at which this workflow reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`). Null while the workflow is still active.
+- **completed_at**: The epoch timestamp (in milliseconds) at which this workflow reached a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`). Null while the workflow is still active.
 - **attributes**: Custom key-value attributes attached to this workflow, if any. Stored in Postgres as GIN-indexed JSONB, so workflows can be efficiently searched by attribute.
 - **schedule_name**: If this workflow was started by a [scheduled workflow](#dbosworkflow_schedules), the name of its schedule.
 - **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
@@ -155,7 +155,7 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 
 **Columns:**
 - **workflow_uuid**: The unique identifier of the workflow execution this function belongs to.
-- **function_id**: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.
+- **function_id**: The monotonically increasing ID of the step (starts from 0, or from 1 in Python) within the workflow, based on the order in which steps execute.
 - **function_name**: The name of the step.
 - **output**: The serialized step output, if any.
 - **error**: The serialized error thrown by the step, if any.
@@ -185,7 +185,7 @@ Each entry represents a different event.
 
 **Columns:**
 - **workflow_uuid**: The ID of the workflow that published this event.
-- **key**: The serialized key of the event.
+- **key**: The key of the event.
 - **value**: The serialized value of the event.
 - **serialization**: The name of the serialization format used for the event value. Null if the default serializer was used.
 
@@ -196,7 +196,7 @@ Each entry represents a distinct value of a workflow event during the workflow l
 **Columns:**
 - **workflow_uuid**: The ID of the workflow that published this event.
 - **function_id**: The monotonically increasing ID of the step that set this value.
-- **key**: The serialized key of the event.
+- **key**: The key of the event.
 - **value**: The serialized value of the event.
 - **serialization**: The name of the serialization format used for the event value. Null if the default serializer was used.
 
@@ -206,7 +206,7 @@ Each entry represents a different message in a stream.
 
 **Columns:**
 - **workflow_uuid**: The ID of the workflow that wrote this stream message.
-- **key**: The serialized key of the stream.
+- **key**: The key of the stream.
 - **value**: The serialized value of the message.
 - **offset**: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).
 - **function_id**: The monotonically increasing step ID responsible for emitting this stream.
