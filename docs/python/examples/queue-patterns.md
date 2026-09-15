@@ -20,7 +20,7 @@ To do that, first let's register the two queues and define a workflow:
 
 ```python
 DBOS.register_queue("concurrency-queue", worker_concurrency=5)
-DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("partitioned-queue", partition_concurrency=1)
 
 # This workflow is fairly queued: at most five workflows can run concurrently,
 # but no more than one per tenant.

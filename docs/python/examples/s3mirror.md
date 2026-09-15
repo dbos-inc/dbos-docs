@@ -48,23 +48,28 @@ def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
 ## Starting a Transfer
 
 
-We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [DBOS.set_event](../tutorials/workflow-communication.md#set_event) to record those Workflow IDs, along with metadata about the files, for later retrieval. As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
+We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [DBOS.set_event](../tutorials/workflow-communication.md#set_event) to record those Workflow IDs, along with metadata about the files, for later retrieval.
 
 ```python
-transfer_queue = Queue("transfer_queue", concurrency = MAX_FILES_AT_A_TIME, worker_concurrency = MAX_FILES_PER_WORKER)
-
 @DBOS.workflow()
 def transfer_job(buckets: BucketPaths, tasks: List[FileTransferTask]):
     DBOS.logger.info(f"{DBOS.workflow_id} starting {len(tasks)} transfers from {buckets.src_bucket}/{buckets.src_prefix} to {buckets.dst_bucket}/{buckets.dst_prefix}")
     # For each task, start a workflow on the queue
     for task in tasks:
-         handle = transfer_queue.enqueue(s3_transfer_file, task = task, buckets = buckets)
+         handle = DBOS.enqueue_workflow("transfer_queue", s3_transfer_file, task = task, buckets = buckets)
          task.workflow_id = handle.workflow_id
     # Store the description and ID of each transfer in the workflow context
     DBOS.set_event('tasks', tasks)
 ```
 
 This workflow terminates as soon as all of its child workflows are enqueued. Once enqueued, DBOS ensures that they will continue to completion.
+
+As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `global_concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
+Because `register_queue` writes the configuration to the system database, it must be called after `DBOS.launch()`.
+
+```python
+DBOS.register_queue("transfer_queue", global_concurrency = MAX_FILES_AT_A_TIME, worker_concurrency = MAX_FILES_PER_WORKER)
+```
 
 ## Cancelling a Transfer
 

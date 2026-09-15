@@ -62,11 +62,11 @@ def deploy_tracker_workflow(user_id: str, channel_id: str):
 
 ## Concurrency-Limited Queue
 
-To ensure only one deployment workflow runs at a time, we register a queue with `concurrency=1`. This is helpful when the deployment pipeline consumes significant resources and you don't want to exhaust your resource pool when multiple users trigger deployments.
+To ensure only one deployment workflow runs at a time, we register a queue with `global_concurrency=1`. This is helpful when the deployment pipeline consumes significant resources and you don't want to exhaust your resource pool when multiple users trigger deployments.
 
 ```python
 # Create a queue with concurrency of 1 so only one deployment workflow runs at a time
-DBOS.register_queue("deploy-tracker-queue", concurrency=1)
+DBOS.register_queue("deploy-tracker-queue", global_concurrency=1)
 ```
 
 Because `register_queue` writes the configuration to the system database, it must be called after `DBOS.launch()`.
