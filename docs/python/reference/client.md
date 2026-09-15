@@ -97,6 +97,8 @@ class EnqueueOptions(TypedDict):
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
     serialization_type: NotRequired[WorkflowSerializationFormat]
+    class_name: NotRequired[str]
+    instance_name: NotRequired[str]
     attributes: NotRequired[Dict[str, Any]]
     otel_context: NotRequired[opentelemetry.context.Context]
     application_name: NotRequired[Optional[str]]
@@ -116,7 +118,7 @@ However, since `DBOSClient` runs outside the DBOS application, the metadata must
 
 Required metadata includes:
 
-* `workflow_name`: The name of the workflow method being enqueued.
+* `workflow_name`: The registered name of the workflow being enqueued: the `name` passed to [`@DBOS.workflow`](./decorators.md#workflow), or by default the function's qualified name (for example, `URLFetcher.fetch_workflow` for a method on a class).
 * `queue_name`: The name of the [Queue](./queues.md) to enqueue the workflow on.
 
 Additional but optional metadata includes:
@@ -138,23 +140,36 @@ If left undefined, the workflow is only dequeued by an executor running the late
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
+- `class_name`: If the workflow is a class method (`@classmethod`) or a method on a [configured instance](../tutorials/classes.md), the registered name of its class: the `class_name` passed to [`@DBOS.dbos_class`](./decorators.md#dbos_class), or by default the class's qualified name. Not needed for static methods.
+- `instance_name`: If the workflow is a method on a [configured instance](../tutorials/classes.md), the `config_name` of the instance that runs it. Requires `class_name`.
 - `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
 - `otel_context`: An OpenTelemetry context to propagate to the enqueued workflow, so that when the workflow runs, its span joins that context's trace. The client-side equivalent of [`PropagateOtelContext`](./contexts.md#propagateotelcontext). Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage. See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for details.
 - `application_name`: The application that owns and runs the enqueued workflow. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
 
-:::warning
-At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
-:::
+To enqueue a workflow that is a method on a [Python class](../tutorials/classes.md), also set `class_name` (for a class method) or both `class_name` and `instance_name` (for a method on a configured instance).
+The class and instance must be registered in the application that dequeues the workflow; otherwise, the workflow cannot run.
 
 **Example syntax:**
 
 ```python
 options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
+  "queue_name": "example_queue",
+  "workflow_name": "process_task",
 }
 handle = client.enqueue(options, task)
 result = handle.get_result()
+```
+
+To enqueue a method on a configured instance, such as `fetch_workflow` on the `URLFetcher("https://example.com")` instance from the [classes tutorial](../tutorials/classes.md):
+
+```python
+options: EnqueueOptions = {
+  "queue_name": "example_queue",
+  "workflow_name": "URLFetcher.fetch_workflow",
+  "class_name": "URLFetcher",
+  "instance_name": "https://example.com",
+}
+handle = client.enqueue(options)
 ```
 
 ### enqueue_async
@@ -174,8 +189,8 @@ Similar to [enqueue](#enqueue), but enqueues asynchronously and returns a
 
 ```python
 options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
+  "queue_name": "example_queue",
+  "workflow_name": "process_task",
 }
 handle = await client.enqueue_async(options, task)
 result = await handle.get_result()
@@ -214,8 +229,8 @@ import sqlalchemy as sa
 engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
 
 options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
+  "queue_name": "example_queue",
+  "workflow_name": "process_task",
 }
 
 with engine.connect() as conn:
