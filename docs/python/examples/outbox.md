@@ -138,7 +138,7 @@ To run it, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/transactional-outbox
+cd dbos-demo-apps/python/transactional-outbox
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox) to run the app.

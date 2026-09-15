@@ -313,7 +313,7 @@ Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps)
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/widget-store
+cd dbos-demo-apps/python/widget-store
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store) to run the app.

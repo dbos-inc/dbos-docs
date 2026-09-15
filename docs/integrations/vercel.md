@@ -86,7 +86,6 @@ DBOS.setConfig({
   name: 'dbos-vercel-integration',
   applicationVersion: '0.1.0',
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
-  runAdminServer: false,
 });
 await DBOS.launch();
 await DBOS.registerQueue('exampleQueue');

@@ -126,7 +126,7 @@ Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps)
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/queue-patterns
+cd dbos-demo-apps/python/queue-patterns
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/queue-patterns) to run the example.
