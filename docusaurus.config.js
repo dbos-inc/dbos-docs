@@ -151,10 +151,6 @@ const config = {
             to: '/golang/reference/dbos-context',
           },
           {
-            from: '/typescript/upgrading',
-            to: '/typescript/programming-guide',
-          },
-          {
             from: '/explanations/core-concepts',
             to: '/',
           },
