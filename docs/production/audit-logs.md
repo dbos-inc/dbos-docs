@@ -50,7 +50,7 @@ By default the endpoint returns the most recent entries for your organization. Y
 | `operation` | Only return entries for this [operation](#operations), matched exactly (e.g. `application.delete`). |
 | `subject` | Only return entries whose actor matches this value, compared against both the subject's display name (email or API-key name) and its id. |
 | `target` | Only return entries whose target resource id matches this value exactly (e.g. an application name or workflow id). |
-| `limit` | Maximum number of entries to return. |
+| `limit` | Maximum number of entries to return. Defaults to `100`; the maximum is `1000`, and a larger value is rejected as an error. |
 | `offset` | Number of matching entries to skip. Defaults to `0`. |
 
 Pagination is offset-based over the filtered, time-ordered results. To page through the log, hold the filters constant and advance `offset` by `limit` on each request. A page with fewer than `limit` entries means you have reached the end.

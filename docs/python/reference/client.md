@@ -228,7 +228,9 @@ import sqlalchemy as sa
 
 # For Postgres, use a postgresql+psycopg:// URL: DBOS installs the psycopg (v3) driver,
 # while SQLAlchemy uses psycopg2 for a plain postgresql:// URL.
-engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
+engine = sa.create_engine(
+  sa.make_url(os.environ["DBOS_SYSTEM_DATABASE_URL"]).set(drivername="postgresql+psycopg")
+)
 
 options: EnqueueOptions = {
   "queue_name": "example_queue",
@@ -412,7 +414,9 @@ The send cannot atomically span a separate application database.
 import sqlalchemy as sa
 
 # For Postgres, use a postgresql+psycopg:// URL (see the enqueue_in_transaction example)
-engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
+engine = sa.create_engine(
+    sa.make_url(os.environ["DBOS_SYSTEM_DATABASE_URL"]).set(drivername="postgresql+psycopg")
+)
 
 with engine.connect() as conn:
     with conn.begin():

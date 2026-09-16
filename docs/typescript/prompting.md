@@ -1384,7 +1384,7 @@ Note that `listenQueues` only controls what workflows are dequeued, not what wor
 You can use class instance methods as workflows and steps.
 Any class instance method can be freely used as a step using DBOS.runStep; there are no special requirements.
 To use the DBOS.step decorator on a class instance method, the class must inherit from `ConfiguredInstance`.
-To use a class instance method as a workflow, the class must inherit from `ConfiguredInstance`, and you must either use the DBOS.workflow decorator or register the method with DBOS.registerWorkflow, passing the class as `ctorOrProto`.
+To use a class instance method as a workflow, the class must inherit from `ConfiguredInstance`, and you must either use the DBOS.workflow decorator or register the method with DBOS.registerWorkflow, passing the class's prototype (`MyClass.prototype`) as `ctorOrProto`.
 For example:
 
 ```typescript

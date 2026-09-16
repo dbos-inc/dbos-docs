@@ -68,8 +68,6 @@ The `enqueue` method durably enqueues your function; after it returns your funct
 ```python
 from dbos import DBOS
 
-queue = DBOS.register_queue("example_queue")
-
 @DBOS.step()
 def process_task(task):
   ...
@@ -84,6 +82,10 @@ def process_tasks(tasks):
   # Wait for each task to complete and retrieve its result.
   # Return the results of all tasks.
   return [handle.get_result() for handle in task_handles]
+
+DBOS.launch()
+# Queues are registered after DBOS is launched, once all decorators have run.
+queue = DBOS.register_queue("example_queue")
 ```
 
 ### enqueue_async
@@ -106,8 +108,6 @@ The enqueued function is launched into a different event loop than its caller.
 ```python
 from dbos import DBOS
 
-queue = DBOS.register_queue("example_queue")
-
 @DBOS.step()
 async def process_task_async(task):
   ...
@@ -122,6 +122,10 @@ async def process_tasks(tasks):
   # Wait for each task to complete and retrieve its result.
   # Return the results of all tasks.
   return [await handle.get_result() for handle in task_handles]
+
+DBOS.launch()
+# Queues are registered after DBOS is launched, once all decorators have run.
+queue = DBOS.register_queue("example_queue")
 ```
 
 ### Async Property Accessors
@@ -315,11 +319,12 @@ with SetEnqueueOptions(priority=1):
 **Partitioned Queue Example**
 
 ```python
-DBOS.register_queue("partitioned_queue", partition_concurrency=1)
-
 @DBOS.workflow()
 def process_task(task: Task):
   ...
+
+DBOS.launch()
+DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 
 
 def on_user_task_submission(user_id: str, task: Task):
