@@ -26,6 +26,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 
 **Output:**
 A JSON-formatted list of [workflow statuses](./methods.md#workflow-status).
+The `input`, `output`, and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ### npx dbos workflow get
 
@@ -38,6 +39,7 @@ Retrieve information on a workflow run by your application.
 
 **Output:**
 A JSON-formatted [workflow status](./methods.md#workflow-status).
+The `input`, `output`, and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ### npx dbos workflow steps
 
@@ -47,6 +49,7 @@ A JSON-formatted [workflow status](./methods.md#workflow-status).
 
 **Output:**
 A JSON-formatted list of [workflow steps](./methods.md#dboslistworkflowsteps).
+The `output` and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ### npx dbos workflow cancel
 
@@ -100,6 +103,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 
 **Output:**
 A JSON-formatted list of [workflow statuses](./methods.md#workflow-status).
+The `input`, `output`, and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 
 ## Application Management Commands

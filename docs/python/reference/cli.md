@@ -80,7 +80,8 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Description:**
 Fork a new execution of a workflow, starting at a given step.
-This new workflow has a new workflow ID but the same code version, unless you specify a different one with `--application-version`.
+This new workflow has a new workflow ID.
+Unless you pin it with `--application-version`, it is not tagged with any application version, so it is dequeued by an executor running the latest application version.
 Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
 
 **Arguments:**

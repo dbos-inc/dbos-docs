@@ -23,7 +23,7 @@ You may also need a [Gemini API key](https://aistudio.google.com/app/api-keys) (
 To wrap your Google ADK agents for durable execution, [install and configure DBOS](../python/integrating-dbos.md) then follow these three guidelines:
 
 1. Add `DBOSPlugin` to your `Runner`'s list of plugins.
-2. Annotate the function calling `runner.run_async` or `runner.run` with `@DBOS.workflow` to run your agent as a durably executed workflow.
+2. Annotate the function calling `runner.run_async` with `@DBOS.workflow` to run your agent as a durably executed workflow.
 3. Annotate your agent's tool call functions and guardrail functions with `@DBOS.step` or `@DBOS.workflow()` to mark them as steps or sub-workflows of your durably executed agentic workflow.
 
 Here is a simple but complete example of wrapping an agent for durable execution.
