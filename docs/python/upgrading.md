@@ -19,7 +19,7 @@ If you use [patching](./tutorials/upgrading-workflows.md#patching), shut down al
 - **Upgrade applications that use [`DBOSClient`](./reference/client.md) along with your DBOS processes.**
 A DBOS 2.x client cannot retrieve the inputs or results of workflows created by DBOS 3.0.
 
-## Removed Features
+## Breaking Changes
 
 ### `@DBOS.transaction` and the Application Database
 

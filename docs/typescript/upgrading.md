@@ -21,7 +21,7 @@ If you use [patching](./tutorials/upgrading-workflows.md#patching), shut down al
 A DBOS 4.x client cannot retrieve the inputs or results of workflows created by DBOS 5.0.
 A DBOS 5.0 client requires the new schema, so launch a DBOS 5.0 process (or run [`npx dbos schema`](./reference/cli.md#npx-dbos-schema)) before using it.
 
-## Removed Features
+## Breaking Changes
 
 ### In-Memory Queues
 
