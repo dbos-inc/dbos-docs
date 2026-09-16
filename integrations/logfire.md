@@ -53,7 +53,7 @@ DBOS(config=dbos_config)
 
 <LargeTabItem value="typescript" label="Typescript">
 
-```javascript
+```typescript
 DBOS.setConfig({
   name: 'my-app',
   applicationVersion: '0.1.0',

@@ -43,7 +43,7 @@ Alternatively, write a script using the DBOS Client ([Python](./python/reference
 
 DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, are **serializable**.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
-DBOS serializes objects to JSON in TypeScript and Go, with `pickle` in Python, and with Jackson in Java.
+DBOS serializes objects with [SuperJSON](https://github.com/flightcontrolhq/superjson) in TypeScript, `encoding/json` in Go, `pickle` in Python, and Jackson in Java.
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.

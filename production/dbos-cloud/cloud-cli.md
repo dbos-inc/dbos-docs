@@ -121,7 +121,7 @@ This command destroys a previously-provisioned Postgres database instance.
 ### `dbos-cloud db url`
 
 **Description:**
-This command retrives your cloud database connection URL.
+This command retrieves your cloud database connection URL.
 
 **Arguments:**
 - `[database-instance-name]`: The name of the database instance to which to connect.
@@ -172,14 +172,14 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `--configFile`: DBOS config file path (default: `dbos-config.yaml`).
-- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the [versions command](#dbos-cloud-app-versions).
+- `-p, --previous-version <string>`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the [versions command](#dbos-cloud-app-versions).
 
 ---
 
 ### `dbos-cloud app update`
 
 **Description:**
-Update an application metadata in DBOS Cloud. Increasing RAM or adjusting autoscaling configuration requires a DBOS Pro subsciption.
+Update an application metadata in DBOS Cloud. Increasing RAM or adjusting autoscaling configuration requires a DBOS Pro subscription.
 
 **Arguments:**
 - `[application-name]`: The name of the application to update.
@@ -309,7 +309,7 @@ It redeploys the application to a new database instance.
 **Arguments:**
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-d, --database <string>` The name of the new database instance for this application.
-- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory.
+- `-p, --previous-version <string>`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory.
 
 ---
 
@@ -458,16 +458,18 @@ Lists all currently enqueued functions in JSON format ordered by recency (most r
 - `-o, --offset <number>`      Skip functions from the results returned (for pagination)
 - `-q, --queue <string>`       Retrieve functions run on this queue
 
-### `dbos workflow cancel`
+### `dbos-cloud workflow cancel`
 
 **Description:**
- Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
+Cancel a workflow, setting its status to `CANCELLED`.
+If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
+If the workflow is enqueued, cancelling removes it from the queue.
 
 **Arguments:**
 - `[application-name]`: The name of your application
 - `-w, --workflowid`: The ID of the workflow to cancel.
 
-### `dbos workflow resume`
+### `dbos-cloud workflow resume`
 
 **Description:**
 Resume a workflow from its last completed step.
@@ -477,13 +479,3 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 **Arguments:**
 - `[application-name]`: The name of your application
 - `-w, --workflowid`: The ID of the workflow to resume.
-
-### `dbos workflow restart`
-
-**Description:**
-Start a new execution of a workflow with the same inputs.
-This new workflow has a new workflow ID.
-
-**Arguments:**
-- `[application-name]`: The name of your application
-- `-w, --workflowid`: The ID of the workflow to restart.

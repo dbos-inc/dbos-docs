@@ -8,7 +8,7 @@ Also check out the integration guides for popular TypeScript frameworks:
 :::
 
 :::warning
-Due to its internal workflow registry, The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.
+Due to its internal workflow registry, the DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.
 :::
 
 ### Using DBOS Transact

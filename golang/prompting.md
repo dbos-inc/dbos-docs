@@ -44,7 +44,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
-- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
 - Do NOT start goroutines from workflows or use select in workflows. Instead, use DBOS's durable `dbos.Go` and `dbos.Select` functions which provide deterministic replay. For more complex parallel execution, use DBOS.RunWorkflow and DBOS queues.
 - Do NOT range over a map to call steps or start workflows: Go map iteration order is random, which breaks determinism. Sort the keys first (e.g. `slices.Sorted(maps.Keys(m))`) and iterate over the sorted slice.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
@@ -947,7 +947,7 @@ They are useful for publishing information about the status of a workflow or to 
 func SetEvent[P any](ctx Context, key string, message P) error
 ```
 
-Any workflow can call `SetEvent` to publish a key-value pair, or update its value if has already been published.
+Any workflow can call `SetEvent` to publish a key-value pair, or update its value if it has already been published.
 
 ### GetEvent
 

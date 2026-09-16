@@ -327,7 +327,7 @@ Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps)
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/reliable-refunds-langchain
+cd dbos-demo-apps/python/reliable-refunds-langchain
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/reliable-refunds-langchain) to run the app.

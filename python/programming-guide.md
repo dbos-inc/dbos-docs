@@ -90,7 +90,7 @@ Now, run this code with `python3 main.py`.
 Your program should print output like:
 
 ```
-15:41:06 [    INFO] (dbos:_dbos.py:534) DBOS launched!
+15:41:06 [    INFO] (dbos:_dbos.py:735) DBOS launched!
 Step one completed!
 Step two completed!
 ```

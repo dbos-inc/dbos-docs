@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.b9dc8877.js" defer="defer"></script>
-<script src="/assets/js/main.73376021.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.cf672e27.js" defer="defer"></script>
+<script src="/assets/js/main.27ec0dad.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -24,7 +24,7 @@
 <p>You use DBOS by installing the open-source library into your application and annotating workflows and steps.
 While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.</p>
-<p>Architecturally, an application built with DBOS looks the below diagram.
+<p>Architecturally, an application built with DBOS looks like the below diagram.
 The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
 There&#x27;s no separate orchestration server and no infrastructure required besides Postgres.
 When running in production, we also recommend connecting your DBOS applications to <a href="#operating-dbos-in-production-with-conductor" class="">Conductor</a>, a &quot;control plane&quot; for your durable workflows that coordinates workflow recovery to guarantee high availability and provides operational tooling such as an admin UI and dashboard, observability integrations, and managed workflow retention policies.</p>
@@ -56,7 +56,7 @@ Cross-language operations are documented <a class="" href="/explanations/portabl
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step&#x27;s outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).</p>
 <p>In <a href="https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a DBOS application using a single Postgres database can sustain a throughput of &gt;40K workflows or steps per second.
 Scaling beyond that is possible by sharding workflows across multiple Postgres databases.</p>
-<p>It is worth noting that the since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
+<p>It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
 Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-workflow-recovery-works">How Workflow Recovery Works<a href="#how-workflow-recovery-works" class="hash-link" aria-label="Direct link to How Workflow Recovery Works" title="Direct link to How Workflow Recovery Works" translate="no">​</a></h2>

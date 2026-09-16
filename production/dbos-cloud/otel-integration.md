@@ -1,6 +1,6 @@
 # Export Logs and Traces
 
-> This tutorial shows how to configure your DBOS Cloud application to export OpenTelemetry logs and traces to a third party observability service. If your service accepts the OTEL format, you can skip steps 1 and 2. Simply pass environment variables like `OTEL_EXPORTER_OTLP_HEADERS` as [app secrets](./secrets.md) (see [step 3](#3-set-the-datadog-api-key-to-your-apps-environment)) and then configure logs and traces enpdoints as shown in [step 4](#4-configure-your-app-to-export-logs-and-traces-to-otel-contrib).
+> This tutorial shows how to configure your DBOS Cloud application to export OpenTelemetry logs and traces to a third party observability service. If your service accepts the OTEL format, you can skip steps 1 and 2. Simply pass environment variables like `OTEL_EXPORTER_OTLP_HEADERS` as [app secrets](./secrets.md) (see [step 3](#3-set-the-datadog-api-key-to-your-apps-environment)) and then configure logs and traces endpoints as shown in [step 4](#4-configure-your-app-to-export-logs-and-traces-to-otel-contrib).
 
 Other services may require additional software. Here we use Datadog as an example. We connect by installing the otel-contrib package in the App VM at deployment time and configuring it with the Datadog API key to export data.
 
@@ -92,7 +92,7 @@ config: DBOSConfig = {
         "otlp_traces_endpoints": [ "http://0.0.0.0:4318/v1/traces" ], #match the config in step 1 above
         "otlp_logs_endpoints": [  "http://0.0.0.0:4318/v1/logs" ]
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 ```
 
 **Typescript**

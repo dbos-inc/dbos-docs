@@ -29,7 +29,7 @@ import { DBOSClient } from '@dbos-inc/dbos-sdk';
 
 export async function enqueueWorkflow() {
     console.log('Enqueueing DBOS workflow');
-    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL! });
     await client.enqueue({
         workflowName: 'exampleWorkflow',
         queueName: 'exampleQueue',
@@ -40,12 +40,15 @@ export async function enqueueWorkflow() {
 
 You can also use the client to list past workflows or retrieve their results.
 
-## 2. Create a Worker in a Vercel Functions
+## 2. Create a Worker in a Vercel Function
 
 Next, create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
 In the Vercel Function, define and register your workflows, steps, and queues:
 
 ```ts title="app/api/dbos/route.ts"
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import { waitUntil } from '@vercel/functions';
+
 // Define a workflow and steps
 async function stepOne() {
   // Sleep 3 seconds
@@ -80,7 +83,6 @@ DBOS.setConfig({
   name: 'dbos-vercel-integration',
   applicationVersion: '0.1.0',
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
-  runAdminServer: false,
 });
 await DBOS.launch();
 await DBOS.registerQueue('exampleQueue');

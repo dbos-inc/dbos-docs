@@ -86,7 +86,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Upgrading](https://docs.dbos.dev/java/upgrading.md): The `updateTime` field on the `ExternalState` record changed from `BigDecimal` to `java.time.Instant`, and the `withUpdateTime` builder method upda...
 - [Alerting](https://docs.dbos.dev/production/alerting.md): If you are using [Conductor](./conductor.md), you can configure automatic alerts when certain failure conditions are met.
 - [Audit Logs](https://docs.dbos.dev/production/audit-logs.md): If you are using [Conductor](./conductor.md), you can retrieve an **audit log** of the mutating operations performed against your organization: reg...
-- [Autoscaling and Version Management](https://docs.dbos.dev/production/autoscaling.md): [Conductor](./conductor.md) lets you attach autoscaling policies policies to your applications. An autoscaling policy computes how many executors y...
+- [Autoscaling and Version Management](https://docs.dbos.dev/production/autoscaling.md): [Conductor](./conductor.md) lets you attach autoscaling policies to your applications. An autoscaling policy computes how many executors your appli...
 - [Production Checklist](https://docs.dbos.dev/production/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [Conductor API](https://docs.dbos.dev/production/conductor-api.md): Conductor is the control plane for your durable workflows, and this HTTP API is how you drive it programmatically: register applications with Condu...
 - [DBOS Conductor](https://docs.dbos.dev/production/conductor.md): When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
@@ -125,7 +125,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Add DBOS To Your App](https://docs.dbos.dev/python/integrating-dbos.md): This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application ...
 - [Learn DBOS Python](https://docs.dbos.dev/python/programming-guide.md): This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
 - [AI-Assisted Development](https://docs.dbos.dev/python/prompting.md): If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
-- [DBOS CLI](https://docs.dbos.dev/python/reference/cli.md): These commands all require the URL of your DBOS system database (and optionally your application database, if you use legacy DBOS [transactions](.....
+- [DBOS CLI](https://docs.dbos.dev/python/reference/cli.md): These commands all require the URL of your DBOS system database.
 - [DBOS Client](https://docs.dbos.dev/python/reference/client.md): `DBOSClient` provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
 - [Configuration](https://docs.dbos.dev/python/reference/configuration.md): To configure DBOS, pass a `DBOSConfig` object to its constructor.
 - [DBOS Methods & Variables](https://docs.dbos.dev/python/reference/contexts.md): DBOS provides a number of useful context methods and variables.
@@ -148,6 +148,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Communicating with Workflows](https://docs.dbos.dev/python/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/python/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md), programmatically, or via ...
 - [Workflows](https://docs.dbos.dev/python/tutorials/workflow-tutorial.md): Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+- [Upgrading to 3.0](https://docs.dbos.dev/python/upgrading.md): DBOS Python 3.0 removes features that were deprecated in DBOS 2.x.
 - [Get Started with DBOS](https://docs.dbos.dev/quickstart.md): DBOS is a library for building reliable programs.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/typescript/examples/checkout-tutorial.md): :::info
 - [Hacker News Research Agent](https://docs.dbos.dev/typescript/examples/hacker-news-agent.md): :::info
@@ -176,4 +177,5 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Communicating with Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md), programmatically, or via ...
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+- [Upgrading to 5.0](https://docs.dbos.dev/typescript/upgrading.md): DBOS TypeScript 5.0 removes features that were deprecated in DBOS TypeScript 4.x.
 - [Why DBOS?](https://docs.dbos.dev/why-dbos.md): :::info

@@ -20,7 +20,7 @@ dbos-cloud app deploy my-app-prod
 There's nothing special about the `-staging` and `-prod` suffixes&mdash;you can use any names you like.
 
 :::info
-If you manually specify the application database name by setting `app_db_name` in `dbos_config.yaml`, you must ensure each environment uses a different value of `app_db_name`.
+If you manually specify the application database name by setting `app_db_name` in `dbos-config.yaml`, you must ensure each environment uses a different value of `app_db_name`.
 :::
 
 ## Authentication

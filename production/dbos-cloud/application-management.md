@@ -34,7 +34,6 @@ You need to provide a valid `dbos-config.yaml` file when deploying an applicatio
 
 Note that some fields from dbos-config.yaml will be **ignored** during cloud deployments:
 - **database_url** and **database** connection-related fields. DBOS Cloud automatically applies the connection information of your cloud database server.
-- **runtimeConfig.admin_port**: DBOS Cloud communicates with Transact admin port on port 3001.
 
 #### Dependency Management
 
@@ -69,7 +68,7 @@ runtimeConfig:
 
 A setup script may install system packages or libraries or otherwise customize the microVM image. For example:
 
-```python title="build.sh"
+```shell title="build.sh"
 #!/bin/bash
 
 # Install the traceroute package for use in your application

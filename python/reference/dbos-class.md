@@ -9,7 +9,7 @@
 ```python
 DBOS(
     *,
-    config: Optional[DBOSConfig] = None,
+    config: DBOSConfig,
 )
 ```
 
@@ -60,28 +60,30 @@ if __name__ == "__main__":
 
 ```python
 DBOS.listen_queues(
-    queues: Sequence[Union[Queue, str]]
+    queues: Sequence[str]
 )
 ```
 
 Configure this DBOS process to only listen to (dequeue workflows from) specific queues.
-If this is not used, DBOS will listen to all declared queues.
-Must be called before DBOS is launched.
+If this is not used, DBOS will listen to all registered queues.
+Must be called after DBOS is constructed and before it is launched, and may be called at most once.
 
 **Parameters:**
-- `queues`: The queues to listen to, given as [`Queue`](./queues.md#class-dbosqueue) objects or as queue names.
+- `queues`: The names of the queues to listen to.
 
 ### destroy
 
 ```python
 DBOS.destroy(
+    *,
+    destroy_registry: bool = False,
     workflow_completion_timeout_sec: int = 0,
-    destroy_registry: bool = False
 )
 ```
 
-Destroy the DBOS singleton, terminating all active workflows and closing database connections.
-After this completes, the singleton can be re-initialized.
+Destroy the DBOS singleton, stopping its background threads (such as queue polling and the scheduler) and closing database connections.
+`destroy` waits up to `workflow_completion_timeout_sec` for active workflows to complete and cancels executor tasks that have not yet started; it does not interrupt workflows that are still running, but they can no longer checkpoint their progress.
+After this completes, the singleton can be re-initialized: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
 Useful for testing.
 
 **Parameters:**
@@ -103,6 +105,7 @@ Reset the DBOS [system database](../../explanations/system-tables.md), clearing 
 By default, this destroys the system database entirely; pass `truncate=True` to instead empty its tables, which is substantially faster.
 Useful when testing a DBOS application to reset the internal state of DBOS between tests.
 For example, see its use in the [testing tutorial](../tutorials/testing.md).
+It cannot be called after DBOS is launched.
 **This is a destructive operation and should only be used in a test environment.**
 
 **Parameters:**

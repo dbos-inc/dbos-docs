@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.b9dc8877.js" defer="defer"></script>
-<script src="/assets/js/main.73376021.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.cf672e27.js" defer="defer"></script>
+<script src="/assets/js/main.27ec0dad.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -30,7 +30,7 @@ You can configure alerts either in Conductor directly or on <a href="#metrics-ba
 <ul>
 <li class="">If a certain number of workflows (parameterizable by workflow type) fail in a set period of time.</li>
 <li class="">If a workflow remains enqueued for more than a certain period of time (parameterizable by queue name), indicating the queue is overwhelmed or stuck.</li>
-<li class="">If an application is unreponsive (no connected executors, or connected but unresponsive executors).</li>
+<li class="">If an application is unresponsive (no connected executors, or connected but unresponsive executors).</li>
 </ul>
 <p>If multiple applications <a class="" href="/explanations/sharing-a-system-database">share a system database</a>, each application&#x27;s alerts consider only the workflows it owns.</p>
 <p>You may also specify an application to receive the alert—this does not need to be the same as the application that generated the alert.
@@ -74,7 +74,7 @@ If no handler is registered, alerts are logged automatically.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="metrics-based-alerts">Metrics-Based Alerts<a href="#metrics-based-alerts" class="hash-link" aria-label="Direct link to Metrics-Based Alerts" title="Direct link to Metrics-Based Alerts" translate="no">​</a></h3>
 <p>If you scrape <a class="" href="/production/metrics">Conductor metrics</a> into a monitoring system such as Prometheus (with <a href="https://prometheus.io/docs/alerting/latest/alertmanager/" target="_blank" rel="noopener noreferrer" class="">Alertmanager</a>), Datadog, or Grafana, you can define alerts directly on DBOS metrics.
 This is an alternative to the Conductor-managed alerts above, useful if you already run a monitoring and alerting stack.</p>
-<p>Here are some example alerting conditions written in in <a href="https://prometheus.io/docs/prometheus/latest/querying/basics/" target="_blank" rel="noopener noreferrer" class="">PromQL</a>:</p>
+<p>Here are some example alerting conditions written in <a href="https://prometheus.io/docs/prometheus/latest/querying/basics/" target="_blank" rel="noopener noreferrer" class="">PromQL</a>:</p>
 <p><strong>Elevated workflow failures:</strong> more than 10 workflows failing per minute for an application:</p>
 <div class="language-promql codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-promql codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token keyword" style="color:#66d9ef">sum</span><span class="token plain"> </span><span class="token keyword" style="color:#66d9ef">by</span><span class="token plain"> </span><span class="token vector-match punctuation" style="color:#f8f8f2">(</span><span class="token vector-match label-key attr-name" style="color:#a6e22e !important">application</span><span class="token vector-match punctuation" style="color:#f8f8f2">)</span><span class="token plain"> </span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token plain">dbos_conductor_v1_workflow_failed_rate</span><span class="token punctuation" style="color:#f8f8f2">)</span><span class="token plain"> </span><span class="token operator" style="color:#66d9ef">*</span><span class="token plain"> </span><span class="token number" style="color:#ae81ff">60</span><span class="token plain"> </span><span class="token operator" style="color:#66d9ef">&gt;</span><span class="token plain"> </span><span class="token number" style="color:#ae81ff">10</span><br></div></code></pre></div></div>
 <p><strong>Stuck queue:</strong> a workflow has been waiting in a queue for more than 5 minutes:</p>

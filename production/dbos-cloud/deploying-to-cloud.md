@@ -6,7 +6,7 @@
 
 - [**Application hosting and autoscaling**](./application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
 - [**Managed workflow recovery**](./application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
-- [**Workflow and queue management**](./workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps. Cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+- [**Workflow and queue management**](./workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps. Cancel, resume, or fork any workflow execution and manage the tasks in your distributed queues.
 
 ## Deploying Your App to DBOS Cloud
 
@@ -230,7 +230,6 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <article className="col col--6">
 
 Your DBOSContext [Config](../../golang/reference/dbos-context.md) must be set with:
-- `AdminServer` enabled and listening on port 3001 (the default port)
 - `DatabaseURL` (or your custom `pgxpool`) must point to an environment variable named `DBOS_SYSTEM_DATABASE_URL`
 
 </article>
@@ -241,7 +240,6 @@ dbos.Config{
     AppName:            "dbos-starter",
     ApplicationVersion: "0.1.0",
     DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-    AdminServer:        true,
 }
 ```
 </article>
@@ -274,7 +272,7 @@ language: go
 <section className="row list">
 <article className="col col--6">
 
-Finally, build your application under the name `main`, against linux/adm64, then run this command to deploy your application to DBOS Cloud!
+Finally, build your application under the name `main`, against linux/amd64, then run this command to deploy your application to DBOS Cloud!
 
 :::info
 DBOS Cloud will serve HTTP traffic on port 8080. Make sure to use that port when configuring web servers.
@@ -299,7 +297,7 @@ dbos-cloud app deploy
 ### HTTP Serving & Port Numbers
 
 DBOS Cloud provides your application with an HTTPS URL and routes traffic to it.
-It expects applications to listen for HTTP requests on port 3000 (TypeScript) or port 8000 (Python).
+It expects applications to listen for HTTP requests on port 3000 (TypeScript), port 8000 (Python), or port 8080 (Go and Java).
 
 ### Environment Management
 

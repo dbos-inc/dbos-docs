@@ -2,10 +2,10 @@
 
 > `DBOSClient` provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
 > `DBOSClient` includes methods similar to [`DBOS`](./contexts.md) that can be used outside of a DBOS application, 
-> such as [`enqueue`](./queues.md#enqueue) or [`getEvent`](./contexts.md#get_event).
+> such as [`enqueue`](./queues.md#enqueue) or [`get_event`](./contexts.md#get_event).
 
 :::note 
-`DBOSClient` is included in the `dbos` package, the same package that used by DBOS applications.
+`DBOSClient` is included in the `dbos` package, the same package used by DBOS applications.
 Where DBOS applications use the [`DBOS` methods](./contexts.md),
 external applications use `DBOSClient` instead.
 :::
@@ -22,13 +22,14 @@ DBOSClient(
     system_database_pool_size: Optional[int] = None,
     system_database_polling_concurrency: Optional[int] = None,
     use_listen_notify: bool = False,
+    application_name: Optional[str] = None,
     lazy: bool = False,
     retry_connection_errors: bool = True,
-    application_name: Optional[str] = None,
+    observability_query_timeout_sec: Optional[float] = None,
 )
 ```
 **Parameters:**
-- `system_database_url`: A connection string to your DBOS system database, with the same format and defaults as in [DBOSConfig](./configuration.md).
+- `system_database_url`: A connection string to your DBOS system database, with the same format as in [DBOSConfig](./configuration.md). Required unless `system_database_engine` is provided (raises `DBOSException` if neither is set).
 - `system_database_engine`: A custom SQLAlchemy engine to use to connect to your system database. If provided, the client will not create an engine but use this instead.
 - `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - `serializer`: A custom [serializer](./contexts.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
@@ -38,12 +39,16 @@ DBOSClient(
 - `lazy`: Whether to defer connecting to the system database until the client is first used. Defaults to `False`, meaning the connection is checked on construction and the constructor raises if the system database is unreachable. If `True`, the constructor does not connect; use [`check_connection`](#check_connection) to check the connection explicitly. Cannot be combined with `use_listen_notify`, whose listener thread connects immediately (raises `DBOSException` if both are set).
 - `retry_connection_errors`: Whether a client operation that loses its database connection blocks and retries until the connection recovers. Defaults to `True`. Set to `False` to raise connection errors instead, so an unreachable database surfaces as an error rather than a wait.
 - `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
+- `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 
 **Example syntax:**
 
 This DBOS client connects to the system database specified in the `DBOS_SYSTEM_DATABASE_URL` environment variable.
 
 ```python
+import os
+from dbos import DBOSClient
+
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 ```
 
@@ -87,14 +92,15 @@ class EnqueueOptions(TypedDict):
     duplication_policy: NotRequired[DuplicationPolicy]
     priority: NotRequired[int]
     delay_seconds: NotRequired[float]
-    max_recovery_attempts: NotRequired[int]
     queue_partition_key: NotRequired[str]
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
     serialization_type: NotRequired[WorkflowSerializationFormat]
+    class_name: NotRequired[str]
+    instance_name: NotRequired[str]
     attributes: NotRequired[Dict[str, Any]]
     otel_context: NotRequired[opentelemetry.context.Context]
-    application_name: NotRequired[str]
+    application_name: NotRequired[Optional[str]]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -111,7 +117,7 @@ However, since `DBOSClient` runs outside the DBOS application, the metadata must
 
 Required metadata includes:
 
-* `workflow_name`: The name of the workflow method being enqueued.
+* `workflow_name`: The registered name of the workflow being enqueued: the `name` passed to [`@DBOS.workflow`](./decorators.md#workflow), or by default the function's qualified name (for example, `URLFetcher.fetch_workflow` for a method on a class).
 * `queue_name`: The name of the [Queue](./queues.md) to enqueue the workflow on.
 
 Additional but optional metadata includes:
@@ -120,36 +126,50 @@ Additional but optional metadata includes:
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). 
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
 * `app_version`: The version of your application that should process this workflow. 
-If left undefined, it will be updated to the current version when the workflow is first dequeued.
+If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
   - `"reject"`: raise `DBOSQueueDeduplicatedError`.
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
-- `max_recovery_attempts`: The maximum number of times the workflow will be retried on recovery before its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. Defaults to 100.
 - `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one `partition_*` limit). A partitioned queue applies its `partition_*` limits to each partition separately, while its `global_concurrency`, `worker_concurrency`, and `limiter` still apply across all partitions.
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
+- `class_name`: If the workflow is a class method (`@classmethod`) or a method on a [configured instance](../tutorials/classes.md), the registered name of its class: the `class_name` passed to [`@DBOS.dbos_class`](./decorators.md#dbos_class), or by default the class's qualified name. Not needed for static methods.
+- `instance_name`: If the workflow is a method on a [configured instance](../tutorials/classes.md), the `config_name` of the instance that runs it. Requires `class_name`.
 - `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
 - `otel_context`: An OpenTelemetry context to propagate to the enqueued workflow, so that when the workflow runs, its span joins that context's trace. The client-side equivalent of [`PropagateOtelContext`](./contexts.md#propagateotelcontext). Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage. See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for details.
 - `application_name`: The application that owns and runs the enqueued workflow. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
 
-:::warning
-At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
-:::
+To enqueue a workflow that is a method on a [Python class](../tutorials/classes.md), also set `class_name` (for a class method) or both `class_name` and `instance_name` (for a method on a configured instance).
+The class and instance must be registered in the application that dequeues the workflow; otherwise, the workflow cannot run.
 
 **Example syntax:**
 
 ```python
+from dbos import EnqueueOptions
+
 options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
+  "queue_name": "example_queue",
+  "workflow_name": "process_task",
 }
 handle = client.enqueue(options, task)
 result = handle.get_result()
+```
+
+To enqueue a method on a configured instance, such as `fetch_workflow` on the `URLFetcher("https://example.com")` instance from the [classes tutorial](../tutorials/classes.md):
+
+```python
+options: EnqueueOptions = {
+  "queue_name": "example_queue",
+  "workflow_name": "URLFetcher.fetch_workflow",
+  "class_name": "URLFetcher",
+  "instance_name": "https://example.com",
+}
+handle = client.enqueue(options)
 ```
 
 ### enqueue_async
@@ -169,8 +189,8 @@ Similar to [enqueue](#enqueue), but enqueues asynchronously and returns a
 
 ```python
 options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
+  "queue_name": "example_queue",
+  "workflow_name": "process_task",
 }
 handle = await client.enqueue_async(options, task)
 result = await handle.get_result()
@@ -190,7 +210,7 @@ client.enqueue_in_transaction(
 Similar to [enqueue](#enqueue), but performs the enqueue write inside a caller-owned SQLAlchemy transaction instead of in its own transaction.
 This lets you enqueue a workflow **atomically** with your own database writes: either both are committed or both are rolled back.
 Pass either a SQLAlchemy [`Connection`](https://docs.sqlalchemy.org/en/20/core/connections.html) or an ORM [`Session`](https://docs.sqlalchemy.org/en/20/orm/session_basics.html) as `conn_or_session`.
-The remaining parameters are the same as [enqueue](#enqueue).
+The remaining parameters are the same as [enqueue](#enqueue), except that `duplication_policy="return-existing"` is not supported (raises `DBOSException`).
 
 You own the transaction: `enqueue_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
@@ -204,13 +224,19 @@ The enqueue cannot atomically span a separate application database.
 **Example syntax:**
 
 ```python
+import os
 import sqlalchemy as sa
+from dbos import EnqueueOptions
 
-engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
+# For Postgres, use a postgresql+psycopg:// URL: DBOS installs the psycopg (v3) driver,
+# while SQLAlchemy uses psycopg2 for a plain postgresql:// URL.
+engine = sa.create_engine(
+  sa.make_url(os.environ["DBOS_SYSTEM_DATABASE_URL"]).set(drivername="postgresql+psycopg")
+)
 
 options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
+  "queue_name": "example_queue",
+  "workflow_name": "process_task",
 }
 
 with engine.connect() as conn:
@@ -249,6 +275,9 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 **Returns:**
 - The [WorkflowHandle](./workflow_handles.md#workflowhandle) of the workflow whose ID is `workflow_id`.
 
+**Raises:**
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
+
 ### retrieve_workflow_async
 
 ```python
@@ -266,6 +295,9 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 **Returns:**
 - The [WorkflowHandleAsync](./workflow_handles.md#workflowhandleasync) of the workflow whose ID is `workflow_id`.
 
+**Raises:**
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
+
 ### wait_first
 
 ```python
@@ -280,7 +312,7 @@ Wait for any one of the given workflow handles to complete and return the first 
 Similar to [`DBOS.wait_first`](contexts.md#wait_first).
 
 **Parameters:**
-- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty.
+- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty or contains duplicate workflow IDs.
 - **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
 
 ### wait_first_async
@@ -321,7 +353,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
-it is highly recommended that you use the `idempotencyKey` parameter with both `send` and `send_async`
+it is highly recommended that you use the `idempotency_key` parameter with both `send` and `send_async`
 in order to get exactly-once behavior.
 :::
 
@@ -381,9 +413,13 @@ The send cannot atomically span a separate application database.
 **Example syntax:**
 
 ```python
+import os
 import sqlalchemy as sa
 
-engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
+# For Postgres, use a postgresql+psycopg:// URL (see the enqueue_in_transaction example)
+engine = sa.create_engine(
+    sa.make_url(os.environ["DBOS_SYSTEM_DATABASE_URL"]).set(drivername="postgresql+psycopg")
+)
 
 with engine.connect() as conn:
     with conn.begin():
@@ -508,7 +544,7 @@ client.get_event(
 
 Retrieve the latest value of an event published by the workflow identified by `workflow_id` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning `None` if the wait times out.
-Similar to [`DBOS.get_event](contexts.md#get_event).
+Similar to [`DBOS.get_event`](contexts.md#get_event).
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
@@ -530,7 +566,7 @@ client.get_event_async(
 
 Asynchronously retrieve the latest value of an event published by the workflow identified by `workflow_id` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning `None` if the wait times out.
-Similar to [`DBOS.get_event_async](contexts.md#get_event_async).
+Similar to [`DBOS.get_event_async`](contexts.md#get_event_async).
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
@@ -562,7 +598,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client rea
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
-- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to `1.0`.
 - `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
 
 **Yields:**
@@ -570,6 +606,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client rea
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 ```python
@@ -618,7 +655,7 @@ Similar to [`DBOS.read_stream_offset`](contexts.md#read_stream_offset).
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
 - `offset`: The offset to read
-- `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+- `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to `1.0`.
 - `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
 
 **Returns:**
@@ -626,6 +663,7 @@ Similar to [`DBOS.read_stream_offset`](contexts.md#read_stream_offset).
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 ```python
@@ -716,6 +754,9 @@ Parameters have the same meaning as on `DBOS.register_queue` except for `on_conf
 **Example syntax:**
 
 ```python
+import os
+from dbos import DBOSClient
+
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 client.register_queue("email", global_concurrency=10, limiter={"limit": 100, "period": 60})
 client.enqueue({"queue_name": "email", "workflow_name": "send_email"}, "alice@example.com")
@@ -767,7 +808,7 @@ client.list_queues(
 ) -> List[Queue]
 ```
 
-List all database-backed queues registered in the system database.
+List all queues registered in the system database.
 Returns an empty list if no queues have been registered.
 Similar to [`DBOS.list_queues`](./contexts.md#list_queues), including the `application_name` filter.
 If the filter is unset, it defaults to the client's own [`application_name`](#constructor); a client with no application name lists every application's queues.
@@ -836,6 +877,7 @@ client.list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    was_forked_from: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
@@ -855,7 +897,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -868,12 +910,12 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor); a client with no application name retrieves every application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
 
 ### list_workflows_async
 
@@ -902,6 +944,7 @@ client.list_workflows_async(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    was_forked_from: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
@@ -943,19 +986,19 @@ client.list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `ENQUEUED` or `PENDING`) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -970,7 +1013,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor); a client with no application name retrieves every application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
 
 ### list_queued_workflows_async
 
@@ -1051,7 +1094,7 @@ client.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
 Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 
 **Parameters:**
@@ -1116,7 +1159,7 @@ client.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandle[Any]
 ```
 
 Resume a workflow.
@@ -1124,6 +1167,7 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 
 ### resume_workflow_async
@@ -1133,7 +1177,7 @@ client.resume_workflow_async(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandleAsync[Any]
 ```
 
 Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
@@ -1149,6 +1193,7 @@ client.resume_workflows(
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` and resumes none of them.
 Similar to [`DBOS.resume_workflows`](./contexts.md#resume_workflows).
 
 ### resume_workflows_async
@@ -1167,10 +1212,11 @@ client.fork_workflow(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandle[Any]
 ```
 
 Similar to [`DBOS.fork_workflow`](./contexts.md#fork_workflow).
+Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 
 ### fork_workflow_async
 
@@ -1184,7 +1230,7 @@ client.fork_workflow_async(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
-) -> WorkflowHandleAsync[R]
+) -> WorkflowHandleAsync[Any]
 ```
 
 Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
@@ -1243,12 +1289,14 @@ DebouncerClient(
     workflow_options: EnqueueOptions,
     *,
     debounce_timeout_sec: Optional[float] = None,
-    queue: Optional[queue] = None,
+    queue: Optional[Union[Queue, str]] = None,
     application_name: Optional[str] = None,
 )
 ```
 
 Similar to [`Debouncer.create`](./contexts.md#debouncercreate) but takes in a DBOSClient and `EnqueueOptions` instead of a workflow function.
+If `queue` (a queue or queue name) is set, it overrides the `queue_name` in `workflow_options`.
+`workflow_options` must not set `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`: `debounce` raises `DBOSException` if they are set.
 `application_name` debounces on behalf of that application; it defaults to the `application_name` in `workflow_options`, then to the client's own.
 
 ### debounce
@@ -1323,10 +1371,10 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 
 **Parameters:**
 - **schedule_name**: Unique name identifying this schedule.
-- **workflow_name**: Fully-qualified name of the workflow function to invoke.
+- **workflow_name**: Registered name of the workflow function to invoke.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
-- **workflow_class_name**: The class name if the workflow is a static method on a [DBOS class](../tutorials/classes.md).
+- **workflow_class_name**: The registered class name if the workflow is a class method (`@classmethod`) on a [DBOS class](../tutorials/classes.md).
 - **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. Defaults to `None`.
@@ -1416,8 +1464,8 @@ class ClientScheduleInput(TypedDict):
     schedule_name: str
     workflow_name: str
     schedule: str
-    context: Any
-    workflow_class_name: Optional[str]
+    context: Any  # Optional, defaults to None
+    workflow_class_name: Optional[str]  # Optional, defaults to None
     automatic_backfill: bool  # Optional, defaults to False
     cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
     queue_name: Optional[str]  # Optional, defaults to None (internal queue)
@@ -1441,7 +1489,7 @@ client.backfill_schedule(
 ) -> List[WorkflowHandle[None]]
 ```
 
-Enqueue (on an internal queue) all executions of a schedule that would have run between `start` and `end`.
+Enqueue (on the schedule's `queue_name`, or an internal queue if it has none) all executions of a schedule that would have run between `start` and `end`.
 Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
 Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
 
@@ -1451,7 +1499,7 @@ Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
 client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 ```
 
-Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
+Immediately enqueue (on the schedule's `queue_name`, or an internal queue if it has none) the scheduled workflow at the current time.
 Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).
 
 ## Version Management
@@ -1481,6 +1529,7 @@ client.get_latest_application_version() -> VersionInfo
 ```
 
 Return the latest application version (the one with the highest timestamp).
+Like [`list_application_versions`](#list_application_versions), if the client has an [`application_name`](#constructor), only versions registered by that application (plus versions owned by no application) are considered.
 Raises `DBOSException` if no versions are registered.
 Similar to [`DBOS.get_latest_application_version`](./contexts.md#get_latest_application_version).
 
@@ -1547,7 +1596,7 @@ Every workflow, step, queue, schedule, and application version is owned by the a
 After renaming an application, use this method (or the [`dbos rename-application`](./cli.md#dbos-rename-application) CLI command) to transfer everything owned by the old name to the new name.
 Returns the number of rows transferred, by table.
 
-Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and their steps are then transferred in batches of `batch_size`.
+Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and then all workflow steps are transferred in batches of `batch_size` workflows.
 The operation is idempotent: if interrupted, running it again resumes where it left off.
 
 :::warning
@@ -1558,7 +1607,7 @@ A running application would race the rename, creating new work under its old nam
 **Parameters:**
 - `old_name`: The application's previous name. If `None`, nothing is transferred except rows owned by no application, so `adopt_unclaimed_rows` must be set.
 - `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 256 characters, containing only lowercase letters, numbers, dashes, and underscores).
-- `batch_size`: The number of completed workflows and steps transferred per transaction. Pass `None` to transfer everything in a single transaction.
+- `batch_size`: The number of workflows per batch when transferring completed workflows and steps. Pass `None` to transfer them without batching.
 - `adopt_unclaimed_rows`: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `False`.
 
 ### rename_application_async

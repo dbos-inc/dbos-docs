@@ -13,7 +13,7 @@ The rest of this guide will assume you have a local application.
 
 Install a CockroachDB-compatible PostgreSQL driver:
 
-```python
+```shell
 pip install psycopg2-binary sqlalchemy-cockroachdb
 ```
 
@@ -39,6 +39,8 @@ export DBOS_COCKROACHDB_URL="<your connection string>"
 Now, configure your DBOS application to connect to CockroachDB as follows:
 
 ```python
+import os
+
 from sqlalchemy import create_engine
 from dbos import DBOS, DBOSConfig
 

@@ -15,26 +15,15 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-n, --name <string>`                 Retrieve functions with this name
 - `-l, --limit <number>`                Limit the results returned (default: "10") 
 - `-u, --user <string>`                 Retrieve workflows run by this user
-- `-s, --start-time <string>`           Retrieve workflows starting after this timestamp (ISO 8601 format)
+- `-t, --start-time <string>`           Retrieve workflows starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`             Retrieve workflows starting before this timestamp (ISO 8601 format)
 - `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`)
 - `-v, --application-version <string>`  Retrieve workflows with this application version
 - `-a, --application-name <string>`     Retrieve workflows owned by this application (workflows owned by no application are always included)
 
 **Output:**
-For each retrieved workflow, emit a JSON whose fields are:
-- `workflowUUID`: The ID of the workflow
-- `status`: The status of the workflow
-- `workflowName`: The name of the workflow function
-- `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects.md), the name of the configuration
-- `authenticatedUser`: The user who ran the workflow, if specified
-- `assumedRole`: The role with which the workflow ran, if specified
-- `authenticatedRoles`: All roles which the authenticated user could assume
-- `queueName`: The queue of the workflow, if enqueued.
-- `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfuly, its output
-- `error`: If the workflow threw an error, the serialized error object
+A JSON-formatted list of [workflow statuses](./methods.md#workflow-status).
+The `input`, `output`, and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ### npx dbos workflow get
 
@@ -42,22 +31,12 @@ For each retrieved workflow, emit a JSON whose fields are:
 Retrieve information on a workflow run by your application.
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to retrieve.
 
 **Output:**
-A JSON whose fields are:
-- `workflowUUID`: The ID of the workflow
-- `status`: The status of the workflow
-- `workflowName`: The name of the workflow function
-- `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects), the name of the configuration
-- `authenticatedUser`: The user who ran the workflow, if specified
-- `assumedRole`: The role with which the workflow ran, if specified
-- `authenticatedRoles`: All roles which the authenticated user could assume
-- `queueName`: The queue of the workflow, if enqueued.
-- `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfuly, its output
-- `error`: If the workflow threw an error, the serialized error object
+A JSON-formatted [workflow status](./methods.md#workflow-status).
+The `input`, `output`, and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ### npx dbos workflow steps
 
@@ -67,11 +46,13 @@ A JSON whose fields are:
 
 **Output:**
 A JSON-formatted list of [workflow steps](./methods.md#dboslistworkflowsteps).
+The `output` and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ### npx dbos workflow cancel
 
 **Description:**
- Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
+Cancel a workflow so it is no longer automatically retried or restarted.
+If the workflow is executing, it is interrupted at the beginning of its next step.
 
 **Arguments:**
 - `-s, --sys-db-url <string>`: Your DBOS system database URL
@@ -92,15 +73,15 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Description:**
 Fork a new execution of a workflow, starting at a given step.
-This new workflow has a new workflow ID but the same code version (you can fork to a different code version [programmatically](./client.md#forkworkflow)).
+This new workflow has a new workflow ID but the same code version, unless you specify a different one with `--application-version`.
 Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
 
 **Arguments:**
-* `<workflow-id>`: The ID of the workflow to restart.
+* `<workflow-id>`: The ID of the workflow to fork.
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
 * `-f, --forked-workflow-id`: Custom ID for the forked workflow
 * `-v, --application-version`: Custom application version for the forked workflow
-* `-S, --step INTEGER`: Restart from this step [default: 1]
+* `-S, --step INTEGER`: Restart from this step (required)
 
 ### npx dbos workflow queue list
 
@@ -112,25 +93,14 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 - `-n, --name <string>`        Retrieve functions with this name
 - `-t, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
-- `-S, --status <string>`      Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
+- `-S, --status <string>`      Retrieve functions with this status (`ENQUEUED`, `PENDING`, or `DELAYED`)
 - `-l, --limit <number>`       Limit the results returned
 - `-q, --queue <string>`       Retrieve functions run on this queue
 - `-a, --application-name <string>`  Retrieve functions owned by this application (functions owned by no application are always included)
 
 **Output:**
-For each retrieved workflow, emit a JSON whose fields are:
-- `workflowUUID`: The ID of the workflow
-- `status`: The status of the workflow
-- `workflowName`: The name of the workflow function
-- `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects), the name of the configuration
-- `authenticatedUser`: The user who ran the workflow, if specified
-- `assumedRole`: The role with which the workflow ran, if specified
-- `authenticatedRoles`: All roles which the authenticated user could assume
-- `queueName`: The queue of the workflow, if enqueued.
-- `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfuly, its output
-- `error`: If the workflow threw an error, the serialized error object
+A JSON-formatted list of [workflow statuses](./methods.md#workflow-status).
+The `input`, `output`, and `error` fields are rendered as human-readable strings rather than as JSON values.
 
 ## Application Management Commands
 
@@ -142,7 +112,7 @@ By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, this command can be run with a privileged user to create all DBOS database tables.
 
-After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the system database.
 Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`runMigrations: false`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
 
@@ -195,7 +165,7 @@ This command initializes a new DBOS application from a template into a target di
 
 **Arguments:**
 - `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 256 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-- `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
+- `-t, --template <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
 
 ### npx dbos start
 

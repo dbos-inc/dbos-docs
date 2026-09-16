@@ -4,18 +4,21 @@
 > These settings let you configure how long workflow history is retained in your application's [system database](../../explanations/system-tables.md).
 > This is useful for managing the database disk usage of workflow history.
 
+Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, or delayed are never deleted.
+Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams.
+
 ### Time Threshold
 
-If a time threshold is set, workflow history is only retained for X hours.
-History of completed workflows that started more than X hours ago is automatically deleted.
+If a time threshold is set, workflow history is only retained for X hours after a workflow completes.
+History of workflows that completed more than X hours ago is automatically deleted.
 Time-based retention is disabled by default.
 
 ### Rows Threshold
 
-If the rows threshold is set, history is only retained for the last X completed workflows.
-History of additional completed workflows is automatically deleted.
+If the rows threshold is set, history is only retained for the X most recently completed workflows.
+History of older completed workflows is automatically deleted.
 By default, the rows threshold is set to 1M rows.
-You can set both a rows threshold an a time threshold.
+You can set both a rows threshold and a time threshold.
 
 ### Global Timeout
 

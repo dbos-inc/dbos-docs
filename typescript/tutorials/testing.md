@@ -2,7 +2,7 @@
 
 > You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like [Jest](https://jestjs.io/) or [Vitest](https://vitest.dev/).
 
-Steps are ordinary functions that can be tested without any DBOS-specific infrastructure.
+The functions underlying your steps are ordinary functions that can be tested directly, without any DBOS-specific infrastructure (calling them as DBOS steps, such as through `DBOS.runStep`, requires DBOS to be launched).
 Thus, this guide will focus on testing workflows.
 There are two basic approaches to testing workflows:
 
@@ -211,6 +211,7 @@ describe('example integration tests', () => {
 });
 ```
 
+Queues are stored in the system database, so if your tests use queues, register them with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue) after each call to `DBOS.launch()`.
 With the DBOS environment correctly configured between tests, you can freely call your workflows, steps, and DBOS interface methods and test them any way you need.
 
 You can find a complete integration test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/widget-store/tests/shop-integration.test.ts).

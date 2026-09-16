@@ -9,7 +9,7 @@ Here are some recommendations for configuring a Postgres database to best work w
 
 **Use any Postgres** - DBOS is compatible with any Postgres database, including standard self-hosted Postgres, RDS, Aurora, Google Cloud SQL, Azure PostgreSQL, Supabase, Neon, Planetscale, TimescaleDB, AlloyDB, PgDog, etc.
 
-**If using a connection pooler, use it session mode** - Connect your DBOS applications to your Postgres database either directly or using a connection pooler in session mode. Do not use a connection pooler in transaction mode as some Postgres features that DBOS uses (e.g., LISTEN/NOTIFY) are not compatible with it. [This page](https://www.pgbouncer.org/features.html) documents the differences.
+**If using a connection pooler, use it in session mode** - Connect your DBOS applications to your Postgres database either directly or using a connection pooler in session mode. Do not use a connection pooler in transaction mode as some Postgres features that DBOS uses (e.g., LISTEN/NOTIFY) are not compatible with it. [This page](https://www.pgbouncer.org/features.html) documents the differences.
 
 **Configure a retention policy** - You should configure a [retention policy](./retention.md) for the workflows in your DBOS application to limit the total amount of storage DBOS uses.
 

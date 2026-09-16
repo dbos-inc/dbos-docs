@@ -14,7 +14,7 @@ Every action in Conductor, like viewing a workflow, registering an application, 
 | `organization.read` | View organization details, members, and roles. |
 | `organization.write` | Manage the organization: rename it, add and remove members, create and assign roles, manage billing.
 | `application.read` | View applications and their workflows, queues, schedules, executors, and alerting rules. |
-| `application.write` | Register, update, and delete applications; manage workflows (cancel, resume, restart, fork, delete, import); and manage schedules and alerting rules. |
+| `application.write` | Register, update, and delete applications; manage workflows (cancel, resume, fork, delete, import); and manage schedules and alerting rules. |
 | `metric.read` | Read application metrics, including the [Prometheus-compatible metrics endpoint](./metrics.md). |
 | `token.read` | List API keys. |
 | `token.write` | Create and revoke API keys. |

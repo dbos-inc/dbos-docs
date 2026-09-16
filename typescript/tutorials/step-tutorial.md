@@ -62,6 +62,7 @@ Common nondeterministic operations include:
 You **cannot** call, start, or enqueue workflows from within steps.
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+If you call a step from outside a workflow (after DBOS is launched), it runs as an ordinary function, without checkpoints, retries, or timeouts.
 
 ### Configurable Retries
 
@@ -73,14 +74,15 @@ Retries are configurable through the `StepConfig`, which can be passed to `runSt
 export interface StepConfig {
   retriesAllowed?: boolean; // Should failures be retried? (default false)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
-  maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
+  maxAttempts?: number;     // Maximum number of attempts, including the first (default 3). If every attempt fails, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
   shouldRetry?: (error: unknown) => boolean | Promise<boolean>; // Predicate called after a failure to decide whether to retry (default: retry every error).
   timeoutMS?: number;       // Maximum duration of a single step attempt, in milliseconds. An attempt exceeding it fails with DBOSStepTimeoutError.
+  name?: string;            // Name of the step (defaults to the function name).
 }
 ```
 
-For example, let's configure this step to retry exceptions (such as if `example.com` is temporarily down) up to 10 times:
+For example, let's configure this step to retry exceptions (such as if `example.com` is temporarily down), making up to 10 attempts:
 
 ```javascript
 async function fetchFunction() {
@@ -117,7 +119,7 @@ static async exampleStep() {
 }
 ```
 
-If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
+If a step fails on all `maxAttempts` attempts, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
 If that exception is not caught, the workflow terminates.
 
 #### Filtering Retries With `shouldRetry`

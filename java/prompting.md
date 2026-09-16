@@ -44,7 +44,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
-- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step, or wrap it as a lambda with `dbos.runStep`. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step, or wrap it as a lambda with `dbos.runStep`. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access instance or static variables, but they should NOT create or update static, instance, or other variables outside their scope.
 - Do NOT call any DBOS instance method (`dbos.send`, `dbos.recv`, `dbos.startWorkflow`, `dbos.getEvent`) from a step.  Those do their own checkpointing.
 - Do NOT start workflows from inside a step.

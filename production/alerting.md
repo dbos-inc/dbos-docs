@@ -16,7 +16,7 @@ Currently, you can create alerts for the following failure conditions:
 
 - If a certain number of workflows (parameterizable by workflow type) fail in a set period of time.
 - If a workflow remains enqueued for more than a certain period of time (parameterizable by queue name), indicating the queue is overwhelmed or stuck.
-- If an application is unreponsive (no connected executors, or connected but unresponsive executors).
+- If an application is unresponsive (no connected executors, or connected but unresponsive executors).
 
 If multiple applications [share a system database](../explanations/sharing-a-system-database.md), each application's alerts consider only the workflows it owns.
 
@@ -311,7 +311,7 @@ dbos.registerAlertHandler((ruleType, message, metadata) -> {
 If you scrape [Conductor metrics](./metrics.md) into a monitoring system such as Prometheus (with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/)), Datadog, or Grafana, you can define alerts directly on DBOS metrics.
 This is an alternative to the Conductor-managed alerts above, useful if you already run a monitoring and alerting stack.
 
-Here are some example alerting conditions written in in [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/):
+Here are some example alerting conditions written in [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/):
 
 **Elevated workflow failures:** more than 10 workflows failing per minute for an application:
 

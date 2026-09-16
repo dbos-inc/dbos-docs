@@ -22,7 +22,7 @@ To wrap your OpenAI agents for durable execution, [install and configure DBOS](.
 Here is a simple but complete example of wrapping an agent for durable execution.
 With just 10 lines of code (highlighted below), you can add DBOS into an existing OpenAI Agents application.
 
-```python {title="dbos_agent.py"}
+```python title="dbos_agent.py"
 import asyncio
 from agents import Agent, function_tool
 # highlight-start

@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.b9dc8877.js" defer="defer"></script>
-<script src="/assets/js/main.73376021.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.cf672e27.js" defer="defer"></script>
+<script src="/assets/js/main.27ec0dad.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -47,7 +47,7 @@ Alternatively, write a script using the DBOS Client (<a class="" href="/python/r
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-am-i-seeing-errors-that-objects-cannot-be-deserialized">Why am I seeing errors that objects cannot be deserialized?<a href="#why-am-i-seeing-errors-that-objects-cannot-be-deserialized" class="hash-link" aria-label="Direct link to Why am I seeing errors that objects cannot be deserialized?" title="Direct link to Why am I seeing errors that objects cannot be deserialized?" translate="no">​</a></h3>
 <p>DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, are <strong>serializable</strong>.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
-DBOS serializes objects to JSON in TypeScript and Go, with <code>pickle</code> in Python, and with Jackson in Java.</p>
+DBOS serializes objects with <a href="https://github.com/flightcontrolhq/superjson" target="_blank" rel="noopener noreferrer" class="">SuperJSON</a> in TypeScript, <code>encoding/json</code> in Go, <code>pickle</code> in Python, and Jackson in Java.</p>
 <p>If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-large-can-serialized-step-and-workflow-outputs-be">How large can serialized step and workflow outputs be?<a href="#how-large-can-serialized-step-and-workflow-outputs-be" class="hash-link" aria-label="Direct link to How large can serialized step and workflow outputs be?" title="Direct link to How large can serialized step and workflow outputs be?" translate="no">​</a></h3>

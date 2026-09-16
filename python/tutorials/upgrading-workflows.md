@@ -48,6 +48,8 @@ def workflow():
 
 Now, new workflows will run `baz()`, while old workflows will safely continue through `foo()`.
 
+In [coroutine workflows](./workflow-tutorial.md#coroutine-async-workflows), use `await DBOS.patch_async()` and `await DBOS.deprecate_patch_async()` instead, as `DBOS.patch()` and `DBOS.deprecate_patch()` raise an error when called from a running event loop.
+
 ### Deprecating and Removing Patches
 
 Patches don't need to stay in your code forever.
@@ -79,7 +81,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 ### How Patching Works
 
 Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history (this is a new row in the `operation_outputs` table in your database).
-If it succesfully inserts the patch marker or if the patch marker is already present, then the workflow must be new (it started after the patch, or started before the patch but has not yet reached this point), so `DBOS.patch()` returns `True`.
+If it successfully inserts the patch marker or if the patch marker is already present, then the workflow must be new (it started after the patch, or started before the patch but has not yet reached this point), so `DBOS.patch()` returns `True`.
 If there is already a record present in this point in your workflow history, then the workflow must be old (it started before the patch and has already continued past this point), so `DBOS.patch()` returns `False`.
 
 When you deprecate a patch with `DBOS.deprecate_patch()`, new workflows no longer insert patch markers into their workflow history.
@@ -147,7 +149,7 @@ You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to 
 ```python
 active = DBOS.list_workflows(
     app_version="1.0.0",
-    status=["ENQUEUED", "PENDING"],
+    status=["ENQUEUED", "DELAYED", "PENDING"],
 )
 if not active:
     print("Safe to retire version 1.0.0")

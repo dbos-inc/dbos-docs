@@ -93,7 +93,7 @@ They are useful for publishing information about the status of a workflow or to 
 func SetEvent[P any](ctx Context, key string, message P, opts ...SetEventOption) error
 ```
 
-Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
 If called from a step, the write is at-least-once (the step may be retried on failure).
 
 #### GetEvent

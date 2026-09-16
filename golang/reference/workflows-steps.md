@@ -725,7 +725,7 @@ An error that signals this execution has lost ownership of the workflow, or has 
 The **In a workflow** column classifies each code:
 
 - **Return** — propagate it out of your workflow function. Either DBOS's own handler needs the error to resolve the situation, or the workflow's recorded history can no longer be trusted.
-- **Handle** — you may catch it and continue. Where the Meaning column notes that the failure left no checkpoint, see [Handling non-checkpointed errors](#handling-non-checkpointed-errors) first.
+- **Handle** — you may catch it and continue. Take extra care where the Meaning column notes that the failure left no checkpoint.
 - **Check the cause** — a wrapper code; classify by the error it wraps.
 - **—** — a configuration, registration, or management error that does not arise from workflow execution.
 

@@ -14,14 +14,14 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
+DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
 ```
 
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md)
-or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-tables.md#dbossend_message)
+or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-tables.md#dbossend_message)
 
 #### Recv
 
@@ -80,7 +80,7 @@ They are useful for publishing information about the status of a workflow or to 
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 
-Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if it has already been published.
 
 #### getEvent
 
@@ -118,9 +118,9 @@ static async webCheckout(...): Promise<void> {
   const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
   const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL, 300);
   if (url === null) {
-    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+    ... // Redirect the customer to a cancellation page.
   } else {
-    DBOS.koaContext.redirect(url);
+    ... // Redirect the customer to the payments URL.
   }
 }
 ```

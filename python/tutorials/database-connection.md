@@ -53,15 +53,8 @@ For more information on DBOS configuration, see [the reference](../reference/con
 
 ## Connecting to an Application Database
 
-DBOS offers two ways to run durable database operations in workflows: [datasources](./transaction-tutorial.md#datasources) and the legacy [`@DBOS.transaction`](./transaction-tutorial.md#dbostransaction) decorator.
-
-:::info
-If you need to run database operations in coroutines (`async def` functions), you must use datasources. `@DBOS.transaction` only supports synchronous functions.
-:::
-
-### Datasources
-
-Datasources are the recommended approach. You create a datasource with its own database URL, independent of the DBOS system database:
+To run durable database operations in workflows, use [datasources](./transaction-tutorial.md#datasources).
+You create a datasource with its own database URL, independent of the DBOS system database:
 
 ```python
 import asyncio
@@ -76,26 +69,7 @@ ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
-The datasource manages its own connection pool and can point to any PostgreSQL or SQLite database. No additional DBOS configuration is needed. See the [ Datasources](./transaction-tutorial.md#datasources) tutorial for full usage details.
-
-### `@DBOS.transaction`
-
-The legacy [@DBOS.transaction](./transaction-tutorial.md#dbostransaction) decorator is an **optional** special kind of step that are optimized for database accesses.
-Transactions need to run in the database in which your application stores data.
-You can specify the database in which transactions run by setting an `application_database_url` when you configure DBOS.
-The application database (the database in which transactions run) does not need to be the same database (or even on the same server) as your system database.
-For example:
-
-```python
-config: DBOSConfig = {
-    "name": "dbos-example",
-    "application_version": "0.1.0",
-    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
-    "application_database_url": os.environ["APP_DATABASE_URL"],
-}
-DBOS(config=config)
-```
-
-:::info
-If you are not using `@DBOS.transaction`, you do not need to set `application_database_url`.
-:::
+The datasource manages its own connection pool and can point to any PostgreSQL or SQLite database.
+To use an async datasource with SQLite, use an async driver URL such as `sqlite+aiosqlite:///app.sqlite`.
+Your application database does not need to be the same database (or even on the same server) as your system database, and no additional DBOS configuration is needed.
+See the [datasources tutorial](./transaction-tutorial.md#datasources) for full usage details.

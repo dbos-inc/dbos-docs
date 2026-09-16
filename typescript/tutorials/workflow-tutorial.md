@@ -76,7 +76,7 @@ async function main() {
 ```
 
 After starting a workflow in the background, you can use [`DBOS.retrieveWorkflow`](../reference/methods.md#dbosretrieveworkflow) to retrieve a workflow's handle from its ID.
-You can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieveWorkflow`](../reference/client.md#retrieveworkflow).
+You can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieveWorkflow`](../reference/client.md#retrieveworkflow).
 
 If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
@@ -163,8 +163,8 @@ This is allowed because each step is started in a well-defined sequence before a
 By contrast, the following is not allowed:
 ```typescript
 const results = await Promise.allSettled([
-  async () => { await step1("arg1"); await step2("arg3"); },
-  async () => { await step3("arg2"); await step4("arg4"); },
+  (async () => { await step1("arg1"); await step2("arg3"); })(),
+  (async () => { await step3("arg2"); await step4("arg4"); })(),
 ]);
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.

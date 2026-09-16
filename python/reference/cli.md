@@ -1,6 +1,6 @@
 # DBOS CLI
 
-> These commands all require the URL of your DBOS system database (and optionally your application database, if you use legacy DBOS [transactions](../tutorials/transaction-tutorial.md#dbostransaction)).
+> These commands all require the URL of your DBOS system database.
 > You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ## Workflow Management Commands
@@ -12,7 +12,6 @@ List workflows run by your application in JSON format ordered by recency (most r
 
 **Arguments:**
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
 * `-l, --limit INTEGER`: Limit the results returned  [default: 10]
 * `-u, --user TEXT`: Retrieve workflows run by this user
 * `-t, --start-time TEXT`: Retrieve workflows starting after this timestamp (ISO 8601 format)
@@ -21,8 +20,9 @@ List workflows run by your application in JSON format ordered by recency (most r
 * `-v, --application-version TEXT`: Retrieve workflows with this application version
 * `-n, --name TEXT`: Retrieve workflows with this name
 * `-a, --application-name TEXT`: Retrieve workflows owned by this application (workflows owned by no application are always included)
-* `-d, --sort-desc`: Sort the results in descending order (older first)
+* `-d, --sort-desc`: Sort the results in descending order (newest first)
 * `-o, --offset INTEGER`: Offset for pagination
+* `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted list of [workflow statuses](./contexts#workflow-status).
@@ -35,7 +35,7 @@ Retrieve information on a workflow run by your application.
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to retrieve
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted [workflow status](./contexts#workflow-status).
@@ -45,7 +45,7 @@ A JSON-formatted [workflow status](./contexts#workflow-status).
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to retrieve
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted list of [workflow steps](./contexts#list_workflow_steps).
@@ -53,12 +53,13 @@ A JSON-formatted list of [workflow steps](./contexts#list_workflow_steps).
 ### dbos workflow cancel
 
 **Description:**
- Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
+Cancel a workflow so it is no longer automatically retried or restarted.
+If the workflow is executing, it is interrupted at the beginning of its next step.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to cancel
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 ### dbos workflow resume
 
@@ -70,25 +71,23 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to resume.
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
-
-**Output:**
-A JSON-formatted [workflow status](./contexts#workflow-status).
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 ### dbos workflow fork
 
 **Description:**
 Fork a new execution of a workflow, starting at a given step.
-This new workflow has a new workflow ID but the same code version (you can fork to a different code version [programmatically](./client.md#fork_workflow)).
+This new workflow has a new workflow ID.
+Unless you pin it with `--application-version`, it is not tagged with any application version, so it is dequeued by an executor running the latest application version.
 Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
 
 **Arguments:**
-* `<workflow-id>`: The ID of the workflow to restart.
+* `<workflow-id>`: The ID of the workflow to fork.
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
 * `-f, --forked-workflow-id`: Custom ID for the forked workflow
 * `-v, --application-version`: Custom application version for the forked workflow
 * `-S, --step INTEGER`: Restart from this step [default: 1]
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted [workflow status](./contexts#workflow-status).
@@ -100,16 +99,16 @@ Lists all currently enqueued tasks in JSON format ordered by recency (most recen
 
 **Arguments:**
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-- `-D, --db-url URL`: Your DBOS application database URL.
 * `-l, --limit INTEGER`: Limit the results returned
 * `-t, --start-time TEXT`: Retrieve functions starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve functions starting before this timestamp (ISO 8601 format)
 * `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 * `-q, --queue-name TEXT`: Retrieve functions on this queue
-* `-n, --name TEXT`: Retrieve functions on this queue
+* `-n, --name TEXT`: Retrieve functions with this name
 * `-a, --application-name TEXT`: Retrieve functions owned by this application (functions owned by no application are always included)
-* `-d, --sort-desc`: Sort the results in descending order (older first)
+* `-d, --sort-desc`: Sort the results in descending order (newest first)
 * `-o, --offset INTEGER`: Offset for pagination
+* `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted list of [workflow statuses](./contexts#workflow-status).
@@ -123,21 +122,20 @@ By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, this command can be run with a privileged user to create all DBOS database tables.
 
-After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the system database.
 Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`run_migrations=False`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
 
 **Arguments:**
 
 - `-s, --sys-db-url URL`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
-- `-D, --db-url URL`: A connection string for your DBOS application database, in which DBOS [transactions](../tutorials/transaction-tutorial.md#dbostransaction) run. Optional if you are not using transactions.
-- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your application and system databases.
+- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
 - `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 - `--print-migrations [all|NUMBER]`: Instead of running the migrations, print their SQL to standard output, either all of them (for a fresh database) or starting from a migration number (to upgrade an existing database). Postgres only.
 - `--print-user-role`: Instead of executing them, print the SQL statements granting `--app-role` access to the DBOS system tables.
 
 Use these last two flags to emit SQL you can apply yourself, for example if your database is managed by a DBA.
-The output is only SQL and comments, but it contains `CREATE INDEX CONCURRENTLY`, so it must run outside a transaction block.
+The output is only SQL and comments, but it contains `CREATE INDEX CONCURRENTLY` and `DROP INDEX CONCURRENTLY`, so it must run outside a transaction block.
 
 ```shell
 dbos migrate --print-migrations all -s ${DBOS_SYSTEM_DATABASE_URL} > migrations.sql
@@ -162,14 +160,14 @@ DBOS Cloud executes this command to start your app.
 Initialize the local directory with a DBOS template application.
 
 **Arguments:**
-- `<application-name>`: The name of your application. If not specified, will be prompted for.
-- `-t, --template TEXT`: Specify a template to use. ("dbos-toolbox", "dbos-app-starter", "dbos-cron-starter", "dbos-db-starter")
+- `<application-name>`: The name of your application. If not specified, will be prompted for (the `dbos-toolbox` and `dbos-app-starter` templates instead default to the template name).
+- `-t, --template TEXT`: Specify a template to use. ("dbos-toolbox", "dbos-app-starter", "dbos-db-starter")
 - `--config, -c`: If this flag is set, only the `dbos-config.yaml` file is added from the template. Useful to add DBOS to an existing project.
 
 ### dbos reset
 
 Reset your DBOS [system database](../../explanations/system-tables.md), deleting metadata about past workflows and steps.
-No application data is affected by this.
+This drops the entire system database (for SQLite, it deletes the database file), including any application data stored in that database; data in other databases is not affected.
 
 **Arguments:**
 * `--yes, -y`: Skip confirmation prompt.
@@ -187,6 +185,6 @@ Prints the number of rows transferred, by table.
 - `-f, --from TEXT`: The application's previous name. Omit to only adopt rows owned by no application (requires `--adopt-unclaimed-rows`).
 - `-t, --to TEXT`: The application that ends up owning the rows. Required.
 - `--adopt-unclaimed-rows`: Also transfer rows owned by no application.
-- `--batch-size INTEGER`: The number of completed workflows and steps transferred per transaction [default: 10000]
+- `--batch-size INTEGER`: The number of workflows per batch when transferring completed workflows and steps [default: 10000]
 - `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 - `-y, --yes`: Skip confirmation prompt.

@@ -25,7 +25,7 @@ Factory method. Creates (or reuses) a SQLAlchemy engine and runs the schema migr
 - `engine_kwargs`: Optional keyword arguments forwarded verbatim to SQLAlchemy's `create_engine`.
 - `engine`: Provide an existing `sa.Engine` instead of creating one from `database_url`. When set, `engine_kwargs` is ignored.
 - `schema`: The PostgreSQL schema in which the `datasource_outputs` table is created. Defaults to `"dbos"`. Has no effect for SQLite.
-- `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS JSON serializer.
+- `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS default serializer (`pickle`, then Base64-encoded), not the `serializer` set in [`DBOSConfig`](./configuration.md#serialization-settings).
 
 **Example:**
 ```python
@@ -50,8 +50,8 @@ Decorator that registers a synchronous function as a datasource transaction step
 The decorated function must **not** be a coroutine (`async def`). Decorating an `async def` function raises `DBOSException` at decoration time.
 
 **Parameters:**
-- `name`: Step name recorded in the workflow log. Defaults to the function's fully qualified name.
-- `isolation_level`: SQL transaction isolation level. Must be one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"`.
+- `name`: Step name recorded in the workflow log. Defaults to the function's qualified name (`__qualname__`).
+- `isolation_level`: SQL transaction isolation level. Must be one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"`. SQLite supports only `"SERIALIZABLE"`.
 
 **Example:**
 ```python
@@ -129,7 +129,7 @@ Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs th
 - `engine_kwargs`: Optional keyword arguments forwarded verbatim to SQLAlchemy's `create_async_engine`.
 - `engine`: Provide an existing `AsyncEngine` instead of creating one from `database_url`. When set, `engine_kwargs` is ignored.
 - `schema`: The PostgreSQL schema in which the `datasource_outputs` table is created. Defaults to `"dbos"`. Has no effect for SQLite.
-- `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS JSON serializer.
+- `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS default serializer (`pickle`, then Base64-encoded), not the `serializer` set in [`DBOSConfig`](./configuration.md#serialization-settings).
 
 **Example:**
 
@@ -161,8 +161,8 @@ Decorator that registers an async coroutine function as a datasource transaction
 The decorated function **must** be a coroutine (`async def`). Decorating a non-coroutine raises `DBOSException` at decoration time.
 
 **Parameters:**
-- `name`: Step name recorded in the workflow log. Defaults to the function's fully qualified name.
-- `isolation_level`: SQL transaction isolation level. Must be one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"`.
+- `name`: Step name recorded in the workflow log. Defaults to the function's qualified name (`__qualname__`).
+- `isolation_level`: SQL transaction isolation level. Must be one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"`. SQLite supports only `"SERIALIZABLE"`.
 
 **Example:**
 ```python
@@ -229,4 +229,4 @@ A `TypedDict` passed to `run_tx_step` / `run_tx_step_async` to configure the ste
 
 **Fields:**
 - `name`: Step name recorded in the workflow log.
-- `isolation_level`: One of `"SERIALIZABLE"`, `"REPEATABLE READ"`, or `"READ COMMITTED"`.
+- `isolation_level`: One of `"SERIALIZABLE"`, `"REPEATABLE READ"`, or `"READ COMMITTED"` (SQLite supports only `"SERIALIZABLE"`).

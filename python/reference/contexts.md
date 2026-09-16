@@ -9,7 +9,7 @@
 
 ```python
 DBOS.start_workflow(
-    func: Workflow[P, R],
+    func: Callable[P, R],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> WorkflowHandle[R]
@@ -33,7 +33,7 @@ handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
 
 ```python
 DBOS.start_workflow_async(
-    func: Workflow[P, Coroutine[Any, Any, R]],
+    func: Callable[P, Coroutine[Any, Any, R]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
@@ -68,7 +68,7 @@ Wait for any one of the given workflow handles to complete and return the first 
 This is useful when you have multiple concurrent workflows and want to process results as they complete.
 
 **Parameters:**
-- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty.
+- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty or contains duplicate workflow IDs.
 - **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
@@ -223,7 +223,7 @@ DBOS.set_event(
 
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
-Can only be called from within a workflow.
+Can only be called from within a workflow or its steps.
 The `set_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), `set_event_async` should be used instead.
 
 **Parameters:**
@@ -294,7 +294,7 @@ Retrieve the latest values of all events published by `workflow_id`.
 ```python
 DBOS.get_all_events_async(
     workflow_id: str
-) -> Dict[str, Any]
+) -> Coroutine[Any, Any, Dict[str, Any]]
 ```
 
 Coroutine version of [`get_all_events`](#get_all_events).
@@ -333,7 +333,7 @@ DBOS.asyncio_wait(
     *,
     timeout: Optional[float] = None,
     return_when: str = asyncio.ALL_COMPLETED,
-) -> tuple[set[asyncio.Task[Any]], set[asyncio.Task[Any]]]
+) -> Coroutine[Any, Any, tuple[set[asyncio.Task[Any]], set[asyncio.Task[Any]]]]
 ```
 
 A durable wrapper around [`asyncio.wait`](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait) with the same interface and semantics.
@@ -342,7 +342,7 @@ It checkpoints which futures are done vs. pending so the result is deterministic
 When called outside a workflow, it falls back to regular `asyncio.wait`.
 
 **Parameters:**
-- **fs**: An list of awaitables (coroutines, tasks, or futures) to wait on.
+- **fs**: A list of awaitables (coroutines, tasks, or futures) to wait on.
 - **timeout**: Maximum number of seconds to wait. If `None` (the default), wait until the `return_when` condition is met.
 - **return_when**: Controls when the function returns. Must be one of the following constants:
   - `asyncio.FIRST_COMPLETED`: The function will return when any future finishes or is cancelled.
@@ -396,18 +396,18 @@ class StepOptions(TypedDict, total=False):
             Optional predicate called with a raised exception to decide
             whether the step should be retried. If it returns False (or
             an awaitable resolving to False), the exception is re-raised
-            immediately without further retries. Async predicates are
-            only supported when used with `run_step_async`.
+            immediately without further retries. Async validators are
+            only supported for async steps.
 
         preemptible:
-            If True, cancel the step if its workflow is cancelled.
-            Only supported when used with `run_step_async`.
+            If True, cancel the (async) step if its workflow is cancelled.
+            Only supported for async steps.
 
         timeout_seconds:
-            If set, cancel the step and raise DBOSStepTimeoutError if it
-            runs for longer than this many seconds. Only supported when
-            used with `run_step_async`. Each retry attempt gets a fresh
-            timeout.
+            If set, cancel the (async) step and raise DBOSStepTimeoutError if it
+            runs for longer than this many seconds. Only supported for async
+            steps. Each retry attempt gets a fresh timeout. Inert outside a
+            workflow, where the step runs as a normal function call.
     """
 
     name: Optional[str]
@@ -490,7 +490,7 @@ Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workfl
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose handle to retrieve.
-- `existing_workflow`: Whether to throw an exception if the workflow does not yet exist, or to wait for its creation. If set to `False` and the workflow does not exist, will wait for the workflow to be created, then return its handle.
+- `existing_workflow`: Whether to throw an exception (`DBOSNonExistentWorkflowError`) if the workflow does not yet exist. If set to `False`, return a handle immediately without checking whether the workflow exists; calling `get_result` on the handle waits for the workflow to be created and complete.
 
 **Returns:**
 - The [handle](./workflow_handles.md) of the workflow whose ID is `workflow_id`.
@@ -498,10 +498,10 @@ Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workfl
 ### retrieve_workflow_async
 
 ```python
-DBOS.retrieve_workflow(
+DBOS.retrieve_workflow_async(
     workflow_id: str,
     existing_workflow: bool = True,
-) -> WorkflowHandleAsync[R]
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
 ```
 
 Coroutine version of [`DBOS.retrieve_workflow`](#retrieve_workflow), retrieving an async workflow handle.
@@ -548,7 +548,7 @@ DBOS.close_stream(
 ```
 
 Close a stream identified by a key.
-After this is called, no more values can be written to the stream.
+After this is called, readers stop at the close, so any value written to the stream afterward is never read.
 Can only be called from within a workflow or its steps.
 The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
 
@@ -595,6 +595,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 
@@ -655,6 +656,7 @@ Use this when you want one specific value instead of iterating the whole stream&
 
 **Raises:**
 - `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflow_id` exists.
 
 **Example syntax:**
 
@@ -692,8 +694,10 @@ DBOS.patch(
 ) -> bool
 ```
 
-Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted and `False` if there is already a checkpoint present at this point in history.
+Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted (or this patch marker is already present) and `False` if a different checkpoint is already present at this point in history.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
+The `patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`patch_async`](#patch_async) should be used instead.
 
 **Parameters:**
 - `patch_name`: The name to give the patch marker that will be inserted into workflow history.
@@ -718,7 +722,9 @@ DBOS.deprecate_patch(
 
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `True`.
-Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
+The `deprecate_patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`deprecate_patch_async`](#deprecate_patch_async) should be used instead.
 
 **Parameters:**
 - `patch_name`: The name of the patch marker to be bypassed.
@@ -764,14 +770,14 @@ DBOS must be launched before calling `register_queue`.
 If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
 
 **Parameters:**
-- `name`: The name of the queue. Must be unique among all queues in the application.
+- `name`: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
 - `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
 - `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes. Must be at least 1 and less than or equal to `global_concurrency`.
 - `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process. Must be at least 1 and less than or equal to `partition_concurrency`, `worker_concurrency`, and `global_concurrency`.
 - `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
-- `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+- `polling_interval_sec`: The minimum interval at which DBOS polls the database for new workflows on this queue. The actual interval includes random jitter and increases with backoff under contention, then scales back down when contention clears.
 - `on_conflict`: How to behave when a queue with this name already exists in the system database:
   - `"update_if_latest_version"` (default): overwrite the existing configuration only if the running application is the latest registered [application version](#version-management). This prevents older versions in a rolling deploy from overwriting a newer configuration.
   - `"always_update"`: always overwrite the existing configuration.
@@ -780,7 +786,7 @@ If the queue already exists in the database, the `on_conflict` parameter control
 Setting any `partition_*` limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queue_partition_key`](./queues.md#setenqueueoptions), and [deduplication](../tutorials/queue-tutorial.md#deduplication) is not supported.
 The queue-wide limits (`global_concurrency`, `worker_concurrency`, and `limiter`) continue to apply across all partitions.
 
-Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database.
+Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database, so registering a queue whose name is owned by a different application raises an error regardless of `on_conflict`.
 
 **Example syntax:**
 
@@ -1003,7 +1009,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -1016,12 +1022,14 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows (or, if `workflow_ids` is set, workflows owned by any application).
+
+On a Postgres system database, this query is subject to the [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) statement timeout (unless `workflow_ids` is set) and raises `DBOSQueryTimeoutError` if it exceeds it.
 
 ### list_workflows_async
 
@@ -1058,18 +1066,18 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `ENQUEUED` or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
 - **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
 - **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
 - **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **name**: Retrieve workflows with this name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
 - **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
@@ -1084,7 +1092,9 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows (or, if `workflow_ids` is set, workflows owned by any application).
+
+On a Postgres system database, this query is subject to the [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) statement timeout (unless `workflow_ids` is set) and raises `DBOSQueryTimeoutError` if it exceeds it.
 
 ### list_queued_workflows_async
 
@@ -1104,13 +1114,14 @@ def list_workflow_steps(
 Retrieve the steps of a workflow.
 Steps are ordered by `function_id`. Use `limit` and `offset` to paginate results.
 Set `load_output` to `False` to improve performance when step outputs and errors are not needed; the `output` and `error` fields are then always `None`.
+On a Postgres system database, this query is subject to the [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) statement timeout and raises `DBOSQueryTimeoutError` if it exceeds it.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```python
 class StepInfo(TypedDict):
     # The unique ID of the step in the workflow. One-indexed.
     function_id: int
-    # The (fully qualified) name of the step
+    # The name of the step
     function_name: str
     # The step's output, if any
     output: Optional[Any]
@@ -1187,7 +1198,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
@@ -1220,7 +1231,7 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandle[Any]
 ```
 
 Resume a workflow.
@@ -1229,6 +1240,7 @@ You can use this to resume workflows that are cancelled or have exceeded their m
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Raises `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 ### resume_workflow_async
 
@@ -1245,6 +1257,7 @@ DBOS.resume_workflows(
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` without resuming any of them.
 
 ### resume_workflows_async
 
@@ -1262,12 +1275,13 @@ DBOS.fork_workflow(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
-) -> WorkflowHandle[R]
+) -> WorkflowHandle[Any]
 ```
 
 Start a new execution of a workflow from a specific step.
 The input step ID must match the `function_id` of the step returned by `list_workflow_steps`.
 The specified `start_step` is the step from which the new workflow will start, so any steps whose ID is less than `start_step` will not be re-executed.
+Raises `DBOSNonExistentWorkflowError` if the workflow identified by `workflow_id` does not exist.
 
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
@@ -1338,7 +1352,7 @@ Coroutine version of [`delete_workflows`](#delete_workflows).
 DBOS.create_schedule(
     *,
     schedule_name: str,
-    workflow_fn: Callable[[datetime, Any], None],
+    workflow_fn: Union[Callable[[datetime, Any], None], Callable[[datetime, Any], Coroutine[Any, Any, None]]],
     schedule: str,
     context: Any = None,
     automatic_backfill: bool = False,
@@ -1359,7 +1373,7 @@ Create a cron schedule that periodically invokes a workflow function.
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. This is useful for managing the concurrency of scheduled workflows. Defaults to `None`.
 
 Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
-Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name is owned by a different application raises an error.
+Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name already exists (including one owned by a different application) raises an error.
 
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
@@ -1380,6 +1394,7 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
 
 ```python
 from datetime import datetime
+from typing import Any
 from dbos import DBOS
 
 @DBOS.workflow()
@@ -1474,7 +1489,7 @@ class ScheduleInput(TypedDict):
     schedule_name: str
     workflow_fn: Union[Callable[[datetime, Any], None], Callable[[datetime, Any], Coroutine[Any, Any, None]]]
     schedule: str
-    context: Any
+    context: Any  # Optional, defaults to None
     automatic_backfill: bool  # Optional, defaults to False
     cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
     queue_name: Optional[str]  # Optional, defaults to None (internal queue)
@@ -1484,7 +1499,7 @@ Atomically apply a set of schedules.
 Useful for declaratively defining all your static schedules in one place.
 May not be called from within a workflow.
 
-Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queue_name` reverts the schedule to the internal queue), while the schedule's status and last-fired time are preserved.
+Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queue_name` reverts the schedule to the internal queue), while the schedule's ID, status, and last-fired time are preserved.
 
 **Example:**
 
@@ -1509,7 +1524,7 @@ DBOS.backfill_schedule(
 ) -> List[WorkflowHandle[None]]
 ```
 
-Enqueue (on an internal queue) all executions of a schedule that would have run between `start` and `end`.
+Enqueue (on the schedule's `queue_name`, or an internal queue if it has none) all executions of a schedule that would have run between `start` and `end` (both exclusive).
 Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
 May not be called from within a workflow.
 
@@ -1519,7 +1534,7 @@ May not be called from within a workflow.
 DBOS.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 ```
 
-Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
+Immediately enqueue (on the schedule's `queue_name`, or an internal queue if it has none) the scheduled workflow at the current time.
 May not be called from within a workflow.
 
 ### WorkflowSchedule
@@ -1609,8 +1624,10 @@ class WorkflowStatus:
     was_forked_from: bool
     # If this workflow was started as a child of another workflow, that workflow's ID.
     parent_workflow_id: Optional[str]
-    # The Unix epoch timestamp at which the workflow was last dequeued, if it had been enqueued
+    # The Unix epoch timestamp in ms at which the workflow was last dequeued, if it had been enqueued
     dequeued_at: Optional[int]
+    # The Unix epoch timestamp in ms before which the workflow should not be dequeued, if it was delayed
+    delay_until_epoch_ms: Optional[int]
     # The Unix epoch timestamp in ms at which the workflow completed (SUCCESS, ERROR, or CANCELLED), if it has completed
     completed_at: Optional[int]
     # Custom key-value attributes attached to the workflow with SetWorkflowAttributes
@@ -1632,24 +1649,10 @@ DBOS.logger: Logger
 
 Retrieve the DBOS logger. This is a pre-configured Python logger provided as a convenience.
 
-### sql_session
-
-```python
-DBOS.sql_session: sqlalchemy.Session
-```
-
-May only be accessed from within a transaction.
-Retrieves the SQLAlchemy session of the transaction, a database connection the transaction can use to interact with the database.
-
-:::tip
-DBOS automatically wraps your transaction functions in a SQLAlchemy ["begin once" block](https://docs.sqlalchemy.org/en/20/core/connections.html#connect-and-begin-once-from-the-engine). Transaction functions automatically commit when they successfully complete and roll back if they throw an exception. Therefore, do not use `DBOS.sql_session.commit()` or `DBOS.sql_session.rollback()` in your transaction functions. Otherwise, you might see a `sqlalchemy.exc.InvalidRequestError: Can't operate on closed transaction inside
-context manager` error.
-:::
-
 ### workflow_id
 
 ```python
-DBOS.workflow_id: str
+DBOS.workflow_id: Optional[str]
 ```
 
 Return the ID of the currently executing workflow. If a workflow is not executing, return None.
@@ -1657,7 +1660,7 @@ Return the ID of the currently executing workflow. If a workflow is not executin
 ### step_id
 
 ```python
-DBOS.step_id: int
+DBOS.step_id: Optional[int]
 ```
 
 Return the step ID for the currently executing step. This is a unique identifier of the current step within the workflow. If a step is not currently executing, return None.
@@ -1665,7 +1668,7 @@ Return the step ID for the currently executing step. This is a unique identifier
 ### step_status
 
 ```python
-DBOS.step_status: StepStatus
+DBOS.step_status: Optional[StepStatus]
 ```
 
 Return the status of the currently executing step.
@@ -1685,10 +1688,10 @@ class StepStatus:
 ### span
 
 ```python
-DBOS.span: opentelemetry.trace.Span
+DBOS.span: Optional[opentelemetry.trace.Span]
 ```
 
-Retrieve the OpenTelemetry span associated with the curent request.
+Retrieve the OpenTelemetry span associated with the current workflow or step, or `None` if there is no active span.
 You can use this to set custom attributes in your span.
 
 ### executor_id
@@ -1798,16 +1801,15 @@ Debouncer.create(
     workflow: Callable[P, R],
     *,
     debounce_timeout_sec: Optional[float] = None,
-    queue: Optional[Queue] = None,
+    queue: Optional[Union[Queue, str]] = None,
     application_name: Optional[str] = None,
 ) -> Debouncer[P, R]
 ```
 
 **Parameters:**
-- `workflow`: The workflow to debounce.
-- `debounce_key`: The debounce key for this debouncer. Used to group workflow executions that will be debounced. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- `workflow`: The workflow to debounce. Must be a function or static method: bound methods, including those of [configured instances](../tutorials/classes.md), cannot be debounced and raise a `TypeError`.
 - `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
-- `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of executing it directly.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue (a `Queue` or a queue name) instead of an internal queue.
 - `application_name`: Debounce on behalf of this application instead of your own: the debounced workflow is owned and run by that application.
 
 ### debounce
@@ -1826,7 +1828,9 @@ Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounce_timeout_sec`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
 
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+`debounce` raises `DBOSException` if it is called inside a [`SetEnqueueOptions`](./queues.md#setenqueueoptions) block that sets `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`, because the debouncer controls these options itself.
 
 **Parameters:**
 - `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
@@ -1858,7 +1862,7 @@ Debouncer.create_async(
     workflow: Callable[P, Coroutine[Any, Any, R]],
     *,
     debounce_timeout_sec: Optional[float] = None,
-    queue: Optional[Queue] = None,
+    queue: Optional[Union[Queue, str]] = None,
     application_name: Optional[str] = None,
 ) -> Debouncer[P, R]
 ```
@@ -1872,7 +1876,7 @@ debouncer.debounce_async(
     debounce_period_sec: float,
     *args: P.args,
     **kwargs: P.kwargs,
-) -> WorkflowHandleAsync[R]:
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
 ```
 
 Async version of `debouncer.debounce`.
@@ -2024,7 +2028,7 @@ Example syntax:
 
 ```python
 with PropagateOtelContext():
-    handle = queue.enqueue(workflow_function, ...)
+    handle = DBOS.enqueue_workflow("example_queue", workflow_function, ...)
 ```
 
 ### DBOSContextEnsure
@@ -2072,7 +2076,7 @@ The handler function is called with three arguments:
 - **message**: The alert message.
 - **metadata**: A dictionary of string key-value pairs with additional alert information.
 
-Only one alert handler may be registered per application, and it must be defined before `DBOS.launch()` is called.
+Only one alert handler may be registered per application, and it must be defined after DBOS is initialized (`DBOS(config=...)`) and before `DBOS.launch()` is called.
 If no handler is registered, alerts are logged to the DBOS logger.
 
 **Example syntax:**
@@ -2102,15 +2106,18 @@ class Serializer(ABC):
     def deserialize(self, serialized_data: str) -> Any:
         pass
 
-    @abstractmethod
     def name(self) -> str:
         """The serializer's `name` is stored with serialized values and used to ensure that the correct deserializer is used."""
-        pass
+        return "custom_serializer"
 ```
 
 For example, here is how to configure DBOS to use a JSON serializer:
 
 ```python
+import json
+import os
+from typing import Any
+
 from dbos import DBOS, DBOSConfig, Serializer
 
 class JsonSerializer(Serializer):
@@ -2145,6 +2152,6 @@ from dbos import WorkflowSerializationFormat
 
 The available strategies are:
 
-- **`WorkflowSerializationFormat.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./configuration.md) (defaults to pickle).
+- **`WorkflowSerializationFormat.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./configuration.md) (defaults to pickle). When called from within a workflow, uses that workflow's serialization format instead (for example, the portable format for a workflow that uses portable serialization).
 - **`WorkflowSerializationFormat.PORTABLE`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
 - **`WorkflowSerializationFormat.NATIVE`**: Explicitly uses the native Python pickle serializer (`py_pickle`).

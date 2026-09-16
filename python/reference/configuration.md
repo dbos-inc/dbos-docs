@@ -25,7 +25,6 @@ class DBOSConfig(TypedDict):
     executor_id: Optional[str]
 
     system_database_url: Optional[str]
-    application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     sys_db_polling_concurrency: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
@@ -34,6 +33,8 @@ class DBOSConfig(TypedDict):
     use_listen_notify: Optional[bool]
     run_migrations: Optional[bool]
     notification_listener_polling_interval_sec: Optional[float]
+    notification_coalesce_sec: Optional[float]
+    observability_query_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -48,9 +49,6 @@ class DBOSConfig(TypedDict):
     otlp_log_level: Optional[str]
     console_log_level: Optional[str]
 
-    run_admin_server: Optional[bool]
-    admin_port: Optional[int]
-
     max_executor_threads: Optional[int]
 
     scheduler_polling_interval_sec: Optional[float]
@@ -63,9 +61,11 @@ class DBOSConfig(TypedDict):
 ### Application Settings
 
 - **name**: Your application's name.
+It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`dbos rename-application`](./cli.md#dbos-rename-application).
-- **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
+- **enable_patching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
+Required to use [`DBOS.patch`](./contexts.md#patch) and [`DBOS.deprecate_patch`](./contexts.md#deprecate_patch), which otherwise raise a `DBOSException`.
 - **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
@@ -74,7 +74,8 @@ If you rename an application, transfer ownership of its data with [`dbos rename-
 - **system_database_url**: A connection string to your system database.
 This is the database in which DBOS stores workflow and step state; its schema is documented [here](../../explanations/system-tables.md).
 This may be either Postgres or SQLite, though Postgres is recommended for production.
-DBOS uses this connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+DBOS uses this connection string to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+For Postgres, DBOS always connects with the `psycopg` (version 3) driver, replacing any driver specified in the connection string.
 A valid connection string looks like:
 
 ```
@@ -91,26 +92,25 @@ sqlite:///[path to database file]
 Passwords in connection strings must be escaped (for example with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)) if they contain special characters.
 :::
 
-If no connection string is provided, DBOS uses a SQLite database:
+If no connection string is provided, DBOS uses a SQLite database (with any dashes in the application name replaced by underscores, and an underscore prepended if the name starts with a digit):
 
 ```shell
 sqlite:///[application_name].sqlite
 ```
-- **application_database_url**: A connection string to your application database.
-This is the database in which DBOS executes legacy [`@DBOS.transaction`](../tutorials/transaction-tutorial.md#dbostransaction) functions.
-This parameter has the same format and default as `system_database_url`.
-If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
 - **sys_db_polling_concurrency**: The maximum number of database-backed polling reads from wait operations (such as [`get_result`](./contexts.md#get_result), [`recv`](./contexts.md#recv), [`get_event`](./contexts.md#get_event), and [`read_stream`](./contexts.md#read_stream)) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `sys_db_pool_size` (minimum 1). Set to a non-positive value to disable the limit.
 - **db_engine_kwargs**: A dictionary of additional keyword arguments passed to the SQLAlchemy [create_engine](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine) call. Can be used to customize connection pool settings, timeouts, and other engine parameters.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
-- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be `False` in SQLite.
+- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
+On Postgres, this setting determines which notification triggers are created with the system database, so do not change it after the system database is first created.
 - **run_migrations**: Whether to create and migrate the system database on launch. Defaults to `True`.
 Set to `False` for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`dbos migrate`](./cli.md#dbos-migrate).
-Launch then verifies the schema instead of changing it: a system database that is missing (including a SQLite file that does not exist), or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
+Launch then verifies the schema instead of changing it: a system database whose DBOS tables are missing (including a SQLite file that does not exist) or behind the version this build of DBOS requires fails launch with a `DBOSInitializationError`, and a Postgres database that does not exist fails launch with a connection error.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
-- **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`. Only used when `use_listen_notify` is `False`.
+- **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`; the minimum is `0.001`. Used when polling (when `use_listen_notify` is `False` or the system database is SQLite), and as the default `polling_interval_sec` of [`read_stream`](./contexts.md#read_stream) and [`read_stream_offset`](./contexts.md#read_stream_offset).
+- **notification_coalesce_sec**: Interval in seconds at which DBOS batches and sends the LISTEN/NOTIFY notifications that wake readers of [events](./contexts.md#get_event) and [streams](./contexts.md#read_stream). This bounds how long a waiting reader may be delayed and caps the rate of notifying commits regardless of write throughput. Defaults to `0.01`; the minimum is `0.001`. Only used on Postgres when `use_listen_notify` is `True`.
+- **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
 
 ### Conductor Settings
 
@@ -129,18 +129,9 @@ A system database ahead of the required version is accepted, so a process with m
 - **otlp_log_level**: Log level specifically for OTLP logging (if enabled). Must be no less severe than `log_level`. Defaults to the value of `log_level`.
 - **console_log_level**: Log level specifically for console logging. Must be no less severe than `log_level`. Defaults to the value of `log_level`.
 
-### Admin Server Settings
-
-:::warning
-The admin server is deprecated and will be removed in a future version of DBOS.
-:::
-
-- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to False.
-- **admin_port**: The port on which the admin server runs. Defaults to 3001. Has no effect unless `run_admin_server` is set.
-
 ### Execution Settings
 
-- **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions.
+- **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions. If unset, the pool is unbounded.
 
 ### Scheduler Settings
 
@@ -177,9 +168,6 @@ Each `dbos-config.yaml` file has the following fields and sections:
 - **system_database_url**: The connection string to your DBOS system database.
 This connection string is used by the DBOS [CLI](cli.md).
 It has the same format as the `system_database_url` you pass to the DBOS constructor.
-- **database_url**: The connection string to your application database.
-This connection string is used by the DBOS [CLI](cli.md).
-It has the same format as the `application_database_url` you pass to the DBOS constructor.
 - **runtimeConfig**:
   - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
   - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
@@ -193,5 +181,5 @@ This extension provides [multiple ways](https://github.com/redhat-developer/vsco
 The easiest is to simply add a comment with a link to the schema at the top of the config file:
 
 ```yaml
-# yaml-language-server: $schema=https://github.com/dbos-inc/dbos-transact-py/blob/main/dbos/dbos-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
 ```

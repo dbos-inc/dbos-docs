@@ -2,9 +2,8 @@
 
 > Learn how to perform database operations
 
-DBOS provides two ways to run database operations durably inside workflows: _datasources_ and the built-in `@DBOS.transaction` decorator.
-
-Datasources are the recommended approach. They connect to any PostgreSQL or SQLite database, support both sync and async transaction functions, and integrate with DBOS's exactly-once execution guarantees. `@DBOS.transaction` is an older, simpler option that only supports synchronous functions.
+DBOS runs database operations durably inside workflows through _datasources_.
+Datasources connect to any PostgreSQL or SQLite database, support both sync and async transaction functions, and integrate with DBOS's exactly-once execution guarantees.
 
 ## Datasources
 
@@ -33,20 +32,22 @@ from dbos import AsyncSQLAlchemyDatasource
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
+To use `AsyncSQLAlchemyDatasource` with SQLite, you must use an async driver URL such as `sqlite+aiosqlite:///app.sqlite` (install the driver with `pip install "dbos[aiosqlite]"`); a plain `sqlite:///` URL raises an error.
+
 :::warning
 
 Due to the nature of SQLAlchemy's object model, `AsyncSQLAlchemyDatasource` only supports coroutine functions (`async def`) and `SQLAlchemyDatasource` only supports regular synchronous functions. Decorating the wrong function type raises a `DBOSException` at decoration time.
 
 :::
 
-Both `create` methods accept optional keyword arguments for advanced configuration:
+Both `create` methods take a required `database_url` and accept optional arguments for advanced configuration:
 
 | Parameter | Type | Description |
 |---|---|---|
-| `database_url` | `str` | SQLAlchemy-compatible database URL |
+| `database_url` | `str` | SQLAlchemy-compatible database URL (required). DBOS connects to Postgres with the psycopg driver. |
 | `engine_kwargs` | `dict` | Extra kwargs forwarded to SQLAlchemy's `create_engine` / `create_async_engine` |
 | `engine` | `Engine` / `AsyncEngine` | Provide your own SQLAlchemy engine instead of creating one |
-| `schema` | `str` | Schema name for the `datasource_outputs` table (defaults to `"dbos"`) |
+| `schema` | `str` | Postgres schema name for the `datasource_outputs` table (defaults to `"dbos"`; ignored for SQLite) |
 | `serializer` | `Serializer` | Custom serializer for transaction outputs |
 
 ### Using a Datasource
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
 The decorator accepts two optional keyword arguments:
 - `name` – a custom step name recorded in the workflow log (defaults to the function's qualified name)
-- `isolation_level` – the SQL transaction isolation level; one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"`
+- `isolation_level` – the SQL transaction isolation level; one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"` (SQLite supports only `"SERIALIZABLE"`)
 
 ```python
 @ds.transaction(isolation_level="READ COMMITTED", name="insert_greeting")
@@ -175,77 +176,3 @@ The first argument to `run_tx_step` / `run_tx_step_async` is a dict with optiona
 When a datasource transaction runs inside a DBOS workflow, DBOS records the outcome atomically in the same database transaction. If the workflow is interrupted and replayed, DBOS detects the existing record and returns the stored result without re-executing the function&mdash;exactly-once semantics even for side effects on your application database.
 
 Outside a workflow, datasource transactions execute normally as plain SQLAlchemy transactions with no recording overhead.
-
-## @DBOS.transaction
-
-`@DBOS.transaction` is an older approach to durable database operations. It runs in the application database configured by `application_database_url` in your DBOS config, defaulting to the system database if that field is not set. However, it only supports synchronous functions&mdash;use datasources if you need async transaction steps.
-
-To make a function a transaction, annotate it with [`@DBOS.transaction`](../reference/decorators.md#transaction). Inside the function, use [`DBOS.sql_session`](../reference/contexts.md#sql_session), a [SQLAlchemy](https://www.sqlalchemy.org/) session that executes your operations atomically together with DBOS's checkpoint.
-
-**SQLAlchemy Core**
-
-```python
-greetings = Table(
-    "greetings",
-    MetaData(),
-    Column("name", String),
-    Column("note", String)
-)
-
-@DBOS.transaction()
-def insert_greeting(name: str, note: str) -> None:
-    DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
-
-@DBOS.transaction()
-def get_greeting(name: str) -> Optional[str]:
-    row = DBOS.sql_session.execute(
-        select(greetings.c.note).where(greetings.c.name == name)
-    ).first()
-    return row[0] if row else None
-```
-
-**Raw SQL**
-
-```python
-@DBOS.transaction()
-def insert_greeting(name: str, note: str) -> None:
-    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
-    DBOS.sql_session.execute(sql, {"name": name, "note": note})
-
-@DBOS.transaction()
-def get_greeting(name: str) -> Optional[str]:
-    sql = text("SELECT note FROM greetings WHERE name = :name LIMIT 1")
-    row = DBOS.sql_session.execute(sql, {"name": name}).first()
-    return row[0] if row else None
-```
-
-By default, transactions run against the DBOS system database. To use a separate application database, set `application_database_url` in your DBOS configuration:
-
-```python
-config: DBOSConfig = {
-    "name": "my-app",
-    "application_version": "0.1.0",
-    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
-    "application_database_url": os.environ["APP_DATABASE_URL"],
-}
-DBOS(config=config)
-```
-
-:::warning
-
-`@DBOS.transaction` does not support `async def` functions. When calling a transaction from an async workflow, use [`asyncio.to_thread`](https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread) to avoid blocking the event loop:
-
-```python
-@DBOS.transaction()
-def insert_greeting(name: str, note: str) -> None:
-    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
-    DBOS.sql_session.execute(sql, {"name": name, "note": note})
-
-@DBOS.workflow()
-async def greeting_workflow(name: str, note: str):
-    await asyncio.to_thread(insert_greeting, name, note)
-```
-
-If you need async transaction steps, use a [datasource](#datasources) instead.
-
-:::

@@ -15,11 +15,13 @@ Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new 
 To use patching, you must enable it in the configuration:
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   enablePatching: true,
 };
 ```
+
+If you enable patching and don't set `applicationVersion`, DBOS uses the fixed application version `PATCHING_ENABLED` instead of computing one from your code, so workflows started while patching is enabled can be recovered by processes running newer code.
 
 For example, let's say our original workflow is:
 
@@ -65,7 +67,7 @@ For example, here's how to deprecate the patch above:
 ```typescript
 @DBOS.workflow()
 static async workflow(){
-  if (await DBOS.deprecate_patch("use-baz")) { // always true
+  if (await DBOS.deprecatePatch("use-baz")) { // always true
     await baz();
   }
   await bar();
@@ -87,7 +89,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 ### How Patching Works
 
 Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history (this is a new row in the `operation_outputs` table in your database).
-If it succesfully inserts the patch marker or if the patch marker is already present, then the workflow should take the patch codepath.
+If it successfully inserts the patch marker or if the patch marker is already present, then the workflow should take the patch codepath.
 If there is already a record present in this point in your workflow history and it is not a patch marker, then the workflow must be old (it already continued past this point with old code), and `DBOS.patch()` returns `false`.
 
 When you deprecate a patch with `DBOS.deprecatePatch()`, new workflows no longer insert patch markers into their workflow history.
@@ -102,7 +104,7 @@ By default, application version is automatically computed from a hash of workflo
 However, you can set your own version through configuration.
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   applicationVersion: '1.0.0',
 }
@@ -130,7 +132,7 @@ Or using [`DBOSClient`](../reference/client.md#version-management):
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
 const client = await DBOSClient.create({
-  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
   applicationName: "my-app",
 });
 
@@ -150,7 +152,7 @@ You can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to
 ```typescript
 const active = await DBOS.listWorkflows({
   applicationVersion: "1.0.0",
-  status: ["ENQUEUED", "PENDING"],
+  status: ["ENQUEUED", "DELAYED", "PENDING"],
 });
 if (active.length === 0) {
   console.log("Safe to retire version 1.0.0");

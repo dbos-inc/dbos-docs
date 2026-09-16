@@ -56,20 +56,20 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
-- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
 - Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only.  For any complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
 - Do NOT call DBOS.setEvent and DBOS.recv from outside a workflow function.
-- Do NOT use DBOS.getApi, DBOS.postApi, or other DBOS HTTP annotations. These are DEPRECATED. Instead, use Express for HTTP serving by default, unless another web framework is specified.
+- Do NOT use DBOS.getApi, DBOS.postApi, or other DBOS HTTP annotations. These are no longer supported. Instead, use Express for HTTP serving by default, unless another web framework is specified.
 
 ## DBOS Lifecycle Guidelines
 
 DBOS should be installed and imported from the `@dbos-inc/dbos-sdk` package.
-Due to its internal workflow registry, The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.  Configuration for bundlers should be suggested if these tools are in use and cannot be avoided.
+Due to its internal workflow registry, the DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.  Configuration for bundlers should be suggested if these tools are in use and cannot be avoided.
 
-DBOS does not support "serverless" frameworks due to its long-running background jobs.  DBOS programs MUST have a starting file (typically 'main.ts' or 'server.ts') that creates all objects and workflow functions during startup.
+DBOS programs MUST have a starting file (typically 'main.ts' or 'server.ts') that creates all objects and workflow functions during startup, before calling DBOS.launch().  Because DBOS runs workflows as long-running background jobs, prefer a long-lived process.  DBOS can run on a "serverless" platform, but only where that startup file is evaluated on every invocation and the invocation lives long enough to dequeue and execute workflows; for that pattern, enqueue work from your application with a DBOS client and run a separate worker invocation that launches DBOS and drains the queue.
 
 Any DBOS program MUST call DBOS.setConfig and DBOS.launch in its main function, like so.
 You MUST use this default configuration (changing the name as appropriate) unless otherwise specified.
@@ -236,34 +236,49 @@ main().catch(console.log);
 
 ### Scheduled Workflow
 
-You can schedule DBOS workflows to run exactly once per time interval.
-To do this, use the the `DBOS.registerScheduled` method or the `DBOS.scheduled` decorator and specify the schedule in crontab syntax.  For example:
+You can schedule DBOS workflows to run on a cron schedule. Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
 
-- A scheduled workflow MUST specify a crontab schedule.
-- It MUST take in two arguments, scheduled and actual time. Both are Date of when the workflow started.
+A scheduled workflow MUST take two arguments: a `Date` (the scheduled execution time) and a context object:
 
 ```typescript
-async function scheduledFunction(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
+import { DBOS } from "@dbos-inc/dbos-sdk";
+
+async function myPeriodicTask(scheduledTime: Date, context: unknown) {
+  DBOS.logger.info(`Running task scheduled for ${scheduledTime.toISOString()}`);
+}
+const myPeriodicTaskWorkflow = DBOS.registerWorkflow(myPeriodicTask);
+
+async function main() {
+  DBOS.setConfig({
+    "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+  });
+  await DBOS.launch();
+  await DBOS.applySchedules([
+    {
+      scheduleName: "my-task-schedule",
+      workflowFn: myPeriodicTaskWorkflow,
+      schedule: "*/5 * * * *", // Every 5 minutes
+    },
+  ]);
 }
 
-const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
-DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
+main().catch(console.log);
 ```
 
-Or using decorators:
-
-```typescript
-class ScheduledExample{
-  @DBOS.workflow()
-  @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-  }
-}
-```
-
-Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.listWorkflows({ scheduleName: "my-task-schedule" })`.
+- You MUST create schedules after `DBOS.launch()`; schedule methods throw if DBOS has not been launched.
+- Use `DBOS.createSchedule({ scheduleName, workflowFn, schedule, context?, options? })` to create a schedule with a crontab expression. It throws if a schedule with that name already exists.
+- Use `DBOS.applySchedules` to atomically create or update multiple schedules at once. To define static schedules on program start, use `DBOS.applySchedules`, which updates schedules that already exist.
+- Optional settings (`automaticBackfill`, `cronTimezone`, `queueName`) go in the `options` object of `DBOS.createSchedule`, but are top-level fields of each `DBOS.applySchedules` entry.
+- Use `DBOS.pauseSchedule` and `DBOS.resumeSchedule` to pause and resume schedules.
+- Use `DBOS.updateSchedule` to change only some fields of an existing schedule.
+- Use `DBOS.deleteSchedule` to delete a schedule.
+- Use `DBOS.listSchedules` and `DBOS.getSchedule` to inspect schedules.
+- Use `DBOS.backfillSchedule` to enqueue missed executions for a time range.
+- Use `DBOS.triggerSchedule` to immediately trigger a schedule.
+- Scheduled workflows MUST be free functions or static class methods, not methods on `ConfiguredInstance` objects.
+- Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.listWorkflows({ scheduleName: "my-task-schedule" })`.
 
 ## Workflow Documentation:
 
@@ -310,8 +325,8 @@ export class Example {
   // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Toolbox.stepOne();
-    await Toolbox.stepTwo();
+    await Example.stepOne();
+    await Example.stepTwo();
   }
 }
 
@@ -343,7 +358,7 @@ async function main() {
 ```
 
 After starting a workflow in the background, you can use `DBOS.retrieveWorkflow` to retrieve a workflow's handle from its ID.
-You can also retrieve a workflow's handle from outside of your DBOS application with 'DBOSClient.retrieveWorkflow`.
+You can also retrieve a workflow's handle from outside of your DBOS application with `DBOSClient.retrieveWorkflow`.
 
 If you need to run many workflows in the background and manage their concurrency or flow control, you can also use DBOS queues.
 
@@ -430,8 +445,8 @@ This is allowed because each step is started in a well-defined sequence before a
 By contrast, the following is not allowed:
 ```typescript
 const results = await Promise.allSettled([
-  async () => { await step1("arg1"); await step2("arg3"); },
-  async () => { await step3("arg2"); await step4("arg4"); },
+  (async () => { await step1("arg1"); await step2("arg3"); })(),
+  (async () => { await step3("arg2"); await step4("arg4"); })(),
 ]);
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
@@ -542,7 +557,7 @@ Submit a workflow for execution but delay it by `debouncePeriodMs`.
 Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounceTimeoutMs`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
 **Parameters:**
 - **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
@@ -587,7 +602,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 ### Send
 
 ```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
+DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
 ```
 
 You can call `DBOS.send()` to send a message to a workflow.
@@ -658,7 +673,7 @@ They are useful for publishing information about the status of a workflow or to 
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 
-Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if has already been published.
+Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if it has already been published.
 
 ### getEvent
 
@@ -698,15 +713,15 @@ static async checkoutWorkflow(...): Promise<void> {
 The HTTP handler that originally started the workflow uses `getEvent()` to await this URL, then redirects the customer to it:
 
 ```javascript
-static async webCheckout(...): Promise<void> {
+app.post("/checkout", async (req, res) => {
   const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
   const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
   if (url === null) {
-    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+    res.redirect(`${origin}/checkout/cancel`);
   } else {
-    DBOS.koaContext.redirect(url);
+    res.redirect(url);
   }
-}
+});
 ```
 
 ### Reliability Guarantees
@@ -857,6 +872,8 @@ export class Example {
 You **cannot** call, start, or enqueue workflows from within steps.
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+Steps are only checkpointed when called from a workflow: a step called outside a workflow runs as an ordinary function call, with no checkpoint, retries, or timeout.
+Only workflows can be started or enqueued; calling `DBOS.startWorkflow` on a step throws an error.
 
 ### Configurable Retries
 
@@ -868,8 +885,9 @@ Retries are configurable through arguments to the step decorator:
 export interface StepConfig {
   retriesAllowed?: boolean; // Should failures be retried? (default false)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
-  maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
+  maxAttempts?: number;     // Maximum number of attempts, including the first (default 3). If every attempt fails, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
+  timeoutMS?: number;       // Maximum duration in milliseconds of a single attempt of the step.
 }
 ```
 
@@ -910,7 +928,7 @@ static async exampleStep() {
 }
 ```
 
-If a step exhausts all `maxAttempts` retries, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
+If a step fails on all `maxAttempts` attempts, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
 If that exception is not caught, the workflow terminates.
 
 ### Step Timeouts
@@ -944,6 +962,8 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 await DBOS.registerQueue("example_queue");
 ```
 
+For brevity, some snippets below omit `DBOS.setConfig`, which you MUST still call before `DBOS.launch()`.
+
 Full signature:
 
 ```typescript
@@ -965,6 +985,8 @@ interface RegisterQueueOptions {
   onConflict?: 'update_if_latest_version' | 'always_update' | 'never_update';
 }
 ```
+
+Queue names must be unique within the system database, and names starting with `_dbos_` are reserved.
 
 Setting any partition limit makes the queue partitioned: every enqueue must supply a `queuePartitionKey`, and deduplication is not supported. The queue-wide limits still apply across all partitions.
 
@@ -1065,7 +1087,11 @@ For example, this code registers `pipelineQueue` and enqueues the `dataPipeline`
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
+    // The name of the application that runs the data pipeline
+    applicationName: "data-processing-service",
+});
 
 await client.registerQueue("pipelineQueue");
 
@@ -1096,8 +1122,6 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 await DBOS.registerQueue("example_queue", { workerConcurrency: 5 });
 ```
 
-Note that DBOS uses `executorID` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through configuration.
-
 #### Global Concurrency
 
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
@@ -1116,7 +1140,7 @@ await DBOS.registerQueue("example_queue", { globalConcurrency: 10 });
 
 #### In-Order Processing
 
-You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+You can use a queue with `globalConcurrency: 1` to guarantee sequential, in-order processing of events.
 Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
@@ -1140,6 +1164,11 @@ app.get("/events/:event", async (req, res) => {
 
 // Launch DBOS, register the queue, and start the server
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+  });
   await DBOS.launch();
   await DBOS.registerQueue("in_order_queue", { globalConcurrency: 1 });
   app.listen(3000, () => {});
@@ -1247,7 +1276,7 @@ Deduplication is not supported on partitioned queues.
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -1276,11 +1305,11 @@ async function main() {
 ### Priority
 
 You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
-Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**.
 Priority is enabled on every queue; no extra configuration is needed.
 
 :::tip
-Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+Workflows without assigned priorities have priority `0`, the highest priority.
 :::
 
 Example syntax:
@@ -1303,10 +1332,10 @@ async function main() {
 
 ### Explicit Queue Listening
 
-By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+By default, a process running DBOS listens to (dequeues workflows from) all queues owned by its application in its system database.
 However, sometimes you only want a process to listen to a specific list of queues.
 You can configure `listenQueues` in your DBOS configuration to explicitly tell a process running DBOS to only listen to a specific set of queues.
-Each entry is either a `WorkflowQueue` instance or a queue name; names that don't match any queue at launch are deferred until a database-backed queue is registered with that name.
+Each entry is a queue name; names that don't match any queue at launch are deferred until a queue is registered with that name.
 
 This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
 For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
@@ -1339,8 +1368,9 @@ Note that `listenQueues` only controls what workflows are dequeued, not what wor
 ## Classes
 
 You can use class instance methods as workflows and steps.
-Any class instance method can be freely used as a step using the DBOS.step decorator or DBOS.runstep; there are no special requirements.
-To use a class instance method as a workflow, you must use the DBOS.workflow decorator and the class must inherit from `ConfiguredInstance`.
+Any class instance method can be freely used as a step using DBOS.runStep; there are no special requirements.
+To use the DBOS.step decorator on a class instance method, the class must inherit from `ConfiguredInstance`.
+To use a class instance method as a workflow, the class must inherit from `ConfiguredInstance`, and you must either use the DBOS.workflow decorator or register the method with DBOS.registerWorkflow, passing the class's prototype (`MyClass.prototype`) as `ctorOrProto`.
 For example:
 
 ```typescript
@@ -1348,7 +1378,7 @@ class MyClass extends ConfiguredInstance {
   cfg: MyConfig;
   constructor(name: string, config: MyConfig) {
     super(name);
-    this.cfg = cfg;
+    this.cfg = config;
   }
 
   override async initialize() : Promise<void> {
@@ -1361,14 +1391,14 @@ class MyClass extends ConfiguredInstance {
   }
 }
 
-const myClassInstance = new MyClass('instanceA');
+const myClassInstance = new MyClass('instanceA', myConfig);
 ```
 
 When you create a new instance of such a class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
 This `name` should be unique among instances of the same class.
 Additionally, all `ConfiguredInstance` classes must be instantiated before DBOS.launch() is called.
 
-The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+The reason for these requirements is to enable workflow recovery.  When you create a new instance of a `ConfiguredInstance` class, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 You should AVOID using ConfiguredInstance if at all possible and instead use registerWorkflow on regular non-class functions.
 
 ### Testing DBOS Functions
@@ -1409,8 +1439,9 @@ describe('example integration tests', () => {
   beforeEach(async () => {
     const databaseUrl = process.env.DBOS_TEST_DATABASE_URL;
 
-    // Shut down DBOS (in case a previous test launched it) and reset the database.
+    // Shut down DBOS (in case a previous test launched it).
     await DBOS.shutdown();
+    // Reset the system database here (for example, drop and recreate it).
 
     // Configure and launch DBOS
     const dbosTestConfig: DBOSConfig = {
@@ -1451,7 +1482,7 @@ Workflow handles have the following methods:
 ### handle.workflowID
 
 ```typescript
-handle.workflowID(): string;
+handle.workflowID: string;
 ```
 
 Retrieve the ID of the workflow.
@@ -1466,7 +1497,7 @@ handle.getResult(
 
 Wait for the workflow to complete, then return its result.
 The optional `pollingIntervalMs` sets the interval between system database polls while waiting.
-It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow` or the DBOS Client), not to a handle from `DBOS.startWorkflow` in the same process.
+It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow`, from `DBOS.startWorkflow` with a `queueName`, or from the DBOS Client), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
 
 ### handle.getStatus
 
@@ -1519,7 +1550,7 @@ export interface WorkflowStatus {
   readonly deadlineEpochMS?: number;
   // Unique queue deduplication ID, if any. Deduplication IDs are unset when the workflow completes.
   readonly deduplicationID?: string;
-  // Priority of the workflow on a queue, starting from 1 ~ 2,147,483,647. Default 0 (highest priority).
+  // Priority of the workflow on a queue, 0 ~ 2,147,483,647. Default 0 (highest priority).
   readonly priority: number;
   // If this workflow is enqueued on a partitioned queue, its partition key
   readonly queuePartitionKey?: string;
@@ -1528,6 +1559,11 @@ export interface WorkflowStatus {
   readonly forkedFrom?: string;
   // Whether this workflow has ever been forked from by another workflow.
   readonly wasForkedFrom?: boolean;
+
+  // Custom key-value attributes attached to the workflow at creation, if any.
+  readonly attributes?: Record<string, unknown>;
+  // If this workflow was enqueued by a named schedule, that schedule's name.
+  readonly scheduleName?: string;
 }
 ```
 
@@ -1562,10 +1598,12 @@ This object has the following properties:
 interface StepStatus {
   // The unique ID of this step in its workflow.
   stepID: number;
-  // For steps with automatic retries, which attempt number (zero-indexed) is currently executing.
+  // For steps with automatic retries, which attempt number (starting from 1) is currently executing.
   currentAttempt?: number;
   // For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
   maxAttempts?: number;
+  // For steps with a timeout, an AbortSignal that fires when the current attempt's timeout expires.
+  timeoutSignal?: AbortSignal;
 }
 ```
 
@@ -1599,7 +1637,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string; // Retrieve workflows with this name.
-  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status or any of these statuses (each must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
@@ -1610,6 +1648,8 @@ interface GetWorkflowsInput {
   queuesOnly?: boolean; // Return only workflows that are actively enqueued
   forkedFrom?: string; // Get workflows forked from this workflow ID.
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
+  attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
+  scheduleName?: string; // Retrieve workflows enqueued by this named schedule.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -1628,8 +1668,8 @@ DBOS.listQueuedWorkflows(
 ): Promise<WorkflowStatus[]>
 ```
 
-Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING` or `ENQUEUED`) workflows matching specified criteria.
-The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set.
+Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING`, `ENQUEUED`, or `DELAYED`) workflows matching specified criteria.
+The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
 
 ### DBOS.listWorkflowSteps
 ```typescript
@@ -1677,8 +1717,8 @@ DBOS.setWorkflowPriority(
 ```
 
 Set the priority of a queued workflow.
-Only affects workflows with `ENQUEUED` status.
-Priority value must be between `1` and `2,147,483,647`. Lower values are dequeued first.
+Only affects workflows with `ENQUEUED` or `DELAYED` status.
+Priority value must be between `0` and `2,147,483,647`. Lower values are dequeued first.
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
 
 ### DBOS.setWorkflowDelay
@@ -1708,7 +1748,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 If `cancelChildren` is true, also cancel all child workflows recursively.
 
 ### DBOS.resumeWorkflow
@@ -1768,6 +1808,15 @@ DBOS supports two strategies for safely upgrading workflow code: **patching** an
 In patching, the result of a call to `DBOS.patch()` is used to conditionally execute the new code.
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
+
+To use patching, you MUST enable it in the configuration; otherwise `DBOS.patch()` and `DBOS.deprecatePatch()` throw an error:
+
+```typescript
+const config: DBOSConfig = {
+  // ...
+  enablePatching: true,
+}
+```
 
 ```typescript
 DBOS.patch(
@@ -1854,11 +1903,11 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
 All workflows are tagged with the application version on which they started.
-By default, application version is automatically computed from a hash of workflow source code.
+By default, application version is automatically computed from a hash of workflow source code (or is fixed to `PATCHING_ENABLED` if patching is enabled).
 However, you can set your own version through configuration.
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   applicationVersion: '1.0.0',
 }
@@ -1887,7 +1936,7 @@ All fields except `name` are optional.
 
 ```javascript
 export interface DBOSConfig {
-  name?: string;
+  name: string;
   applicationVersion?: string;
   executorID?: string;
 
@@ -1896,6 +1945,7 @@ export interface DBOSConfig {
   systemDatabasePollingConcurrency?: number;
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
+  observabilityQueryTimeoutMs?: number;
 
   enableOTLP?: boolean;
   logLevel?: string;
@@ -1903,12 +1953,10 @@ export interface DBOSConfig {
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
 
-  runAdminServer?: boolean;
-  adminPort?: number;
-
-  listenQueues?: (WorkflowQueue | string)[];
+  listenQueues?: string[];
   maxConcurrentQueueDispatches?: number;
 
+  enablePatching?: boolean;
   serializer?: DBOSSerializer;
 }
 ```
@@ -1931,16 +1979,16 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabasePollingConcurrency**: The maximum number of database-backed polling reads from wait operations (such as `getResult`, `waitAll`, `waitFirst`, `recv`, and `getEvent`) that may run concurrently against the system database pool. This prevents high-fan-out polling from starving control-plane operations such as enqueue/dequeue, status writes, recovery, and cancellation. Defaults to half the `systemDatabasePoolSize` (minimum 1). Set to a non-positive value to disable the limit.
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
-- **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
+- **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries against the system database (such as `DBOS.listWorkflows`, `DBOS.listQueuedWorkflows`, and `DBOS.listWorkflowSteps`), so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
+- **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False (True in DBOS Cloud).
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
 - **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
-- **otlpTracesEndpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible receivers.
-- **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
-- **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to False.
-- **adminPort**: The port on which the admin server runs. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to 3001. Has no effect unless `runAdminServer` is set.
-- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
+- **otlpTracesEndpoints**: A list of OTLP-compatible receivers to which to send traces. Only used when `enableOTLP` is enabled.
+- **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
 - **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time. This prevents dequeuing from a large queue (especially a partitioned queue with many active partitions) from delaying work on smaller queues. A single queue is never dequeued from twice concurrently in the same process. Does not affect workflow concurrency, rate limits, or `systemDatabasePollingConcurrency`.
-- **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `stringify` and `parse` methods.
+- **enablePatching**: Enable workflow patching with `DBOS.patch()` and `DBOS.deprecatePatch()`. Defaults to false.
+- **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `name`, `stringify`, and `parse` methods.
 
 ````
 

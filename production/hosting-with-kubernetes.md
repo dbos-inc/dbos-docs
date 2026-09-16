@@ -89,10 +89,10 @@ APP_ROLE_PASSWORD='choose-another-secure-password'
 CONDUCTOR_API_KEY='your-api-key'
 
 # Conductor URL
-# DBOS Cloud: wss://conductor.dbos.dev/
+# DBOS Cloud: wss://cloud.dbos.dev/conductor/v1alpha1
 # Self-hosted (same cluster): ws://conductor.dbos.svc.cluster.local:8090
 # Self-hosted (external): wss://your-conductor-hostname/conductor/
-CONDUCTOR_URL='wss://conductor.dbos.dev/'
+CONDUCTOR_URL='wss://cloud.dbos.dev/conductor/v1alpha1'
 ```
 
 </details>
@@ -645,7 +645,7 @@ spec:
 ```
 
 Replace `${CONDUCTOR_URL}` with the value you set earlier:
-- **DBOS Cloud**: `wss://conductor.dbos.dev/`
+- **DBOS Cloud**: `wss://cloud.dbos.dev/conductor/v1alpha1`
 - **Self-hosted (same cluster)**: `ws://conductor.dbos.svc.cluster.local:8090`
 - **Self-hosted (external)**: `wss://<your-conductor-hostname>/conductor/`
 

@@ -49,7 +49,6 @@ async function main() {
     name: "my-nextjs-app",
     applicationVersion: "0.1.0",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
-    runAdminServer: false,
   });
   await DBOS.launch();
   await DBOS.registerQueue("task_queue");

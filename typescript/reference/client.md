@@ -1,11 +1,11 @@
 # DBOS Client
 
 > `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
-> `DBOSClient` includes methods similar to `DBOS`.
-> that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
+> `DBOSClient` includes methods similar to `DBOS`
+> that make sense to be used outside of a DBOS workflow or step, such as `enqueue` or `getEvent`.
 
 :::note 
-`DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package that used by DBOS applications.
+`DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package used by DBOS applications.
 Where DBOS applications use the static `DBOS` class,
 external applications use the `DBOSClient` class instead.
 :::
@@ -13,7 +13,7 @@ external applications use the `DBOSClient` class instead.
 ### class DBOSClient
 
 ```ts
-interface EnqueueOptions {
+interface ClientEnqueueOptions {
     workflowName: string;
     workflowClassName?: string;
     workflowConfigName?: string;
@@ -26,12 +26,15 @@ interface EnqueueOptions {
     delaySeconds?: number;
     queuePartitionKey?: string;
     duplicationPolicy?: 'reject' | 'return-existing';
+    serializationType?: WorkflowSerializationFormat;
     attributes?: Record<string, unknown>;
+    authenticatedUser?: string;
+    authenticatedRoles?: string[];
     applicationName?: string;
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -44,11 +47,13 @@ class DBOSClient {
         options: ClientEnqueueOptions,
         ...args: Parameters<T>
     ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
-    send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
+    enqueuePortable<T = unknown>(options: ClientEnqueueOptions, positionalArgs: unknown[], namedArgs?: { [key: string]: unknown }): Promise<WorkflowHandle<T>>;
+    enqueuePortableInTransaction<T = unknown>(client: ClientBase, options: ClientEnqueueOptions, positionalArgs: unknown[], namedArgs?: { [key: string]: unknown }): Promise<WorkflowHandle<T>>;
+    send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     sendInTransaction<T>(client: ClientBase, destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
-    waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
+    waitFirst(handles: WorkflowHandle<unknown>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<unknown>>;
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
@@ -58,11 +63,14 @@ class DBOSClient {
     listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined>;
 
+    setWorkflowPriority(workflowID: string, priority: number): Promise<void>;
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
     cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
     resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
     resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
+    deleteWorkflow(workflowID: string, deleteChildren?: boolean): Promise<void>;
+    deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
         options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string> }): Promise<string>;
 
@@ -103,13 +111,14 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabasePollingConcurrency**: An optional maximum number of concurrent database-backed polling reads from wait operations. See [`systemDatabasePollingConcurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
 - **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
 - **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
+- **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 
 Example:
 
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 ```
 
 #### `destroy`
@@ -131,28 +140,30 @@ However, since `DBOSClient` runs outside the DBOS application, the metadata must
 Required metadata includes:
 
 * **workflowName**: The name of the workflow method being enqueued.
-* **queueName**: The name of the queue to enqueue the workflow on.
+* **queueName**: The name of the queue to enqueue the workflow on. The queue must be registered (with [`registerQueue`](#registerqueue) or [`DBOS.registerQueue`](./queues.md#dbosregisterqueue)); a workflow enqueued on an unregistered queue stays `ENQUEUED` until the queue is registered.
 
 Additional but optional metadata includes:
 
 * **workflowClassName**: The name of the class the workflow method is a member of, if any.
 * **workflowConfigName**: If the workflow is an instance method (of class `workflowClassName`), the name of the [instance](./workflows-steps.md#instance-method-workflows).
 * **workflowID**: The unique ID for the enqueued workflow. If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
-* **appVersion**: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued.
+* **appVersion**: The version of your application that should process this workflow. If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
-* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
-* **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+* **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
 * **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
-* **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned. In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+* **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
 * **duplicationPolicy**: How to handle a collision with another workflow that has the same `deduplicationID` on the same queue. Defaults to `'reject'`.
   * `'reject'`: throw `DBOSQueueDuplicatedError`.
   * `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 * **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
 * **attributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](./methods.md#workflow-status) and are searchable via the `attributes` filter of [`listWorkflows`](./methods.md#dboslistworkflows).
+* **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`.
+* **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`.
 * **applicationName**: The application that owns and runs the enqueued workflow. Defaults to the client's own [`applicationName`](#create). Always set `applicationName` either here or in the client constructor if multiple applications share a system database.
 
-In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
-These are passed to `enqueue` after the initial `EnqueueOptions` parameter.
+In addition to the `ClientEnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
+These are passed to `enqueue` after the initial `ClientEnqueueOptions` parameter.
 
 Since DBOS Client works independently of your DBOS application code, `enqueue` accepts whatever arguments you provide it without verifying if they match the workflow's expected argument types.
 However, you can get type safety by providing a function declaration type parameter to `enqueue`.
@@ -205,6 +216,8 @@ You can copy or import the function type declaration from your application's
 [generated declaration file (aka.d.ts file)](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html).
 ::: 
 
+For a workflow that takes named arguments (for example, a Python workflow with keyword arguments), use `enqueuePortable(options, positionalArgs, namedArgs?)`, which is the same operation but serializes arguments in [portable format](../../explanations/portable-workflows.md).
+
 #### `enqueueInTransaction`
 
 ```typescript
@@ -218,7 +231,7 @@ enqueueInTransaction<T extends (...args: any[]) => Promise<any>>(
 Similar to [`enqueue`](#enqueue), but performs the enqueue write inside a caller-owned transaction instead of in its own transaction.
 This lets you enqueue a workflow **atomically** with your own database writes: either both are committed or both are rolled back.
 Pass a `node-postgres` [`Client`](https://node-postgres.com/apis/client) or [`PoolClient`](https://node-postgres.com/apis/pool) with an open transaction as `client`.
-The remaining parameters are the same as [`enqueue`](#enqueue).
+The remaining parameters are the same as [`enqueue`](#enqueue), except that `duplicationPolicy: 'return-existing'` is not supported (throws an error).
 
 You own the transaction: `enqueueInTransaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
@@ -329,7 +342,7 @@ and the [ReturnType Utility Class](https://www.typescriptlang.org/docs/handbook/
 Example:
 
 ```ts
-const handle = client.retrieveWorkflow<ReturnType<IndexDocument>>(documentWFID);
+const handle = client.retrieveWorkflow<ReturnType<typeof DocumentDetective.indexDocument>>(documentWFID);
 const pageCount = await handle.getResult();
 ```
 
@@ -346,7 +359,7 @@ Wait for any one of the given workflow handles to complete and return the first 
 Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst), including the optional `pollingIntervalMs`.
 
 **Parameters:**
-- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty or contains duplicate workflow IDs.
 
 #### `waitAll`
 
@@ -399,6 +412,7 @@ Similar to [`DBOS.readStream`](./methods.md#dbosreadstream), except that client 
 
 **Throws:**
 - `DBOSStreamTimeoutError`: If `timeoutSeconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflowID` exists.
 
 **Example:**
 
@@ -436,6 +450,7 @@ Similar to [`DBOS.readStreamOffset`](./methods.md#dbosreadstreamoffset).
 
 **Throws:**
 - `DBOSStreamTimeoutError`: If `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflowID` exists.
 
 **Example:**
 
@@ -454,27 +469,30 @@ Please see [`DBOS.getWorkflowStatus`](./methods.md#dbosgetworkflowstatus) for mo
 #### `listWorkflows`
 
 Retrieves information about workflow execution history. 
-Please see [`DBOS.listWorkflows`](./methods.md#dboslistworkflows) for more for more information.
-If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create); a client with no application name retrieves every application's workflows.
+Please see [`DBOS.listWorkflows`](./methods.md#dboslistworkflows) for more information.
+If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
+Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 #### `listQueuedWorkflows`
 
-Retrieves information about workflow execution history for a given workflow queue. 
-Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more for more information.
-If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create); a client with no application name retrieves every application's workflows.
+Retrieves information about currently enqueued workflows (status `DELAYED`, `ENQUEUED`, or `PENDING`).
+Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more information.
+If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
+Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 #### `listWorkflowSteps`
 
 Retrieves information about the steps executed in a specified workflow. 
-If the specified workflow is not found, `listWorkflowSteps` returns undefined
-Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for more for more information.
+If the specified workflow is not found, `listWorkflowSteps` returns undefined.
+Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for more information.
+This query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 ### Workflow Management
 
 #### `cancelWorkflow`
 
 Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
-Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more for more information.
+Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more information.
 
 #### `cancelWorkflows`
 
@@ -483,7 +501,7 @@ Please see [`DBOS.cancelWorkflows`](./methods.md#dboscancelworkflows) for more i
 
 #### `setWorkflowPriority`
 
-Sets the priority of a queued workflow. Only affects workflows with `ENQUEUED` status.
+Sets the priority of a queued workflow. Only affects workflows with `ENQUEUED` or `DELAYED` status.
 Please see [`DBOS.setWorkflowPriority`](./methods.md#dbossetworkflowpriority) for more information.
 
 #### `setWorkflowDelay`
@@ -494,7 +512,7 @@ Please see [`DBOS.setWorkflowDelay`](./methods.md#dbossetworkflowdelay) for more
 
 #### `resumeWorkflow`
 
-Resumes a workflow that had stopped during execution (due to cancellation or error).
+Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts).
 Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more information.
 
 #### `resumeWorkflows`
@@ -541,7 +559,7 @@ Options have the same meaning as on `DBOS.registerQueue` except for `onConflict`
 **Example syntax:**
 
 ```ts
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 await client.registerQueue("email", {
   globalConcurrency: 10,
   rateLimit: { limitPerPeriod: 100, periodSec: 60 },
@@ -566,7 +584,7 @@ The returned queue is bound to this client's system database; you can read its c
 client.listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>
 ```
 
-List all database-backed queues registered in the system database.
+List all queues registered in the system database.
 Similar to [`DBOS.listQueues`](./queues.md#dboslistqueues).
 If `applicationName` is unset, lists only queues owned by the client's own [`applicationName`](#create); a client with no application name lists every application's queues.
 The returned queues are bound to this client's system database, as with [`retrieveQueue`](#retrievequeue).
@@ -615,7 +633,7 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 
 **Parameters:**
 - **scheduleName**: Unique name identifying this schedule.
-- **workflowName**: Fully-qualified name of the workflow function to invoke.
+- **workflowName**: The name of the workflow function to invoke.
 - **workflowClassName**: The class name if the workflow is a static method on a class.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
@@ -755,6 +773,7 @@ client.listApplicationVersions(): Promise<VersionInfo[]>
 Return all registered application versions, ordered by timestamp descending (newest first).
 Similar to [`DBOS.listApplicationVersions`](./methods.md#dboslistapplicationversions).
 If the client has an [`applicationName`](#create), only versions registered by that application (plus versions owned by no application) are returned; otherwise, every application's versions are returned.
+This query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 ### getLatestApplicationVersion
 
@@ -763,6 +782,7 @@ client.getLatestApplicationVersion(): Promise<VersionInfo>
 ```
 
 Return the latest application version (the one with the highest timestamp).
+If the client has an [`applicationName`](#create), only versions registered by that application (plus versions owned by no application) are considered; otherwise, every application's versions are.
 Throws if no versions are registered.
 Similar to [`DBOS.getLatestApplicationVersion`](./methods.md#dbosgetlatestapplicationversion).
 
@@ -840,6 +860,7 @@ interface DebouncerClientConfig {
   workflowClassName?: string;
   startWorkflowParams?: StartWorkflowParams;
   debounceTimeoutMs?: number;
+  serializationType?: WorkflowSerializationFormat;
   applicationName?: string;
 }
 ```
@@ -853,6 +874,7 @@ Similar to [`Debouncer`](./methods.md#debouncer) but takes in a DBOSClient and w
   - **workflowClassName**: The name of the class the workflow method is a member of, if any.
   - **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](./methods.md#dbosstartworkflow). Applied to all workflows started from this debouncer.
   - **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+  - **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments. Set to `'portable'` for a workflow registered with portable serialization.
   - **applicationName**: Debounce on behalf of this application. Defaults to the `applicationName` in `startWorkflowParams.enqueueOptions`, then to the client's own.
 
 ### debouncerClient.debounce
@@ -873,7 +895,7 @@ Similar to [`Debouncer.debounce`](./methods.md#debouncerdebounce).
 import { DBOSClient, DebouncerClient } from "@dbos-inc/dbos-sdk";
 
 const client = await DBOSClient.create({
-  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!
 });
 
 const debouncer = new DebouncerClient(client, {

@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.b9dc8877.js" defer="defer"></script>
-<script src="/assets/js/main.73376021.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.cf672e27.js" defer="defer"></script>
+<script src="/assets/js/main.27ec0dad.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -33,6 +33,7 @@ Ownership determines which application runs what:</p>
 <li class="">A schedule is fired only by the application that created it, and its workflows are owned by that application.</li>
 <li class="">Application versions are tracked per application, so one application&#x27;s deployments do not affect which version its peers consider latest.</li>
 </ul>
+<p><a class="" href="/production/retention">Retention policies</a> are an exception: their time and rows thresholds apply to the entire system database, including workflows owned by other applications. The global timeout remains scoped to the application that configures it.</p>
 <p>Queue, schedule, and version names remain globally unique across all applications sharing a system database; registering a name that a different application already owns raises an error.
 Workflow IDs are also unique across the entire system database, so ID-addressed operations (retrieving a workflow&#x27;s handle, status, or result by ID, and sending messages or reading events and streams) work across applications regardless of ownership.
 Observability queries (<code>list_workflows</code>, <code>list_queues</code>, <code>list_schedules</code>) are scoped to the calling application by default.</p>

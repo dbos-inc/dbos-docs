@@ -35,7 +35,7 @@ def greeting_workflow(name: str, note: str):
 ```
 
 **Parameters:**
-- `name`: A name for this workflow. If not provided, the function's fully qualified name is used.
+- `name`: A name for this workflow. If not provided, the function's qualified name (`__qualname__`, which does not include its module) is used. Workflow names must be unique: registering workflows with the same name from different modules raises a `DBOSException`.
 - `max_recovery_attempts`: The maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
@@ -72,76 +72,14 @@ def example_step():
 ```
 
 **Parameters:**
-- `name`: A name for this step. If not provided, the function's fully qualified name is used.
+- `name`: A name for this step. If not provided, the function's qualified name (`__qualname__`) is used.
 - `retries_allowed`: Whether to retry the step if it throws an exception.
 - `interval_seconds`: How long to wait before the initial retry.
-- `max_attempts`: How many times to retry a step that is throwing exceptions.
+- `max_attempts`: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
 - `backoff_rate`: How much to multiplicatively increase `interval_seconds` between retries.
-- `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Async predicates are only supported for async steps.
+- `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Ignored when `retries_allowed` is `False`. Async predicates are only supported for async steps.
 - `preemptible`: If `True`, the step is cancelled immediately when its workflow is cancelled, rather than running to completion. Only supported for async steps.
 - `timeout_seconds`: If set, cancel the step and raise `DBOSStepTimeoutError` if it runs for longer than this many seconds. Only supported for async steps, and must be positive and finite. Each retry attempt gets a fresh timeout. See [Step Timeouts](../tutorials/step-tutorial.md#step-timeouts).
-
-### transaction
-
-```python
-DBOS.transaction(
-    isolation_level: str = "SERIALIZABLE"
-    *,
-    name: Optional[str] = None,
-)
-```
-
-Transactions are a special type of step that are optimized for database operations.
-They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
-They provide database access through the `DBOS.sql_session` context variable.
-
-**Example:**
-```python
-@DBOS.transaction()
-def example_insert(name: str, note: str) -> None:
-    # Insert a new greeting into the database
-    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
-    DBOS.sql_session.execute(sql, {"name": name, "note": note})
-```
-
-**Parameters:**
-- `isolation_level`: The isolation level with which to run the transaction. Must be one of `SERIALIZABLE`, `REPEATABLE READ`, or `READ COMMITTED`. Defaults to `SERIALIZABLE`.
-- `name`: A name for this transaction. If not provided, the function's fully qualified name is used.
-
-### scheduled
-
-```python
-DBOS.scheduled(
-    cron: str
-)
-```
-
-Run a function on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax. See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
-
-The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).  Functions within classes may be marked as `@staticmethod` to meet this requirement.
-
-**Example:**
-```python
-@DBOS.scheduled('* * * * *') # crontab syntax to run once every minute
-@DBOS.workflow()
-def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
-    DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
-```
-
-**Parameters:**
-- `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax. DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, which is able to do second repetition and by default we use seconds as the first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)). The DBOS variant contains 5 or 6 items, separated by spaces:
-
-```
- ┌────────────── second (optional)
- │ ┌──────────── minute
- │ │ ┌────────── hour
- │ │ │ ┌──────── day of month
- │ │ │ │ ┌────── month
- │ │ │ │ │ ┌──── day of week
- │ │ │ │ │ │
- │ │ │ │ │ │
- * * * * * *
-```
 
 ### required_roles
 
@@ -151,7 +89,7 @@ DBOS.required_roles(
 )
 ```
 
-The `@DBOS.dbos_required_roles` decorator applies role-based security to the decorated function.  The authenticated user must have at least one of the roles on the `roles` list in order to access the function.
+The `@DBOS.required_roles` decorator applies role-based security to the decorated function.  The authenticated user must have at least one of the roles on the `roles` list in order to access the function.
 
 **Parameters:**
 - `roles`: List of required roles applied to the decorated function.
@@ -159,7 +97,7 @@ The `@DBOS.dbos_required_roles` decorator applies role-based security to the dec
 **Example:**
 ```python
 @DBOS.workflow()
-@DBOS.required_roles(["support","admin")
+@DBOS.required_roles(["support","admin"])
 def my_support_workflow():
   pass # Function accessible only with "support" or "admin" role
 ```
@@ -170,7 +108,6 @@ def my_support_workflow():
 DBOS.kafka_consumer(
         config: dict[str, Any],
         topics: list[str],
-        in_order: bool = False,
         *,
         ordering: Optional[Literal["none", "partition", "topic"]] = None,
         batch_size: int = 250,
@@ -179,23 +116,23 @@ DBOS.kafka_consumer(
 ```
 
 Runs a function for each Kafka message received on the specified topic(s). 
-Uses the Kafka message's topic, partition and offset to create a unique [workflow id](../reference/contexts#setworkflowid) to ensure once and only once execution.
+Uses the Kafka message's topic, partition, and offset and the consumer group ID to create a unique [workflow id](../reference/contexts#setworkflowid) to ensure once and only once execution.
 Takes a configuration dictionary and a list of topics to consume. 
 The decorated function must take a KafkaMessage as its only parameter.
 
 **Parameters:**
-- `config`: a dictionary of config settings. Information on required settings follows with full configuration setting details available in the [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
+- `config`: a dictionary of config settings. Information on key settings follows with full configuration setting details available in the [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
   - `bootstrap.servers`: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
     This list should be in the form host1:port1,host2:port2,...
   - `group.id`: A unique string that identifies the consumer group this consumer belongs to.
+    Setting it is recommended: if it is omitted, DBOS generates one from the function name and topics and logs a warning.
 - `topics`: a list of Kafka topics to subscribe to. A topic prefixed with `^` is treated as a regular expression.
 - `ordering`: Controls how messages are processed. See [In-Order Processing](../tutorials/kafka-integration.md#in-order-processing).
   - `"none"` (default): messages are processed in parallel.
   - `"partition"`: messages are processed serially per topic partition (preserving Kafka's per-partition delivery order) and in parallel across partitions.
   - `"topic"`: messages are processed serially per topic.
 - `batch_size`: The maximum number of messages consumed from Kafka and durably enqueued per batch. Defaults to 250.
-- `queue_name`: The name of an optional [queue](./queues.md) on which consumer workflows run, for example to configure concurrency or rate limits. Only valid with `ordering="none"`; ordered consumers share an internal partitioned queue. The named queue must not be a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
-- `in_order`: **(Deprecated)** Alias for `ordering="topic"`. Use `ordering` instead.
+- `queue_name`: The name of an optional [queue](./queues.md) on which consumer workflows run, for example to configure concurrency or rate limits. Only valid with `ordering="none"`; ordered consumers share an internal partitioned queue. The named queue must not be a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues). If you use [`DBOS.listen_queues`](./dbos-class.md#listen_queues), you must include this queue.
 
 **Example**
 ```python
@@ -216,6 +153,7 @@ def test_kafka_workflow(msg: KafkaMessage):
 Python workflows can specify a `validate_args` parameter on `@DBOS.workflow()`.
 The built-in `pydantic_args_validator` sentinel builds a [Pydantic](https://docs.pydantic.dev/) validator from the function's type hints at decoration time.
 This validates argument types and coerces compatible values (for example, ISO date strings to `datetime` objects).
+Validation runs when a workflow is dequeued for execution (for example, after being enqueued, recovered, or forked), not when the workflow function is called directly or started with `DBOS.start_workflow`.
 
 ```python
 from datetime import datetime
@@ -267,11 +205,11 @@ Classes with instance methods should extend from [`DBOSConfiguredInstance`](#dbo
 
 ```python
 DBOS.dbos_class(
-  class_name: Optional[str]
+  class_name: Optional[str] = None
 )
 ```
 
-The `@DBOS.dbos_class` decorator should be applied to all classes with DBOS workflow, transaction, and step functions.  This decorator assists in making sure all functions are properly registered with the class and provided with class-level configuration information.
+The `@DBOS.dbos_class` decorator should be applied to all classes with DBOS workflow and step functions.  This decorator assists in making sure all functions are properly registered with the class and provided with class-level configuration information.
 
 **Parameters**
 - `class_name` (Optional): A custom name to register the class with DBOS. By default, DBOS uses the class’s qualified name (`cls.__qualname__`) for identification. This can be overridden by providing a user-defined name, which may differ from the qualified name. All class names registered with DBOS must be globally unique.
@@ -319,7 +257,7 @@ class MyClass:
 
 ```python
 DBOSConfiguredInstance(
-  instance_name: str
+  config_name: str
 )
 ```
 
@@ -328,12 +266,12 @@ DBOSConfiguredInstance(
 `DBOSConfiguredInstance` also registers the class instance with the DBOS recovery system.
 
 **Parameters:**
-- `instance_name`: The name of the instance, for recording in workflow database records
+- `config_name`: The name of the instance, for recording in workflow database records
 
 **Example:**
 ```python
-    @DBOS.dbos_class()
-    class DBOSTestClass(DBOSConfiguredInstance):
-        def __init__(self) -> None:
-            super().__init__("instance1")
+@DBOS.dbos_class()
+class DBOSTestClass(DBOSConfiguredInstance):
+    def __init__(self) -> None:
+        super().__init__("instance1")
 ```
