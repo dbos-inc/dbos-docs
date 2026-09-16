@@ -376,7 +376,7 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./golang/
 <article className="col col--6">
 
 Install the DBOS Go CLI, then initialize a starter application and enter its directory.
-DBOS requires Go 1.23.0 or higher.
+DBOS requires Go 1.25.0 or higher.
 </article>
 
 <article className="col col--6">

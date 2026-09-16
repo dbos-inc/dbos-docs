@@ -13,13 +13,13 @@ Audit logs require a [DBOS Enterprise](https://www.dbos.dev/dbos-pricing) plan.
 
 ## The Audit Logs Endpoint
 
-Conductor exposes an organization's audit log at:
+Conductor exposes an organization's audit log through the [Conductor API](./conductor-api.md) at:
 
 ```
-https://cloud.dbos.dev/conductor/v1alpha1/api/{org}/audit-logs
+GET https://cloud.dbos.dev/conductor/v2/orgs/{orgName}/audit-logs
 ```
 
-`{org}` is your DBOS organization name.
+`{orgName}` is your DBOS organization name.
 
 The endpoint is authenticated with a Conductor API key, passed as a bearer token in the `Authorization` header.
 You can generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey) of the DBOS Console. **Make sure the key has the [`organization.read`](./permissions.md) permission.**
@@ -27,11 +27,15 @@ You can generate an API key from the [key settings page](https://console.dbos.de
 A read is a simple authenticated `GET`:
 
 ```bash
-curl -G https://cloud.dbos.dev/conductor/v1alpha1/api/my-org/audit-logs \
+curl -G https://cloud.dbos.dev/conductor/v2/orgs/my_org/audit-logs \
   -H "Authorization: Bearer $DBOS_API_KEY" \
   --data-urlencode "operation=workflow.cancel" \
-  --data-urlencode "page_size=50"
+  --data-urlencode "limit=50"
 ```
+
+:::note
+Audit logs are an organization-level concept, so a [self-hosted Conductor](./hosting-conductor.md) running with authentication disabled does not register this operation and responds `404`. See [Self-hosted differences](./conductor-api.md#self-hosted-differences).
+:::
 
 Entries are returned newest first (by emit time).
 
@@ -41,50 +45,48 @@ By default the endpoint returns the most recent entries for your organization. Y
 
 | Parameter | Description |
 | --- | --- |
-| `start` | Only return entries at or after this time. [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) timestamp (e.g. `2026-07-01T00:00:00Z`), inclusive. |
-| `end` | Only return entries before this time. RFC 3339 timestamp, exclusive. |
+| `startTime` | Only return entries at or after this time. [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) timestamp (e.g. `2026-07-01T00:00:00Z`), inclusive. |
+| `endTime` | Only return entries before this time. RFC 3339 timestamp, exclusive. |
 | `operation` | Only return entries for this [operation](#operations), matched exactly (e.g. `application.delete`). |
 | `subject` | Only return entries whose actor matches this value, compared against both the subject's display name (email or API-key name) and its id. |
 | `target` | Only return entries whose target resource id matches this value exactly (e.g. an application name or workflow id). |
-| `page_size` | Maximum number of entries to return. Defaults to `100`; the maximum is `1000`. |
+| `limit` | Maximum number of entries to return. |
 | `offset` | Number of matching entries to skip. Defaults to `0`. |
 
-Pagination is offset-based over the filtered, time-ordered results. To page through the log, hold the filters constant and advance `offset` by `page_size` on each request. A page with fewer than `page_size` entries means you have reached the end.
+Pagination is offset-based over the filtered, time-ordered results. To page through the log, hold the filters constant and advance `offset` by `limit` on each request. A page with fewer than `limit` entries means you have reached the end.
 
 For example, to fetch the second page of application deletions in June:
 
 ```
-https://cloud.dbos.dev/conductor/v1alpha1/api/my-org/audit-logs?operation=application.delete&start=2026-06-01T00:00:00Z&end=2026-07-01T00:00:00Z&page_size=100&offset=100
+https://cloud.dbos.dev/conductor/v2/orgs/my_org/audit-logs?operation=application.delete&startTime=2026-06-01T00:00:00Z&endTime=2026-07-01T00:00:00Z&limit=100&offset=100
 ```
 
 ## The Response
 
-The endpoint returns a JSON object with an `entries` array:
+The endpoint returns a JSON array of audit entries:
 
 ```json
-{
-  "entries": [
-    {
-      "id": "3f9a1c2e-6b0d-4f8a-9c1e-2a7b5d4c8e10",
-      "emit_time": "2026-07-06T18:22:41.512Z",
-      "operation": "workflow.cancel",
-      "status": "success",
-      "subject": {
-        "type": "user",
-        "id": "user_123",
-        "display": "alice@example.com"
-      },
-      "target": {
-        "type": "workflow",
-        "id": "e1b2c3d4-a5b6-7c8d-9e0f-1a2b3c4d5e6f"
-      },
-      "source_ip": "203.0.113.7",
-      "details": {
-        "application_name": "dbos-node-toolbox"
-      }
+[
+  {
+    "id": "3f9a1c2e-6b0d-4f8a-9c1e-2a7b5d4c8e10",
+    "emitTime": "2026-07-06T18:22:41.512Z",
+    "operation": "workflow.cancel",
+    "status": "success",
+    "subject": {
+      "type": "user",
+      "id": "user_123",
+      "display": "alice@example.com"
+    },
+    "target": {
+      "type": "workflow",
+      "id": "e1b2c3d4-a5b6-7c8d-9e0f-1a2b3c4d5e6f"
+    },
+    "sourceIp": "203.0.113.7",
+    "details": {
+      "application_name": "dbos-node-toolbox"
     }
-  ]
-}
+  }
+]
 ```
 
 Each entry has the following fields:
@@ -92,7 +94,7 @@ Each entry has the following fields:
 | Field | Description |
 | --- | --- |
 | `id` | Unique identifier of the audit entry. |
-| `emit_time` | When the operation was recorded, as an RFC 3339 timestamp. |
+| `emitTime` | When the operation was recorded, as an RFC 3339 timestamp. |
 | `operation` | The operation performed (see [Operations](#operations)). |
 | `status` | `success`, or `failure` if the operation was rejected or errored (for example, a denied attempt or invalid request). |
 | `subject` | Who performed the operation. |
@@ -102,8 +104,8 @@ Each entry has the following fields:
 | `target` | The resource the operation acted on. Omitted when no specific target applies. |
 | `target.type` | The [type](#target-types) of the target resource. |
 | `target.id` | Identifier or name of the target resource. |
-| `source_ip` | IP address the request originated from. |
-| `details` | Operation-specific context, as a JSON object (see [Details](#details)). Omitted when empty. |
+| `sourceIp` | IP address the request originated from. |
+| `details` | Operation-specific context, as a JSON object (see [Details](#details)). `null` when there is none. |
 
 ### Operations
 
@@ -121,7 +123,7 @@ The `operation` field, and the `operation` query filter, use these values:
 
 ### Target types
 
-The `target.type` field is one of: `application`, `workflow`, `schedule`, `alerting_rule`, `token`, `role`, `user`, `organization`.
+The `target.type` field is one of: `application`, `workflow`, `schedule`, `alerting_rule`, `token`, `role`, `user`, `organization`, `domain_claim`.
 
 ### Details
 

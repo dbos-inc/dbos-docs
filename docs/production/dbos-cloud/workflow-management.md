@@ -27,10 +27,10 @@ You can manage individual workflows directly from the DBOS console.
 
 #### Cancelling Workflows
 
-You can cancel any `PENDING` or `ENQUEUED` workflow.
+You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, or `DELAYED`.
 Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
+If the workflow is enqueued or delayed, cancelling removes it from the queue.
 
 #### Resuming Workflows
 
