@@ -495,9 +495,15 @@ This provides exactly-once semantics for database writes, which is stronger than
 Learn more in the [transactions tutorial](../python/tutorials/transaction-tutorial.md).
 
 ```python
-@DBOS.transaction()
+import os
+from dbos import SQLAlchemyDatasource
+from sqlalchemy import text
+
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+
+@ds.transaction()
 def update_order_status(order_id: str, status: str) -> None:
-    DBOS.sql_session.execute(
+    ds.sql_session().execute(
         text("UPDATE orders SET status = :status WHERE id = :id"),
         {"status": status, "id": order_id}
     )

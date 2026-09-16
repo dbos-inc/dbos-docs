@@ -72,7 +72,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 DBOS should be installed and imported from the `@dbos-inc/dbos-sdk` package.
 Due to its internal workflow registry, the DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.  Configuration for bundlers should be suggested if these tools are in use and cannot be avoided.
 
-DBOS does not support "serverless" frameworks due to its long-running background jobs.  DBOS programs MUST have a starting file (typically 'main.ts' or 'server.ts') that creates all objects and workflow functions during startup.
+DBOS programs MUST have a starting file (typically 'main.ts' or 'server.ts') that creates all objects and workflow functions during startup, before calling DBOS.launch().  Because DBOS runs workflows as long-running background jobs, prefer a long-lived process.  DBOS can run on a "serverless" platform, but only where that startup file is evaluated on every invocation and the invocation lives long enough to dequeue and execute workflows; for that pattern, enqueue work from your application with a DBOS client and run a separate worker invocation that launches DBOS and drains the queue.
 
 Any DBOS program MUST call DBOS.setConfig and DBOS.launch in its main function, like so.
 You MUST use this default configuration (changing the name as appropriate) unless otherwise specified.

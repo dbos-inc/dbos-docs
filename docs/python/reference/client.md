@@ -49,6 +49,9 @@ DBOSClient(
 This DBOS client connects to the system database specified in the `DBOS_SYSTEM_DATABASE_URL` environment variable.
 
 ```python
+import os
+from dbos import DBOSClient
+
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 ```
 
@@ -152,6 +155,8 @@ The class and instance must be registered in the application that dequeues the w
 **Example syntax:**
 
 ```python
+from dbos import EnqueueOptions
+
 options: EnqueueOptions = {
   "queue_name": "example_queue",
   "workflow_name": "process_task",
@@ -224,7 +229,9 @@ The enqueue cannot atomically span a separate application database.
 **Example syntax:**
 
 ```python
+import os
 import sqlalchemy as sa
+from dbos import EnqueueOptions
 
 # For Postgres, use a postgresql+psycopg:// URL: DBOS installs the psycopg (v3) driver,
 # while SQLAlchemy uses psycopg2 for a plain postgresql:// URL.
@@ -411,6 +418,7 @@ The send cannot atomically span a separate application database.
 **Example syntax:**
 
 ```python
+import os
 import sqlalchemy as sa
 
 # For Postgres, use a postgresql+psycopg:// URL (see the enqueue_in_transaction example)
@@ -751,6 +759,9 @@ Parameters have the same meaning as on `DBOS.register_queue` except for `on_conf
 **Example syntax:**
 
 ```python
+import os
+from dbos import DBOSClient
+
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 client.register_queue("email", global_concurrency=10, limiter={"limit": 100, "period": 60})
 client.enqueue({"queue_name": "email", "workflow_name": "send_email"}, "alice@example.com")

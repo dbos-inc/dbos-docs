@@ -123,7 +123,7 @@ The `operation` field, and the `operation` query filter, use these values:
 
 ### Target types
 
-The `target.type` field is one of: `application`, `workflow`, `schedule`, `alerting_rule`, `token`, `role`, `user`, `organization`, `domain_claim`.
+The `target.type` field is one of: `application`, `workflow`, `schedule`, `alerting_rule`, `token`, `role`, `user`, `organization`.
 
 ### Details
 
