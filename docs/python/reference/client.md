@@ -95,7 +95,6 @@ class EnqueueOptions(TypedDict):
     duplication_policy: NotRequired[DuplicationPolicy]
     priority: NotRequired[int]
     delay_seconds: NotRequired[float]
-    max_recovery_attempts: NotRequired[int]
     queue_partition_key: NotRequired[str]
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
@@ -138,7 +137,6 @@ If left undefined, the workflow is only dequeued by an executor running the late
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
-- `max_recovery_attempts`: The maximum number of times the workflow will be retried on recovery before its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. Defaults to 100.
 - `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one `partition_*` limit). A partitioned queue applies its `partition_*` limits to each partition separately, while its `global_concurrency`, `worker_concurrency`, and `limiter` still apply across all partitions.
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
