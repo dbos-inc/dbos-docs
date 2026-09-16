@@ -273,7 +273,7 @@ dbos-cloud app deploy
 ### HTTP Serving & Port Numbers
 
 DBOS Cloud provides your application with an HTTPS URL and routes traffic to it.
-It expects applications to listen for HTTP requests on port 3000 (TypeScript), port 8000 (Python), or port 8080 (Go).
+It expects applications to listen for HTTP requests on port 3000 (TypeScript), port 8000 (Python), or port 8080 (Go and Java).
 
 ### Environment Management
 
