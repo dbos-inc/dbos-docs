@@ -22,7 +22,7 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./python/
 
 #### 1. Create a Virtual Environment
 Create and activate a Python virtual environment in a directory.
-DBOS requires Python 3.9 or later.
+DBOS requires Python 3.10 or later.
 
 </article>
 

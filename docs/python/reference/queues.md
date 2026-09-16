@@ -38,7 +38,7 @@ class QueueRateLimit(TypedDict):
 - `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes.
 - `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process.
 - `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
-- `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+- `polling_interval_sec`: The minimum interval at which DBOS polls the database for new workflows on this queue. The actual interval includes random jitter and increases with backoff under contention, then scales back down when contention clears.
 - `application_name`: The application that owns this queue and dequeues workflows from it, or `None` if the queue is owned by no application. Unlike the other properties, ownership cannot be reconfigured.
 
 A queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) if any of its `partition_*` limits is set.
@@ -99,7 +99,7 @@ queue.enqueue_async(
 Asynchronously enqueue an async function for processing and return an [async handle](./workflow_handles.md#workflowhandleasync) to it.
 You can enqueue any DBOS-annotated async function.
 The `enqueue_async` method durably enqueues your function; after it returns your function is guaranteed to eventually execute even if your app is interrupted.
-The enqueued function is launched into a different event loop as its caller.
+The enqueued function is launched into a different event loop than its caller.
 
 **Example syntax:**
 

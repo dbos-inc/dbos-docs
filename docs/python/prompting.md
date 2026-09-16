@@ -59,7 +59,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way except by adding the @DBOS.step() annotation.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
-- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
 - Do NOT use threads to start workflows or to start steps in workflows. You should instead use DBOS.start_workflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call DBOS.start_workflow or DBOS.recv from a step
@@ -474,7 +474,7 @@ Debouncer.create(
 **Parameters:**
 - `workflow`: The workflow to debounce.
 - `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
-- `queue`: When starting a workflow after debouncing, enqueue it on this queue (a queue name or `Queue`) instead of executing it directly.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue (a queue name or `Queue`) instead of an internal queue.
 
 ### debounce
 
@@ -492,7 +492,7 @@ Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounce_timeout_sec`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
 
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
 **Parameters:**
 - `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
@@ -544,7 +544,7 @@ Async version of `debouncer.debounce`.
 
 ## Coroutine (Async) Workflows
 
-Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
+Coroutines (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
 Coroutine workflows may invoke coroutine steps via await expressions.
 You should start coroutine workflows using `DBOS.start_workflow_async` and enqueue them using `DBOS.enqueue_workflow_async`.
 Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but a workflow enqueued with `DBOS.enqueue_workflow_async` is started by DBOS in the event loop in which `DBOS.launch()` was called (if that loop is still running) or otherwise in a separate background event loop.
@@ -720,7 +720,7 @@ DBOS.set_event(
 ) -> None
 ```
 
-Any workflow or step can call `DBOS.set_event` to publish a key-value pair, or update its value if has already been published.
+Any workflow or step can call `DBOS.set_event` to publish a key-value pair, or update its value if it has already been published.
 
 ### get_event
 
@@ -1633,7 +1633,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 If `cancel_children` is `True`, also recursively cancels all child workflows started by this workflow.
 
 ### resume_workflow
@@ -1741,8 +1741,6 @@ class WorkflowStatus:
     # The application that owns this workflow
     application_name: Optional[str]
 ```
-
-Retrieve the workflow status:
 
 
 ### Configuring DBOS

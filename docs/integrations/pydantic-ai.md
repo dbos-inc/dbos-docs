@@ -49,7 +49,7 @@ DBOS runs fully in-process as a library: functions remain standard Python functi
   +------------------------------------------------------+
 ```
 
-Any Pydantic AI agent can be wrapped in a [`DBOSAgent`](https://ai.pydantic.dev/api/durable_exec/#pydantic_ai.durable_exec.dbos.DBOSAgent) to enable durable execution. `DBOSAgent` automatically:,
+Any Pydantic AI agent can be wrapped in a [`DBOSAgent`](https://ai.pydantic.dev/api/durable_exec/#pydantic_ai.durable_exec.dbos.DBOSAgent) to enable durable execution. `DBOSAgent` automatically:
 
 * Wraps `Agent.run` and `Agent.run_sync` (the agent's main loop) as DBOS workflows.
 * Wraps [model requests](https://ai.pydantic.dev/models/overview) and [MCP communication](https://ai.pydantic.dev/mcp/client) as DBOS steps.
@@ -100,7 +100,7 @@ uv add pydantic-ai-slim[dbos]
 Here is a simple but complete example of wrapping an agent for durable execution.
 With fewer than 10 additional lines (highlighted below), you can add DBOS into an existing Pydantic AI application.
 
-```python {title="dbos_agent.py"}
+```python title="dbos_agent.py"
 import asyncio
 # highlight-next-line
 from dbos import DBOS, DBOSConfig

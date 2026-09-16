@@ -209,5 +209,5 @@ With Flask, remove `flask=app` and call [`DBOS.launch()`](./reference/dbos-class
 
 The integrations created a tracing span for each HTTP request.
 Instead, use the OpenTelemetry instrumentation for your web framework.
-DBOS workflow spans automatically join its request spans, as described in the [tracing tutorial](./tutorials/logging-and-tracing.md#connecting-dbos-to-your-observability-provider).
+DBOS workflow spans automatically join your request spans, as described in the [tracing tutorial](./tutorials/logging-and-tracing.md#connecting-dbos-to-your-observability-provider).
 

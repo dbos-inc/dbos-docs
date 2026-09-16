@@ -56,7 +56,7 @@ export interface DBOSConfig {
 ```
 
 In [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
-The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion`, `enablePatching`, and `executorID` are ignored there.
+The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there, as is `enablePatching`'s effect on the application version (it still enables [`DBOS.patch`](./workflows-steps.md#patch)).
 
 ### Application Settings
 

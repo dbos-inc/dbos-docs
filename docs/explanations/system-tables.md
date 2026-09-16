@@ -49,9 +49,9 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 
 **Parameters:**
 - `workflow_name`: The name of workflow to enqueue.
-- `queue_name`: The durable queue on witch to enqueue this workflow.
+- `queue_name`: The durable queue on which to enqueue this workflow.
 - `positional_args`: An array of positional parameters for the enqueued workflow. Must use [Portable JSON Format](portable-workflows.md#portable-json-format). Defaults to an empty array
-- `named_args`: The named paramters (for languages that support them, like Python). Must use [Portable JSON Format](portable-workflows.md#portable-json-format) and be a JSON object. Defaults to an empty object (`{}`).
+- `named_args`: The named parameters (for languages that support them, like Python). Must use [Portable JSON Format](portable-workflows.md#portable-json-format) and be a JSON object. Defaults to an empty object (`{}`).
 - `class_name`: The class name of workflow to enqueue. Defaults to null.
 - `config_name`: The config name of workflow to enqueue. For languages that support it, this is usually exposed as workflow class instance name. Defaults to null.
 - `workflow_id`: Specify the idempotency ID to assign to the enqueued workflow. If left undefined, a random UUID is generated.
@@ -105,7 +105,7 @@ Each row represents a different workflow execution.
 - **application_version**: The application version of this workflow code.
 - **class_name**: The class name of the workflow function.
 - **config_name**: The name of the configured instance of this workflow, if any.
-- **recovery_attempts**: The number of attempts (so far) to recovery this workflow.
+- **recovery_attempts**: The number of attempts (so far) to recover this workflow.
 - **queue_name**: If this workflow is or was enqueued, the name of the queue.
 - **executor_id**: The ID of the executor that ran this workflow.
 - **workflow_timeout_ms**: The timeout of the workflow, if specified.

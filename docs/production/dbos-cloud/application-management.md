@@ -78,7 +78,7 @@ runtimeConfig:
 
 A setup script may install system packages or libraries or otherwise customize the microVM image. For example:
 
-```python title="build.sh"
+```shell title="build.sh"
 #!/bin/bash
 
 # Install the traceroute package for use in your application

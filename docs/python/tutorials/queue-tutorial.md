@@ -20,6 +20,7 @@ If multiple applications [share a system database](../../explanations/sharing-a-
 Register your queues after [`DBOS.launch()`](../reference/dbos-class.md#launch).
 
 You can then enqueue any DBOS workflow or step.
+If no queue with that name has been registered, the workflow stays `ENQUEUED` until one is.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflow_handles.md) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
@@ -122,7 +123,7 @@ The [queue worker](../examples/queue-worker.md) example shows this design patter
 You can also enqueue a workflow from a Postgres trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
 
-For example, here is the previous example of enqueing the `data_pipeline` workflow on the `pipeline_queue` queue with arguments, but using PL/pgSQL.
+For example, here is the previous example of enqueueing the `data_pipeline` workflow on the `pipeline_queue` queue with arguments, but using PL/pgSQL.
 
 ```sql
 DECLARE workflow_id text;
@@ -280,6 +281,7 @@ def on_user_task_submission(user_id: str, task: Task):
 
 :::warning
 Every enqueue on a partitioned queue must supply a partition key.
+A workflow enqueued on a partitioned queue without a partition key stays `ENQUEUED` and is not dequeued.
 :::
 
 ### Combining Queue-Wide and Per-Partition Limits
@@ -343,7 +345,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
 ## Singleton Workflows
 
 If you want only one instance of a workflow to be active at a time, you can set `duplication_policy="return-existing"` on [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
-When a workflow with the same `deduplication_id` is already enqueued or executing on the queue, this returns a handle to that existing workflow instead of raising `DBOSQueueDeduplicatedError`.
+When a workflow with the same `deduplication_id` is already enqueued, delayed, or executing on the queue, this returns a handle to that existing workflow instead of raising `DBOSQueueDeduplicatedError`.
 The arguments passed by the colliding caller are discarded, and the returned handle resolves with the original workflow's result.
 
 This requires both a queue and a `deduplication_id`.
@@ -437,7 +439,7 @@ You can configure each type of worker to only listen to the appropriate queue:
 
 ```python
 if __name__ == "__main__":
-    worker_type = ... # "cpu' or 'gpu'
+    worker_type = ... # "cpu" or "gpu"
     config: DBOSConfig = ...
     DBOS(config=config)
     if worker_type == "gpu":

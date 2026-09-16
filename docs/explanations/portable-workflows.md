@@ -52,6 +52,8 @@ When these values are decoded, the recipient must restore them to the appropriat
 | Java       | `BigDecimal`           | Numeric string          |
 | TypeScript | `Date`                 | RFC 3339 UTC string     |
 | TypeScript | `BigInt`               | Numeric string          |
+| TypeScript | `Map` (string keys)    | JSON object             |
+| TypeScript | `Set`                  | JSON array              |
 
 ## Using Portable Serialization
 
@@ -66,7 +68,7 @@ This ensures the workflow's arguments are serialized in portable format that can
 If multiple applications [share the system database](./sharing-a-system-database.md), also name the application that owns the workflow, so that application runs it.
 
 You can also enqueue a workflow using the PL/pgSQL function [`dbos.enqueue_workflow`](system-tables.md#dbosenqueue_workflow).
-Only portable serialization is allowed when enqueing using PL/pgSQL.
+Only portable serialization is allowed when enqueuing using PL/pgSQL.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
@@ -247,9 +249,9 @@ Setting the serialization format at the workflow level affects the default for `
 However, individual operations can override this&mdash;for example, a workflow running with native serialization may want to publish a specific event in portable format for cross-language consumption, or a portable workflow may need to record an event with the greater flexibility afforded by the native serializer.
 Each language's `setEvent` and `writeStream` methods accept a serialization parameter for this purpose.
 
-Note that `send` is not affected by the current workflow's serialization strategy, because messages target a different workflow and the sender does not know what serialization that workflow expects.
-The exception is TypeScript, where `DBOS.send` called from a workflow defaults to that workflow's serialization format.
-You should always set the serialization format explicitly on `send` when communicating cross-language.
+`send` is a special case, because messages target a different workflow and the sender does not know what serialization that workflow expects.
+In Python, TypeScript, and Go, a `send` from inside a workflow defaults to that workflow's serialization format, but in Java it always uses the default serializer.
+You should therefore always set the serialization format explicitly on `send` when communicating cross-language.
 
 You can also send a message to a workflow using the PL/pgSQL function [`dbos.send_message`](system-tables.md#dbossend_message).
 Only portable serialization is allowed when sending a message using PL/pgSQL. 

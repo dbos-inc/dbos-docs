@@ -18,7 +18,7 @@ The rest of this guide will assume you have a local application.
 
 Install a CockroachDB-compatible PostgreSQL driver:
 
-```python
+```shell
 pip install psycopg2-binary sqlalchemy-cockroachdb
 ```
 

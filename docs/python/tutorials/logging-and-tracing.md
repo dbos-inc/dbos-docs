@@ -210,7 +210,7 @@ To keep it on the caller's trace, enqueue it inside a [`PropagateOtelContext`](.
 from dbos import PropagateOtelContext
 
 with PropagateOtelContext():
-    handle = queue.enqueue(workflow_function, ...)
+    handle = DBOS.enqueue_workflow("example_queue", workflow_function, ...)
 ```
 
 `PropagateOtelContext` durably records the current trace context (or optionally, a passed-in OpenTelemetry context) with every workflow started or enqueued in the block, so each workflow's span joins the caller's trace no matter when or where the workflow runs, even on recovery.

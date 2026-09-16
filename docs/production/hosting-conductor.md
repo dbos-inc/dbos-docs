@@ -272,7 +272,7 @@ You can integrate Conductor with any OAuth-compatible single-sign on (SSO) exper
 To do this, first register the DBOS Console as an application and Conductor as an API (audience) with your OAuth provider.
 Configure the following with your provider:
 
-- `https://your-domain/oauth/callback`as a callback URL
+- `https://your-domain/oauth/callback` as a callback URL
 - `https://your-domain` as an allowed web origin
 - Authorization code with PKCE as an allowed grant type
 - `openid profile email` as valid scopes.

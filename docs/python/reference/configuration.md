@@ -67,7 +67,8 @@ class DBOSConfig(TypedDict):
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`dbos rename-application`](./cli.md#dbos-rename-application).
-- **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
+- **enable_patching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
+Required to use [`DBOS.patch`](./contexts.md#patch) and [`DBOS.deprecate_patch`](./contexts.md#deprecate_patch), which otherwise raise a `DBOSException`.
 - **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
@@ -135,7 +136,7 @@ A system database ahead of the required version is accepted, so a process with m
 
 ### Execution Settings
 
-- **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions.
+- **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions. If unset, the pool is unbounded.
 
 ### Scheduler Settings
 

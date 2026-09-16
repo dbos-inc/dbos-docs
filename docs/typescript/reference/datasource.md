@@ -163,6 +163,7 @@ For example, the Knex `TransactionConfig` is:
 interface TransactionConfig {
   isolationLevel?: Knex.IsolationLevels;
   readOnly?: boolean;
+  name?: string;
 }
 ```
 
@@ -175,7 +176,7 @@ interface TransactionConfig {
 
 ```typescript
 @dataSource.transaction()
-  static async insertRow() {
+static async insertRow() {
   await dataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
 }
 

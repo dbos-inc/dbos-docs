@@ -553,7 +553,7 @@ DBOS.close_stream(
 ```
 
 Close a stream identified by a key.
-After this is called, no more values can be written to the stream.
+After this is called, readers stop at the close, so any value written to the stream afterward is never read.
 Can only be called from within a workflow or its steps.
 The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
 
@@ -782,7 +782,7 @@ If the queue already exists in the database, the `on_conflict` parameter control
 - `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes. Must be at least 1 and less than or equal to `global_concurrency`.
 - `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process. Must be at least 1 and less than or equal to `partition_concurrency`, `worker_concurrency`, and `global_concurrency`.
 - `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
-- `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+- `polling_interval_sec`: The minimum interval at which DBOS polls the database for new workflows on this queue. The actual interval includes random jitter and increases with backoff under contention, then scales back down when contention clears.
 - `on_conflict`: How to behave when a queue with this name already exists in the system database:
   - `"update_if_latest_version"` (default): overwrite the existing configuration only if the running application is the latest registered [application version](#version-management). This prevents older versions in a rolling deploy from overwriting a newer configuration.
   - `"always_update"`: always overwrite the existing configuration.
@@ -1504,7 +1504,7 @@ Atomically apply a set of schedules.
 Useful for declaratively defining all your static schedules in one place.
 May not be called from within a workflow.
 
-Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queue_name` reverts the schedule to the internal queue), while the schedule's status and last-fired time are preserved.
+Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queue_name` reverts the schedule to the internal queue), while the schedule's ID, status, and last-fired time are preserved.
 
 **Example:**
 
@@ -1812,9 +1812,9 @@ Debouncer.create(
 ```
 
 **Parameters:**
-- `workflow`: The workflow to debounce.
+- `workflow`: The workflow to debounce. Must be a function or static method: bound methods, including those of [configured instances](../tutorials/classes.md), cannot be debounced and raise a `TypeError`.
 - `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
-- `queue`: When starting a workflow after debouncing, enqueue it on this queue (a `Queue` or a queue name) instead of executing it directly.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue (a `Queue` or a queue name) instead of an internal queue.
 - `application_name`: Debounce on behalf of this application instead of your own: the debounced workflow is owned and run by that application.
 
 ### debounce
@@ -1833,7 +1833,7 @@ Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounce_timeout_sec`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
 
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
 `debounce` raises `DBOSException` if it is called inside a [`SetEnqueueOptions`](./queues.md#setenqueueoptions) block that sets `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`, because the debouncer controls these options itself.
 
@@ -2033,7 +2033,7 @@ Example syntax:
 
 ```python
 with PropagateOtelContext():
-    handle = queue.enqueue(workflow_function, ...)
+    handle = DBOS.enqueue_workflow("example_queue", workflow_function, ...)
 ```
 
 ### DBOSContextEnsure

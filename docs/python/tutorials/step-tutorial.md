@@ -28,6 +28,7 @@ Common nondeterministic operations include:
 You **cannot** call, start, or enqueue workflows from within steps.
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+If you call a step from outside a workflow, it runs as an ordinary function, without checkpoints, retries, or timeouts.
 
 ### Configurable Retries
 
@@ -89,7 +90,7 @@ Async predicates are only supported for async steps; pairing an async `should_re
 
 You may also decorate coroutines (functions defined with `async def`, also known as async functions) with `@DBOS.step`.
 Coroutine steps can use Python's asynchronous language capabilities such as [await](https://docs.python.org/3/reference/expressions.html#await), [async for](https://docs.python.org/3/reference/compound_stmts.html#async-for) and [async with](https://docs.python.org/3/reference/compound_stmts.html#async-with).
-Like syncronous step functions, async steps support [configurable automatic retries](#configurable-retries) and require their inputs and outputs to be serializable.  
+Like synchronous step functions, async steps support [configurable automatic retries](#configurable-retries) and require their inputs and outputs to be serializable.  
 
 For example, here is an asynchronous version of the `example_step` function from above, using the [`aiohttp`](https://docs.aiohttp.org/en/stable/) library instead of [`requests`](https://requests.readthedocs.io/en/latest/).
 
@@ -120,10 +121,6 @@ Step timeouts are only supported for [async steps](#coroutine-steps), because Py
 If the step also has [retries](#configurable-retries) enabled, **each attempt gets its own timeout**, and time spent waiting between retries is not counted against it.
 A step with `timeout_seconds=30, max_attempts=3` therefore allows up to three 30-second attempts, not 30 seconds total.
 You can configure this behavior with a `should_retry` predicate, not retrying `DBOSStepTimeoutError`.
-
-:::note
-The timeout is enforced only when the step runs as part of a workflow.
-:::
 
 ### Running Steps In-Line With `run_step`
 

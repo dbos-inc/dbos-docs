@@ -45,7 +45,7 @@ await Example.exampleWorkflow();
 **Parameters:**
 - **config**:
   - **name**: The name to use for the workflow function.  If not specified, the method name is used.
-  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
+  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted. Defaults to 100.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
@@ -88,12 +88,12 @@ await workflow();
 - **func**: The function to be wrapped in a workflow.
 - **config**: Accepts all fields from [`WorkflowConfig`](#dbosworkflow) plus:
   - **name**: The name with which to register the workflow. Defaults to the function name.
-  - **ctorOrProto**: If the function is a class method, its class (for a `static` method) or the class's prototype (for an instance method; passing the class itself also works).
+  - **ctorOrProto**: If the function is a class method, its class (for a `static` method) or the class's prototype (for an instance method).
 DBOS records the workflow's class so that, when the workflow is dequeued or recovered, it can find the class and, for instance methods, the right [`ConfiguredInstance`](#instance-method-workflows).
 You must set this when registering an instance method; otherwise, the workflow can't be run from a queue or recovered.
   - **className**: The name of the class the function belongs to. Defaults to the name of the class given in `ctorOrProto`.
 For a `static` method, you can set `className` without `ctorOrProto`. If you set both, `className` must be the class's registered name.
-  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
+  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted. Defaults to 100.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
@@ -164,11 +164,11 @@ DBOS.step(
 
 ```typescript
 interface StepConfig {
-  retriesAllowed?: boolean;
-  intervalSeconds?: number;
-  maxAttempts?: number;
-  backoffRate?: number;
-  shouldRetry?: (error: unknown) => boolean | Promise<boolean>;
+  retriesAllowed?: boolean; // Should failures be retried? (default false)
+  intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1)
+  maxAttempts?: number;     // Maximum number of attempts, including the first (default 3)
+  backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2)
+  shouldRetry?: (error: unknown) => boolean | Promise<boolean>; // Predicate called after a failure to decide whether to retry (default: retry every error)
   timeoutMS?: number;
   name?: string;
 }
@@ -361,7 +361,7 @@ class MyClass extends ConfiguredInstance {
 const myClassInstance = new MyClass('instanceA', myConfig);
 ```
 
-To register an instance method without decorators, register it on the class prototype with [`DBOS.registerWorkflow`](#dbosregisterworkflow), passing the class as `ctorOrProto` so DBOS can find the instance when the workflow is dequeued or recovered:
+To register an instance method without decorators, register it on the class prototype with [`DBOS.registerWorkflow`](#dbosregisterworkflow), passing that prototype as `ctorOrProto` so DBOS can find the instance when the workflow is dequeued or recovered:
 
 ```typescript
 class MyClass extends ConfiguredInstance {
@@ -378,7 +378,7 @@ class MyClass extends ConfiguredInstance {
 
 MyClass.prototype.testWorkflow = DBOS.registerWorkflow(MyClass.prototype.testWorkflow, {
   name: "testWorkflow",
-  ctorOrProto: MyClass,
+  ctorOrProto: MyClass.prototype,
 });
 
 const myClassInstance = new MyClass('instanceA', myConfig);
@@ -396,7 +396,7 @@ DBOS.patch(
 ): Promise<boolean>
 ```
 
-Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
+Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted (or this patch marker is already present) and `false` if a different checkpoint is already present at this point in history, indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
 Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
 

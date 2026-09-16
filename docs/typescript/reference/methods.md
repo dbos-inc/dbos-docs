@@ -336,6 +336,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 
 **Throws:**
 - `DBOSStreamTimeoutError`: If `timeoutSeconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflowID` exists.
 
 **Example syntax:**
 
@@ -375,6 +376,7 @@ Use this when you want one specific value instead of iterating the whole stream&
 
 **Throws:**
 - `DBOSStreamTimeoutError`: If `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflowID` exists.
 
 **Example syntax:**
 
@@ -787,7 +789,7 @@ If called from within a workflow, the operation is recorded as a step.
 - **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue. This is useful for managing the concurrency of scheduled workflows.
 
 Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
-Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name is owned by a different application throws an error.
+Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name already exists (including one owned by a different application) throws an error.
 
 **Example:**
 
@@ -1124,7 +1126,7 @@ Returns true if called from within a datasource transaction.
 DBOS.span: DBOSSpan | undefined
 ```
 
-Retrieve the OpenTelemetry span associated with the current workflow.
+Retrieve the OpenTelemetry span associated with the current workflow or step.
 You can use this to set custom attributes in your span.
 
 

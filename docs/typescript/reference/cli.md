@@ -25,18 +25,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-a, --application-name <string>`     Retrieve workflows owned by this application (workflows owned by no application are always included)
 
 **Output:**
-For each retrieved workflow, emit a JSON whose fields are:
-- `workflowID`: The ID of the workflow
-- `status`: The status of the workflow
-- `workflowName`: The name of the workflow function
-- `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects.md), the name of the configuration
-- `authenticatedUser`: The user who ran the workflow, if specified
-- `authenticatedRoles`: All roles which the authenticated user could assume
-- `queueName`: The queue of the workflow, if enqueued.
-- `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfully, its output
-- `error`: If the workflow threw an error, the serialized error object
+A JSON-formatted list of [workflow statuses](./methods.md#workflow-status).
 
 ### npx dbos workflow get
 
@@ -48,18 +37,7 @@ Retrieve information on a workflow run by your application.
 - `<workflow-id>`: The ID of the workflow to retrieve.
 
 **Output:**
-A JSON whose fields are:
-- `workflowID`: The ID of the workflow
-- `status`: The status of the workflow
-- `workflowName`: The name of the workflow function
-- `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects), the name of the configuration
-- `authenticatedUser`: The user who ran the workflow, if specified
-- `authenticatedRoles`: All roles which the authenticated user could assume
-- `queueName`: The queue of the workflow, if enqueued.
-- `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfully, its output
-- `error`: If the workflow threw an error, the serialized error object
+A JSON-formatted [workflow status](./methods.md#workflow-status).
 
 ### npx dbos workflow steps
 
@@ -121,16 +99,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 - `-a, --application-name <string>`  Retrieve functions owned by this application (functions owned by no application are always included)
 
 **Output:**
-For each retrieved workflow, emit a JSON whose fields are:
-- `workflowID`: The ID of the workflow
-- `status`: The status of the workflow
-- `workflowName`: The name of the workflow function
-- `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects), the name of the configuration
-- `authenticatedUser`: The user who ran the workflow, if specified
-- `authenticatedRoles`: All roles which the authenticated user could assume
-- `queueName`: The queue of the workflow, if enqueued.
-- `input`: The input arguments to the workflow, in array format
+A JSON-formatted list of [workflow statuses](./methods.md#workflow-status).
 
 
 ## Application Management Commands

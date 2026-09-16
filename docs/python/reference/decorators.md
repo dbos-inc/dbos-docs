@@ -70,7 +70,7 @@ def example_step():
 - `interval_seconds`: How long to wait before the initial retry.
 - `max_attempts`: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
 - `backoff_rate`: How much to multiplicatively increase `interval_seconds` between retries.
-- `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Async predicates are only supported for async steps.
+- `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Ignored when `retries_allowed` is `False`. Async predicates are only supported for async steps.
 - `preemptible`: If `True`, the step is cancelled immediately when its workflow is cancelled, rather than running to completion. Only supported for async steps.
 - `timeout_seconds`: If set, cancel the step and raise `DBOSStepTimeoutError` if it runs for longer than this many seconds. Only supported for async steps, and must be positive and finite. Each retry attempt gets a fresh timeout. See [Step Timeouts](../tutorials/step-tutorial.md#step-timeouts).
 
@@ -267,9 +267,9 @@ DBOSConfiguredInstance(
 
 **Example:**
 ```python
-    @DBOS.dbos_class()
-    class DBOSTestClass(DBOSConfiguredInstance):
-        def __init__(self) -> None:
-            super().__init__("instance1")
+@DBOS.dbos_class()
+class DBOSTestClass(DBOSConfiguredInstance):
+    def __init__(self) -> None:
+        super().__init__("instance1")
 ```
 

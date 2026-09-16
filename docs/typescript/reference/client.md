@@ -415,6 +415,7 @@ Similar to [`DBOS.readStream`](./methods.md#dbosreadstream), except that client 
 
 **Throws:**
 - `DBOSStreamTimeoutError`: If `timeoutSeconds` passes without a value arriving.
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflowID` exists.
 
 **Example:**
 
@@ -452,6 +453,7 @@ Similar to [`DBOS.readStreamOffset`](./methods.md#dbosreadstreamoffset).
 
 **Throws:**
 - `DBOSStreamTimeoutError`: If `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+- `DBOSNonExistentWorkflowError`: If no workflow with ID `workflowID` exists.
 
 **Example:**
 

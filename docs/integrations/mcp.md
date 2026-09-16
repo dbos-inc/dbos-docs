@@ -37,16 +37,33 @@ The DBOS MCP server provides the following tools:
 #### Application Introspection
 - `list_applications` - List all applications
 - `list_executors` - List connected executors for an application
+- `list_application_versions` - List all versions of an application
+- `set_latest_application_version` - Set an application's latest version
 
 #### Workflow Introspection
 - `list_workflows` - List/filter workflows
 - `get_workflow` - Get workflow details
 - `list_steps` - Get execution steps for a workflow
+- `get_workflow_events` - Get the events a workflow published
+- `get_workflow_notifications` - Get the notifications a workflow received
+- `get_workflow_aggregates` - Aggregate workflow counts, grouped by status, name, queue, executor, version, or application
 
 #### Workflow Management
 - `cancel_workflow` - Cancel a running workflow
 - `resume_workflow` - Resume a pending or failed workflow
 - `fork_workflow` - Fork a workflow from a specific step
+- `delete_workflow` - Delete a workflow and its history
+- `bulk_cancel_workflows` - Cancel multiple workflows at once
+- `bulk_resume_workflows` - Resume multiple workflows at once
+- `bulk_delete_workflows` - Delete multiple workflows at once
+- `fork_from_failure` - Fork multiple failed workflows from the point at which they failed
+
+#### Schedule Management
+- `list_schedules` - List an application's schedules
+- `get_schedule` - Get details of a specific schedule
+- `pause_schedule` - Pause a schedule, stopping it from triggering new workflows
+- `resume_schedule` - Resume a paused schedule
+- `trigger_schedule` - Manually trigger a schedule to run its workflow immediately
 
 #### Authentication
 - `login` - Start login flow (returns URL to login page)

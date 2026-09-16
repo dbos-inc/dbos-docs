@@ -30,6 +30,8 @@ DBOS.create_schedule(
 )
 ```
 
+Because schedules are stored in the system database, `DBOS.create_schedule` and the other schedule management methods must be called after [`DBOS.launch()`](../reference/dbos-class.md#launch).
+
 Note that `DBOS.create_schedule` will fail if the schedule already exists.
 If you're defining a set of static schedules to be created on program start, you can instead use `DBOS.apply_schedules` to create them atomically, updating them if they already exist:
 

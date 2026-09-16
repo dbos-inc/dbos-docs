@@ -661,7 +661,7 @@ dbosctl sysdb migrate --print-user-role -r my_app_role > grants.sql
 
 #### LISTEN/NOTIFY
 
-If your system database sites behind a connection pooler in transaction mode, pass `--no-listen-notify` to generate a system scehma that doesn't use `pg_notify`.:
+If your system database sits behind a connection pooler in transaction mode, pass `--no-listen-notify` to generate a system schema that doesn't use `pg_notify`:
 
 ```shell
 dbosctl sysdb migrate -D postgres://user:password@host:5432/dbos_sys --no-listen-notify

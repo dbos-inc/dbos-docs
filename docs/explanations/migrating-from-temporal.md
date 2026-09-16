@@ -876,7 +876,11 @@ await client.create_schedule(
 <TabItem value="python" label="Python">
 
 ```python
-DBOS.create_schedule("daily-report", daily_report_workflow, schedule="0 9 * * *")
+DBOS.create_schedule(
+    schedule_name="daily-report",
+    workflow_fn=daily_report_workflow,
+    schedule="0 9 * * *",
+)
 ```
 
 DBOS schedules also support pausing, resuming, backfilling missed runs, and triggering immediate execution.

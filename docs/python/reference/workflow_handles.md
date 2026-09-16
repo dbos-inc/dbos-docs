@@ -5,7 +5,7 @@ description: API reference for DBOS workflow handles
 ---
 
 A workflow handle represents the state of a particular active or completed workflow execution.
-You obtain a workflow handle when using `DBOS.start_workflow` to start a workflow in the background.
+You obtain a workflow handle when using `DBOS.start_workflow` to start a workflow in the background or when enqueueing a workflow with [`DBOS.enqueue_workflow`](./contexts.md#enqueue_workflow) or [`Queue.enqueue`](./queues.md#enqueue).
 If you know a workflow's identity, you can also retrieve its handle using `DBOS.retrieve_workflow`.
 
 ## WorkflowHandle

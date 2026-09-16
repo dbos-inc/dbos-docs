@@ -977,7 +977,7 @@ client.list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING`) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 
 **Parameters:**

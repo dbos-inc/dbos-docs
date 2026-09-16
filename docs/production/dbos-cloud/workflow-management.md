@@ -28,7 +28,7 @@ You can manage individual workflows directly from the DBOS console.
 #### Cancelling Workflows
 
 You can cancel any `PENDING` or `ENQUEUED` workflow.
-Cancelling a workflow sets is status to `CANCELLED`.
+Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.
 
@@ -45,4 +45,4 @@ To do this, open the workflow steps view, select a particular step, and click "F
 
 When you fork a workflow, DBOS generates a new workflow with a new workflow ID, copies to that workflow the original workflow's inputs and all its steps up to the selected step, then begins executing the new workflow from the selected step.
 
-Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an appliation version on which the bug is fixed).
+Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an application version on which the bug is fixed).

@@ -246,7 +246,7 @@ language: go
 <section className="row list">
 <article className="col col--6">
 
-Finally, build your application under the name `main`, against linux/adm64, then run this command to deploy your application to DBOS Cloud!
+Finally, build your application under the name `main`, against linux/amd64, then run this command to deploy your application to DBOS Cloud!
 
 :::info
 DBOS Cloud will serve HTTP traffic on port 8080. Make sure to use that port when configuring web servers.
@@ -273,7 +273,7 @@ dbos-cloud app deploy
 ### HTTP Serving & Port Numbers
 
 DBOS Cloud provides your application with an HTTPS URL and routes traffic to it.
-It expects applications to listen for HTTP requests on port 3000 (TypeScript) or port 8000 (Python).
+It expects applications to listen for HTTP requests on port 3000 (TypeScript), port 8000 (Python), or port 8080 (Go).
 
 ### Environment Management
 

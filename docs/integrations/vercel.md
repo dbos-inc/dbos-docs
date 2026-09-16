@@ -46,7 +46,7 @@ export async function enqueueWorkflow() {
 
 You can also use the client to list past workflows or retrieve their results.
 
-## 2. Create a Worker in a Vercel Functions
+## 2. Create a Worker in a Vercel Function
 
 Next, create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
 In the Vercel Function, define and register your workflows, steps, and queues:

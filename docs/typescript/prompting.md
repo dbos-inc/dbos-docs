@@ -59,7 +59,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
-- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
 - Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only.  For any complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
@@ -70,7 +70,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 ## DBOS Lifecycle Guidelines
 
 DBOS should be installed and imported from the `@dbos-inc/dbos-sdk` package.
-Due to its internal workflow registry, The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.  Configuration for bundlers should be suggested if these tools are in use and cannot be avoided.
+Due to its internal workflow registry, the DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.  Configuration for bundlers should be suggested if these tools are in use and cannot be avoided.
 
 DBOS does not support "serverless" frameworks due to its long-running background jobs.  DBOS programs MUST have a starting file (typically 'main.ts' or 'server.ts') that creates all objects and workflow functions during startup.
 
@@ -449,8 +449,8 @@ This is allowed because each step is started in a well-defined sequence before a
 By contrast, the following is not allowed:
 ```typescript
 const results = await Promise.allSettled([
-  async () => { await step1("arg1"); await step2("arg3"); },
-  async () => { await step3("arg2"); await step4("arg4"); },
+  (async () => { await step1("arg1"); await step2("arg3"); })(),
+  (async () => { await step3("arg2"); await step4("arg4"); })(),
 ]);
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
@@ -561,7 +561,7 @@ Submit a workflow for execution but delay it by `debouncePeriodMs`.
 Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounceTimeoutMs`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
 **Parameters:**
 - **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
@@ -1384,7 +1384,7 @@ Note that `listenQueues` only controls what workflows are dequeued, not what wor
 You can use class instance methods as workflows and steps.
 Any class instance method can be freely used as a step using DBOS.runStep; there are no special requirements.
 To use the DBOS.step decorator on a class instance method, the class must inherit from `ConfiguredInstance`.
-To use a class instance method as a workflow, you must use the DBOS.workflow decorator and the class must inherit from `ConfiguredInstance`.
+To use a class instance method as a workflow, the class must inherit from `ConfiguredInstance`, and you must either use the DBOS.workflow decorator or register the method with DBOS.registerWorkflow, passing the class as `ctorOrProto`.
 For example:
 
 ```typescript

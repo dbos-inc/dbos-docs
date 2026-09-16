@@ -47,7 +47,7 @@ DBOS must be launched before calling `registerQueue`.
 If the queue already exists in the database, the `onConflict` option controls whether its configuration is overwritten.
 
 **Parameters:**
-- **name**: The name of the queue. Must be unique among all queues in the application. Names starting with `_dbos_` are reserved for DBOS.
+- **name**: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
 - **globalConcurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Defaults to no limit.
 - **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `globalConcurrency`.
 - **rateLimit**: A limit on the maximum number of functions which may be started in a given period.

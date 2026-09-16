@@ -105,7 +105,7 @@ npm install @dbos-inc/dbos-sdk@latest
 Add these lines of code to your agent's main function.
 They initialize DBOS when your agentic application starts.
 
-```javascript
+```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
 DBOS.setConfig({

@@ -137,7 +137,7 @@ Such an application should also be configured with [`run_migrations=False`](./co
 - `--print-user-role`: Instead of executing them, print the SQL statements granting `--app-role` access to the DBOS system tables.
 
 Use these last two flags to emit SQL you can apply yourself, for example if your database is managed by a DBA.
-The output is only SQL and comments, but it contains `CREATE INDEX CONCURRENTLY`, so it must run outside a transaction block.
+The output is only SQL and comments, but it contains `CREATE INDEX CONCURRENTLY` and `DROP INDEX CONCURRENTLY`, so it must run outside a transaction block.
 
 ```shell
 dbos migrate --print-migrations all -s ${DBOS_SYSTEM_DATABASE_URL} > migrations.sql
