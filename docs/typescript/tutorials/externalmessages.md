@@ -161,7 +161,6 @@ static async processMessages(topic: string, partition: number, message: KafkaMes
   //...
 }
 
-// After DBOS.launch()
 await DBOS.registerQueue("kafka_processing_queue", { globalConcurrency: 10 });
 ```
 

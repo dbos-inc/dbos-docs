@@ -83,8 +83,6 @@ def process_tasks(tasks):
   # Return the results of all tasks.
   return [handle.get_result() for handle in task_handles]
 
-DBOS.launch()
-# Queues are registered after DBOS is launched, once all decorators have run.
 queue = DBOS.register_queue("example_queue")
 ```
 
@@ -123,8 +121,6 @@ async def process_tasks(tasks):
   # Return the results of all tasks.
   return [await handle.get_result() for handle in task_handles]
 
-DBOS.launch()
-# Queues are registered after DBOS is launched, once all decorators have run.
 queue = DBOS.register_queue("example_queue")
 ```
 
@@ -323,7 +319,6 @@ with SetEnqueueOptions(priority=1):
 def process_task(task: Task):
   ...
 
-DBOS.launch()
 DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 
 

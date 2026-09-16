@@ -234,12 +234,7 @@ async function queueFunction(tasks) {
 }
 const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
 
-async function main() {
-  await DBOS.launch();
-  // Register the queue after launching DBOS
-  await DBOS.registerQueue("example_queue");
-  // ...
-}
+await DBOS.registerQueue("example_queue");
 ```
 
 **Example syntax using decorated workflows:**
@@ -272,12 +267,7 @@ class Tasks {
   }
 }
 
-async function main() {
-  await DBOS.launch();
-  // Register the queue after launching DBOS
-  await DBOS.registerQueue("example_queue");
-  // ...
-}
+await DBOS.registerQueue("example_queue");
 ```
 
 ### DBOS.enqueueWorkflowWithOptions

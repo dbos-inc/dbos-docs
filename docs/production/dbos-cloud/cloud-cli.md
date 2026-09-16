@@ -485,12 +485,3 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 - `[application-name]`: The name of your application
 - `-w, --workflowid`: The ID of the workflow to resume.
 
-### `dbos-cloud workflow restart`
-
-**Description:**
-Start a new execution of a workflow with the same inputs.
-This new workflow has a new workflow ID.
-
-**Arguments:**
-- `[application-name]`: The name of your application
-- `-w, --workflowid`: The ID of the workflow to restart.

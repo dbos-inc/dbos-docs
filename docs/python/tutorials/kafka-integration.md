@@ -105,8 +105,6 @@ from dbos import DBOS, KafkaMessage
 def process_messages(msg: KafkaMessage):
     ...
 
-DBOS.launch()
-# Queues are registered after launch
 DBOS.register_queue("kafka_processing_queue", global_concurrency=10)
 ```
 
