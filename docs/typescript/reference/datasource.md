@@ -19,7 +19,7 @@ This package, along with its underlying database libraries, should be installed 
 - [@dbos-inc/drizzle-datasource](https://www.npmjs.com/package/@dbos-inc/drizzle-datasource): [drizzle](https://orm.drizzle.team/)
 - [@dbos-inc/knex-datasource](https://www.npmjs.com/package/@dbos-inc/knex-datasource): [Knex.js](https://knexjs.org/)
 - [@dbos-inc/kysely-datasource](https://www.npmjs.com/package/@dbos-inc/kysely-datasource): [Kysely](https://kysely.dev/)
-- [@dbos-inc/nodepg-datasource](https://www.npmjs.com/package/@dbos-inc/nodepg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
+- [@dbos-inc/node-pg-datasource](https://www.npmjs.com/package/@dbos-inc/node-pg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
 - [@dbos-inc/postgres-datasource](https://www.npmjs.com/package/@dbos-inc/postgres-datasource): [Postgres.js](https://github.com/porsager/postgres)
 - [@dbos-inc/prisma-datasource](https://www.npmjs.com/package/@dbos-inc/prisma-datasource): [Prisma](https://www.prisma.io/)
 - [@dbos-inc/typeorm-datasource](https://www.npmjs.com/package/@dbos-inc/typeorm-datasource): [TypeORM](https://typeorm.io/)
@@ -37,7 +37,7 @@ class KnexDataSource {
   constructor(name: string, config: Knex.Config)
 }
 
-const config = {client: 'pg', connectionString: process.env.DBOS_DATABASE_URL}
+const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
 const dataSource = new KnexDataSource('knex-ds', config);
 ```
 
@@ -82,7 +82,7 @@ While datasource transactions are generally run inside workflows, this is not st
 runTransaction<T>(
   func: () => Promise<T>,
   config?: TransactionConfig & {name?: string}
-)
+): Promise<T>
 ```
 
 **Parameters:**
@@ -105,7 +105,7 @@ async function workflowFunction() {
     {name: "countRows", readOnly: true}
   );
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow");
+const workflow = DBOS.registerWorkflow(workflowFunction, {name: "workflow"});
 ```
 
 ### dataSource.registerTransaction()
@@ -119,7 +119,7 @@ registerTransaction<This, Args extends unknown[], Return>(
 ): (this: This, ...args: Args) => Promise<Return>
 ```
 
-Wrap a function in a tranasction.
+Wrap a function in a transaction.
 Returns the wrapped function.
 
 **Parameters:**
@@ -144,7 +144,7 @@ async function workflowFunction() {
   await insertRowTransaction();
   await countRowsTransaction();
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction, {name: "workflow"})
 ```
 
 ### dataSource.transaction() Decorators
@@ -163,19 +163,20 @@ For example, the Knex `TransactionConfig` is:
 interface TransactionConfig {
   isolationLevel?: Knex.IsolationLevels;
   readOnly?: boolean;
+  name?: string;
 }
 ```
 
 **Parameters:**
 - **config**:
-  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read committed`, `repeatable read`, or `serializable`. Default is `serializable`.
+  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read uncommitted`, `read committed`, `repeatable read`, or `serializable`. Defaults to the database's default isolation level (`read committed` in Postgres).
   - **readOnly**: Whether this transaction only performs reads. Optimizes checkpointing if so.
 
 **Example:**
 
 ```typescript
 @dataSource.transaction()
-  static async insertRow() {
+static async insertRow() {
   await dataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
 }
 

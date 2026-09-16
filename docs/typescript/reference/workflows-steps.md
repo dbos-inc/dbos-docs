@@ -45,9 +45,9 @@ await Example.exampleWorkflow();
 **Parameters:**
 - **config**:
   - **name**: The name to use for the workflow function.  If not specified, the method name is used.
-  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
+  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted. Defaults to 100.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
   - **inputSchema**: A schema for validating and optionally transforming workflow input arguments. Must have a `.parse()` method, making it compatible with [Zod](https://zod.dev/) schemas, AJV wrappers, or any custom validator. The schema receives the arguments as an array (tuple) and should return the validated/transformed array. Runs before the workflow function on every invocation (direct call, queue dispatch, and recovery). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
 
@@ -57,12 +57,14 @@ If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it
 DBOS.registerWorkflow<This, Args extends unknown[], Return>(
     func: (this: This, ...args: Args) => Promise<Return>,
     config?: FunctionName & WorkflowConfig,
-  ): (this: This, ...args: Args) => Promise<Return> => Promise<Return> 
+  ): (this: This, ...args: Args) => Promise<Return>
 ```
 
 ```typescript
 interface FunctionName {
   name?: string;
+  className?: string;
+  ctorOrProto?: object;
 }
 ```
 
@@ -84,89 +86,18 @@ await workflow();
 
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
-- **name**: A name to give the workflow.
 - **config**: Accepts all fields from [`WorkflowConfig`](#dbosworkflow) plus:
   - **name**: The name with which to register the workflow. Defaults to the function name.
-  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
+  - **ctorOrProto**: If the function is a class method, its class (for a `static` method) or the class's prototype (for an instance method).
+DBOS records the workflow's class so that, when the workflow is dequeued or recovered, it can find the class and, for instance methods, the right [`ConfiguredInstance`](#instance-method-workflows).
+You must set this when registering an instance method; otherwise, the workflow can't be run from a queue or recovered.
+  - **className**: The name of the class the function belongs to. Defaults to the name of the class given in `ctorOrProto`.
+For a `static` method, you can set `className` without `ctorOrProto`. If you set both, `className` must be the class's registered name.
+  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted. Defaults to 100.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
   - **inputSchema**: A schema for validating/transforming input arguments. See [`WorkflowConfig`](#dbosworkflow) above.
-
-### DBOS.scheduled
-
-```typescript
-DBOS.scheduled(
-  schedulerConfig: SchedulerConfig
-);
-```
-
-```typescript
-class SchedulerConfig {
-  crontab: string;
-  mode?: SchedulerMode = SchedulerMode.ExactlyOncePerIntervalWhenActive;
-  queueName?: string;
-}
-```
-
-A decorator directing DBOS to run a workflow on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
-See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
-
-The annotated function must take in two parameters: The time that the run was scheduled (as a `Date`) and the time that the run was actually started (also a `Date`).
-For example:
-
-```typescript
-import { DBOS } from '@dbos-inc/dbos-sdk';
-
-class ScheduledExample{
-  @DBOS.workflow()
-  @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-  }
-}
-```
-
-**Parameters:**
-- **schedulerConfig**:
-  - **crontab**: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
-The DBOS variant contains 5 or 6 items, separated by spaces:
-
-```
- ┌────────────── second (optional)
- │ ┌──────────── minute
- │ │ ┌────────── hour
- │ │ │ ┌──────── day of month
- │ │ │ │ ┌────── month
- │ │ │ │ │ ┌──── day of week
- │ │ │ │ │ │
- │ │ │ │ │ │
- * * * * * *
-```
-  - **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
-  - **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
-
-### DBOS.registerScheduled
-
-```typescript
-registerScheduled<This, Return>(
-    func: (this: This, ...args: ScheduledArgs) => Promise<Return>,
-    config: SchedulerConfig,
-)
-```
-
-Register a workflow to run on a schedule.
-The semantics are the same as for the [`DBOS.scheduled`](#dbosscheduled) decorator.
-For example:
-
-```typescript
-async function scheduledFunction(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-}
-
-const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
-DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
-```
 
 ## Input Validation and Coercion
 
@@ -233,17 +164,19 @@ DBOS.step(
 
 ```typescript
 interface StepConfig {
-  retriesAllowed?: boolean;
-  intervalSeconds?: number;
-  maxAttempts?: number;
-  backoffRate?: number;
-  shouldRetry?: (error: unknown) => boolean | Promise<boolean>;
+  retriesAllowed?: boolean; // Should failures be retried? (default false)
+  intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1)
+  maxAttempts?: number;     // Maximum number of attempts, including the first (default 3)
+  backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2)
+  shouldRetry?: (error: unknown) => boolean | Promise<boolean>; // Predicate called after a failure to decide whether to retry (default: retry every error)
   timeoutMS?: number;
   name?: string;
 }
 ```
 
 A decorator that marks a function as a step in a durable workflow.
+DBOS must be launched before a step is called.
+If a step is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
 
 **Example:**
 ```typescript
@@ -261,8 +194,8 @@ export class Example {
   // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Toolbox.stepOne();
-    await Toolbox.stepTwo();
+    await Example.stepOne();
+    await Example.stepTwo();
   }
 }
 ```
@@ -271,7 +204,7 @@ export class Example {
 - **config**:
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
-  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **maxAttempts**: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
@@ -288,6 +221,8 @@ DBOS.registerStep<This, Args extends unknown[], Return>(
 
 Wrap a function in a step to safely call it from a durable workflow.
 Returns the wrapped function.
+DBOS must be launched before the wrapped function is called.
+If it is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
 
 **Example:**
 
@@ -316,7 +251,7 @@ const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkfl
   - **name**: A name to give the step. If not provided, use the function name.
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
-  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **maxAttempts**: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
@@ -331,7 +266,8 @@ runStep<Return>(
 ```
 
 Run a function as a step in a workflow.
-Can only be called from a durable workflow.
+DBOS must be launched before `runStep` is called.
+If called outside a workflow, `runStep` runs the function as an ordinary function call, without checkpoints, retries, or a timeout.
 Returns the output of the step.
 
 **Example:**
@@ -358,7 +294,7 @@ async function exampleWorkflow() {
   - **name**: A name to give the step.
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
-  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **maxAttempts**: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
@@ -367,7 +303,7 @@ async function exampleWorkflow() {
 
 Workflows are uniquely identified by a class name + function name pair.
 
-If a function is registered through a decorator, by default the class name is taken from the `class` itself, but the name may be overriden with the `DBOS.className` decorator.
+If a function is registered through a decorator, by default the class name is taken from the `class` itself, but the name may be overridden with the `DBOS.className` decorator.
 
 This allows:
   - reusing the same `class` identifier across multiple files, or
@@ -401,7 +337,7 @@ abstract class ConfiguredInstance {
 }
 ```
 
-You can register or decorate class instance methods.  However, if a class has any workflow methods, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
+You can register or decorate class instance methods.  However, if a class has any instance methods that are workflows or are decorated with `@DBOS.step`, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
 
 When you create a new instance of the class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
 This `name` should be unique among instances of the same class.
@@ -413,7 +349,7 @@ class MyClass extends ConfiguredInstance {
   cfg: MyConfig;
   constructor(name: string, config: MyConfig) {
     super(name);
-    this.cfg = cfg;
+    this.cfg = config;
   }
 
   @DBOS.workflow()
@@ -422,10 +358,33 @@ class MyClass extends ConfiguredInstance {
   }
 }
 
-const myClassInstance = new MyClass('instanceA');
+const myClassInstance = new MyClass('instanceA', myConfig);
 ```
 
-The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+To register an instance method without decorators, register it on the class prototype with [`DBOS.registerWorkflow`](#dbosregisterworkflow), passing that prototype as `ctorOrProto` so DBOS can find the instance when the workflow is dequeued or recovered:
+
+```typescript
+class MyClass extends ConfiguredInstance {
+  cfg: MyConfig;
+  constructor(name: string, config: MyConfig) {
+    super(name);
+    this.cfg = config;
+  }
+
+  async testWorkflow(p: string): Promise<void> {
+    // ... Operations that use this.cfg
+  }
+}
+
+MyClass.prototype.testWorkflow = DBOS.registerWorkflow(MyClass.prototype.testWorkflow, {
+  name: "testWorkflow",
+  ctorOrProto: MyClass.prototype,
+});
+
+const myClassInstance = new MyClass('instanceA', myConfig);
+```
+
+The reason for these requirements is to enable workflow recovery.  When you create a new instance of a `ConfiguredInstance` class, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 
 ## Patching
 
@@ -437,8 +396,9 @@ DBOS.patch(
 ): Promise<boolean>
 ```
 
-Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
+Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted (or this patch marker is already present) and `false` if a different checkpoint is already present at this point in history, indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
 
 **Parameters:**
 - `patchName`: The name to give the patch marker that will be inserted into workflow history.
@@ -454,6 +414,7 @@ DBOS.deprecatePatch(
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `true`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
 
 **Parameters:**
 - `patchName`: The name of the patch marker to be bypassed.

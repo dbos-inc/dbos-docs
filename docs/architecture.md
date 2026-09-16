@@ -10,7 +10,7 @@ You use DBOS by installing the open-source library into your application and ann
 While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
 
-Architecturally, an application built with DBOS looks the below diagram.
+Architecturally, an application built with DBOS looks like the below diagram.
 The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
 There's no separate orchestration server and no infrastructure required besides Postgres.
 When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), a "control plane" for your durable workflows that coordinates workflow recovery to guarantee high availability and provides operational tooling such as an admin UI and dashboard, observability integrations, and managed workflow retention policies.
@@ -55,7 +55,7 @@ The only overhead DBOS adds is database writes: one database write per step (to 
 In [benchmarks](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres), a DBOS application using a single Postgres database can sustain a throughput of >40K workflows or steps per second.
 Scaling beyond that is possible by sharding workflows across multiple Postgres databases.
 
-It is worth noting that the since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
+It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
 Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).
 

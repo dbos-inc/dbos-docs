@@ -12,7 +12,7 @@ For example:
 DBOS.logger.info("Welcome to DBOS!");
 ```
 
-Entries logged to the DBOS logger are automatically augmented with DBOS context information, such as the current workflow state.
+When DBOS [exports logs over OTLP](#letting-dbos-export-traces-directly), entries logged to the DBOS logger are automatically augmented with DBOS context information, such as the current workflow ID.
 
 You can [configure](../reference/configuration.md) the log level of this built-in logger:
 ```javascript
@@ -28,7 +28,7 @@ Setting `logLevel` also affects any log messages emitted by the DBOS library.
 
 #### Custom Logger
 
-By default, the DBOS logger writes to the console (or exports its logs over OTLP when `enableOTLP` is set).
+By default, the DBOS logger writes to the console (and also exports its logs over OTLP when `enableOTLP` is set).
 To route all of DBOS's internal logging to your own logging system instead, supply a custom logger that implements the `DLogger` interface:
 
 ```typescript
@@ -57,7 +57,7 @@ You can also supply a custom logger to the [DBOS Client](../reference/client.md)
 
 ```typescript
 const client = await DBOSClient.create({
-  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
   logger: myCustomLogger,
 });
 ```
@@ -66,7 +66,7 @@ When a custom logger is set, DBOS directs all its internal logging to it (includ
 Keep the following contract in mind when implementing `DLogger`:
 
 - **Log entries arrive as strings.** DBOS stringifies non-string entries before delegating. `error()` receives the message of an `Error`, with its stack trace in `metadata.stack`.
-- **Context metadata is provided via the span.** When called from a workflow or step, `metadata.span?.attributes` carries the operation context (workflow ID, operation name and type, etc.).
+- **Context metadata is provided via the span.** When called from a workflow or step with tracing enabled (`tracingEnabled` or `enableOTLP`), `metadata.span?.attributes` carries the operation context (workflow ID, operation name and type, etc.); without tracing, `metadata.span` is undefined.
 - **Level routing is your responsibility.** DBOS does not filter by `logLevel` before delegating; your implementation decides what to do with each level.
 - **OTLP log export is disabled.** Logs are not sent over OTLP even if `enableOTLP` is on (tracing is unaffected).
 - **The logger's lifecycle is yours.** DBOS never flushes or closes it.

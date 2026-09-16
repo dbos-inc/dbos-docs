@@ -51,8 +51,10 @@ For example, if using pytest, declare `reset_dbos` as a fixture and require it f
 
 
 ```python title="conftest.py"
+import os
+
 import pytest
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 
 @pytest.fixture()
 def reset_dbos():

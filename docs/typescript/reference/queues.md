@@ -47,7 +47,7 @@ DBOS must be launched before calling `registerQueue`.
 If the queue already exists in the database, the `onConflict` option controls whether its configuration is overwritten.
 
 **Parameters:**
-- **name**: The name of the queue. Must be unique among all queues in the application.
+- **name**: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
 - **globalConcurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Defaults to no limit.
 - **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `globalConcurrency`.
 - **rateLimit**: A limit on the maximum number of functions which may be started in a given period.
@@ -147,7 +147,7 @@ class WorkflowQueue {
   partitionRateLimit?: QueueRateLimit;
   minPollingIntervalMs?: number;
 
-  // The application that owns this queue; undefined for in-memory and unowned queues.
+  // The application that owns this queue; undefined for unowned queues.
   applicationName?: string;
 
   // Read the latest values from the database.
@@ -171,8 +171,8 @@ class WorkflowQueue {
 ```
 
 A queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) if any of its partition limits is set.
-Each `set` method validates the new value against the queue's other limits: a per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
-Pass `undefined` to any `set` method to remove that limit.
+Each `set` method validates the new value against the queue's other limits using the same rules as [`registerQueue`](#dbosregisterqueue): for example, `workerConcurrency` and each per-partition concurrency limit must be less than or equal to `globalConcurrency`, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency` and `workerConcurrency`.
+Pass `undefined` to any `set` method except `setMinPollingIntervalMs` to remove that limit.
 
 ### Reconfiguring Queues
 
@@ -192,18 +192,16 @@ Setting any partition limit makes the queue [partitioned](../tutorials/queue-tut
 Take care when partitioning a queue at runtime: workflows already enqueued on it have no partition key and will not be dequeued until the queue is unpartitioned.
 :::
 
-The `set` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, `DBOS.listQueues`, or the equivalent [`DBOSClient`](./client.md) methods.
-
 :::warning
 If your application calls [`DBOS.registerQueue`](#dbosregisterqueue) on startup, the next process to start can overwrite settings you applied at runtime via `set` methods.
 Either update the `registerQueue` call to match the new configuration, or pass `onConflict: "never_update"` to preserve the runtime changes.
 :::
-Calling them on a queue created with the legacy `new WorkflowQueue(...)` constructor throws an error.
 
 ## Enqueueing Workflows
 
 Workflows are enqueued by providing a `queueName` argument to [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow).
 This enqueues a function for processing and returns a [handle](./methods.md#workflow-handles) to it.
+If no queue with that name has been [registered](#dbosregisterqueue), the workflow stays `ENQUEUED` until one is.
 Through arguments to `DBOS.startWorkflow`, you can optionally provide a custom priority or deduplication ID to an enqueued workflow.
 
 The `DBOS.startWorkflow` method durably enqueues your function; after it returns, your function is guaranteed to eventually execute even if your app is interrupted.
@@ -219,7 +217,6 @@ async function taskFunction(task) {
 const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function queueFunction(tasks) {
-  await DBOS.registerQueue("example_queue");
   const handles = []
 
   // Enqueue each task so all tasks are processed concurrently.
@@ -235,7 +232,9 @@ async function queueFunction(tasks) {
   }
   return results
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "taskWorkflow"})
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
+
+await DBOS.registerQueue("example_queue");
 ```
 
 **Example syntax using decorated workflows:**
@@ -251,7 +250,6 @@ class Tasks {
 
   @DBOS.workflow()
   static async processTasks(tasks) {
-    await DBOS.registerQueue("example_queue");
     const handles = []
 
     // Enqueue each task so all tasks are processed concurrently.
@@ -268,6 +266,8 @@ class Tasks {
     return results;
   }
 }
+
+await DBOS.registerQueue("example_queue");
 ```
 
 ### DBOS.enqueueWorkflowWithOptions
@@ -297,38 +297,3 @@ DBOS.enqueueWorkflowWithOptionsPortable<T = unknown>(
 ```
 
 Like [`enqueueWorkflowWithOptions`](#dbosenqueueworkflowwithoptions), but serializes arguments in [portable format](../../explanations/portable-workflows.md) for target workflows that take named arguments (for example, a Python workflow with keyword arguments).
-
-## Legacy: In-Memory Queues
-
-```typescript
-class WorkflowQueue {
-  constructor(name: string, queueParameters?: QueueParameters);
-}
-
-interface QueueParameters {
-  globalConcurrency?: number;
-  workerConcurrency?: number;
-  rateLimit?: QueueRateLimit;
-  partitionConcurrency?: number;
-  partitionWorkerConcurrency?: number;
-  partitionRateLimit?: QueueRateLimit;
-  minPollingIntervalMs?: number;
-}
-```
-
-The `new WorkflowQueue(...)` constructor declares an in-memory queue whose configuration is fixed at construction and lives only in process memory.
-It must be called before `DBOS.launch()`, and the resulting queue cannot be reconfigured at runtime.
-
-:::warning
-This API is deprecated. Use [`DBOS.registerQueue`](#dbosregisterqueue) instead.
-:::
-
-```typescript
-const queue = new WorkflowQueue(
-    "example_queue",
-    {
-        workerConcurrency: 5,
-        rateLimit: { limitPerPeriod: 50, periodSec: 30 }
-    },
-);
-```

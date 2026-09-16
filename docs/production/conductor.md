@@ -56,7 +56,12 @@ DBOS(config=config)
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-```javascript
+```typescript
+DBOS.setConfig({
+    "name": "my-app-name",
+    "applicationVersion": "0.1.0",
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+});
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY
 await DBOS.launch({conductorKey})
 ```
@@ -98,7 +103,7 @@ You can view all applications registered with Conductor on the DBOS Console:
 On your application's page, you can see all executors (processes) running that application that are currently connected to Conductor.
 Executors are identified by a unique ID that they generate and print on startup.
 When you restart an executor, it generates a new ID.
-You can tag executors with custom metadata (such as region or instance type) using the `conductor_executor_metadata` configuration option. This metadata is displayed on the dashboard to help you identify executors.
+You can tag executors with custom metadata (such as region or instance type) using the `conductor_executor_metadata` configuration option (in TypeScript, the `conductorExecutorMetadata` launch option). This metadata is displayed on the dashboard to help you identify executors.
 
 <img src={require('@site/static/img/conductor/app-page.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
@@ -116,7 +121,7 @@ To facilitate this, pass in your application name as an environment variable, fo
 config: DBOSConfig = {
     "name": os.environ.get("DBOS_APPLICATION_NAME"),
     "application_version": "0.1.0",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
 }
 DBOS(config=config)
@@ -124,9 +129,9 @@ DBOS(config=config)
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-```javascript
+```typescript
 DBOS.setConfig({
-    "name": process.env.DBOS_APPLICATION_NAME,
+    "name": process.env.DBOS_APPLICATION_NAME!,
     "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
@@ -165,7 +170,7 @@ DBOSConfig config = DBOSConfig.defaults(appName)
 
 :::info
 
-Metadata-Only mode require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
+Metadata-Only mode requires at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 :::
 
 If an application handles especially sensitive data, you may consider enabling metadata-only mode for it.

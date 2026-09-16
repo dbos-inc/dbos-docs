@@ -5,7 +5,7 @@ title: Scheduling Workflows
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
 Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
-Each time a scheduled fires, its workflow is executed by exactly one worker process.
+Each time a schedule fires, its workflow is executed by exactly one worker process.
 
 To schedule a workflow, first define a workflow that takes two arguments: a `Date` (the scheduled execution time) and a context object:
 
@@ -27,6 +27,7 @@ await DBOS.createSchedule({
 });
 ```
 
+Because schedules are stored in the system database, `DBOS.createSchedule` and the other `DBOS` schedule management methods must be called **after** [`DBOS.launch()`](../reference/dbos-class.md#dboslaunch).
 Note that `DBOS.createSchedule` will fail if the schedule already exists.
 If you're defining a set of static schedules to be created on program start, you can instead use `DBOS.applySchedules` to create them atomically, updating them if they already exist:
 
@@ -66,7 +67,7 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
  * * * * * *
 ```
 
-Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
+Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option (inside `options` for `DBOS.createSchedule`, or as a top-level field for `DBOS.applySchedules`) to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
 
 You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
@@ -143,11 +144,11 @@ await DBOS.backfillSchedule(
 );
 ```
 
-Alternatively, you can set `automaticBackfill: true` when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
+Alternatively, you can set `automaticBackfill: true` when creating a schedule (inside `options` for `DBOS.createSchedule`, or as a top-level field for `DBOS.applySchedules`) so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
 
 Backfills (manual or automatic) compute missed executions using the schedule's **current** cron expression.
 If you update a schedule's cron expression and then backfill, the backfill generates one execution per tick of the new expression over the requested window—including times the old expression would never have matched.
-For example, changing a daily schedule to an hourly one and then backfilling yesterday enqueues 24 executions, not 1.
+For example, changing a daily schedule to an hourly one and then backfilling a one-day window enqueues roughly 24 executions (one per hour), not one for the day.
 
 You can also immediately trigger a schedule using [`DBOS.triggerSchedule`](../reference/methods.md#dbostriggerschedule):
 
@@ -185,7 +186,7 @@ The client accepts workflow names as strings instead of function references:
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
 const client = await DBOSClient.create({
-    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
     // The name of the application that owns and runs the schedule
     applicationName: "my-app",
 });
@@ -204,43 +205,3 @@ Under the hood, DBOS constructs an [idempotency key](./workflow-tutorial.md#work
 The key is a concatenation of the schedule name and the scheduled time, ensuring each scheduled invocation occurs exactly once while your application is active.
 
 For the full API reference, see [Workflow Schedules](../reference/methods.md#workflow-schedules).
-
----
-
-# Static Scheduling (Deprecated)
-
-You can use the [`DBOS.registerScheduled`](../reference/workflows-steps.md#dbosregisterscheduled) method or the [`DBOS.scheduled`](../reference/workflows-steps.md#dbosscheduled) decorator, specifying a schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax, to schedule a workflow to run exactly once per time interval.
-
-For example:
-
-
-```typescript
-async function scheduledFunction(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-}
-
-const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
-DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
-```
-
-Or using decorators:
-
-```typescript
-class ScheduledExample{
-  @DBOS.workflow()
-  @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-  }
-}
-```
-
-Scheduled workflows must take in exactly two arguments: the time that the run was scheduled (as a `Date`) and the time the run was actually started (as a `Date`).
-
-Sometimes, you may require a scheduled workflow run **exactly once** per interval, even if the application was offline when it should have run.
-For example, if your workflow is supposed to run every Friday at 9 PM UTC, but your application is offline for maintenance one Friday, you may want the workflow to launch as soon as your application is restarted.
-You can configure this behavior in the `DBOS.scheduled` decorator:
-
-```typescript
-    @DBOS.scheduled({mode: SchedulerMode.ExactlyOncePerInterval, crontab: '...'})
-```

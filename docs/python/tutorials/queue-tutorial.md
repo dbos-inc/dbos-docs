@@ -20,6 +20,7 @@ If multiple applications [share a system database](../../explanations/sharing-a-
 Register your queues after [`DBOS.launch()`](../reference/dbos-class.md#launch).
 
 You can then enqueue any DBOS workflow or step.
+If no queue with that name has been registered, the workflow stays `ENQUEUED` until one is.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflow_handles.md) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
@@ -122,17 +123,18 @@ The [queue worker](../examples/queue-worker.md) example shows this design patter
 You can also enqueue a workflow from a Postgres trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
 
-For example, here is the previous example of enqueing the `dataPipeline` workflow on the `pipelineQueue` queue with arguments, but using PL/pgSQL.
+For example, here is the previous example of enqueueing the `data_pipeline` workflow on the `pipeline_queue` queue with arguments, but using PL/pgSQL.
 
 ```sql
 DECLARE workflow_id text;
 workflow_id := dbos.enqueue_workflow(
-    workflow_name => 'data_pipeline', 
-    queue_name => 'pipeline_queue', 
+    workflow_name => 'data_pipeline',
+    queue_name => 'pipeline_queue',
     positional_args => ARRAY[
-        '"task-123"'::json, 
-        '"data"'::json]
-    )
+        '"task-123"'::json,
+        '"data"'::json
+    ]
+);
 ```
 
 ### Managing Concurrency
@@ -149,8 +151,6 @@ For example, this queue has a worker concurrency of 5, so each process will run 
 ```python
 DBOS.register_queue("example_queue", worker_concurrency=5)
 ```
-
-Note that DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](../reference/configuration.md).
 
 #### Global Concurrency
 
@@ -173,7 +173,6 @@ Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
  ```python
-from fastapi import FastAPI
 from dbos import DBOS
 
 DBOS.register_queue("in_order_queue", global_concurrency=1)
@@ -282,6 +281,7 @@ def on_user_task_submission(user_id: str, task: Task):
 
 :::warning
 Every enqueue on a partitioned queue must supply a partition key.
+A workflow enqueued on a partitioned queue without a partition key stays `ENQUEUED` and is not dequeued.
 :::
 
 ### Combining Queue-Wide and Per-Partition Limits
@@ -322,7 +322,7 @@ Each per-partition concurrency limit must be less than or equal to its queue-wid
 
 You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -339,12 +339,13 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
         handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
+        ...
 ```
 
 ## Singleton Workflows
 
 If you want only one instance of a workflow to be active at a time, you can set `duplication_policy="return-existing"` on [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
-When a workflow with the same `deduplication_id` is already enqueued or executing on the queue, this returns a handle to that existing workflow instead of raising `DBOSQueueDeduplicatedError`.
+When a workflow with the same `deduplication_id` is already enqueued, delayed, or executing on the queue, this returns a handle to that existing workflow instead of raising `DBOSQueueDeduplicatedError`.
 The arguments passed by the colliding caller are discarded, and the returned handle resolves with the original workflow's result.
 
 This requires both a queue and a `deduplication_id`.
@@ -427,7 +428,7 @@ DBOS.set_workflow_delay(handle.workflow_id, delay_until_epoch_ms=int((time.time(
 
 ## Explicit Queue Listening
 
-By default, a process running DBOS listens to (dequeues workflows from) all queues registered in its system database.
+By default, a process running DBOS listens to (dequeues workflows from) all queues owned by its application in its system database.
 However, sometimes you only want a process to listen to a specific list of queues.
 You can use [`DBOS.listen_queues`](../reference/dbos-class.md#listen_queues) to explicitly tell a process running DBOS to only listen to a specific set of queues.
 You must call `DBOS.listen_queues` before DBOS is launched.
@@ -438,7 +439,7 @@ You can configure each type of worker to only listen to the appropriate queue:
 
 ```python
 if __name__ == "__main__":
-    worker_type = ... # "cpu' or 'gpu'
+    worker_type = ... # "cpu" or "gpu"
     config: DBOSConfig = ...
     DBOS(config=config)
     if worker_type == "gpu":

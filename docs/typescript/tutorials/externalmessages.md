@@ -28,7 +28,7 @@ npm i @dbos-inc/confluent-kafka-receive
 
 ## Creating a Receiver
 
-The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which is requires an underlying library object or configuration:
+The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which requires a configuration for its underlying client library:
 
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
@@ -46,7 +46,7 @@ The `KafkaReceiver` constructor takes a KafkaJS configuration as its argument.
 <TabItem value="confluentkafka" label="Confluent Kafka">
 
 ```typescript
-import { ConfluentKafkaReceiver } from '..';
+import { ConfluentKafkaReceiver } from '@dbos-inc/confluent-kafka-receive';
 import { KafkaJS as ConfluentKafkaJS } from '@confluentinc/kafka-javascript';
 
 const kafkaReceiver = new ConfluentKafkaReceiver(kafkaConfig);
@@ -151,16 +151,17 @@ Because each workflow's ID is derived from its message's topic, partition, consu
 ## Rate-Limiting Message Processing
 
 Consumer workflows run on a DBOS [queue](./queue-tutorial.md).
-By default they use an internal queue, but you can name your own queue to configure concurrency or rate limits:
+By default they use an internal queue, but you can name your own queue to configure concurrency or rate limits.
+Register the queue with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue) after launching DBOS:
 
 ```typescript
-await DBOS.registerQueue("kafka_processing_queue", { globalConcurrency: 10 });
-
 @kafkaReceiver.consumer('example-topic', { queueName: 'kafka_processing_queue' })
 @DBOS.workflow()
 static async processMessages(topic: string, partition: number, message: KafkaMessage) {
   //...
 }
+
+await DBOS.registerQueue("kafka_processing_queue", { globalConcurrency: 10 });
 ```
 
 A custom queue is only supported with `ordering: 'none'`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).
@@ -171,6 +172,7 @@ Each consumer's [`group.id`](https://kafka.apache.org/documentation/#consumercon
 You can run multiple consumers on the same topics, including with ordering, by giving each a distinct `group.id`.
 Every consumer group receives its own copy of each message.
 Two consumers that share both a `group.id` and a topic would each receive only some of that topic's messages, so DBOS raises an error at startup if it detects this configuration.
+With KafkaJS, DBOS also raises an error at startup if two consumers share a `group.id` across different topics, as KafkaJS would leave some of their partitions unconsumed; with Confluent Kafka, DBOS logs a warning instead.
 
 ## Sending Messages
 
@@ -183,6 +185,7 @@ The DBOS libraries for Kafka do not include code for sending messages.  Messages
 // Setup ...
 const kafka = new Kafka(kafkaConfig);
 producer = kafka.producer();
+await producer.connect();
 
 // ... produce messages during workflow processing
 await DBOS.runStep(async () => {
@@ -198,8 +201,9 @@ await producer?.disconnect();
 
 ```typescript
 // Setup ...
-const kafka = new Kafka(kafkaConfig);
+const kafka = new ConfluentKafkaJS.Kafka({ kafkaJS: kafkaConfig });
 producer = kafka.producer();
+await producer.connect();
 
 // ... produce messages during workflow processing
 await DBOS.runStep(async () => {
@@ -250,7 +254,7 @@ consumer(
     config?: ConsumerConfig;
     ordering?: KafkaOrdering;
     batchSize?: number;
-  }
+  } = {}
 );
 
 ```
@@ -293,7 +297,7 @@ consumer(
     config?: KafkaJS.ConsumerConstructorConfig;
     ordering?: KafkaOrdering;
     batchSize?: number;
-  }
+  } = {}
 );
 
 ```

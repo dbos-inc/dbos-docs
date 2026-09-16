@@ -20,7 +20,7 @@ To do that, first let's register the two queues and define a workflow:
 
 ```python
 DBOS.register_queue("concurrency-queue", worker_concurrency=5)
-DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("partitioned-queue", partition_concurrency=1)
 
 # This workflow is fairly queued: at most five workflows can run concurrently,
 # but no more than one per tenant.
@@ -28,6 +28,8 @@ DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
 def fair_queue_workflow():
     time.sleep(5)
 ```
+
+Because `DBOS.register_queue` writes the queue's configuration to the system database, call it after `DBOS.launch()`.
 
 Next, let's create an endpoint to enqueue the workflow.
 It does not enqueue the workflow directly, but instead enqueues a "concurrency manager" workflow to the partitioned queue to enforce per-tenant limits:
@@ -103,7 +105,7 @@ debouncer = Debouncer.create(debouncer_workflow, queue="debouncer-queue")
 
 Then, we submit the workflow with the debouncer.
 This delays the workflow until a set time has passed since the last input is submitted for a tenant.
-When the workflow starts, it uses the last input receieved by the debouncer.
+When the workflow starts, it uses the last input received by the debouncer.
 
 ```python
 # Each time a new input is submitted for a tenant, debounce debouncer_workflow.
@@ -124,7 +126,7 @@ Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps)
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/queue-patterns
+cd dbos-demo-apps/python/queue-patterns
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/queue-patterns) to run the example.

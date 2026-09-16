@@ -162,8 +162,8 @@ def process_input(user_input):
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
-debouncer = Debouncer.create(process_input)
 # then process the last input submitted.
+debouncer = Debouncer.create(process_input)
 def on_user_input_submit(user_id, user_input):
     debounce_key = user_id
     debounce_period_sec = 60
@@ -175,10 +175,10 @@ See the [debouncing reference](../reference/contexts.md#debouncing) for more det
 
 ## Coroutine (Async) Workflows
 
-Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
+Coroutines (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
 Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
-You should start coroutine workflows using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`enqueue_async`](../reference/queues.md#enqueue_async).
-Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `enqueue_async` starts the workflow in a different event loop.
+You should start coroutine workflows using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`DBOS.enqueue_workflow_async`](../reference/contexts.md#enqueue_workflow_async).
+Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but a workflow enqueued with `DBOS.enqueue_workflow_async` is started by DBOS in the event loop in which `DBOS.launch()` was called (if that loop is still running) or otherwise in a separate background event loop.
 Additionally, coroutine workflows should use the asynchronous versions of the workflow [communication](./workflow-communication.md) context methods.
 
 
@@ -193,8 +193,7 @@ async def example_step():
 async def example_workflow(friend: str):
     await DBOS.sleep_async(10)
     body = await example_step()
-    result = await asyncio.to_thread(example_transaction, body)
-    return result
+    return body
 ```
 
 ### Running Async Steps In Parallel

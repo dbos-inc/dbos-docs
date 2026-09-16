@@ -133,6 +133,7 @@ async function agenticResearchWorkflowFunction(
 }
 export const agenticResearchWorkflow = DBOS.registerWorkflow(
   agenticResearchWorkflowFunction,
+  { name: "agenticResearchWorkflow" },
 );
 ```
 
@@ -217,6 +218,7 @@ async function researchQueryWorkflowFunction(
 }
 export const researchQueryWorkflow = DBOS.registerWorkflow(
   researchQueryWorkflowFunction,
+  { name: "researchQueryWorkflow" },
 );
 ```
 
@@ -714,7 +716,7 @@ First, clone this repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd typescript/hacker-news-agent
+cd dbos-demo-apps/typescript/hacker-news-agent
 ```
 
 Install dependencies and build the project:

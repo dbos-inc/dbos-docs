@@ -149,13 +149,13 @@ Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md)
 
 ```typescript
 // Starting a workflow from in your application
-const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "order-123"})();
+const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "order-123"})(order);
 const result = await handle.getResult();
 ```
 
 ```typescript
 // Starting a workflow from another application using the DBOS Client
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 await client.enqueue<typeof orderWorkflow>(
     { workflowName: "orderWorkflow", queueName: "orders" },
     order,
@@ -231,7 +231,7 @@ Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#
 <TabItem value="typescript" label="TypeScript">
 
 ```typescript
-const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})();
+const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})(order);
 ```
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
@@ -495,9 +495,15 @@ This provides exactly-once semantics for database writes, which is stronger than
 Learn more in the [transactions tutorial](../python/tutorials/transaction-tutorial.md).
 
 ```python
-@DBOS.transaction()
+import os
+from dbos import SQLAlchemyDatasource
+from sqlalchemy import text
+
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+
+@ds.transaction()
 def update_order_status(order_id: str, status: str) -> None:
-    DBOS.sql_session.execute(
+    ds.sql_session().execute(
         text("UPDATE orders SET status = :status WHERE id = :id"),
         {"status": status, "id": order_id}
     )
@@ -876,7 +882,11 @@ await client.create_schedule(
 <TabItem value="python" label="Python">
 
 ```python
-DBOS.create_schedule("daily-report", daily_report_workflow, schedule="0 9 * * *")
+DBOS.create_schedule(
+    schedule_name="daily-report",
+    workflow_fn=daily_report_workflow,
+    schedule="0 9 * * *",
+)
 ```
 
 DBOS schedules also support pausing, resuming, backfilling missed runs, and triggering immediate execution.
@@ -993,7 +1003,7 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#st
 
 In Temporal, you can define a codec to encrypt workflow information before it is stored on a Temporal server to limit Temporal's access to sensitive data.
 In DBOS, this is rarely necessary because data is stored **only** in your own database.
-However, if it is necessary to store sensitive data encrypted, you can use a custom serializer ([Python](../python/reference/contexts.md#custom-serialization), [TypeScript](../typescript/reference/methods.md#serialization-strategy)) to encrypt your data before storing it and decrypt it before retrieving it.
+However, if it is necessary to store sensitive data encrypted, you can use a custom serializer ([Python](../python/reference/contexts.md#custom-serialization), [TypeScript](../typescript/reference/configuration.md#custom-serialization)) to encrypt your data before storing it and decrypt it before retrieving it.
 
 ## What's Different in DBOS
 

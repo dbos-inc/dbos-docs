@@ -22,7 +22,7 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./python/
 
 #### 1. Create a Virtual Environment
 Create and activate a Python virtual environment in a directory.
-DBOS requires Python 3.9 or later.
+DBOS requires Python 3.10 or later.
 
 </article>
 
@@ -203,7 +203,7 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./typescr
 <article className="col col--6">
 
 #### 1. Initialize an Application
-Initalize a starter application and enter its directory.
+Initialize a starter application and enter its directory.
 DBOS requires Node v20 or later.
 </article>
 
@@ -376,7 +376,7 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./golang/
 <article className="col col--6">
 
 Install the DBOS Go CLI, then initialize a starter application and enter its directory.
-DBOS requires Go 1.23.0 or higher.
+DBOS requires Go 1.25.0 or higher.
 </article>
 
 <article className="col col--6">

@@ -24,7 +24,7 @@ pip install dbos
 
 In your Django application `AppConfig`, configure and launch DBOS inside the `ready` method:
 
-```python  title="project/settings.py"
+```python  title="polls/apps.py"
 import os
 from django.apps import AppConfig
 from dbos import DBOS, DBOSConfig

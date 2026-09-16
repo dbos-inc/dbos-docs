@@ -31,7 +31,7 @@ You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md)
-or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-tables.md#dbossend_message)
+or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-tables.md#dbossend_message).
 
 #### Recv
 
@@ -67,7 +67,7 @@ def checkout_workflow():
 An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```python
-@app.post("/payment_webhook/{workflow_id}/{payment_status}")
+@app.post("/payment_webhook/{payment_id}/{payment_status}")
 def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     # Send the payment status to the checkout workflow.
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
@@ -77,7 +77,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once delivery.
+If you're sending a message from normal Python code, you can pass an `idempotency_key` to [`DBOS.send`](../reference/contexts.md#send) to guarantee exactly-once delivery.
 
 ## Workflow Events
 
@@ -103,7 +103,7 @@ DBOS.get_event(
     workflow_id: str,
     key: str,
     timeout_seconds: float = 60,
-) -> None
+) -> Any
 ```
 
 You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
@@ -134,7 +134,7 @@ The payments workflow emits the payment ID using `set_event()`:
 def checkout_workflow():
     ...
     payment_id = ...
-    dbos.set_event(PAYMENT_ID, payment_id)
+    DBOS.set_event(PAYMENT_ID, payment_id)
     ...
 ```
 

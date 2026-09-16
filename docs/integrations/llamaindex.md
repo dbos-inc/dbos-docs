@@ -62,7 +62,6 @@ config: DBOSConfig = {
     "name": "llamaindex-counter-example",
     "application_version": "0.1.0",
     "system_database_url": "sqlite:///counter_example.sqlite",
-    "run_admin_server": False
 }
 DBOS(config=config)
 
@@ -137,7 +136,6 @@ config: DBOSConfig = {
     "name": "llamaindex-server",
     "application_version": "0.1.0",
     "system_database_url": "sqlite:///server_example.sqlite",
-    "run_admin_server": False
 }
 DBOS(config=config)
 
