@@ -8,14 +8,10 @@ hide_table_of_contents: false
 
 You can use DBOS to add [durable execution](../typescript/tutorials/workflow-tutorial.md) to agents built with the [Vercel AI SDK](https://ai-sdk.dev/) through the [`@dbos-inc/vercel-ai`](https://www.npmjs.com/package/@dbos-inc/vercel-ai) package.
 
-This package makes AI SDK **agents** durable, backed by your Postgres database.
-All you have to do is wrap your model with `durableCalls` and run your generation inside a DBOS workflow.
+This package makes AI SDK agents durable, backed by your Postgres database.
+All you have to do is wrap your model with `durableCalls` and your tools with `durableTools` and run your agents inside a DBOS workflow.
 Then, this integration automatically checkpoints every action your agents take in Postgres.
-If your process crashes mid-agent, DBOS replays the completed steps from their checkpoints and the agent resumes exactly where it left off.
-
-This package is implemented as standard AI SDK [middleware](https://ai-sdk.dev/docs/ai-sdk-core/middleware), so you keep your provider, your model configuration, and the familiar APIs like `generateText`, `streamText`, and `ToolLoopAgent`.
-Durability is transparent to your agent code.
-For example:
+If your process is interrupted, DBOS replays your agent from its checkpoints so it resumes from where it left off.
 
 ```ts
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -52,96 +48,121 @@ console.log(await researchAgent('Why did the agent cross the road?'));
 npm install @dbos-inc/vercel-ai @dbos-inc/dbos-sdk ai
 ```
 
-Requires AI SDK v7+ and a Postgres database for DBOS.
+Requires DBOS v4.21+ or v5, AI SDK v7+, and a Postgres database for DBOS.
 
-## How It Works
+## Durable Model Calls
 
-When an agent runs inside a DBOS workflow, DBOS makes three things durable:
+To durably checkpoint each call you make to a model, wrap your model in `durableCalls`.
+Then, call your model or agent from a workflow:
 
-- **Every model call.** `durableCalls()` is AI SDK middleware that intercepts `doGenerate`/`doStream` and runs each call through [`DBOS.runStep`](../typescript/tutorials/step-tutorial.md). The complete result (content, usage, finish reason, response metadata) is checkpointed in Postgres. On recovery, completed calls replay from their checkpoints without contacting the model provider.
-- **The agent loop.** Because DBOS workflows replay deterministically on recovery and each model call replays from its checkpoint, a multi-step, tool-calling agent resumes from the first unfinished step instead of restarting from the beginning.
-- **Tool calls.** MCP tools (via [`durableMCPTools`](#mcp-tools)) are checkpointed automatically. Your own tools' side effects are durable when you wrap their `execute` in `DBOS.runStep` (see [Tools](#tools)).
+```ts
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import { ToolLoopAgent, wrapLanguageModel } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { durableCalls } from '@dbos-inc/vercel-ai';
 
-Outside a workflow (or inside another step) the wrapped model calls the provider directly with no checkpointing, so the same model works anywhere in your app.
+const model = wrapLanguageModel({ model: openai('gpt-5'), middleware: durableCalls() });
+const agent = new ToolLoopAgent({ model, instructions: 'You are a helpful research assistant.', tools });
 
-All DBOS step options are accepted and apply per model call:
+const researchAgent = DBOS.registerWorkflow(
+  async (question: string) => {
+    const result = await agent.stream({ prompt: question });
+    for await (const delta of result.textStream) process.stdout.write(delta);
+    return await result.text;
+  },
+  { name: 'researchAgent' },
+);
+```
+
+You can parameterize `durableCalls` to configure model call retries and timeouts:
 
 ```ts
 durableCalls({
-  retriesAllowed: true,   // retry failed model calls (default: true)
-  maxAttempts: 5,         // total attempts when retries are allowed (default: 3)
-  intervalSeconds: 1,     // delay before first retry (default: 1)
-  backoffRate: 2,         // exponential backoff multiplier (default: 2)
-  shouldRetry: (error) => true,  // per-error retry predicate (default: skip provider-declared non-retryable errors and aborts)
-  timeoutMS: 60000,       // per-attempt timeout
-  name: 'my-model-call',  // step name (default: "<provider>.<modelId>.<operation>")
+  name?: string;              // step name (default: "<provider>.<modelId>.<operation>")
+  retriesAllowed?: boolean;   // retry failed model calls (default: true)
+  maxAttempts?: number;       // total attempts when retries are allowed (default: 3)
+  intervalSeconds?: number;   // delay before first retry (default: 1)
+  backoffRate?: number;       // exponential backoff multiplier (default: 2)
+  shouldRetry?: (error: unknown) => boolean;  // default: skip provider-declared non-retryable errors and aborts
+  timeoutMS?: number;         // per-attempt timeout
+  durableStream?: string;     // stream each call's output to this durable stream
 });
 ```
 
-Retries are on by default so that a transient provider error is absorbed inside a single durable step.
-The default `shouldRetry` treats errors the provider marks non-retryable (an AI SDK `APICallError`/`GatewayError` with `isRetryable === false`, e.g. a 401 or an invalid-request 400) and aborts/timeouts as terminal, so they fail fast instead of retrying `maxAttempts` times.
-Pass your own `shouldRetry` to override it, or `retriesAllowed: false` to disable step retries.
+## Durable Streams
 
-Because DBOS owns retries by default, pass `maxRetries: 0` to the AI SDK call so retry behavior is governed in one place; otherwise the two compose multiplicatively and each AI SDK retry is a fresh step.
-
-## Streaming
-
-You can stream durable model responses inside a workflow with `streamText`.
-During streaming, DBOS checkpoints only the final completed output, not individual deltas.
-As a consequence:
-
-- You can safely forward streamed deltas to a UI or terminal, but you should not perform durable steps on them because model responses are not resumable. Instead, run your own durable steps on the complete result (`result.text`) after the stream ends. Tool calls performed by the AI SDK during streaming are already durable because they execute after the model call has been checkpointed.
-- Do not exit a stream before it completes. To stop reading early, either drain the stream (`await result.consumeStream()`) or abort it.
-- To abort early, pass an `abortSignal` to `streamText` and fire it. The output streamed so far becomes the durable result for that model call.
+You can [**durably stream**](../typescript/tutorials/workflow-communication.md#workflow-streaming) agent or model output so it can be read by an external client or UI.
+To do this, configure `durableCalls` or `durableTools`/`durableMCPTools` with a durable stream name:
 
 ```ts
-import { streamText } from 'ai';
-import { durableCalls } from '@dbos-inc/vercel-ai';
+import { createUIMessageStreamResponse, streamText } from 'ai';
+import { durableCalls, durableTools, readDurableStream } from '@dbos-inc/vercel-ai';
 
-const model = wrapLanguageModel({
-  model: openai('gpt-5'),
-  middleware: durableCalls({ retriesAllowed: true, maxAttempts: 5 }),
-});
+const model = wrapLanguageModel({ model: openai('gpt-5'), middleware: durableCalls({ durableStream: 'ui' }) });
+const tools = durableTools(myTools, { durableStream: 'ui' });
 
-const streamingAgent = DBOS.registerWorkflow(async (prompt: string) => {
-  const result = streamText({ model, prompt });
-  for await (const delta of result.textStream) {
-    process.stdout.write(delta);
-  }
+const chatTurn = DBOS.registerWorkflow(async (messages: ModelMessage[]) => {
+  const result = streamText({ model, messages, tools, stopWhen: stepCountIs(10) });
   return await result.text;
-}, { name: 'streamingAgent' });
+}, { name: 'chatTurn' });
+
+const handle = await DBOS.startWorkflow(chatTurn)(messages);
+return createUIMessageStreamResponse({
+  stream: readDurableStream({ workflowID: handle.workflowID, key: 'ui', messageId }),
+});
 ```
 
-## Tools
+You can read from a durable stream using `readDurableStream`, for example to stream it to a UI.
+It emits a stream of AI SDK `UIMessageChunk`.
+You can also pass a [`DBOSClient`](../typescript/reference/client.md) into `readDurableStream` to read it from a different process.
 
-Model calls in a tool-calling loop are each checkpointed individually, so a recovered agent resumes mid-loop.
-You should wrap your tool's `execute` in a DBOS step so it is checkpointed too.
+You can write your own data to a stream with `writeDurableStream(key, chunks)`.
+Your streams are closed when your workflow finishes; you can also close a stream early using `closeDurableStream`.
+
+If a workflow is interrupted during a model call, when the workflow recovers, it restarts the model call and streams its output again.
+Readers that connect afterwards see the model's output once; live readers receive a transient `data-dbos-superseded` chunk indicating the model call has been restarted.
+
+## Durable Tools
+
+To durably checkpoint your agents' tool calls, wrap them in `durableTools`:
 
 ```ts
 import { tool, stepCountIs } from 'ai';
+import { durableTools } from '@dbos-inc/vercel-ai';
 import { z } from 'zod';
 
+const tools = durableTools({
+  getWeather: tool({
+    description: 'Get the weather for a city',
+    inputSchema: z.object({ city: z.string() }),
+    execute: ({ city }) => fetchWeather(city),
+  }),
+});
+
 const agent = DBOS.registerWorkflow(async (question: string) => {
-  const result = await generateText({
-    model,
-    prompt: question,
-    tools: {
-      getWeather: tool({
-        description: 'Get the weather for a city',
-        inputSchema: z.object({ city: z.string() }),
-        execute: ({ city }) => DBOS.runStep(() => fetchWeather(city), { name: 'getWeather' }),
-      }),
-    },
-    stopWhen: stepCountIs(10),
-  });
+  const result = await generateText({ model, prompt: question, tools, stopWhen: stepCountIs(10) });
   return result.text;
 }, { name: 'weatherAgent' });
 ```
 
-### MCP Tools
+You can pass step configuration (such as timeouts or retries) to `durableTools`.
+You can set defaults for all tools or configure tools individually.
+Retries are off by default.
 
-`durableMCPTools` wraps an [MCP](https://modelcontextprotocol.io/) client (e.g. from [`@ai-sdk/mcp`](https://www.npmjs.com/package/@ai-sdk/mcp)) so both the tool listing and every tool call run as durable steps.
-Each tool call is checkpointed so recovery replays results instead of re-invoking the tool:
+```ts
+const tools = durableTools(myTools, {
+  timeoutMS: 30_000,
+  tools: {
+    getWeather: { retriesAllowed: true, maxAttempts: 3 },
+  },
+});
+```
+
+When using durable tools, to ensure the ordering of parallel tool calls is consistent during recovery, do not await I/O in callbacks that run before a tool executes, such as `onToolExecutionStart`.
+
+### Durable MCP Tools
+
+`durableMCPTools` wraps an [MCP](https://modelcontextprotocol.io/) client (for example, from [`@ai-sdk/mcp`](https://www.npmjs.com/package/@ai-sdk/mcp)) so both the tool listing and every tool call run as durable steps:
 
 ```ts
 import { createMCPClient } from '@ai-sdk/mcp';
@@ -163,30 +184,34 @@ const tools = await durableMCPTools(mcpClient, {
 });
 ```
 
-## Concurrency
+## Durable Subagents
 
-Run **one durable model call at a time within a single workflow**.
-DBOS requires workflows to be deterministic, but the AI SDK issues concurrent model calls in nondeterministic order.
-To guard against nondeterminism, this integration throws an error if it detects concurrent durable model calls in the same workflow.
-Sequential calls (including a normal tool-calling loop, where each model call completes before the next begins) are unaffected.
-
-To fan out model calls in parallel, give each its own **child workflow**:
+You can delegate complex tasks to **subagents**, which act as tools for their "parent" agent.
+To create a durable subagent, wrap your agent in `agentTool`, then pass it into `durableTools` just like any other tool:
 
 ```ts
-const summarizeOne = DBOS.registerWorkflow(
-  async (doc: string) => (await generateText({ model, prompt: `Summarize: ${doc}` })).text,
-  { name: 'summarizeOne' },
-);
+import { ToolLoopAgent } from 'ai';
+import { agentTool, durableTools } from '@dbos-inc/vercel-ai';
 
-const summarizeAll = DBOS.registerWorkflow(async (docs: string[]) => {
-  const handles = await Promise.all(
-    docs.map((doc) => DBOS.startWorkflow(summarizeOne)(doc)),
-  );
-  return Promise.all(handles.map((h) => h.getResult()));
-}, { name: 'summarizeAll' });
+const researcher = new ToolLoopAgent({ model, instructions: 'Research thoroughly.', tools: researchTools });
+
+const research = agentTool({
+  name: 'research',                          // subagent name
+  description: 'Research a question in depth',
+  inputSchema: z.object({ question: z.string() }),
+  agent: researcher,
+  prompt: ({ question }) => question,        // tool input → prompt (or ModelMessage[])
+});
+
+const tools = durableTools({ research, getWeather }, { durableStream: 'ui' });
+const orchestrator = new ToolLoopAgent({ model, tools });
 ```
 
-## Embeddings
+Internally, subagents are implemented as child workflows of the parent agent workflow, so each call has its own checkpoints and parallel calls are safe.
+Call `agentTool` before `DBOS.launch()`, since it registers that workflow.
+By default, the tool returns the subagent's final text; you can configure this with the `output` parameter.
+
+## Durable Embedding Models
 
 `durableEmbeddingCalls` enables durable calls to embedding models:
 
@@ -199,12 +224,10 @@ const embeddingModel = wrapEmbeddingModel({
   middleware: durableEmbeddingCalls({ retriesAllowed: true }),
 });
 
-const { embeddings } = await embedMany({ model: embeddingModel, values: chunks, maxParallelCalls: 1 });
+const { embeddings } = await embedMany({ model: embeddingModel, values: chunks });
 ```
 
-Pass `maxParallelCalls: 1` when embedding more values than the model's per-call limit. `embedMany` otherwise splits the input into batches and runs them concurrently, which the concurrency guard rejects (their step order would be nondeterministic on replay); `maxParallelCalls: 1` runs the batches sequentially, keeping them durable and replay-safe.
-
-## Images
+## Durable Image Models
 
 `durableImageCalls` makes image generation durable:
 
