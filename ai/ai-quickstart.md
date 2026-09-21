@@ -453,7 +453,7 @@ async function main() {
 main();
 ```
 
-Wrap tool `execute` functions in [`DBOS.runStep`](../typescript/tutorials/step-tutorial.md) to make their side effects durable too. The integration also supports durable [streaming](../integrations/vercel-ai.md#streaming), [MCP tools](../integrations/vercel-ai.md#mcp-tools), [embeddings](../integrations/vercel-ai.md#embeddings), and [image generation](../integrations/vercel-ai.md#images).
+Wrap your tools with [`durableTools`](../integrations/vercel-ai.md#durable-tools) to make their side effects durable too. The integration also supports [durable streams](../integrations/vercel-ai.md#durable-streams), [MCP tools](../integrations/vercel-ai.md#durable-mcp-tools), [subagents](../integrations/vercel-ai.md#durable-subagents), [embeddings](../integrations/vercel-ai.md#durable-embedding-models), and [image generation](../integrations/vercel-ai.md#durable-image-models).
 
 To learn more, check out the [Vercel AI SDK integration guide](../integrations/vercel-ai.md) and the [Vercel AI SDK documentation](https://ai-sdk.dev/).
 
