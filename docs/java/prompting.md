@@ -69,7 +69,7 @@ The main addition to any project is additional dependencies.
 For **Gradle** (`build.gradle`):
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:0.8.0'
+    implementation 'dev.dbos:transact:1.1.0'
 }
 ```
 
@@ -79,7 +79,7 @@ For **Maven** (`pom.xml`):
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>0.8.0</version>
+        <version>1.1.0</version>
     </dependency>
 </dependencies>
 ```
@@ -177,11 +177,12 @@ import dev.dbos.transact.DBOS;
 import dev.dbos.transact.DBOSClient;
 import dev.dbos.transact.StartWorkflowOptions;
 import dev.dbos.transact.config.DBOSConfig;
+import dev.dbos.transact.exceptions.DBOSQueueDuplicatedException;
 import dev.dbos.transact.workflow.ForkOptions;
 import dev.dbos.transact.workflow.ListWorkflowsInput;
-import dev.dbos.transact.workflow.Queue;
+import dev.dbos.transact.workflow.QueueName;
+import dev.dbos.transact.workflow.QueueOptions;
 import dev.dbos.transact.workflow.ScheduleStatus;
-import dev.dbos.transact.workflow.Scheduled;
 import dev.dbos.transact.workflow.SerializationStrategy;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.StepOptions;
@@ -194,7 +195,7 @@ import dev.dbos.transact.workflow.WorkflowState;
 import dev.dbos.transact.workflow.WorkflowStatus;
 ```
 
-Any DBOS program MUST create a `DBOS` instance, register workflows and queues, then call `launch()`.  For simple cases, this can be in its main function, like so.
+Any DBOS program MUST create a `DBOS` instance, register workflows, call `launch()`, then register any queues it uses.  For simple cases, this can be in its main function, like so.
 You MUST use this default configuration (changing the name 'dbos-java-starter' to the real app name as appropriate) unless otherwise specified.
 
 ```java
@@ -401,7 +402,7 @@ Create workflow options with all fields set to their defaults.
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
-- **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue. The queue must be registered first. `new StartWorkflowOptions(QueueName queue)` is equivalent; do NOT use `new StartWorkflowOptions(String)` for a queue, because its `String` argument is a workflow ID.
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
@@ -415,9 +416,9 @@ Create workflow options with all fields set to their defaults.
 
 - **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 
-- **`withPriority(int priority)`** - May only be used when enqueuing. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities are dequeued first.
+- **`withPriority(Integer priority)`** - May only be used when enqueuing. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority.
 
-- **`withQueuePartitionKey(String key)`** - Set a queue partition key. Only for partitioned queues (created with `withPartitioningEnabled`).
+- **`withQueuePartitionKey(String key)`** - Set a queue partition key. Required on partitioned queues (queues with a per-partition limit), and not allowed on other queues.
 
 - **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued.
 
@@ -586,7 +587,7 @@ public String exampleWorkflow(float timeToSleepSeconds, String task) throws Inte
 
 Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
 To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the `applicationVersion`) configuration parameter.
+When DBOS is launched, it computes an application version from a hash of the source code of its workflows, the DBOS version, and the application name (this can be overridden with the `withAppVersion` configuration method).
 All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
@@ -846,66 +847,408 @@ If a step exhausts all retry attempts, it throws an exception to the calling wor
 Workflow queues ensure that workflow functions will be run, without starting them immediately.
 Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
 
-All queues must be created before DBOS is launched, as this allows recovery to proceed correctly.
-
-### Queue
-
-```java
-new Queue(String name)
-```
+Queues are stored in the system database.
+You MUST register a queue with `dbos.registerQueue` **after** calling `dbos.launch()`, and before enqueueing workflows on it.
+Do NOT use `new Queue(...)`, `dbos.registerQueue(Queue)`, `dbos.registerQueues(...)`, or `dbos.getQueue(...)`: they declare deprecated in-memory queues that no other process can see.
 
 ```java
-public record Queue(
-    String name,
-    Integer concurrency,
-    Integer workerConcurrency,
-    boolean priorityEnabled,
-    boolean partitioningEnabled,
-    RateLimit rateLimit
-) {
-    public Queue withName(String name);
-    public Queue withConcurrency(Integer concurrency);
-    public Queue withWorkerConcurrency(Integer workerConcurrency);
-    public Queue withRateLimit(RateLimit rateLimit);
-    public Queue withRateLimit(int limit, Duration period);
-    public Queue withRateLimit(int limit, double periodSeconds);
-    public Queue withPriorityEnabled(boolean priorityEnabled);
-    public Queue withPartitioningEnabled(boolean partitioningEnabled);
-}
-
-public static record RateLimit(int limit, Duration period) {}
-```
-
-Create a new workflow queue with the specified name and optional configuration parameters.
-Queues must be created and registered with `dbos.registerQueue` before calling `dbos.launch()`.
-You can enqueue a workflow using the `withQueue` parameter of `startWorkflow`.
-
-**Parameters:**
-- **name**: The name of the queue. Must be unique among all queues in the application.
-- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process.
-- **concurrency**: The maximum number of workflows from this queue that may run concurrently. This concurrency limit is global across all DBOS processes using this queue.
-- **rateLimit**: A `RateLimit` limiting the maximum number of workflows that may be started in a given period.
-- **priorityEnabled**: Enable setting priority for workflows on this queue.
-- **partitioningEnabled**: Enable partitioning on this queue. In partitioned queues, all flow control is applied per partition key.
-
-**Example Syntax:**
-
-```java
-Queue queue = new Queue("example-queue")
-  .withWorkerConcurrency(1);
+dbos.launch();
+dbos.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
 ```
 
 ### dbos.registerQueue
-Queues must be registered before calling `dbos.launch()`:
 
 ```java
-void registerQueue(Queue queue)
-void registerQueues(Queue... queues)
+void registerQueue(String name, QueueOptions options)
+void registerQueue(String name, QueueOptions options, QueueConflictResolution onConflict)
 ```
 
-### Enqueueing from Another Application with DBOSClient
+Register a queue in the system database. Must be called after `dbos.launch()`.
+Queue names must be unique within the system database; `_dbos_internal_queue` is reserved.
+To register a queue with default settings (no limits), pass `QueueOptions.empty()`.
 
-`DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
+If a queue with this name already exists in the database, `onConflict` controls whether its configuration is overwritten:
+- `QueueConflictResolution.UPDATE_IF_LATEST_VERSION` (default): overwrite only when this process runs the latest registered application version. Safe for rolling deploys.
+- `QueueConflictResolution.ALWAYS_UPDATE`: always overwrite.
+- `QueueConflictResolution.NEVER_UPDATE`: leave the existing configuration unchanged.
+
+### QueueOptions
+
+`QueueOptions` holds a queue's configuration.
+Build it with a static `set...` factory and chain `and...` methods:
+
+```java
+QueueOptions.setConcurrency(10)
+    .andWorkerConcurrency(2)
+    .andRateLimit(100, Duration.ofSeconds(60));
+```
+
+Static factories (each has a matching `and...` method for chaining):
+
+- **`setConcurrency(Integer value)`**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes.
+- **`setWorkerConcurrency(Integer value)`**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must not exceed `concurrency`.
+- **`setRateLimit(Integer max, Duration period)`** / **`setRateLimit(int limit, long period, TimeUnit unit)`**: The maximum number of workflows that may be started from this queue in a rolling period, across all processes.
+- **`setPartitionConcurrency(Integer value)`**: The maximum number of workflows from any one partition that may run concurrently across all processes.
+- **`setPartitionWorkerConcurrency(Integer value)`**: The maximum number of workflows from any one partition that may run concurrently within a single process.
+- **`setPartitionRateLimit(Integer max, Duration period)`** / **`setPartitionRateLimit(int limit, long period, TimeUnit unit)`**: The maximum number of workflows that may be started from any one partition in a rolling period.
+- **`setPriorityEnabled(boolean value)`**: Deprecated since 1.1 and ignored. Every queue already dequeues in priority order; do not set it.
+- **`setPollingInterval(Duration value)`**: How often workers poll the database for new workflows on this queue. Defaults to 1 second.
+- **`empty()`**: No settings.
+
+Do NOT use `setPartitionQueue`/`andPartitionQueue`; they are deprecated. Setting any per-partition limit is what partitions a queue.
+
+### Enqueueing Workflows
+
+Enqueue a workflow by passing a `QueueName` to `StartWorkflowOptions`:
+
+```java
+WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+    () -> proxy.processTask(task),
+    new StartWorkflowOptions(QueueName.of("example-queue")));
+```
+
+`new StartWorkflowOptions().withQueue("example-queue")` also works.
+Do NOT write `new StartWorkflowOptions("example-queue")`: the single-`String` constructor takes a **workflow ID**, not a queue name.
+Enqueueing on a queue that isn't registered throws.
+Queued workflows are started in first-in, first-out (FIFO) order.
+
+To enqueue a workflow by name, including one implemented by another application or in another language that shares the system database, use `dbos.enqueueWorkflow` with the same `EnqueueOptions` as `DBOSClient` (see below):
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(EnqueueOptions options, Object[] args)
+```
+
+### Queue Example
+
+Here's an example of a workflow using a queue to process tasks in parallel:
+
+```java
+interface Example {
+    String processTask(String task);
+    List<String> processTasks(List<String> tasks);
+}
+
+class ExampleImpl implements Example {
+    private final DBOS dbos;
+    private Example proxy;
+
+    ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
+
+    void setProxy(Example proxy) {
+        this.proxy = proxy;
+    }
+
+    @Workflow
+    public String processTask(String task) {
+        // ...
+        return task;
+    }
+
+    @Workflow
+    public List<String> processTasks(List<String> tasks) {
+        var handles = new ArrayList<WorkflowHandle<String, RuntimeException>>();
+        // Enqueue each task so all tasks are processed concurrently.
+        for (var task : tasks) {
+            handles.add(dbos.startWorkflow(
+                () -> proxy.processTask(task),
+                new StartWorkflowOptions(QueueName.of("task-queue"))));
+        }
+        // Wait for each task to complete and retrieve its result.
+        var results = new ArrayList<String>();
+        for (var handle : handles) {
+            results.add(handle.getResult());
+        }
+        return results;
+    }
+}
+
+// In main:
+DBOS dbos = new DBOS(config);
+ExampleImpl impl = new ExampleImpl(dbos);
+Example proxy = dbos.registerProxy(Example.class, impl);
+impl.setProxy(proxy);
+dbos.launch();
+dbos.registerQueue("task-queue", QueueOptions.setWorkerConcurrency(5));
+```
+
+### Reconfiguring Queues at Runtime
+
+Queue configuration lives in the system database, so you can change it at runtime without redeploying or restarting your workers.
+Workers pick up the new configuration on their next polling iteration.
+
+```java
+void updateQueue(String name, QueueOptions options)
+Optional<Queue> findQueue(String name)
+List<Queue> listQueues()
+boolean deleteQueue(String name)
+```
+
+`updateQueue` writes only the fields set in `options`; fields not set are left unchanged. To clear a limit, set it to `null`:
+
+```java
+dbos.updateQueue("example-queue", QueueOptions.setConcurrency(20));
+dbos.updateQueue("example-queue", QueueOptions.setRateLimit(null, null));  // remove the rate limit
+```
+
+`findQueue` returns a `Queue` record, a snapshot of the queue's configuration with accessors such as `concurrency()`, `workerConcurrency()`, `rateLimit()`, `partitionConcurrency()`, `partitionWorkerConcurrency()`, `partitionRateLimit()`, and `pollingInterval()`.
+Do NOT construct `Queue` yourself.
+
+**Warning:** workflows already enqueued on a deleted queue can no longer be dequeued or executed until a queue with the same name is registered again. Cancel or drain pending workflows before deleting a queue.
+
+`DBOSClient` has the same `registerQueue`, `updateQueue`, `findQueue`, `listQueues`, and `deleteQueue` methods, for managing queues from outside your application.
+
+### Enqueueing from Another Application
+
+Often, you want to enqueue a workflow from outside your DBOS application.
+For example, let's say you have an API server and a data processing service.
+You're using DBOS to build a durable data pipeline in the data processing service.
+When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
+
+You can use `DBOSClient` to register queues and enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+For example, this code registers `pipeline-queue` and enqueues the `dataPipeline` workflow of class `com.example.PipelineImpl` on it with `task` as an argument.
+
+```java
+var client = new DBOSClient(
+    dbUrl, dbUser, dbPassword, "dbos", null, false,
+    // The name of the application that runs the data pipeline
+    "data-processing-service");
+
+client.registerQueue("pipeline-queue", QueueOptions.empty());
+
+var options = new DBOSClient.EnqueueOptions(
+    "dataPipeline", "com.example.PipelineImpl", "pipeline-queue");
+WorkflowHandle<String, Exception> handle =
+    client.enqueueWorkflow(options, new Object[] {task});
+```
+
+Note: `client.registerQueue` defaults `onConflict` to `QueueConflictResolution.ALWAYS_UPDATE` because clients are not associated with an application version. `UPDATE_IF_LATEST_VERSION` is not supported on the client and throws.
+
+See [DBOSClient](#dbosclient) below for the full client API.
+
+### Managing Concurrency
+
+You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
+This helps prevent resource exhaustion when workflows consume significant memory or processing power.
+
+#### Worker Concurrency
+
+Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
+This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
+For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
+
+```java
+dbos.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
+```
+
+#### Global Concurrency
+
+Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
+For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
+
+:::warning
+Worker concurrency limits are recommended for most use cases.
+Take care when using a global concurrency limit as any `PENDING` workflow on the queue counts toward the limit, including workflows from previous application versions.
+:::
+
+```java
+dbos.registerQueue("example-queue", QueueOptions.setConcurrency(10));
+```
+
+#### In-Order Processing
+
+You can use a queue with `concurrency` of 1 to guarantee sequential, in-order processing of events.
+Only a single event will be processed at a time.
+For example, this processes events sequentially in the order of their arrival:
+
+```java
+dbos.launch();
+dbos.registerQueue("in-order-queue", QueueOptions.setConcurrency(1));
+
+// Called for each incoming event, for example from an HTTP handler
+public void onEvent(String event) {
+    dbos.startWorkflow(
+        () -> proxy.processEvent(event),
+        new StartWorkflowOptions(QueueName.of("in-order-queue")));
+}
+```
+
+### Rate Limiting
+
+You can set _rate limits_ for a queue, limiting the number of workflows that it can start in a given period.
+Rate limits are global across all DBOS processes using this queue.
+For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
+
+```java
+dbos.registerQueue("example-queue",
+    QueueOptions.setRateLimit(100, Duration.ofSeconds(60)));
+```
+
+Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
+
+### Setting Timeouts
+
+You can set a timeout for an enqueued workflow with `withTimeout` in `StartWorkflowOptions`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```java
+WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+    () -> proxy.processTask(task),
+    new StartWorkflowOptions(QueueName.of("example-queue")).withTimeout(Duration.ofMinutes(10)));
+```
+
+### Partitioning Queues
+
+You can partition a queue to apply flow control separately to each partition key, for example to run at most one workflow at a time per user.
+Setting any per-partition limit (`setPartitionConcurrency`, `setPartitionWorkerConcurrency`, or `setPartitionRateLimit`) partitions the queue.
+Every workflow enqueued on a partitioned queue must have a partition key, set with `withQueuePartitionKey`; workflows on other queues must not have one.
+
+A partitioned queue can also have queue-wide limits, which bound the queue as a whole across all partitions.
+For example, this queue runs at most one workflow per user at a time, and at most 20 in total:
+
+```java
+dbos.registerQueue("per-user-queue",
+    QueueOptions.setConcurrency(20).andPartitionConcurrency(1));
+
+dbos.startWorkflow(
+    () -> proxy.processTask(task),
+    new StartWorkflowOptions(QueueName.of("per-user-queue")).withQueuePartitionKey(userId));
+```
+
+A partitioned queue enforces its per-partition limits **and** its queue-wide limits (`concurrency`, `workerConcurrency`, and `rateLimit`) at the same time.
+This lets you protect your workers from overload while still fairly distributing work between partitions.
+For example, this "fair queue" runs at most one task per user, but no more than 10 tasks on any single process:
+
+```java
+dbos.registerQueue("fair-queue",
+    QueueOptions.setPartitionConcurrency(1).andWorkerConcurrency(10));
+```
+
+Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
+
+```java
+// At most 100 tasks running globally and 25 running per tenant,
+// at most 10 tasks running per process and 2 per tenant per process,
+// and at most 1000 tasks started per minute globally and 50 per tenant.
+dbos.registerQueue("tenant-queue",
+    QueueOptions.setConcurrency(100)
+        .andWorkerConcurrency(10)
+        .andRateLimit(1000, Duration.ofSeconds(60))
+        .andPartitionConcurrency(25)
+        .andPartitionWorkerConcurrency(2)
+        .andPartitionRateLimit(50, Duration.ofSeconds(60)));
+```
+
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+Deduplication is not supported on partitioned queues: setting both `withQueuePartitionKey` and `withDeduplicationId` throws `IllegalArgumentException`.
+
+:::warning
+Workflows already on a queue without a partition key are never dequeued once the queue becomes partitioned.
+Drain a queue before adding its first per-partition limit.
+:::
+
+### Deduplication
+
+You can set a deduplication ID for an enqueued workflow with `withDeduplicationId` when calling `startWorkflow`.
+At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will throw a `DBOSQueueDuplicatedException`.
+
+For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
+
+**Example syntax:**
+
+```java
+@Workflow
+public String taskWorkflow(String task) {
+    // Process the task...
+    return "completed";
+}
+
+public void example(DBOS dbos, Example proxy, String task, String userID) throws Exception {
+    try {
+        // Use user ID for deduplication
+        WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+            () -> proxy.taskWorkflow(task),
+            new StartWorkflowOptions(QueueName.of("example-queue")).withDeduplicationId(userID)
+        );
+        String result = handle.getResult();
+        System.out.println("Workflow completed: " + result);
+    } catch (DBOSQueueDuplicatedException e) {
+        // A workflow with this deduplication ID is already enqueued or running
+    }
+}
+```
+
+### Priority
+
+You can set a priority for an enqueued workflow with `withPriority` when calling `startWorkflow`.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. A negative priority throws `IllegalArgumentException`.
+Priority is enabled on every queue; no extra configuration is needed.
+
+:::tip
+Workflows without assigned priorities have priority `0`, the highest priority.
+:::
+
+**Example syntax:**
+
+```java
+@Workflow
+public String taskWorkflow(String task) {
+    // Process the task...
+    return "completed";
+}
+
+public void example(DBOS dbos, Example proxy, String task, int priority) throws Exception {
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+        () -> proxy.taskWorkflow(task),
+        new StartWorkflowOptions(QueueName.of("example-queue")).withPriority(priority)
+    );
+
+    String result = handle.getResult();
+    System.out.println("Workflow completed: " + result);
+}
+```
+
+### Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all queues owned by its application in its system database.
+However, sometimes you only want a process to listen to a specific list of queues.
+You can use `withListenQueues` in your `DBOSConfig` to explicitly tell a process running DBOS to only listen to a specific set of queues.
+Each entry is a queue name; names that don't match any queue at launch are deferred until a queue is registered with that name.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```java
+String workerType = System.getenv("WORKER_TYPE"); // "cpu" or "gpu"
+DBOSConfig config = DBOSConfig.defaults("dbos-java-starter").withAppVersion("0.1.0");
+
+if ("gpu".equals(workerType)) {
+    // GPU workers will only dequeue and execute workflows from the GPU queue
+    config = config.withListenQueues("gpu-queue");
+} else if ("cpu".equals(workerType)) {
+    // CPU workers will only dequeue and execute workflows from the CPU queue
+    config = config.withListenQueues("cpu-queue");
+}
+
+DBOS dbos = new DBOS(config);
+// ... register workflows ...
+dbos.launch();
+dbos.registerQueue("cpu-queue", QueueOptions.empty());
+dbos.registerQueue("gpu-queue", QueueOptions.empty());
+```
+
+Note that `withListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
 
 ## DBOSClient
 
@@ -913,12 +1256,18 @@ void registerQueues(Queue... queues)
 DBOSClient(String url, String user, String password)
 DBOSClient(String url, String user, String password, String schema)
 DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer)
+DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer, boolean useListenNotify)
+DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer, boolean useListenNotify, String applicationName)
 DBOSClient(DataSource dataSource)
 DBOSClient(DataSource dataSource, String schema)
 DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer, String applicationName)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer, boolean useListenNotify)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer, boolean useListenNotify, String applicationName)
 ```
 
 Construct the DBOSClient.
+A client never migrates the system database; it throws if the schema is older than this SDK requires, so launch (and migrate) your DBOS application first.
 
 **Parameters:**
 - **url**: The JDBC URL for your system database.
@@ -927,6 +1276,8 @@ Construct the DBOSClient.
 - **schema**: The schema DBOS system tables are stored in. Defaults to `dbos`.
 - **dataSource**: Provide an existing `DataSource` instead of connection URL/credentials.
 - **serializer**: A custom serializer for workflow inputs/outputs. Must match the serializer used by the DBOS application.
+- **useListenNotify**: If true, `getEvent` and `readStream` are woken by PostgreSQL notifications instead of polling. Defaults to false.
+- **applicationName**: The application this client acts for, when several applications share one system database. Without one, the client sees every application's workflows and queues.
 
 ## Workflow Interaction Methods
 
@@ -951,13 +1302,13 @@ This code enqueues workflow `exampleWorkflow` in class `com.example.ExampleImpl`
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
 var options =
     new DBOSClient.EnqueueOptions(
-        "com.example.ExampleImpl", "exampleWorkflow", "example-queue");
+        "exampleWorkflow", "com.example.ExampleImpl", "example-queue");
 var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argumentTwo"});
 ```
 
 #### EnqueueOptions
 
-`EnqueueOptions` is a with-based configuration record for parameterizing `client.enqueueWorkflow`.
+`EnqueueOptions` is a with-based configuration record for parameterizing `client.enqueueWorkflow` and `dbos.enqueueWorkflow`.
 
 
 **Constructors:**
@@ -974,126 +1325,15 @@ Specify the workflow name and queue. `className` is optional — DBOS searches a
 - **`withClassName(String className)`**: The class containing the workflow method.
 - **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
-- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
+- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. If not set, the workflow is run by an executor on the latest application version.
 - **`withTimeout(Duration timeout)`**: Set a timeout for the enqueued workflow. Does not begin until the workflow is dequeued and starts execution.
 - **`withDeadline(Instant deadline)`**: Set an absolute deadline for the enqueued workflow.
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-- **`withPriority(Integer priority)`**: Priority values range from `1` to `2,147,483,647`; lower numbers run first.
-- **`withQueuePartitionKey(String key)`**: Partition key for partitioned queues.
-
-
-You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
-This helps prevent resource exhaustion when workflows consume significant memory or processing power.
-
-### Worker Concurrency
-
-Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
-This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
-For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
-
-```java
-Queue queue = new Queue("example-queue")
-    .withWorkerConcurrency(5);
-dbos.registerQueue(queue);
-```
-
-### Global Concurrency
-
-Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
-For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
-
-:::warning
-Worker concurrency limits are recommended for most use cases.
-Take care when using a global concurrency limit as any `PENDING` workflow on the queue counts toward the limit, including workflows from previous application versions.
-:::
-
-```java
-Queue queue = new Queue("example-queue")
-    .withConcurrency(10);
-dbos.registerQueue(queue);
-```
-
-## Rate Limiting
-
-You can set _rate limits_ for a queue, limiting the number of workflows that it can start in a given period.
-Rate limits are global across all DBOS processes using this queue.
-For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
-
-```java
-Queue queue = new Queue("example-queue")
-    .withRateLimit(100, 60.0);  // 100 workflows per 60 seconds
-dbos.registerQueue(queue);
-```
-
-Rate limits are especially useful when working with a rate-limited API.
-
-## Deduplication
-
-You can set a deduplication ID for an enqueued workflow using `withQueue` when calling `startWorkflow`.
-At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
-
-For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
-
-**Example syntax:**
-
-```java
-@Workflow
-public String taskWorkflow(String task) {
-    // Process the task...
-    return "completed";
-}
-
-public void example(DBOS dbos, Example proxy, String task, String userID) throws Exception {
-    // Use user ID for deduplication
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-        () -> proxy.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue).withDeduplicationId(userID)
-    );
-
-    String result = handle.getResult();
-    System.out.println("Workflow completed: " + result);
-}
-```
-
-## Priority
-
-You can set a priority for an enqueued workflow using `withQueue`.
-Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `priorityEnabled` on your queue.
-
-:::tip
-Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-:::
-
-To use priorities in a queue, you must enable it when creating the queue:
-
-```java
-Queue queue = new Queue("example-queue")
-    .withPriorityEnabled(true);
-dbos.registerQueue(queue);
-```
-
-**Example syntax:**
-
-```java
-@Workflow
-public String taskWorkflow(String task) {
-    // Process the task...
-    return "completed";
-}
-
-public void example(DBOS dbos, Example proxy, String task, int priority) throws Exception {
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-        () -> proxy.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue).withPriority(priority)
-    );
-
-    String result = handle.getResult();
-    System.out.println("Workflow completed: " + result);
-}
-```
+- **`withPriority(Integer priority)`**: Priority values range from `0` to `2,147,483,647`; lower numbers run first, and a negative priority throws.
+- **`withQueuePartitionKey(String key)`**: Partition key, for partitioned queues.
+- **`withSerialization(SerializationStrategy serialization)`**: Serialization format for the arguments, for example `SerializationStrategy.PORTABLE` to enqueue a workflow written in another language.
+- **`withApplicationName(String applicationName)`**: Enqueue the workflow for another application sharing the system database.
 
 ## Classes and Instances
 
@@ -1169,7 +1409,7 @@ public record WorkflowStatus(
     String instanceName,       // The named class instance, if any
     String authenticatedUser,  // The authenticated user who initiated the workflow
     String assumedRole,        // The assumed role for the workflow execution
-    String[] authenticatedRoles, // Roles authenticated for the workflow
+    List<String> authenticatedRoles, // Roles authenticated for the workflow
     Object[] input,            // The deserialized workflow input
     Object output,             // The workflow's output, if any
     ErrorResult error,         // The error the workflow threw, if any
@@ -1190,7 +1430,11 @@ public record WorkflowStatus(
     String parentWorkflowId,   // The parent workflow ID if this is a child workflow
     Boolean wasForkedFrom,     // Whether another workflow was forked from this one
     Instant delayUntil,        // Time until which the workflow is delayed
-    String serialization       // Serialization format used for inputs/outputs
+    Instant completedAt,       // When the workflow reached a terminal state, if it has
+    String serialization,      // Serialization format used for inputs/outputs
+    Map<String, Object> attributes, // Custom key-value attributes attached at creation, if any
+    String scheduleName,       // The schedule that started this workflow, if any
+    String applicationName     // The application that owns this workflow, or null if unclaimed
 )
 ```
 
@@ -1288,7 +1532,8 @@ StepInfo(
     String childWorkflowId,// If the step starts a child workflow, its ID
     Instant startedAt,     // When the step started
     Instant completedAt,   // When the step completed
-    String serialization   // Serialization format used for the step's output
+    String serialization,  // Serialization format used for the step's output
+    String applicationName // The application that ran the step
 )
 ```
 
@@ -1322,15 +1567,15 @@ Resume one or more workflows from their last completed step. Optionally re-enque
 public record ForkOptions(
     String forkedWorkflowId,
     String applicationVersion,
-    Timeout timeout,
+    Duration timeout,
     String queueName,
     String queuePartitionKey
 ) {
     ForkOptions withForkedWorkflowId(String forkedWorkflowId);
     ForkOptions withApplicationVersion(String applicationVersion);
     ForkOptions withTimeout(Duration timeout);
-    ForkOptions withNoTimeout();
-    ForkOptions withQueue(Queue queue);
+    ForkOptions withTimeout(long value, TimeUnit unit);
+    ForkOptions withQueue(QueueName queue);
     ForkOptions withQueue(String queueName);
     ForkOptions withQueuePartitionKey(String queuePartitionKey);
 }
@@ -1344,7 +1589,7 @@ Start a new execution of a workflow from a specific step. Steps before `startSte
 - **options**:
   - **forkedWorkflowId**: Workflow ID for the forked workflow (UUID if not provided)
   - **applicationVersion**: App version for the forked workflow (inherited if not provided)
-  - **timeout**: A timeout for the forked workflow
+  - **timeout**: A timeout for the forked workflow (`null` for no timeout)
   - **queueName**: Enqueue the forked workflow on this queue instead of starting immediately
   - **queuePartitionKey**: Partition key for partitioned queues
 
@@ -1381,17 +1626,11 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withDatabaseSchema(String schema)`**: The schema for DBOS system tables. Defaults to `dbos`.
 
-- **`withMaximumPoolSize(int maximumPoolSize)`**: The maximum size for the system database connection pool.
-
-- **`withConnectionTimeout(int connectionTimeout)`**: The connection timeout for the system database connection.
-
-- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management. Defaults to false.
-
-- **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
-
-- **`withMigrate(boolean enable)`**: If true, apply migrations to the system database on launch. Defaults to true.
+- **`withMigrate(boolean enable)`**: If true, apply migrations to the system database on launch. Defaults to true. If false, launch only checks that the system database schema is new enough, and throws if it isn't; migrate it out-of-band with `dbosctl sysdb migrate`.
 
 - **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, the application is connected to Conductor.
+
+- **`withConductorDomain(String domain)`**: A custom hostname for DBOS Conductor, for self-hosted Conductor.
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows.
 
@@ -1399,10 +1638,16 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withEnablePatching(boolean enable)`**: Enable workflow patching support.
 
-- **`withListenQueues(String... queues)`**: Specify the queues this DBOS process should dequeue and execute workflows from.
+- **`withListenQueues(String... queues)`** / **`withListenQueues(QueueName... queues)`**: Specify the queues this DBOS process should dequeue and execute workflows from. By default it dequeues from all queues.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database.
 
 - **`withSchedulerPollingInterval(Duration interval)`**: How often the scheduler polls for due scheduled workflows.
+
+- **`withUseListenNotify(boolean enable)`**: Use PostgreSQL LISTEN/NOTIFY to wake waiting workflows instead of polling. Defaults to true; set to false on databases that don't support it.
+
+- **`withNotificationCoalesceInterval(Duration interval)`**: How often batched workflow event and stream notifications are sent to other processes. Defaults to 10ms; must be at least 1ms.
+
+- **`withDatabasePollingConcurrency(Integer limit)`**: The maximum number of polling reads (from waiting on a result, `recv`, `getEvent`, or reading a stream) that may run against the system database at once. Defaults to half the connection pool (at least one); a non-positive value removes the cap.
 
 ````
