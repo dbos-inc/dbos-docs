@@ -883,6 +883,10 @@ You can call `Send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 Pass `WithIdempotencyKey(key string)` to make a retried `Send` deliver at most once.
 
+To send many messages at once, possibly to different workflows, call `SendBulk(ctx, []dbos.SendMessage{...})`.
+The batch is sent in a single transaction: either every message is delivered or none is.
+Each `SendMessage` has `DestinationID`, `Message`, `Topic`, and an optional per-message `IdempotencyKey`.
+
 ### Recv
 
 ```go
@@ -1500,24 +1504,28 @@ func example(dbosContext dbos.Context, queue dbos.Queue) error {
 ### Partitioned Queues
 
 You can partition queues to distribute work across dynamically created queue partitions.
-When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+A queue is partitioned if you register it with any per-partition limit: `WithPartitionConcurrency` (maximum workflows from any one partition running at once across all processes), `WithPartitionWorkerConcurrency` (the same, on a single process), or `WithPartitionRateLimiter` (maximum workflows started from any one partition in a given period).
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key; a workflow enqueued without one is never dequeued.
+A partitioned queue enforces its partition limits and its queue-wide limits (`WithGlobalConcurrency`, `WithWorkerConcurrency`, `WithRateLimiter`) at the same time.
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart.
 
-For example, to allow each user to run at most one task at a time:
+For example, to allow each user to run at most one task at a time, while running at most 10 tasks on any single process:
 
 ```go
 partitionedQueue, err := dbos.RegisterQueue(dbosContext, "user-tasks",
-    dbos.WithPartitionQueue(),
-    dbos.WithGlobalConcurrency(1),
+    dbos.WithPartitionConcurrency(1),
+    dbos.WithWorkerConcurrency(10),
 )
 
 // Enqueue workflows with partition keys
-// Each user's tasks run with separate concurrency limits
+// At most one task per user runs at once, but tasks from different users run concurrently
 handle, err := dbos.RunWorkflow(dbosContext, processTask, taskData,
     dbos.WithQueue(partitionedQueue),
     dbos.WithQueuePartitionKey(userID),
 )
 ```
+
+`WithPartitionQueue()` is deprecated: under it the queue-wide limits apply per partition instead. Use the partition limits.
 
 ### Delayed Execution
 
@@ -1803,6 +1811,25 @@ Use `WithPortableSend()` for cross-language messaging.
 - **opts**: Optional `SendOption` functions (e.g., `WithPortableSend()`, `WithIdempotencyKey(key string)`).
 
 Pass `WithIdempotencyKey(key string)` to make a `Send` deliver at most once: the key is combined with the destination workflow ID to form the message's primary key, so retrying a `Send` with the same key inserts the message only once.
+
+### SendBulk
+
+```go
+func SendBulk(ctx Client, messages []SendMessage, opts ...SendOption) error
+
+type SendMessage struct {
+    DestinationID  string // The workflow to which to send the message
+    Message        any    // The message to send. Must be serializable.
+    Topic          string // Optional topic
+    IdempotencyKey string // Optional; delivers the message at most once per destination
+}
+```
+
+Send many messages in a single transaction; each message carries its own destination.
+The batch is atomic: if any destination does not exist, no message is sent.
+Inside a workflow the whole batch is one durable step.
+At most `dbos.MaxSendBulkMessages` (10,000) messages per call, and two messages in one call may not share an idempotency key.
+`WithSendTransaction` and `WithPortableSend` apply to the whole batch; `WithIdempotencyKey` is rejected, set `SendMessage.IdempotencyKey` instead.
 
 ### Recv
 
@@ -2349,6 +2376,9 @@ type Queue interface {
     GetGlobalConcurrency() *int
     GetWorkerConcurrency() *int
     GetRateLimit() *RateLimiter
+    GetPartitionConcurrency() *int
+    GetPartitionWorkerConcurrency() *int
+    GetPartitionRateLimit() *RateLimiter
     GetPriorityEnabled() bool
     GetPartitionQueue() bool
     GetPollingInterval() time.Duration
@@ -2356,6 +2386,9 @@ type Queue interface {
     SetGlobalConcurrency(ctx Client, value *int) error
     SetWorkerConcurrency(ctx Client, value *int) error
     SetRateLimit(ctx Client, value *RateLimiter) error
+    SetPartitionConcurrency(ctx Client, value *int) error
+    SetPartitionWorkerConcurrency(ctx Client, value *int) error
+    SetPartitionRateLimit(ctx Client, value *RateLimiter) error
     SetPriorityEnabled(ctx Client, value bool) error
     SetPartitionQueue(ctx Client, value bool) error
     SetPollingInterval(ctx Client, value time.Duration) error
@@ -2445,14 +2478,42 @@ type RateLimiter struct {
 
 A limit on the maximum number of functions which may be started in a given period.
 
+####  WithPartitionConcurrency
+
+```go
+func WithPartitionConcurrency(concurrency int) QueueOption
+```
+
+Set the maximum number of workflows from any one partition of this queue that may run concurrently across all DBOS processes.
+Must be at least 1 and less than or equal to the queue's global concurrency.
+Setting any partition limit makes the queue partitioned: workflows must then be enqueued with `WithQueuePartitionKey`.
+
+####  WithPartitionWorkerConcurrency
+
+```go
+func WithPartitionWorkerConcurrency(concurrency int) QueueOption
+```
+
+Set the maximum number of workflows from any one partition of this queue that may run concurrently within a single DBOS process.
+Must be at least 1 and less than or equal to the queue's partition concurrency, worker concurrency, and global concurrency.
+
+####  WithPartitionRateLimiter
+
+```go
+func WithPartitionRateLimiter(limiter *RateLimiter) QueueOption
+```
+
+A limit on the maximum number of workflows which may be started from any one partition in a given period, applied to each partition separately.
+
 ####  WithPartitionQueue
 
 ```go
 func WithPartitionQueue() QueueOption
 ```
 
-Enable partitioning for this queue.
-When enabled, workflows can be enqueued with a partition key using `WithQueuePartitionKey`, and each partition has its own concurrency limits.
+Deprecated: use a partition limit instead.
+Enables the legacy partitioned mode, under which the queue's global concurrency, worker concurrency, and rate limit each apply per partition.
+Cannot be combined with a partition limit.
 
 ### RegisterWorkflow
 
@@ -2629,7 +2690,7 @@ func WithQueuePartitionKey(partitionKey string) WorkflowOption
 ```
 
 Set a queue partition key for the workflow.
-Use if and only if the queue is partitioned (created with `WithPartitionQueue`).
+Use if and only if the queue is partitioned (registered with at least one partition limit, such as `WithPartitionConcurrency`).
 
 #### WithDelay
 
@@ -2951,7 +3012,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `ErrorCodeQueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
-* `WithEnqueueQueuePartitionKey(partitionKey string)`: Set the queue partition key. Required if and only if the target queue is partitioned (created with `WithPartitionQueue`).
+* `WithEnqueueQueuePartitionKey(partitionKey string)`: Set the queue partition key. Required if and only if the target queue is partitioned (registered with at least one partition limit, such as `WithPartitionConcurrency`).
 
 **Example syntax:**
 
