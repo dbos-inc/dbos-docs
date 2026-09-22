@@ -179,7 +179,8 @@ func WithEnqueueQueuePartitionKey(partitionKey string) EnqueueOption
 ```
 
 The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
-Each partition has its own concurrency limits.
+Required if and only if the queue is partitioned.
+The queue's partition limits apply to each partition separately.
 
 #### WithEnqueueAttributes
 
@@ -312,6 +313,7 @@ Make a `Send` deliver at most once.
 The key is combined with the destination workflow ID to form the message's primary key, so retrying a `Send` with the same key (after a crash, timeout, or network failure) inserts the message only once.
 Keys are scoped per destination.
 Without a key, every `Send` delivers a new message.
+This option is not valid on [`SendBulk`](#sendbulk): set the `IdempotencyKey` field of each [`SendMessage`](#sendmessage) instead.
 
 ```go
 err := dbos.Send(ctx, destinationID, payload, "payments", dbos.WithIdempotencyKey("payment-123"))
@@ -332,6 +334,7 @@ If the send fails, the transaction is left in an aborted state: roll it back rat
 
 This option is available from a [standalone client](./dbos-context.md#newclient) or a context outside a workflow.
 It cannot be used inside a workflow, where a send is checkpointed as a step.
+It applies to [`SendBulk`](#sendbulk) the same way, committing the whole batch with your writes.
 
 ```go
 tx, err := pool.Begin(ctx)
@@ -350,6 +353,46 @@ if err != nil {
 }
 return tx.Commit(ctx)
 ```
+
+### SendBulk
+
+```go
+func SendBulk(ctx Client, messages []SendMessage, opts ...SendOption) error
+```
+
+Send many messages in a single transaction.
+Each message carries its own destination, so a batch may target many workflows.
+The batch is atomic: if any message cannot be delivered (for example, its destination workflow does not exist), no message is sent.
+A batch may carry at most `dbos.MaxSendBulkMessages` (10,000) messages.
+
+Inside a workflow, the whole batch is checkpointed as one step, so it is delivered exactly once.
+
+**Parameters:**
+- **ctx**: The DBOS client or context.
+- **messages**: The messages to send, as [`SendMessage`](#sendmessage) values. Two messages in the same call may not share an idempotency key.
+- **opts**: Optional `SendOption` functions applied to the whole batch ([`WithSendTransaction`](#withsendtransaction), [`WithPortableSend`](#withportablesend)). [`WithIdempotencyKey`](#withidempotencykey) is per-message and is rejected here: set `SendMessage.IdempotencyKey` instead.
+
+```go
+err := dbos.SendBulk(ctx, []dbos.SendMessage{
+    {DestinationID: orderWorkflowID, Message: "confirmed", Topic: "orders"},
+    {DestinationID: inventoryWorkflowID, Message: order, Topic: "reserve", IdempotencyKey: "reserve-42"},
+})
+```
+
+#### SendMessage
+
+```go
+type SendMessage struct {
+    DestinationID  string // The workflow to which to send the message
+    Message        any    // The message to send. Must be serializable.
+    Topic          string // A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+    IdempotencyKey string // If set, the message is delivered at most once per destination no matter how many times it is submitted with this key.
+}
+```
+
+One entry in a [`SendBulk`](#sendbulk) batch.
+An empty `Topic` sends the message without a topic, as `Send` does.
+`IdempotencyKey` behaves like [`WithIdempotencyKey`](#withidempotencykey): it is combined with `DestinationID` to form the message's primary key, so a retried batch inserts the message only once.
 
 ### Recv
 
@@ -1699,7 +1742,7 @@ These options enable [cross-language interoperability](../../explanations/portab
 func WithPortableSend() SendOption
 ```
 
-Configure [`Send`](#send) to use the portable JSON serializer, enabling cross-language message passing.
+Configure [`Send`](#send) or [`SendBulk`](#sendbulk) to use the portable JSON serializer, enabling cross-language message passing.
 
 ### WithPortableSetEvent
 

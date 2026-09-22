@@ -399,20 +399,26 @@ func example(dbosContext dbos.Context, queue dbos.Queue) error {
 ### Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
+A queue is partitioned if you register it with any per-partition flow control limit:
+
+| Option | Meaning |
+| --- | --- |
+| [`WithPartitionConcurrency`](../reference/queues.md#withpartitionconcurrency) | Maximum workflows from any one partition running at once across all processes. |
+| [`WithPartitionWorkerConcurrency`](../reference/queues.md#withpartitionworkerconcurrency) | Maximum workflows from any one partition running at once on a single process. |
+| [`WithPartitionRateLimiter`](../reference/queues.md#withpartitionratelimiter) | Maximum workflows that may be started from any one partition in a given period. |
+
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
 Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
 
 For example, suppose you want your users to each be able to run at most one task at a time.
-You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+You can do this with a queue whose partition concurrency is 1, where the partition key is user ID.
 
 **Example Syntax:**
 
 ```go
-// Create a partitioned queue with a global concurrency limit of 1
+// Create a partitioned queue with a per-partition concurrency limit of 1
 partitionedQueue, err := dbos.RegisterQueue(dbosContext, "user-tasks",
-    dbos.WithPartitionQueue(),
-    dbos.WithGlobalConcurrency(1),
+    dbos.WithPartitionConcurrency(1),
 )
 
 type Task struct {
@@ -427,7 +433,7 @@ func processTask(ctx dbos.Context, task Task) (string, error) {
 
 func onUserTaskSubmission(dbosContext dbos.Context, userID string, task Task) error {
     // Partition the task queue by user ID. As the queue has a
-    // maximum concurrency of 1, this means that at most one
+    // per-partition concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
     handle, err := dbos.RunWorkflow(dbosContext, processTask, task,
@@ -452,6 +458,48 @@ func onUserTaskSubmission(dbosContext dbos.Context, userID string, task Task) er
 - Partition keys are required when enqueueing to a partitioned queue.
 - Partition keys cannot be used with non-partitioned queues.
 - Partition keys and deduplication IDs cannot be used together.
+:::
+
+:::warning
+Every enqueue on a partitioned queue must supply a partition key.
+A workflow enqueued on a partitioned queue without a partition key stays `ENQUEUED` and is not dequeued.
+This also applies to workflows that were enqueued before a queue was partitioned at runtime through its [`Set*`](../reference/queues.md#reconfiguring-queues) methods.
+:::
+
+#### Combining Queue-Wide and Per-Partition Limits
+
+A partitioned queue enforces its per-partition limits **and** its queue-wide limits ([`WithGlobalConcurrency`](#global-concurrency), [`WithWorkerConcurrency`](#worker-concurrency), and [`WithRateLimiter`](#rate-limiting)) at the same time.
+This lets you protect your workers from overload while still fairly distributing work between partitions.
+
+For example, this "fair queue" runs at most one task per user, but no more than 10 tasks on any single process:
+
+```go
+fairQueue, err := dbos.RegisterQueue(dbosContext, "fair-queue",
+    dbos.WithPartitionConcurrency(1),
+    dbos.WithWorkerConcurrency(10),
+)
+```
+
+Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
+
+```go
+// At most 100 tasks running globally and 25 running per tenant,
+// at most 10 tasks running per process and 2 per tenant per process,
+// and at most 1000 tasks started per minute globally and 50 per tenant.
+tenantQueue, err := dbos.RegisterQueue(dbosContext, "tenant-queue",
+    dbos.WithGlobalConcurrency(100),
+    dbos.WithWorkerConcurrency(10),
+    dbos.WithRateLimiter(&dbos.RateLimiter{Limit: 1000, Period: 60 * time.Second}),
+    dbos.WithPartitionConcurrency(25),
+    dbos.WithPartitionWorkerConcurrency(2),
+    dbos.WithPartitionRateLimiter(&dbos.RateLimiter{Limit: 50, Period: 60 * time.Second}),
+)
+```
+
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and the partition worker concurrency must be less than or equal to the partition concurrency.
+
+:::note
+Queues registered with the deprecated [`WithPartitionQueue`](../reference/queues.md#withpartitionqueue) option instead apply their queue-wide limits to each partition, and cannot combine the two.
 :::
 
 ### Delayed Execution

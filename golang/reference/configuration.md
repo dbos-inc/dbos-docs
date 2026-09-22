@@ -23,10 +23,15 @@ type Config struct {
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
     SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and schema migration or verification (default: 2 minutes)
     SkipMigrations            bool           // Verify the system database schema on startup instead of creating and migrating it (default: false)
-    AdminServer               bool           // Run the HTTP admin server for workflow management operations (default: false)
-    AdminServerPort           int            // Port for the admin server (default: 3001)
+    AdminServer               bool           // Deprecated: run the HTTP admin server for workflow management operations (default: false)
+    AdminServerPort           int            // Deprecated: port for the admin server (default: 3001)
 }
 ```
+
+:::warning Deprecated
+`AdminServer` and `AdminServerPort` are deprecated and will be removed in v1.5.0.
+Use [DBOS Conductor](../../production/conductor.md) for remote workflow management instead.
+:::
 
 `ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
 

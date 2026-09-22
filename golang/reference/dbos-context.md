@@ -18,6 +18,7 @@ type Client interface {
     // Workflow operations
     Enqueue(_ Client, queueName string, workflowName string, input any, opts ...EnqueueOption) (WorkflowHandle[any], error)
     Send(_ Client, destinationID string, message any, topic string, opts ...SendOption) error
+    SendBulk(_ Client, messages []SendMessage, opts ...SendOption) error
     GetEvent(_ Client, targetWorkflowID string, key string, timeout time.Duration) (any, error)
     ReadStream(_ Client, workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
     ReadStreamAsync(_ Client, workflowID string, key string) (<-chan StreamValue[any], error)
@@ -164,6 +165,9 @@ Launch the following resources managed by a `Context`:
 In addition, `Launch()` may perform [workflow recovery](../../architecture.md#how-workflow-recovery-works).
 `Launch()` should be called by your program during startup before running any workflows.
 
+`Launch()` must be called on the `Context` returned by `NewContext`.
+Calling it on a context derived from that one (with [`WithTimeout`](#withtimeout), [`WithValue`](#withvalue), [`From`](#from), and so on) returns an error.
+
 ### NewClient
 
 ```go
@@ -223,6 +227,8 @@ Gracefully shut down a `Context` or a standalone `Client`, waiting for resources
 
 When you shut down a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
 When you shut down a standalone `Client`, its system database connection pool and notification listener are released.
+
+Like `Launch()`, `Shutdown()` must be called on the `Context` returned by `NewContext` (or the `Client` returned by `NewClient`); calling it on a derived context returns an error.
 
 **Parameters:**
 - **timeout**: The time to wait for DBOS resources to gracefully terminate.

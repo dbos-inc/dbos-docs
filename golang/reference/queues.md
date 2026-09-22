@@ -81,26 +81,44 @@ type RateLimiter struct {
 
 A limit on the maximum number of functions which may be started in a given period.
 
-####  WithPartitionQueue
+####  WithPartitionConcurrency
 
 ```go
-func WithPartitionQueue() QueueOption
+func WithPartitionConcurrency(concurrency int) QueueOption
 ```
 
-Enable partitioning for this queue.
-When enabled, workflows can be enqueued with a partition key using [`WithQueuePartitionKey`](./workflows-steps.md#withqueuepartitionkey), and each partition has its own concurrency limits.
-This allows distributing work across dynamically created queue partitions.
+Set the maximum number of workflows from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes.
+Must be at least 1 and less than or equal to the queue's global concurrency.
 
-In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
-For example, if you create a partitioned queue with a global concurrency of 1, then at most one workflow from each partition can run concurrently (but workflows from different partitions can run in parallel).
+Setting any partition limit (`WithPartitionConcurrency`, `WithPartitionWorkerConcurrency`, or `WithPartitionRateLimiter`) makes the queue **partitioned**: every workflow enqueued on it must supply a partition key with [`WithQueuePartitionKey`](./workflows-steps.md#withqueuepartitionkey), and the queue dequeues from each partition separately.
+A partitioned queue enforces its partition limits and its queue-wide limits (`WithGlobalConcurrency`, `WithWorkerConcurrency`, `WithRateLimiter`) at the same time.
+
+####  WithPartitionWorkerConcurrency
+
+```go
+func WithPartitionWorkerConcurrency(concurrency int) QueueOption
+```
+
+Set the maximum number of workflows from any one partition of this queue that may run concurrently within a single DBOS process.
+Must be at least 1 and less than or equal to the queue's partition concurrency, worker concurrency, and global concurrency.
+Setting this limit makes the queue partitioned.
+
+####  WithPartitionRateLimiter
+
+```go
+func WithPartitionRateLimiter(limiter *RateLimiter) QueueOption
+```
+
+A limit on the maximum number of workflows which may be started from any one partition of this queue in a given period.
+The limit is applied to each partition separately.
+Setting this limit makes the queue partitioned.
 
 **Example Syntax:**
 
 ```go
-// Create a partitioned queue with a global concurrency limit of 1
+// Create a partitioned queue with a per-partition concurrency limit of 1
 partitionedQueue, err := dbos.RegisterQueue(ctx, "user-tasks",
-    dbos.WithPartitionQueue(),
-    dbos.WithGlobalConcurrency(1),
+    dbos.WithPartitionConcurrency(1),
 )
 
 // Enqueue workflows with different partition keys
@@ -115,6 +133,25 @@ handle2, _ := dbos.RunWorkflow(ctx, ProcessTask, task2,
     dbos.WithQueuePartitionKey("user-456"),
 )
 ```
+
+####  WithPartitionQueue
+
+```go
+func WithPartitionQueue() QueueOption
+```
+
+:::warning Deprecated
+`WithPartitionQueue` is deprecated.
+Partition a queue by setting a partition limit ([`WithPartitionConcurrency`](#withpartitionconcurrency), [`WithPartitionWorkerConcurrency`](#withpartitionworkerconcurrency), or [`WithPartitionRateLimiter`](#withpartitionratelimiter)) instead.
+:::
+
+Enable the legacy partitioned queue mode, under which the queue's global concurrency, worker concurrency, and rate limit each apply to individual partitions instead of the queue as a whole.
+For example, a queue registered with `WithPartitionQueue()` and `WithGlobalConcurrency(1)` runs at most one workflow from each partition at a time.
+The equivalent under the partition limits is `WithPartitionConcurrency(1)`, which additionally lets you keep queue-wide limits (see [Combining Queue-Wide and Per-Partition Limits](../tutorials/queue-tutorial.md#combining-queue-wide-and-per-partition-limits)).
+
+`WithPartitionQueue` cannot be combined with a partition limit in the same `RegisterQueue` call.
+A queue registered with it rejects the `Set*` methods for its limits with an error matching `dbos.ErrInvalidOption`: re-register the queue with the partition limits instead.
+Its `Get*` methods report each limit at the scope it is enforced, so for example `GetPartitionConcurrency` returns the value passed to `WithGlobalConcurrency` and `GetGlobalConcurrency` returns `nil`.
 
 ####  WithQueueBasePollingInterval
 
@@ -219,6 +256,7 @@ Instead, cancel or drain pending workflows on the queue before deleting it.
 
 A `Queue` is returned from [`RegisterQueue`](#registerqueue), [`RetrieveQueue`](#retrievequeue), and [`ListQueues`](#listqueues).
 Its `Get*` methods reflect the queue's configuration as of the most recent read from the database; the `Set*` methods update the configuration in the database.
+`GetPartitionQueue` reports whether the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues), whether by a partition limit or by the deprecated [`WithPartitionQueue`](#withpartitionqueue) option.
 Unlike the other properties, ownership cannot be reconfigured: there is no `SetApplicationName`. Ownership is only transferred by [`RenameApplication`](./methods.md#renameapplication).
 
 ```go
@@ -227,6 +265,9 @@ type Queue interface {
     GetGlobalConcurrency() *int
     GetWorkerConcurrency() *int
     GetRateLimit() *RateLimiter
+    GetPartitionConcurrency() *int
+    GetPartitionWorkerConcurrency() *int
+    GetPartitionRateLimit() *RateLimiter
     GetPriorityEnabled() bool
     GetPartitionQueue() bool
     GetPollingInterval() time.Duration
@@ -235,6 +276,9 @@ type Queue interface {
     SetGlobalConcurrency(ctx Client, value *int) error
     SetWorkerConcurrency(ctx Client, value *int) error
     SetRateLimit(ctx Client, value *RateLimiter) error
+    SetPartitionConcurrency(ctx Client, value *int) error
+    SetPartitionWorkerConcurrency(ctx Client, value *int) error
+    SetPartitionRateLimit(ctx Client, value *RateLimiter) error
     SetPriorityEnabled(ctx Client, value bool) error
     SetPartitionQueue(ctx Client, value bool) error
     SetPollingInterval(ctx Client, value time.Duration) error
@@ -245,7 +289,15 @@ type Queue interface {
 
 Because queue configuration lives in the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
 Workers pick up the new configuration on their next polling iteration.
-For `SetGlobalConcurrency`, `SetWorkerConcurrency`, and `SetRateLimit`, pass `nil` to clear the limit.
+For the concurrency and rate limit setters, pass `nil` to clear the limit.
+Each change is validated against the queue's latest persisted configuration: a concurrency limit must be greater than or equal to its partition counterpart, a worker limit must be less than or equal to its global counterpart, and partition limits must be at least 1.
+
+Setting any partition limit (`SetPartitionConcurrency`, `SetPartitionWorkerConcurrency`, or `SetPartitionRateLimit`) makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues); clearing all of them makes it unpartitioned again.
+`SetPartitionQueue` toggles the deprecated [`WithPartitionQueue`](#withpartitionqueue) mode, and cannot be used on a queue partitioned by its partition limits.
+
+:::warning
+Take care when partitioning a queue at runtime: workflows already enqueued on it have no partition key and will not be dequeued until the queue is unpartitioned.
+:::
 
 ```go
 queue, err := dbos.RetrieveQueue(ctx, "email-queue")

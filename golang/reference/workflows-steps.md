@@ -232,19 +232,19 @@ func WithQueuePartitionKey(partitionKey string) WorkflowOption
 ```
 
 Set a queue partition key for the workflow.
-Use if and only if the queue is partitioned (created with [`WithPartitionQueue`](./queues.md#withpartitionqueue)).
-In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit, such as [`WithPartitionConcurrency`](./queues.md#withpartitionconcurrency)).
+A partitioned queue applies its partition limits to each partition separately, while its global concurrency, worker concurrency, and rate limit still apply across all partitions.
 
 **Example Syntax:**
 
 ```go
-// Create a partitioned queue
+// Create a partitioned queue: at most one workflow per partition runs at once
 partitionedQueue, err := dbos.RegisterQueue(ctx, "user-tasks",
-    dbos.WithPartitionQueue(),
+    dbos.WithPartitionConcurrency(1),
 )
 
 // Enqueue workflows with partition keys
-// Each user's tasks run with separate concurrency limits
+// At most one task per user runs at once, but tasks from different users run concurrently
 handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
     dbos.WithQueue(partitionedQueue),
     dbos.WithQueuePartitionKey(userID),
