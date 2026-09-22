@@ -34,7 +34,7 @@ If the event already exists, update its value.
 **Parameters:**
 - **key**: The key of the event.
 - **value**: The value of the event. Must be serializable.
-- **serialization**: The [serialization strategy](#serialization-strategy) to use for this event. Defaults to `SerializationStrategy.DEFAULT`.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for this event. Defaults to `SerializationStrategy.DEFAULT`, which uses the serialization format recorded for the calling workflow.
 
 ### getAllEvents
 
@@ -63,7 +63,7 @@ Messages can optionally be associated with a topic.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - **idempotencyKey**: If `dbos.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `dbos.send` is called with this key.
-- **serialization**: The [serialization strategy](#serialization-strategy) to use for this message. Defaults to `SerializationStrategy.DEFAULT`.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for this message. Defaults to `SerializationStrategy.DEFAULT`, which inside a workflow uses the serialization format recorded for the sending workflow (for example, a workflow started with portable serialization sends portable messages), and outside a workflow uses the application's configured serializer.
 
 ### sendBulk
 
@@ -78,7 +78,7 @@ Send multiple messages to workflows in a single batch. Each message is delivered
 **Parameters:**
 - **messages**: A list of [`SendMessage`](#sendmessage) records describing each message to send.
 - **sendToForks**: If `true`, also deliver each message to any forked copies of the destination workflow. Defaults to `false`.
-- **serialization**: The [serialization strategy](#serialization-strategy) to use for all messages in the batch. Defaults to `SerializationStrategy.DEFAULT`.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for all messages in the batch. Defaults to `SerializationStrategy.DEFAULT`, which behaves as described for [`send`](#send).
 
 #### SendMessage
 
@@ -136,7 +136,7 @@ Append a value to a named stream owned by the current workflow. Must be called f
 **Parameters:**
 - **key**: The stream name within this workflow. A workflow may have multiple independent streams identified by different keys.
 - **value**: A serializable value to write.
-- **serialization**: The [serialization strategy](./methods.md#serialization-strategy) to use. Use `SerializationStrategy.PORTABLE` for cross-language consumers.
+- **serialization**: The [serialization strategy](./methods.md#serialization-strategy) to use. Defaults to `SerializationStrategy.DEFAULT`, which uses the serialization format recorded for the calling workflow. Use `SerializationStrategy.PORTABLE` for cross-language consumers.
 
 ### closeStream
 
@@ -156,6 +156,7 @@ Iterator<Object> readStream(String workflowId, String key)
 ```
 
 Read all values written to a stream by the specified workflow. Returns a blocking iterator that stops when the stream is closed or the workflow terminates. Can be called from outside the workflow — typically from a separate thread or external process.
+If no workflow with the given ID exists, iterating throws `DBOSNonExistentWorkflowException`.
 
 On PostgreSQL, the iterator wakes up immediately when a new value is written (via `LISTEN`/`NOTIFY`). On CockroachDB, it falls back to polling once per second.
 
@@ -206,6 +207,51 @@ Safely bypass a patch marker at the current point in workflow history if present
 Always returns `true`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md) for more detail.
 
+## Enqueueing Workflows by Name
+
+### enqueueWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
+    DBOSClient.EnqueueOptions options, Object[] args)
+```
+
+Enqueue a workflow by name, without a reference to its function, and return a handle to it.
+This takes the same [`EnqueueOptions`](./client.md#enqueueoptions) as [`DBOSClient.enqueueWorkflow`](./client.md#enqueueworkflow) and writes the same database record, so the enqueued workflow may be implemented by another process, another application sharing this system database, or an application written in another language.
+
+Unlike [`startWorkflow`](./workflows-steps.md#startworkflow), the options are not validated against this process's registered workflows and queues.
+If no application version is set, the workflow is only dequeued by an executor running the owning application's latest version.
+The enqueued workflow is owned by this application unless [`EnqueueOptions.withApplicationName`](./client.md#enqueueoptions) names another one; see [Sharing a System Database](../../explanations/sharing-a-system-database.md).
+
+`enqueueWorkflow` may be called from inside a workflow, where the enqueued workflow is recorded as a child: if the calling workflow is recovered, it gets a handle to the original child rather than enqueueing a second one.
+It may not be called from inside a step; doing so throws `IllegalStateException`.
+
+**Parameters:**
+- **options**: The workflow name, queue name, and other options; see [`EnqueueOptions`](./client.md#enqueueoptions).
+- **args**: The workflow's positional arguments.
+
+**Example Syntax:**
+
+```java
+var options = new DBOSClient.EnqueueOptions("processOrder", "orders")
+    .withApplicationName("order-service");
+WorkflowHandle<Object, Exception> handle =
+    dbos.enqueueWorkflow(options, new Object[] {"order-123"});
+```
+
+### enqueuePortableWorkflow
+
+```java
+<T> WorkflowHandle<T, PortableWorkflowException> enqueuePortableWorkflow(
+    DBOSClient.EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
+```
+
+Like [`enqueueWorkflow`](#enqueueworkflow), but always uses [portable serialization](../../explanations/portable-workflows.md) and accepts named arguments, for targets that take them (for example, a Python workflow with keyword arguments).
+
+**Parameters:**
+- **options**: The workflow name, queue name, and other options; see [`EnqueueOptions`](./client.md#enqueueoptions).
+- **positionalArgs**: The workflow's positional arguments.
+- **namedArgs**: The workflow's named arguments, or `null`.
 
 ## Workflow Management Methods
 
@@ -218,7 +264,7 @@ This object has the following definition:
 public record WorkflowStatus(
     // The workflow ID
     String workflowId,
-    // The workflow status: ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    // The workflow status: ENQUEUED, PENDING, DELAYED, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     WorkflowState status,
     // The name of the workflow function
     String workflowName,
@@ -231,7 +277,7 @@ public record WorkflowStatus(
     // The assumed role for the workflow execution, if any
     String assumedRole,
     // Roles authenticated for the workflow
-    String[] authenticatedRoles,
+    List<String> authenticatedRoles,
     // The deserialized workflow input
     Object[] input,
     // The workflow's output, if any
@@ -277,9 +323,15 @@ public record WorkflowStatus(
     // The serialization format used for the workflow's inputs/outputs
     String serialization,
     // Custom key-value metadata attached to the workflow
-    Map<String, Object> attributes
+    Map<String, Object> attributes,
+    // The name of the schedule that started this workflow, if any
+    String scheduleName,
+    // The application that owns this workflow, or null if no application owns it
+    String applicationName
 )
 ```
+
+See [Sharing a System Database](../../explanations/sharing-a-system-database.md) for how applications own workflows.
 
 ### listWorkflows
 
@@ -515,6 +567,26 @@ ListWorkflowsInput withDequeuedBefore(Instant dequeuedBefore)
 
 Filter to workflows that were dequeued (started execution) before this timestamp.
 
+#### withScheduleName
+
+```java
+ListWorkflowsInput withScheduleName(String scheduleName)
+ListWorkflowsInput withScheduleName(List<String> scheduleNames)
+```
+
+Retrieve workflows started by these [schedules](#schedule-management-methods).
+
+#### withApplicationName
+
+```java
+ListWorkflowsInput withApplicationName(String applicationName)
+ListWorkflowsInput withApplicationName(List<String> applicationNames)
+```
+
+Retrieve workflows owned by these applications, plus workflows no application owns.
+If unset, only this application's workflows (and unowned ones) are listed, unless the query is filtered by [workflow ID](#withworkflowids), which is never narrowed by default; pass an empty list to list every application's workflows.
+See [Sharing a System Database](../../explanations/sharing-a-system-database.md).
+
 #### withAttributes
 
 ```java
@@ -552,7 +624,11 @@ StepInfo(
     // When the step completed
     Instant completedAt,
     // The serialization format used for the step's output
-    String serialization
+    String serialization,
+    // The application that ran this step, or null if no application owns it.
+    // Usually the owner of the step's workflow, but a workflow resumed or forked
+    // by another application records its new steps under that application.
+    String applicationName
 )
 ```
 
@@ -625,8 +701,9 @@ public record ForkOptions(
     ForkOptions withApplicationVersion(String applicationVersion);
     ForkOptions withTimeout(Duration timeout);
     ForkOptions withTimeout(long value, TimeUnit unit);
-    ForkOptions withQueue(Queue queue);
+    ForkOptions withQueue(QueueName queue);
     ForkOptions withQueue(String queueName);
+    ForkOptions withQueue(Queue queue);          // deprecated since 1.1
     ForkOptions withQueuePartitionKey(String queuePartitionKey);
 }
 ```
@@ -640,7 +717,7 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
   - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
   - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
   - **timeout**: A `Duration` timeout for the forked workflow. Pass `null` for no timeout.
-  - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately.
+  - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately. Set it with `withQueue(QueueName)` or `withQueue(String)`; `withQueue(Queue)` is *(deprecated since 1.1)*.
   - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
 
 ### forkFromFailure
@@ -675,7 +752,7 @@ import dev.dbos.transact.workflow.ForkFromFailureOptions;
 
 **Common `with` methods on all subtypes:**
 - **`withApplicationVersion(String version)`** — run the new workflow on this application version.
-- **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** — enqueue the new workflow on this queue instead of starting immediately.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** — enqueue the new workflow on this queue instead of starting immediately. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withQueuePartitionKey(String key)`** — partition key for partitioned queues.
 
 **Example:**
@@ -736,7 +813,9 @@ public record VersionInfo(
     // When this version was promoted
     Instant versionTimestamp,
     // When this version record was created
-    Instant createdAt
+    Instant createdAt,
+    // The application that registered this version, or null if no application owns it
+    String applicationName
 )
 ```
 
@@ -774,7 +853,8 @@ public record WorkflowSchedule(
     Instant lastFiredAt,      // When the schedule last fired (read-only)
     boolean automaticBackfill,// If true, missed firings are retroactively started on launch
     ZoneId cronTimezone,      // Timezone for interpreting the cron expression (defaults to UTC)
-    String queueName          // Queue to enqueue scheduled workflows on
+    String queueName,         // Queue to enqueue scheduled workflows on
+    String applicationName    // Application that owns the schedule and runs its workflows
 )
 ```
 
@@ -797,6 +877,7 @@ Creates an `ACTIVE` schedule with no backfill, UTC timezone, and no queue overri
 - **`withAutomaticBackfill(boolean value)`** — If `true`, any firings missed while the app was down are retroactively started when the app launches.
 - **`withCronTimezone(ZoneId timezone)`** — Interpret the cron expression in this timezone instead of UTC.
 - **`withQueueName(String queueName)`** — Enqueue scheduled executions on this queue.
+- **`withApplicationName(String applicationName)`** — The application that owns the schedule and runs its workflows. Defaults to the creating application. Schedule names are unique across all applications sharing a system database: creating or applying a schedule whose name a different application owns throws [`DBOSApplicationNameConflictException`](#dbosapplicationnameconflictexception). See [Sharing a System Database](../../explanations/sharing-a-system-database.md).
 
 ```java
 public enum ScheduleStatus { ACTIVE, PAUSED }
@@ -831,6 +912,7 @@ Retrieve a schedule by name. Returns empty if not found.
 
 ```java
 List<WorkflowSchedule> listSchedules(List<ScheduleStatus> status, List<String> workflowName, List<String> namePrefix)
+List<WorkflowSchedule> listSchedules(List<ScheduleStatus> status, List<String> workflowName, List<String> namePrefix, List<String> applicationName)
 ```
 
 List schedules with optional filters. Pass `null` for any filter to skip it.
@@ -839,6 +921,7 @@ List schedules with optional filters. Pass `null` for any filter to skip it.
 - **status**: Filter by `ScheduleStatus.ACTIVE` or `ScheduleStatus.PAUSED`.
 - **workflowName**: Filter by workflow function name.
 - **namePrefix**: Filter by schedule name prefix.
+- **applicationName**: List schedules owned by these applications, plus schedules no application owns. If `null` (or omitted), lists this application's schedules; pass an empty list to list every application's schedules.
 
 ### pauseSchedule
 
@@ -899,10 +982,10 @@ Obtain a `Debouncer` via `dbos.debouncer()`:
 `Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
 
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
-- **`withQueue(String queueName)`** / **`withQueue(Queue queue)`**: Enqueue the user workflow on the specified queue when the debounce period elapses instead of starting it directly.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: Enqueue the user workflow on the specified queue when the debounce period elapses instead of starting it directly. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
-- **`withPriority(Integer priority)`**: Set the priority for the user workflow (only applies when a queue is configured).
-- **`withDeduplicationId(String deduplicationId)`**: Set a deduplication ID forwarded to the user workflow.
+- **`withPriority(Integer priority)`**: Set the priority for the user workflow. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
+- **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Set a deduplication ID forwarded to the user workflow. This will be ignored from the next release, where the debouncer sets the deduplication ID itself, and removed in 2.0.
 
 ### debouncer.debounce
 
@@ -921,7 +1004,7 @@ After the workflow begins execution, the next call to `debounce` starts the debo
 
 **Parameters:**
 - **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows are debounced separately.
-- **debouncePeriod**: Inactivity window before the user workflow runs; each call resets it.
+- **debouncePeriod**: Inactivity window before the user workflow runs; each call resets it. Must be positive.
 - **wfLambda**: A lambda calling exactly one `@Workflow` method on a registered proxy.
 
 **Example Syntax:**
@@ -1058,6 +1141,7 @@ import dev.dbos.transact.workflow.SerializationStrategy;
 The available strategies are:
 
 - **`SerializationStrategy.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./lifecycle.md#custom-serialization) (defaults to Jackson).
+  Inside a workflow, `send`, `sendBulk`, `setEvent`, and `writeStream` instead use the serialization format recorded for the running workflow, so a workflow started with portable serialization writes portable messages, events, and stream values by default.
 - **`SerializationStrategy.PORTABLE`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
 - **`SerializationStrategy.NATIVE`**: Explicitly uses the native Java Jackson serializer (`java_jackson`).
 
@@ -1093,3 +1177,40 @@ dbos.registerAlertHandler((name, message, metadata) ->
     logger.warn("DBOS alert [{}]: {} {}", name, message, metadata));
 dbos.launch();
 ```
+
+## Exceptions
+
+### DBOSApplicationNameConflictException
+
+```java
+public class DBOSApplicationNameConflictException extends RuntimeException {
+    String kind();   // "Queue", "Schedule", or "Application version"
+    String name();   // The name both applications claim
+    String owner();  // The application that already owns the name
+}
+```
+
+Thrown when registering a queue, creating or applying a schedule, or promoting an application version whose name is already owned by a different application sharing the system database.
+Queue, schedule, and version names are unique across all applications sharing a system database.
+Either choose a different name or, if the owning application was renamed, transfer its rows first with [`dbosctl sysdb rename-application`](../../production/dbosctl.md#dbosctl-sysdb-rename-application) or [`DBOSClient.renameApplication`](./client.md#renameapplication).
+See [Sharing a System Database](../../explanations/sharing-a-system-database.md).
+
+### DBOSSystemDatabaseException
+
+```java
+public class DBOSSystemDatabaseException extends RuntimeException {
+    String sqlState();
+    Throwable databaseException();  // deprecated since 1.1
+}
+```
+
+Thrown when a system database operation fails and DBOS will not retry it any further.
+This covers two different situations, which `sqlState()` distinguishes:
+
+- **Connectivity failures** are retried first, so one arriving here means the database stayed unreachable across many attempts.
+- **Failures that retrying cannot fix**, such as a constraint violation or a missing table, are not retried and are thrown immediately.
+
+**Methods:**
+- **`sqlState()`**: The SQLSTATE of the underlying failure, or `null` if it carried none.
+- **`getCause()`**: The underlying `SQLException`. It is the only level of wrapping, so the database's own exception is always one level down.
+- **`databaseException()`** *(deprecated since 1.1)*: Returns the same object as `getCause()`; use `getCause()` instead.

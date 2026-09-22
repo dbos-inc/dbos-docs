@@ -75,12 +75,24 @@ result, err := handle.GetResult()
 ```
 
 </TabItem>
+<TabItem value="java" label="Java">
+
+```java
+var options = new DBOSClient.EnqueueOptions("process_order", "orders")
+    // The name of the application that implements process_order
+    .withApplicationName("order-service");
+WorkflowHandle<Object, Exception> handle =
+    dbos.enqueueWorkflow(options, new Object[] {"order-123"});
+Object result = handle.getResult();
+```
+
+</TabItem>
 </Tabs>
 
 If the applications are written in different languages, also set the serialization type to portable so the target application can read the arguments.
 See [Cross-Language Interaction](./portable-workflows.md) for details.
 
-You can do the same from a [DBOS Client](../python/reference/client.md), which additionally supports registering queues, creating schedules, and debouncing workflows on behalf of a named application.
+You can do the same from a DBOS Client ([Python](../python/reference/client.md), [Java](../java/reference/client.md)), which additionally supports registering queues, creating schedules, and debouncing workflows on behalf of a named application.
 Always set the client's application name if multiple applications share a system database.
 
 ## Unowned Rows
