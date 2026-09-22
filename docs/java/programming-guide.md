@@ -25,7 +25,7 @@ Then, install DBOS (plus Logback for logging) by adding the following to your `a
 
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact:0.9.0")
+  implementation("dev.dbos:transact:1.1.0")
   implementation("org.slf4j:slf4j-simple:2.0.17") // needed to see DBOS log messages
   implementation("io.javalin:javalin:7.0.1") // needed for creating HTTP endpoint later in the guide
 
@@ -120,7 +120,7 @@ Now, build and run this code with:
 Your program should print output like:
 
 ```shell
-[main] INFO dev.dbos.transact.DBOS - Launching DBOS v0.9.0
+[main] INFO dev.dbos.transact.DBOS - Launching DBOS v1.1.0
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - DBOS Executor starting
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - System Database: jdbc:postgresql://localhost:5432/dbos_java_starter
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - System Database User name: postgres
@@ -245,7 +245,7 @@ package org.example;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.StartWorkflowOptions;
 import dev.dbos.transact.config.DBOSConfig;
-import dev.dbos.transact.workflow.Queue;
+import dev.dbos.transact.workflow.QueueOptions;
 import dev.dbos.transact.workflow.Workflow;
 import dev.dbos.transact.workflow.WorkflowHandle;
 
@@ -308,11 +308,12 @@ public class App {
     Example proxy = dbos.registerProxy(Example.class, impl);
     impl.setSelf(proxy);
 
-    var queue = new Queue("example-queue");
-    dbos.registerQueue(queue);
-
     Javalin.create(config -> {
-      config.events.serverStarting(dbos::launch);
+      config.events.serverStarting(() -> {
+        dbos.launch();
+        // Queues are stored in the system database, so register them after launch
+        dbos.registerQueue("example-queue", QueueOptions.empty());
+      });
       config.events.serverStopping(dbos::shutdown);
       config.routes.get("/", ctx -> {
         proxy.queueWorkflow();
@@ -323,6 +324,7 @@ public class App {
 }
 ```
 
+The queue is registered with [`dbos.registerQueue`](./reference/queues.md#dbosregisterqueue) after `dbos.launch()`, because queue configuration is stored in the system database.
 When you enqueue a function by passing `new StartWorkflowOptions().withQueue("example-queue")` into `dbos.startWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
 `dbos.startWorkflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `.getResult()` to wait for each of their handles.

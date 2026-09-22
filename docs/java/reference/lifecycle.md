@@ -4,7 +4,8 @@ title: DBOS Lifecycle
 toc_max_heading_level: 3
 ---
 
-You create a `DBOS` instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
+You create a `DBOS` instance exactly once in a program's lifetime, register your workflows, then launch it.
+Queues are stored in the system database and are registered after launch; see [Queues](./queues.md).
 Here, we document the constructor, configuration, and lifecycle methods.
 
 ### DBOSConfig
@@ -60,7 +61,7 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withConductorExecutorMetadata(Map<String, Object> metadata)`**: Arbitrary key-value metadata attached to this executor and reported to Conductor.
 
-- **`withAdminServer(boolean enable)`** *(deprecated since 0.9, will be removed before 1.0)*: Whether to run the built-in HTTP admin server. Use [DBOS Conductor](../../production/conductor.md) for remote administration instead.
+- **`withAdminServer(boolean enable)`** *(deprecated since 0.9)*: Whether to run the built-in HTTP admin server. Use [DBOS Conductor](../../production/conductor.md) for remote administration instead.
 
 - **`enableAdminServer()`** / **`disableAdminServer()`** *(deprecated since 0.9)*: Convenience methods equivalent to `withAdminServer(true)` and `withAdminServer(false)`.
 
@@ -74,15 +75,21 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withEnablePatching()`** / **`withDisablePatching()`**: Convenience methods equivalent to `withEnablePatching(true)` and `withEnablePatching(false)`.
 
-- **`withListenQueue(Queue queue)`** / **`withListenQueue(String queueName)`**: Add a single queue to the set of queues this DBOS process listens to.
+- **`withListenQueue(String queueName)`** / **`withListenQueue(QueueName queue)`**: Add a single queue to the set of queues this DBOS process listens to. [`QueueName`](./queues.md#queuename) is a typed wrapper for a queue name.
 
-- **`withListenQueues(Queue... queues)`** / **`withListenQueues(String... queues)`**: Add multiple queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.
+- **`withListenQueues(String... queues)`** / **`withListenQueues(QueueName... queues)`**: Add multiple queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.
+
+- **`withListenQueue(Queue queue)`** / **`withListenQueues(Queue... queues)`** *(deprecated since 1.1)*: Equivalent to the `QueueName` overloads, taking the name of each `Queue`.
 
 - **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds.
 
 - **`withUseListenNotify(boolean enable)`**: Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery (e.g. `recv`, `getEvent`). Defaults to `true`. Automatically set to `false` when CockroachDB is detected, since CockroachDB does not support `LISTEN`/`NOTIFY`. Set this to `false` explicitly if your PostgreSQL configuration does not support it.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
+
+- **`withNotificationCoalesceInterval(Duration interval)`**: Interval at which DBOS batches and sends the notifications that wake processes waiting on [events](./methods.md#getevent) and [streams](./methods.md#readstream) written by this process. Rather than one notifying transaction per write, pending wake-ups are sent once per interval. A shorter interval lowers wake-up latency in other processes; a longer one lowers the rate of notifying commits, each of which takes a global lock in PostgreSQL. Waiters in the same process are woken immediately either way. Defaults to 10 milliseconds; the minimum is 1 millisecond.
+
+- **`withDatabasePollingConcurrency(Integer limit)`**: The maximum number of database-backed polling reads from wait operations (such as awaiting a workflow result, [`recv`](./methods.md#recv), [`getEvent`](./methods.md#getevent), and [`readStream`](./methods.md#readstream)) that may run concurrently against the system database connection pool. This prevents many waiters from checking out every connection in the pool and starving control-plane operations such as enqueue and dequeue, status writes, recovery, and cancellation. Defaults to half the pool size (minimum 1); the pool DBOS creates has 10 connections. Set to a non-positive value to remove the limit.
 
 
 ### Cloud Environment Variables
@@ -96,6 +103,7 @@ When deploying to DBOS Cloud, several environment variables are automatically se
 | `DBOS__CONDUCTOR_URL` | URL of the DBOS Cloud Conductor. Overrides `withConductorDomain(...)`. |
 | `DBOS__CONDUCTOR_APP_NAME` | Application name used to identify this executor with Conductor. |
 | `DBOS__CONDUCTOR_KEY` | API key for DBOS Cloud Conductor. Overrides `withConductorKey(...)`. Set by the cloud platform; avoids putting credentials in `DBOSConfig`. |
+| `DBOS__VMID` | The executor ID of this process. Overrides `withExecutorId(...)` when `DBOS__CLOUD=true`. |
 
 These variables take precedence over any values set in `DBOSConfig`. In local development you do not need to set them.
 
@@ -115,14 +123,15 @@ static String version()
 
 Return the DBOS library version string.
 
-### registerQueue / registerQueues
+### registerQueue / registerQueues *(deprecated since 1.1)* {#registerqueue--registerqueues}
 
 ```java
 void registerQueue(Queue queue)
 void registerQueues(Queue... queues)
 ```
 
-Register one or more queues. All queues must be registered before `dbos.launch()` so that workflow recovery has the queue options available.
+Register one or more in-memory queues before `dbos.launch()`.
+In-memory queues are deprecated for removal: register database-backed queues after launch with [`dbos.registerQueue(String, QueueOptions)`](./queues.md#dbosregisterqueue) instead.
 
 ### dbos.launch
 
@@ -131,7 +140,8 @@ void launch()
 ```
 
 Launch DBOS, initializing database connections and beginning workflow recovery and queue processing.
-This should be called after all workflows and queues are registered.
+This should be called after all workflows are registered; queues are registered after launch.
+Launch-time recovery returns this executor's `PENDING` workflows from the current application version to their queues (workflows that were not enqueued go to an internal queue), from which they are dequeued and run again; it is skipped when a Conductor key is configured or on DBOS Cloud, where Conductor manages recovery.
 **You should not call a DBOS workflow until after DBOS is launched.**
 
 ### dbos.shutdown
@@ -144,13 +154,14 @@ Shut down the DBOS instance, releasing database connections and stopping workflo
 `DBOS` also implements `AutoCloseable`, so it can be used in a try-with-resources block.
 This may be useful for testing DBOS applications.
 
-### getQueue
+### getQueue *(deprecated since 1.1)* {#getqueue}
 
 ```java
 Optional<Queue> getQueue(String queueName)
 ```
 
-Return the registered `Queue` with the given name, or empty if no such queue is registered. Must be called after `dbos.launch()`.
+Return the in-memory `Queue` registered before launch with the given name, or empty if no such queue is registered. Must be called after `dbos.launch()`.
+Deprecated for removal: use [`dbos.findQueue`](./queues.md#dbosfindqueue), which reads the queue from the system database.
 
 ### Custom Serialization
 

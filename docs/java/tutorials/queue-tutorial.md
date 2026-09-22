@@ -7,13 +7,13 @@ toc_max_heading_level: 4
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-Register a queue with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue), specifying its name and options.
+Register a queue with [`dbos.registerQueue`](../reference/queues.md#dbosregisterqueue), specifying its name and options.
 Queues must be registered **after** [`dbos.launch()`](../reference/lifecycle.md).
 Queue configuration is persisted to the system database, so queues are visible to every DBOS process connected to that database.
 
 ```java
 dbos.launch();
-DBOS.registerQueue("example-queue", QueueOptions.empty());
+dbos.registerQueue("example-queue", QueueOptions.empty());
 ```
 
 You can then enqueue any workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
@@ -43,6 +43,11 @@ public String example(DBOS dbos, String queue, Example proxy, String task)
   return result;
 }
 ```
+
+:::tip
+`new StartWorkflowOptions("example-queue")` sets the workflow **ID**, not the queue.
+To name a queue in the constructor, pass a [`QueueName`](../reference/queues.md#queuename): `new StartWorkflowOptions(QueueName.of("example-queue"))`.
+:::
 
 ### Queue Example
 
@@ -115,7 +120,7 @@ public class App {
     dbos.launch();
 
     // Register the queue
-    DBOS.registerQueue("example-queue", QueueOptions.empty());
+    dbos.registerQueue("example-queue", QueueOptions.empty());
     impl.setQueueName("example-queue");
 
     // Run the queue workflow
@@ -199,15 +204,30 @@ class ExampleImpl implements Example {
 
 #### Enqueueing from Another Application
 
-Often, you want to enqueue a workflow from outside your DBOS application.
+Often, you want to enqueue a workflow from another DBOS application or from outside your DBOS application.
 For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
-Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+If both applications [share a system database](../../explanations/sharing-a-system-database.md), a DBOS application can enqueue another application's workflow with `dbos.enqueueWorkflow`.
+Because the workflow is implemented elsewhere, workflow and queue metadata must be specified explicitly with [`EnqueueOptions`](../reference/client.md#enqueueoptions), and `withApplicationName` names the application that should run it:
 
-For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with arguments:
+```java
+var options = new DBOSClient.EnqueueOptions(
+  "dataPipeline",                  // Workflow name
+  "com.example.DataPipelineImpl",  // Class name
+  "pipelineQueue"                  // Queue name
+).withApplicationName("data-processing-service");
+
+WorkflowHandle<String, Exception> handle = dbos.enqueueWorkflow(
+  options,
+  new Object[]{"task-123", "data"}  // Workflow arguments
+);
+```
+
+Use `dbos.enqueuePortableWorkflow(options, positionalArgs, namedArgs)` instead when the target takes named arguments, such as a Python workflow with keyword arguments.
+
+From outside any DBOS application, use the [DBOS Client](../reference/client.md), which connects directly to the system database and takes the same `EnqueueOptions`:
 
 ```java
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
@@ -259,7 +279,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```java
-DBOS.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
+dbos.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
 ```
 
 #### Global Concurrency
@@ -273,7 +293,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```java
-DBOS.registerQueue("example-queue", QueueOptions.setConcurrency(10));
+dbos.registerQueue("example-queue", QueueOptions.setConcurrency(10));
 ```
 
 ### Rate Limiting
@@ -283,7 +303,7 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```java
-DBOS.registerQueue("example-queue", QueueOptions.setRateLimit(100, 60, TimeUnit.SECONDS));
+dbos.registerQueue("example-queue", QueueOptions.setRateLimit(100, 60, TimeUnit.SECONDS));
 ```
 
 Rate limits are especially useful when working with a rate-limited API.
@@ -291,18 +311,18 @@ Rate limits are especially useful when working with a rate-limited API.
 ### Reconfiguring Queues at Runtime
 
 Because queue configuration lives in the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
-Use `DBOS.updateQueue` to modify a queue's configuration. Workers pick up the new configuration on their next polling iteration.
+Use `dbos.updateQueue` to modify a queue's configuration. Workers pick up the new configuration on their next polling iteration.
 
 ```java
 // Change the queue's concurrency
-DBOS.updateQueue("example-queue", QueueOptions.setConcurrency(20));
+dbos.updateQueue("example-queue", QueueOptions.setConcurrency(20));
 
 // Change its rate limit
-DBOS.updateQueue("example-queue", QueueOptions.setRateLimit(25, 30, TimeUnit.SECONDS));
+dbos.updateQueue("example-queue", QueueOptions.setRateLimit(25, 30, TimeUnit.SECONDS));
 ```
 
 :::warning
-If your application calls `DBOS.registerQueue` on startup, the next process to start can overwrite settings you applied at runtime via `updateQueue`.
+If your application calls `dbos.registerQueue` on startup, the next process to start can overwrite settings you applied at runtime via `updateQueue`.
 Either update the `registerQueue` call to match the new configuration, or pass `QueueConflictResolution.NEVER_UPDATE` to preserve the runtime changes.
 :::
 
@@ -310,13 +330,13 @@ You can also find, list, and delete queues:
 
 ```java
 // Find a specific queue by name
-Optional<Queue> queue = DBOS.findQueue("example-queue");
+Optional<Queue> queue = dbos.findQueue("example-queue");
 
 // List all queues in the system database
-List<Queue> queues = DBOS.listQueues();
+List<Queue> queues = dbos.listQueues();
 
 // Delete a queue
-boolean deleted = DBOS.deleteQueue("example-queue");
+boolean deleted = dbos.deleteQueue("example-queue");
 ```
 
 You can do all of this from a [`DBOSClient`](../reference/client.md#queue-management-methods) as well, which is useful for managing queues from an admin tool or another service.
@@ -398,78 +418,80 @@ var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
 ### Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
+A queue is partitioned if you register it with any per-partition flow control limit:
+
+| Option | Meaning |
+| --- | --- |
+| `partitionConcurrency` | Maximum workflows from any one partition running at once across all processes. |
+| `partitionWorkerConcurrency` | Maximum workflows from any one partition running at once on a single process. |
+| `partitionRateLimit` | Maximum workflows that may be started from any one partition in a given period. |
+
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
 Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
 
 For example, suppose you want your users to each be able to run at most one task at a time.
-You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+You can do this with a queue whose `partitionConcurrency` is 1, where the partition key is user ID.
 
 **Example Syntax**
 
 ```java
-DBOS.registerQueue("example-queue",
-    QueueOptions.setConcurrency(1).andPartitionQueue(true));
+dbos.registerQueue("example-queue", QueueOptions.setPartitionConcurrency(1));
 
 void onUserTaskSubmission(String userID, Task task) {
     // Partition the task queue by user ID. As the queue has a
-    // maximum concurrency of 1, this means that at most one
+    // per-partition concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
     var options = new StartWorkflowOptions().withQueue("example-queue").withQueuePartitionKey(userID);
-    dbos.startWorkflow(() -> taskWorkflow(task), options);
+    dbos.startWorkflow(() -> proxy.taskWorkflow(task), options);
 }
 ```
 
-Sometimes, you want to apply global or per-worker limits to a partitioned queue.
-You can do this with **multiple levels of queueing**.
-Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
-Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
-to the non-partitioned queue and awaits its result.
-This ensures both queues' flow control limits are enforced on your workflow.
-For example:
+:::warning
+Every enqueue on a partitioned queue must supply a partition key.
+`dbos.startWorkflow` throws if you omit it, but a workflow enqueued without a partition key by other means (such as a [`DBOSClient`](../reference/client.md)) stays `ENQUEUED` and is never dequeued.
+For the same reason, partitioning a queue that already has enqueued workflows strands them; drain the queue first.
+:::
+
+#### Combining Queue-Wide and Per-Partition Limits
+
+A partitioned queue enforces its per-partition limits **and** its queue-wide limits ([`concurrency`](#global-concurrency), [`workerConcurrency`](#worker-concurrency), and [`rateLimit`](#rate-limiting)) at the same time.
+This lets you protect your workers from overload while still fairly distributing work between partitions.
+
+For example, this "fair queue" runs at most one task per user, but no more than 10 tasks on any single process:
 
 ```java
-// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-// and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
-// across all partitions (and at most one task per partition).
-DBOS.registerQueue("concurrency-queue", QueueOptions.setWorkerConcurrency(5));
-DBOS.registerQueue("partitioned-queue",
-    QueueOptions.setConcurrency(1).andPartitionQueue(true));
-
-class UserTasksImpl implements UserTasks {
-
-    // proxy object gets injected to implementation object to enable intra-workflow invocation
-    final DBOS dbos;
-    UserTasks proxy;
-
-    public UserTasksImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
-    @Workflow
-    void onUserTaskSubmission(String userID, Task task) {
-        // First, enqueue a "concurrency manager" workflow to the partitioned
-        // queue to enforce per-partition limits.
-        var options = new StartWorkflowOptions().withQueue("partitioned-queue").withQueuePartitionKey(userID);
-        dbos.startWorkflow(() -> proxy.concurrencyManager(task), options);
-    }
-
-    @Workflow
-    String concurrencyManager(Task task) {
-        // The "concurrency manager" workflow enqueues the processTask
-        // workflow on the non-partitioned queue and awaits its results
-        // to enforce global flow control limits.
-        var options = new StartWorkflowOptions().withQueue("concurrency-queue");
-        var handle = dbos.startWorkflow(() -> proxy.processTask(task), options);
-        return handle.getResult();
-    }
-
-    @Workflow
-    String processTask(Task task) {
-        // task processing code
-    }
+dbos.registerQueue("fair-queue",
+    QueueOptions.setPartitionConcurrency(1).andWorkerConcurrency(10));
 ```
+
+Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
+
+```java
+// At most 100 tasks running globally and 25 running per tenant,
+// at most 10 tasks running per process and 2 per tenant per process,
+// and at most 1000 tasks started per minute globally and 50 per tenant.
+dbos.registerQueue("tenant-queue",
+    QueueOptions.setConcurrency(100)
+        .andWorkerConcurrency(10)
+        .andRateLimit(1000, Duration.ofSeconds(60))
+        .andPartitionConcurrency(25)
+        .andPartitionWorkerConcurrency(2)
+        .andPartitionRateLimit(50, Duration.ofSeconds(60)));
+```
+
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+See [`QueueOptions`](../reference/queues.md#queueoptions) for the full set of rules.
+
+:::note
+[Deduplication](#deduplication) is not supported on partitioned queues.
+:::
+
+:::info Deprecated `partitionQueue` option
+Before 1.1, queues were partitioned with `QueueOptions.setPartitionQueue(true)` (or `andPartitionQueue(true)`), which applies the queue-wide limits to each partition instead of to the queue as a whole.
+This option is deprecated since 1.1: set per-partition limits instead.
+The limits of a queue registered with `partitionQueue` cannot be changed with `updateQueue`; re-register it with per-partition limits.
+:::
 
 ### Deduplication
 
@@ -503,18 +525,12 @@ public void example(DBOS dbos, Example proxy, String task, String userID) throws
 ### Priority
 
 You can set a priority for an enqueued workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
-Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set [`priorityEnabled`](../reference/queues.md#queueoptions) on your queue.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. A negative priority throws `IllegalArgumentException`.
+Priority is enabled on every queue; no extra configuration is needed.
 
 :::tip
-Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+Workflows without assigned priorities have priority `0`, the highest priority.
 :::
-
-To use priorities in a queue, you must enable it when creating the queue:
-
-```java
-DBOS.registerQueue("example-queue", QueueOptions.setPriorityEnabled(true));
-```
 
 **Example syntax:**
 
@@ -560,8 +576,8 @@ DBOS dbos = new DBOS(config);
 // register workflows...
 dbos.launch();
 
-DBOS.registerQueue("cpuQueue", QueueOptions.empty());
-DBOS.registerQueue("gpuQueue", QueueOptions.empty());
+dbos.registerQueue("cpuQueue", QueueOptions.empty());
+dbos.registerQueue("gpuQueue", QueueOptions.empty());
 ```
 
 Note that `withListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.

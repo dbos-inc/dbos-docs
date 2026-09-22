@@ -17,7 +17,7 @@ that illustrates the features described in this documentation.
 <TabItem value="gradle" label="Gradle">
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact-spring-boot-starter:0.8.0")
+  implementation("dev.dbos:transact-spring-boot-starter:1.1.0")
 }
 ```
 </TabItem>
@@ -27,7 +27,7 @@ dependencies {
   <dependency>
     <groupId>dev.dbos</groupId>
     <artifactId>transact-spring-boot-starter</artifactId>
-    <version>0.8.0</version>
+    <version>1.1.0</version>
   </dependency>
 </dependencies>
 ```
@@ -137,7 +137,21 @@ Use `withInstanceName(String)` in `StartWorkflowOptions` or `EnqueueOptions` to 
 
 ## Lifecycle
 
-`DBOSLifecycle` is a `SmartLifecycle` bean that calls `dbos.launch()` after all singletons are initialized and `dbos.shutdown()` when the context closes. Schedules and queues registered in `@PostConstruct` methods or `ApplicationListener<ContextRefreshedEvent>` handlers are guaranteed to be in place before launch.
+`DBOSLifecycle` is a `SmartLifecycle` bean that calls `dbos.launch()` after all singletons are initialized and `dbos.shutdown()` when the context closes, so workflow beans are always registered before launch.
+Schedules and [queues](../reference/queues.md) are stored in the system database and can only be registered once DBOS is launched, so register them in an `ApplicationListener<ContextRefreshedEvent>` handler, which Spring runs after `DBOSLifecycle` has started, rather than in a `@PostConstruct` method:
+
+```java
+@Component
+public class QueueSetup implements ApplicationListener<ContextRefreshedEvent> {
+
+    @Autowired DBOS dbos;
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        dbos.registerQueue("orders", QueueOptions.setWorkerConcurrency(5));
+    }
+}
+```
 
 ## Injecting `dbos` instance
 
