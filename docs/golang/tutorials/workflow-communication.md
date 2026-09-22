@@ -27,6 +27,16 @@ You can call `Send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 Pass [`WithIdempotencyKey`](../reference/methods.md#withidempotencykey) to make a retried `Send` deliver at most once: retrying with the same key (for example, after a crash or network failure) inserts the message only once.
 
+To send many messages at once, possibly to different workflows, use [`SendBulk`](../reference/methods.md#sendbulk).
+The batch is sent in a single transaction: either every message is delivered or none is.
+
+```go
+err := dbos.SendBulk(dbosContext, []dbos.SendMessage{
+    {DestinationID: orderWorkflowID, Message: "confirmed", Topic: "orders"},
+    {DestinationID: inventoryWorkflowID, Message: order, Topic: "reserve", IdempotencyKey: "reserve-42"},
+})
+```
+
 #### Recv
 
 ```go
