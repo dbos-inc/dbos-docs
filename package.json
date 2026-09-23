@@ -49,9 +49,7 @@
   },
   "overrides": {
     "serialize-javascript": "^7.0.4",
-    "docusaurus-plugin-llms": {
-      "minimatch": "^9.0.7",
-      "yaml": "^2.8.3"
-    }
+    "minimatch@^9.0.0": "^9.0.7",
+    "yaml@^2.0.0": "^2.8.3"
   }
 }
