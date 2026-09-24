@@ -1160,9 +1160,7 @@ interface StepStatus {
 }
 ```
 
-`cancelSignal` fires within about a second of the step's workflow being [cancelled](#dboscancelworkflow) (including by a [workflow timeout](../tutorials/workflow-tutorial.md#workflow-timeouts)).
-All attempts of a step share one `cancelSignal`; if it fires and the workflow is later resumed, the resumed step's attempts get a fresh one.
-DBOS only polls for cancellation while a step is using `cancelSignal`, so steps that never read it incur no overhead.
+`cancelSignal` fires when the step's workflow is [cancelled](#dboscancelworkflow) (including by a [workflow timeout](../tutorials/workflow-tutorial.md#workflow-timeouts)).
 
 ### DBOS.isInTransaction()
 ```typescript
