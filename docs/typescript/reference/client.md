@@ -549,12 +549,6 @@ Rewind a workflow to a specific step and re-execute it from that step, keeping i
 Only a workflow in a terminal state can be rewound.
 Please see [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) for more information.
 
-:::warning
-`DBOSClient.rewindWorkflow` rewinds only the workflow's history in the system database.
-It does not delete checkpoints recorded in [data sources](./datasource.md), so if the workflow ran data source transactions at or after `startStep`, those transactions are not re-executed when the workflow re-executes.
-To rewind such a workflow, use [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) from within your application.
-:::
-
 #### `deleteWorkflow`
 
 Delete a workflow and all its associated data from the system database.

@@ -1260,12 +1260,6 @@ Similar to [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
 Only a workflow in a terminal state can be rewound.
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 
-:::warning
-`DBOSClient.rewind_workflow` rewinds only the workflow's history in the system database.
-It does not delete checkpoints recorded in [datasources](./datasources.md), so if the workflow ran datasource transactions at or after `start_step`, those transactions are not re-executed when the workflow re-executes.
-To rewind such a workflow, use [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow) from within your application.
-:::
-
 ### rewind_workflow_async
 
 ```python
