@@ -74,6 +74,20 @@ with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to (or, for a direct call, the result of) the existing workflow instead of starting a new one.
+To instead raise an error when a workflow ID is already in use, set `workflow_id_reuse_policy="reject"` in [`SetWorkflowID`](../reference/contexts.md#setworkflowid):
+
+```python
+from dbos import error as dboserror
+
+try:
+    with SetWorkflowID("very-unique-id", workflow_id_reuse_policy="reject"):
+        example_workflow()
+except dboserror.DBOSWorkflowIDInUseError:
+    # A workflow with this ID already exists
+    ...
+```
+
 ## Determinism
 
 Workflows are in most respects normal Python functions.
