@@ -84,6 +84,7 @@ Workflows already enqueued on a deleted queue can no longer be dequeued, execute
 However, if a queue with the same name is later registered, it will dequeue the leftover workflows.
 Do not rely on this: stale workflows unexpectedly resuming on a future queue is rarely the intended behavior.
 Instead, cancel or drain pending workflows on the queue before deleting it.
+Workflows already stuck on a deleted queue can be moved to a registered queue with [`dbos.resumeWorkflow(workflowId, queueName)`](./methods.md#resumeworkflow).
 :::
 
 ## QueueOptions
@@ -139,6 +140,7 @@ QueueOptions andPriorityEnabled(boolean value)
 
 Setting any per-partition limit [partitions](../tutorials/queue-tutorial.md#partitioning-queues) the queue: every workflow enqueued on it must supply a partition key, and the per-partition limits are enforced for each partition key alongside the queue-wide limits.
 Partitioning a queue that already has enqueued workflows strands them: they have no partition key, so they are never dequeued. Drain a queue before partitioning it.
+Workflows stranded this way can be moved to a queue that is not partitioned with [`dbos.resumeWorkflow(workflowId, queueName)`](./methods.md#resumeworkflow).
 
 The limits are validated when a queue is registered or updated, and an invalid combination throws `IllegalArgumentException`:
 - Every concurrency limit, rate-limit `max`, rate-limit `period`, and `pollingInterval` must be greater than zero.

@@ -958,10 +958,11 @@ class ExampleImpl implements Example {
     public List<String> processTasks(List<String> tasks) {
         var handles = new ArrayList<WorkflowHandle<String, RuntimeException>>();
         // Enqueue each task so all tasks are processed concurrently.
+        var queueName = QueueName.of("task-queue");
         for (var task : tasks) {
             handles.add(dbos.startWorkflow(
                 () -> proxy.processTask(task),
-                new StartWorkflowOptions(QueueName.of("task-queue"))));
+                new StartWorkflowOptions(queueName)));
         }
         // Wait for each task to complete and retrieve its result.
         var results = new ArrayList<String>();
@@ -1004,6 +1005,7 @@ dbos.updateQueue("example-queue", QueueOptions.setRateLimit(null, null));  // re
 Do NOT construct `Queue` yourself.
 
 **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued or executed until a queue with the same name is registered again. Cancel or drain pending workflows before deleting a queue.
+If workflows are already stuck on a deleted queue, move them to a registered queue with `dbos.resumeWorkflow(workflowId, "new-queue")` (or `dbos.resumeWorkflows(workflowIds, "new-queue")`); find them with `dbos.listWorkflows(new ListWorkflowsInput().withQueueName("old-queue").withStatus(WorkflowState.ENQUEUED))`.
 
 `DBOSClient` has the same `registerQueue`, `updateQueue`, `findQueue`, `listQueues`, and `deleteQueue` methods, for managing queues from outside your application.
 
@@ -1162,6 +1164,7 @@ Deduplication is not supported on partitioned queues: setting both `withQueuePar
 :::warning
 Workflows already on a queue without a partition key are never dequeued once the queue becomes partitioned.
 Drain a queue before adding its first per-partition limit.
+If workflows are already stuck this way, move them to a queue that is not partitioned with `dbos.resumeWorkflow(workflowId, "new-queue")` (or `dbos.resumeWorkflows(workflowIds, "new-queue")`); find them with `dbos.listWorkflows(new ListWorkflowsInput().withQueueName("partitioned-queue").withStatus(WorkflowState.ENQUEUED))`.
 :::
 
 ### Deduplication
@@ -1326,7 +1329,7 @@ public EnqueueOptions(String workflowName, String className, QueueName queue)
 public EnqueueOptions(String workflowName, String className, String instanceName, QueueName queue)
 ```
 
-The constructors fix what to run and where: the workflow name, optionally its class and named instance, and the queue as a `QueueName` (for example `QueueName.of("my-queue")`). There is no `withClassName` or `withInstanceName`. If the class name is omitted, DBOS searches all registered classes.
+The constructors fix what to run and where: the workflow name, optionally its class and named instance, and the queue as a `QueueName` (for example `QueueName.of("my-queue")`). There is no `withClassName` or `withInstanceName`. A Java workflow is identified by its class, so always pass the class name (or its `@WorkflowClassName` value) when enqueuing a Java workflow. Omit it only for a workflow that isn't registered on a class, such as a Python workflow function.
 
 **Methods:**
 

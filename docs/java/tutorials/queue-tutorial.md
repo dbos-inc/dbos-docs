@@ -451,6 +451,7 @@ void onUserTaskSubmission(String userID, Task task) {
 Every enqueue on a partitioned queue must supply a partition key.
 `dbos.startWorkflow` throws if you omit it, but a workflow enqueued without a partition key by other means (such as a [`DBOSClient`](../reference/client.md)) stays `ENQUEUED` and is never dequeued.
 For the same reason, partitioning a queue that already has enqueued workflows strands them; drain the queue first.
+Workflows stranded this way can be moved to a queue that is not partitioned with [`dbos.resumeWorkflow(workflowId, queueName)`](../reference/methods.md#resumeworkflow).
 :::
 
 #### Combining Queue-Wide and Per-Partition Limits

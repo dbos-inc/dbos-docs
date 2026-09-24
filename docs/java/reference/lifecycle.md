@@ -5,7 +5,6 @@ toc_max_heading_level: 3
 ---
 
 You create a `DBOS` instance exactly once in a program's lifetime, register your workflows, then launch it.
-Queues are stored in the system database and are registered after launch; see [Queues](./queues.md).
 Here, we document the constructor, configuration, and lifecycle methods.
 
 ### DBOSConfig
@@ -39,6 +38,8 @@ This configuration can be adjusted by using `with` methods that produce new conf
 
 - **`withAppName(String appName)`**: Your application's name. Required.
 
+- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. We recommend always setting it; if it is not set, DBOS computes a version from a hash of your workflow methods, which is only a fallback. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
+
 - **`withDatabaseUrl(String databaseUrl)`**: The JDBC URL for your system database. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`. Required unless valid DataSource is provided.
 
 - **`withDbUser(String dbUser)`**: Your PostgreSQL username or role. Required unless valid DataSource is provided.
@@ -66,8 +67,6 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`enableAdminServer()`** / **`disableAdminServer()`** *(deprecated since 0.9)*: Convenience methods equivalent to `withAdminServer(true)` and `withAdminServer(false)`.
 
 - **`withAdminServerPort(int port)`** *(deprecated since 0.9)*: The port on which the admin server runs. Defaults to 3001.
-
-- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. We recommend always setting it; if it is not set, DBOS computes a version from a hash of your workflow methods, which is only a fallback. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 - **`withExecutorId(String executorId)`**: A unique process ID used to identify this application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
