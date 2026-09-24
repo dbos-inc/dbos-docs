@@ -143,8 +143,9 @@ Partitioning a queue that already has enqueued workflows strands them: they have
 The limits are validated when a queue is registered or updated, and an invalid combination throws `IllegalArgumentException`:
 - Every concurrency limit, rate-limit `max`, rate-limit `period`, and `pollingInterval` must be greater than zero.
 - A rate limit's `max` and `period` go together: registering a queue with only one of them set, or an update that would leave only one set, throws. Pass `null` for both to register without a limit or to clear one.
-- `workerConcurrency` and `partitionConcurrency` must each be less than or equal to `concurrency`.
-- `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`, `workerConcurrency`, and `concurrency`.
+- A concurrency limit must be less than or equal to any wider limit that is also set; limits that are not set are not compared:
+  - `workerConcurrency` and `partitionConcurrency` must each be less than or equal to `concurrency`.
+  - `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`, `workerConcurrency`, and `concurrency`.
 
 ## QueueConflictResolution
 

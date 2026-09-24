@@ -894,7 +894,7 @@ QueueOptions.setConcurrency(10)
 Static factories (each has a matching `and...` method for chaining):
 
 - **`setConcurrency(Integer value)`**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes.
-- **`setWorkerConcurrency(Integer value)`**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must not exceed `concurrency`.
+- **`setWorkerConcurrency(Integer value)`**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. If `concurrency` is also set, must not exceed it.
 - **`setRateLimit(Integer max, Duration period)`** / **`setRateLimit(int limit, long period, TimeUnit unit)`**: The maximum number of workflows that may be started from this queue in a rolling period, across all processes.
 - **`setPartitionConcurrency(Integer value)`**: The maximum number of workflows from any one partition that may run concurrently across all processes.
 - **`setPartitionWorkerConcurrency(Integer value)`**: The maximum number of workflows from any one partition that may run concurrently within a single process.
@@ -918,7 +918,7 @@ WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
 `new StartWorkflowOptions().withQueue("example-queue")` also works.
 Do NOT write `new StartWorkflowOptions("example-queue")`: the single-`String` constructor takes a **workflow ID**, not a queue name.
 Enqueueing on a queue that isn't registered throws.
-Queued workflows are started in first-in, first-out (FIFO) order.
+Queued workflows are started in priority order, and in first-in, first-out (FIFO) order among workflows of the same priority.
 
 To enqueue a workflow by name, including one implemented by another application or in another language that shares the system database, use `dbos.enqueueWorkflow` with the same `EnqueueOptions` as `DBOSClient` (see below):
 
@@ -1156,7 +1156,7 @@ dbos.registerQueue("tenant-queue",
         .andPartitionRateLimit(50, Duration.ofSeconds(60)));
 ```
 
-Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+When both are set, each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`; limits that are not set are not compared.
 Deduplication is not supported on partitioned queues: setting both `withQueuePartitionKey` and `withDeduplicationId` throws `IllegalArgumentException`.
 
 :::warning

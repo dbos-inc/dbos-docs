@@ -18,7 +18,7 @@ dbos.registerQueue("example-queue", QueueOptions.empty());
 
 You can then enqueue any workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
 Enqueuing a workflow submits it for execution and returns a [handle](../reference/workflows-steps.md#workflowhandle) to it.
-Queued tasks are started in first-in, first-out (FIFO) order.
+Queued tasks are started in [priority](#priority) order, and in first-in, first-out (FIFO) order among tasks of the same priority.
 
 ```java
 class ExampleImpl implements Example {
@@ -236,7 +236,7 @@ var options = new EnqueueOptions(
   "dataPipeline",                  // Workflow name
   "com.example.DataPipelineImpl",  // Class name
   QueueName.of("pipelineQueue")    // Queue name
-);
+).withApplicationName("data-processing-service");
 
 var handle = client.enqueueWorkflow(
   options,
@@ -480,7 +480,7 @@ dbos.registerQueue("tenant-queue",
         .andPartitionRateLimit(50, Duration.ofSeconds(60)));
 ```
 
-Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+When both are set, each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`; limits that are not set are not compared.
 See [`QueueOptions`](../reference/queues.md#queueoptions) for the full set of rules.
 
 :::note
