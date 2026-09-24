@@ -7,12 +7,10 @@ title: Upgrading
 
 Follow these steps for every DBOS upgrade.
 
-- **Deploy each upgrade as a new application version.**
-Set the version explicitly with `withAppVersion`, and change it when you upgrade.
-If you don't set it, the version DBOS computes changes on its own, because it includes the DBOS version.
-Either way, executors only dequeue and recover workflows of their own version, so keep some executors on the old release running until their workflows finish, as in a [blue-green deployment](./tutorials/upgrading-workflows.md#versioning).
-Executors on consecutive minor releases can run side by side on the same system database.
-If you use [patching](./tutorials/upgrading-workflows.md#patching), this doesn't apply: unless you set a version, every executor runs the fixed version `PATCHING_ENABLED`, so old and new executors share workflows. Shut down all executors on the old release before launching the new one.
+- **A DBOS upgrade changes a computed application version.**
+If you don't set a version with `withAppVersion` or use [patching](./tutorials/upgrading-workflows.md#patching), DBOS computes one that includes the DBOS version, so executors on the new release run a new application version.
+Executors only dequeue and recover workflows of their own version, so keep some executors on the old release running until their workflows finish, as in a [blue-green deployment](./tutorials/upgrading-workflows.md#versioning).
+If you set the version yourself or use patching, upgrading DBOS doesn't change it, and old and new executors run each other's workflows.
 - **Migrate the system database before anything that needs the new schema.**
 With `withMigrate(true)` (the default), `dbos.launch()` migrates the system database.
 If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../production/dbosctl.md#dbosctl-sysdb-migrate) before deploying the upgrade.
@@ -28,7 +26,7 @@ For new features, see the [release notes](https://github.com/dbos-inc/dbos-trans
 
 ### 1.1 Is Required Before 1.2
 
-If your application servers run 1.0, upgrade all of them to 1.1 before any server runs 1.2, and don't run 1.0 and 1.2 servers against the same system database.
+If your application servers run 1.0, upgrade all of them to 1.1 before any server runs 1.2 or later, and don't run 1.0 servers against the same system database as servers on 1.2 or later.
 1.2 changes how two things are stored in the system database, and 1.1 is the release that understands both the old and the new formats:
 
 - **Debouncing.** 1.2 debounces by delaying the workflow itself on its queue, instead of through a separate debouncer workflow. 1.1 still debounces through a debouncer workflow, but when a workflow debounced by 1.2 already holds the key, 1.1 extends that workflow's delay and replaces its arguments, as 1.2 does. 1.0 doesn't recognize such a workflow: a 1.0 server debouncing the same key can wait on a workflow that never answers it and then run the work a second time.
@@ -68,6 +66,12 @@ Iterating `readStream` for a workflow ID that doesn't exist now throws `DBOSNonE
 A workflow enqueued by [`DBOSClient`](./reference/client.md) without `withAppVersion` is now dequeued only by executors running the latest application version; in 1.0, any executor dequeued it.
 During a blue-green upgrade, such workflows therefore run on the new executors once they launch.
 If executors on an older version must run a workflow, set `withAppVersion` when enqueuing it.
+
+#### Event Waits During a Rolling Upgrade from 1.0
+
+1.1 sends event notifications from the application instead of from database triggers, and its migration removes the triggers.
+While 1.0 executors are still running, events they set don't wake `getEvent` calls in 1.1 processes, which then see the event only at their next re-check, up to a minute later.
+If your 1.1 servers wait on events from workflows still running on 1.0 executors, for example to answer a request, set `withUseListenNotify(false)` on them until the last 1.0 executor has stopped; `getEvent` then checks every second.
 
 #### Several Applications Sharing a System Database
 
