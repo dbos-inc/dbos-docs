@@ -904,7 +904,7 @@ import { FaHackerNews, FaSlack, FaForwardFast, FaPerson } from "react-icons/fa6"
 import { HiMiniQueueList } from "react-icons/hi2";
 import { BiAddToQueue } from "react-icons/bi";
 import { MdOutlineShoppingCart } from "react-icons/md";
-import { SiApachekafka, SiOpenai } from "react-icons/si";
+import { SiApachekafka } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { IoIosChatboxes } from "react-icons/io";
@@ -2836,6 +2836,7 @@ Each entry represents a different message.
 - **message_uuid**: The unique ID of the message.
 - **serialization**: The name of the serialization format used for the message. Null if the default serializer was used.
 - **consumed**: Whether the message has been consumed by a `DBOS.recv` call.
+- **consumed_by_function_id**: The ID of the step (the `DBOS.recv` call) that consumed the message, if it has been consumed.
 
 #### dbos.workflow_events
 This table stores workflow events.
@@ -24858,6 +24859,8 @@ In this mode, only workflow and step metadata (but not data, like workflow or st
 As a result, workflow data will not be visible from the console.
 Note that Conductor does not store application data in any mode.
 
+You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings) or `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch).
+
 ---
 
 ## Account Management
@@ -33004,6 +33007,10 @@ with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
+By default, starting a workflow with an ID that is already in use returns the existing workflow instead of starting a new one.
+To instead raise `DBOSWorkflowIDInUseError`, use `SetWorkflowID("very-unique-id", workflow_id_reuse_policy="reject")` (catch it with `from dbos import error as dboserror` and `except dboserror.DBOSWorkflowIDInUseError`).
+The same option is available as `workflow_id_reuse_policy` in `DBOSClient.enqueue` options.
+
 ### Determinism
 
 Workflows are in most respects normal Python functions.
@@ -34319,6 +34326,25 @@ The forked workflow will have a new workflow ID, which can be set with `SetWorkf
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
 
+#### rewind_workflow
+
+```python
+DBOS.rewind_workflow(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandle[Any]
+```
+
+Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID (unlike `fork_workflow`, which creates a new workflow).
+Steps with IDs greater than or equal to `start_step` are discarded and re-executed; if `start_step` is not provided, the whole workflow re-executes.
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
+Rewinding clears the workflow's output, rolls back events it set at or after `start_step`, deletes messages it received at or after `start_step`, and deletes the checkpoints of datasource transactions at or after `start_step`.
+`application_version`, `queue_name`, and `queue_partition_key` behave as in `fork_workflow`.
+
 #### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
@@ -34894,6 +34920,7 @@ class EnqueueOptions(TypedDict):
     workflow_name: str
     queue_name: str
     workflow_id: NotRequired[str]
+    workflow_id_reuse_policy: NotRequired[WorkflowIDReusePolicy]
     app_version: NotRequired[str]
     workflow_timeout: NotRequired[float]
     deduplication_id: NotRequired[str]
@@ -34933,6 +34960,9 @@ Additional but optional metadata includes:
 * `workflow_id`: The unique ID for the enqueued workflow. 
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). 
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* `workflow_id_reuse_policy`: What to do if a workflow with ID `workflow_id` already exists, whatever its status. Defaults to `"return-existing"`.
+  - `"return-existing"`: return a handle to the existing workflow without enqueueing a new one.
+  - `"reject"`: raise `DBOSWorkflowIDInUseError` without enqueueing a new workflow or modifying the existing one.
 * `app_version`: The version of your application that should process this workflow. 
 If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
@@ -36043,6 +36073,42 @@ client.fork_workflow_async(
 
 Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
 
+#### rewind_workflow
+
+```python
+client.rewind_workflow(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandle[Any]
+```
+
+Similar to [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
+Only a workflow in a terminal state can be rewound.
+Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
+
+:::warning
+Client rewind does not delete [datasource](./datasources.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use datasources, use [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
+:::
+
+#### rewind_workflow_async
+
+```python
+client.rewind_workflow_async(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandleAsync[Any]
+```
+
+Asynchronous version of [`DBOSClient.rewind_workflow`](#rewind_workflow).
+
 #### delete_workflow
 
 ```python
@@ -36104,7 +36170,7 @@ DebouncerClient(
 
 Similar to [`Debouncer.create`](./contexts.md#debouncercreate) but takes in a DBOSClient and `EnqueueOptions` instead of a workflow function.
 If `queue` (a queue or queue name) is set, it overrides the `queue_name` in `workflow_options`.
-`workflow_options` must not set `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`: `debounce` raises `DBOSException` if they are set.
+`workflow_options` must not set `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, `duplication_policy="return-existing"`, or `workflow_id_reuse_policy="reject"`: `debounce` raises `DBOSException` if they are set.
 `application_name` debounces on behalf of that application; it defaults to the `application_name` in `workflow_options`, then to the client's own.
 
 #### debounce
@@ -36465,6 +36531,7 @@ class DBOSConfig(TypedDict):
     conductor_key: Optional[str]
     conductor_url: Optional[str]
     conductor_executor_metadata: Optional[Dict[str, Any]]
+    conductor_metadata_only_mode: Optional[bool]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -36543,6 +36610,7 @@ A system database ahead of the required version is accepted, so a process with m
 - **conductor_key**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
+- **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../production/conductor.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.
 
 #### Logging and Tracing Settings
 
@@ -37910,6 +37978,49 @@ If `timeout_seconds` is provided, it sets a [timeout](#setworkflowtimeout) for t
 
 Coroutine version of [`fork_workflow`](#fork_workflow).
 
+#### rewind_workflow
+
+```python
+DBOS.rewind_workflow(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandle[Any]
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps with IDs greater than or equal to `start_step`, then re-enqueues the workflow so it re-executes from that step.
+Steps with an ID less than `start_step` are not re-executed; their recorded outputs are replayed.
+The input step ID must match the `function_id` of the step returned by [`list_workflow_steps`](#list_workflow_steps).
+If `start_step` is not provided, the workflow's entire history is discarded and it re-executes from the beginning.
+
+Unlike [`fork_workflow`](#fork_workflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID, and its child workflows keep the same IDs.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#cancel_workflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after `start_step`, restoring each such event to the last value it set before `start_step` (or removing it if there is none).
+- Deletes messages it consumed at or after `start_step`, as well as any unconsumed messages.
+- Does not modify streamed values. Streams are append-only. New values will be appended to the end of existing streams. However, it does "un-close" any streams closed at or after `start_step`.
+- Does not modify child workflows, even those started after `start_step`. If you want to rerun child workflows, delete them or rewind them separately.
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to rewind.
+- **start_step**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to the first step.
+- **application_version**: The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
+- **queue_name**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
+- **queue_partition_key**: The partition key to enqueue the rewound workflow under, if `queue_name` is a partitioned queue.
+
+#### rewind_workflow_async
+
+Coroutine version of [`rewind_workflow`](#rewind_workflow).
+
 #### delete_workflow
 
 ```python
@@ -38444,8 +38555,6 @@ When the workflow eventually executes, it uses the **last** set of inputs passed
 
 Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
-`debounce` raises `DBOSException` if it is called inside a [`SetEnqueueOptions`](./queues.md#setenqueueoptions) block that sets `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`, because the debouncer controls these options itself.
-
 **Parameters:**
 - `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
 - `debounce_period_sec`: Delay this workflow's execution by this period.
@@ -38538,12 +38647,20 @@ Set the current authenticated user and granted roles into the current context.  
 
 ```python
 SetWorkflowID(
-    wfid: str
+    wfid: str,
+    *,
+    workflow_id_reuse_policy: Optional[WorkflowIDReusePolicy] = None,
 )
 ```
 
 Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow to run.
 Should be used in a `with` statement.
+
+**Parameters:**
+- **wfid**: The workflow ID to assign.
+- **workflow_id_reuse_policy**: What to do if a workflow with this ID already exists, whatever its status. Defaults to `"return-existing"`.
+  - `"return-existing"`: return a handle to the existing workflow (or, for a direct call, its result) without starting a new one. This is the idempotency behavior described in [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+  - `"reject"`: raise `DBOSWorkflowIDInUseError` without starting a new workflow or modifying the existing one. The exception has `workflow_id`, `workflow_status`, and `workflow_name` attributes describing the existing workflow. Cannot be used with a [debouncer](#debouncing).
 
 Example syntax:
 
@@ -38555,6 +38672,21 @@ def example_workflow():
 # The workflow will run with the supplied ID
 with SetWorkflowID("very-unique-id"):
     example_workflow()
+```
+
+Example of rejecting a reused workflow ID:
+
+```python
+from dbos import DBOS, SetWorkflowID
+from dbos import error as dboserror
+
+def submit_order(order_id: str, order: Order) -> str:
+    try:
+        with SetWorkflowID(f"order-{order_id}", workflow_id_reuse_policy="reject"):
+            handle = DBOS.start_workflow(process_order, order)
+        return handle.get_result()
+    except dboserror.DBOSWorkflowIDInUseError:
+        return "already started"
 ```
 
 #### SetWorkflowTimeout
@@ -41441,6 +41573,9 @@ from dbos import AsyncSQLAlchemyDatasource
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
+Create all your datasources before calling [`DBOS.launch()`](../reference/dbos-class.md#launch): creating a datasource after launch raises a `DBOSException`.
+DBOS tracks every datasource created in the process so that [rewinding a workflow](./workflow-management.md#rewinding-workflows) also deletes the transaction checkpoints it holds.
+
 To use `AsyncSQLAlchemyDatasource` with SQLite, you must use an async driver URL such as `sqlite+aiosqlite:///app.sqlite` (install the driver with `pip install "dbos[aiosqlite]"`); a plain `sqlite:///` URL raises an error.
 
 :::warning
@@ -42060,6 +42195,27 @@ Forking a workflow is useful for recovering from outages in downstream services 
 You can fork a workflow programmatically using [`DBOS.fork_workflow`](../reference/contexts.md#fork_workflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
 
+### Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
+Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
+
+You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
+
+You can rewind a workflow programmatically using [`DBOS.rewind_workflow`](../reference/contexts.md#rewind_workflow):
+
+```python
+# Re-execute the workflow from step 3, keeping its workflow ID
+handle = DBOS.rewind_workflow(workflow_id, start_step=3)
+result = handle.get_result()
+```
+
 ---
 
 ## Workflows(3)
@@ -42132,6 +42288,20 @@ def example_workflow():
 
 with SetWorkflowID("very-unique-id"):
     example_workflow()
+```
+
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to (or, for a direct call, the result of) the existing workflow instead of starting a new one.
+To instead raise an error when a workflow ID is already in use, set `workflow_id_reuse_policy="reject"` in [`SetWorkflowID`](../reference/contexts.md#setworkflowid):
+
+```python
+from dbos import error as dboserror
+
+try:
+    with SetWorkflowID("very-unique-id", workflow_id_reuse_policy="reject"):
+        example_workflow()
+except dboserror.DBOSWorkflowIDInUseError:
+    # A workflow with this ID already exists
+    ...
 ```
 
 ### Determinism
@@ -45279,6 +45449,9 @@ async function main() {
 }
 ```
 
+By default, starting a workflow with an ID that is already in use returns a handle to the existing workflow instead of starting a new one.
+To instead throw `DBOSWorkflowIDInUseError`, pass `workflowIDReusePolicy: 'reject'` to `DBOS.startWorkflow` (or in `DBOSClient.enqueue` options), and match the error with `isWorkflowIDInUseError` from the SDK's `Error` namespace (`import { Error as DBOSErrors } from "@dbos-inc/dbos-sdk"`) rather than `instanceof`.
+
 ### Determinism
 
 Workflows are in most respects normal TypeScript functions.
@@ -45876,7 +46049,7 @@ interface RegisterQueueOptions {
 
 Queue names must be unique within the system database, and names starting with `_dbos_` are reserved.
 
-Setting any partition limit makes the queue partitioned: every enqueue must supply a `queuePartitionKey`, and deduplication is not supported. The queue-wide limits still apply across all partitions.
+Setting any partition limit makes the queue partitioned: every enqueue must supply a `queuePartitionKey`, and deduplication IDs are unique across the whole queue, including all its partitions. The queue-wide limits still apply across all partitions.
 
 If a queue with this name already exists in the database, `onConflict` controls whether the configuration is overwritten:
 - `'update_if_latest_version'` (default): only overwrite when the running application is the latest registered version. Safe for rolling deploys.
@@ -46158,7 +46331,7 @@ await DBOS.registerQueue("tenant_queue", {
 ```
 
 Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
-Deduplication is not supported on partitioned queues.
+On a partitioned queue, deduplication IDs are unique across the whole queue, not per partition. To deduplicate within each partition separately, include the partition key in the deduplication ID.
 
 #### Deduplication
 
@@ -46492,8 +46665,12 @@ interface StepStatus {
   maxAttempts?: number;
   // For steps with a timeout, an AbortSignal that fires when the current attempt's timeout expires.
   timeoutSignal?: AbortSignal;
+  // An AbortSignal that fires (within about a second) when the step's workflow is cancelled.
+  cancelSignal: AbortSignal;
 }
 ```
+
+Pass `cancelSignal` to APIs like `fetch` so a step stops promptly when its workflow is cancelled; otherwise, a running step completes before cancellation takes effect at the next step.
 
 #### DBOS.applicationVersion
 
@@ -46682,6 +46859,26 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+
+#### DBOS.rewindWorkflow
+
+```typescript
+static async rewindWorkflow<T>(
+  workflowID: string,
+  options?: {
+    startStep?: number;
+    applicationVersion?: string;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID (unlike `forkWorkflow`, which creates a new workflow).
+Steps with IDs greater than or equal to `startStep` are discarded and re-executed; `startStep` defaults to `0`, re-executing the whole workflow.
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
+Rewinding clears the workflow's output, rolls back events it set at or after `startStep`, deletes messages it received at or after `startStep`, and deletes the checkpoints of data source transactions at or after `startStep`.
+`applicationVersion`, `queueName`, and `queuePartitionKey` behave as in `forkWorkflow`.
 
 ### Upgrading Workflow Code
 
@@ -47218,9 +47415,12 @@ Additional but optional metadata includes:
 * **workflowClassName**: The name of the class the workflow method is a member of, if any.
 * **workflowConfigName**: If the workflow is an instance method (of class `workflowClassName`), the name of the [instance](./workflows-steps.md#instance-method-workflows).
 * **workflowID**: The unique ID for the enqueued workflow. If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* **workflowIDReusePolicy**: What to do if a workflow with ID `workflowID` already exists, whatever its status. Defaults to `'return-existing'`.
+  * `'return-existing'`: return a handle to the existing workflow without enqueueing a new one.
+  * `'reject'`: throw `DBOSWorkflowIDInUseError` without enqueueing a new workflow or modifying the existing one. Match it with `isWorkflowIDInUseError`, as described in [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow).
 * **appVersion**: The version of your application that should process this workflow. If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
-* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception. On a partitioned queue, deduplication IDs are unique across the whole queue, including all its partitions.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
 * **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -47595,6 +47795,28 @@ Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more i
 
 Start a new execution of a workflow from a specific step.
 Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more information.
+
+##### `rewindWorkflow`
+
+```typescript
+client.rewindWorkflow<T = unknown>(
+  workflowID: string,
+  options?: {
+    startStep?: number;
+    applicationVersion?: string;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID.
+Only a workflow in a terminal state can be rewound.
+See [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) for more information.
+
+:::warning
+Client rewind does not delete [data source](./datasource.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use data sources, use [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow).
+:::
 
 ##### `deleteWorkflow`
 
@@ -48233,6 +48455,8 @@ const dataSource = new KnexDataSource('knex-ds', config);
 
 Note that each datasource is given a `name` upon construction.  These names are used internally within DBOS and must be unique.
 
+DBOS tracks every datasource constructed in the process, so that [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) deletes the transaction checkpoints each one holds for the rewound steps.
+
 To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment variable should be checked within configuration to connect to the primary application database.
 
 #### Installing the DBOS Schema
@@ -48425,6 +48649,7 @@ interface DBOSLaunchOptions {
   conductorKey?: string;
   conductorURL?: string;
   conductorExecutorMetadata?: Record<string, unknown>;
+  conductorMetadataOnlyMode?: boolean;
 }
 ```
 
@@ -48453,6 +48678,7 @@ main().catch(console.log);
 - **conductorKey**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductorURL**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductorExecutorMetadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
+- **conductorMetadataOnlyMode**: If `true`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../production/conductor.md#metadata-only-mode) setting in the Conductor console. Defaults to `false`.
 
 #### DBOS.shutdown
 
@@ -48502,6 +48728,7 @@ static startWorkflow<Args extends unknown[], Return>(
 ```typescript
 interface StartWorkflowParams {
   workflowID?: string;
+  workflowIDReusePolicy?: 'return-existing' | 'reject';
   queueName?: string;
   timeoutMS?: number | null;
   enqueueOptions?: EnqueueOptions;
@@ -48555,13 +48782,16 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 - **target**: The workflow to start.
 - **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated (for a child workflow started from within a workflow, a deterministic ID derived from the parent workflow's ID is used instead).
+- **workflowIDReusePolicy**: What to do if a workflow with ID `workflowID` already exists, whatever its status. Defaults to `'return-existing'`.
+  - `'return-existing'`: return a handle to the existing workflow without starting a new one. This is the idempotency behavior described in [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+  - `'reject'`: throw `DBOSWorkflowIDInUseError` without starting a new workflow or modifying the existing one. The error has `workflowID`, `status`, and `workflowName` properties describing the existing workflow. Match it with the `isWorkflowIDInUseError` helper exported in the SDK's `Error` namespace rather than `instanceof`, because an error rethrown from a workflow's recorded history may not be an instance of the class.
 - **queueName**: The name of the queue on which to enqueue this workflow, if any. The queue must be registered with [`DBOS.registerQueue`](./queues.md#dbosregisterqueue); a workflow enqueued on an unregistered queue stays `ENQUEUED` until the queue is registered.
 - **timeoutMS**: The timeout of this workflow in milliseconds.
 - **duplicationPolicy**: How to handle a collision with another workflow that has the same `enqueueOptions.deduplicationID` on the same queue. Defaults to `'reject'`.
   - `'reject'`: throw `DBOSQueueDuplicatedError`.
   - `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `queueName` and `enqueueOptions.deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - **enqueueOptions**:
-  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) queue, deduplication IDs are unique across the whole queue, including all its partitions. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -49053,7 +49283,8 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+A currently executing step is not interrupted, but it can observe the cancellation through [`DBOS.stepStatus.cancelSignal`](#dbosstepstatus) and stop early.
 
 **Parameters:**
 - **workflowID**: The ID of the workflow to cancel.
@@ -49156,6 +49387,46 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 - **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
+
+#### DBOS.rewindWorkflow
+
+```typescript
+static async rewindWorkflow<T>(
+  workflowID: string,
+  options?: {
+    startStep?: number;
+    applicationVersion?: string;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps with IDs greater than or equal to `startStep`, then re-enqueues the workflow so it re-executes from that step.
+Steps with an ID less than `startStep` are not re-executed; their recorded outputs are replayed.
+The input step ID must match the `functionID` of the step returned by [`listWorkflowSteps`](#dboslistworkflowsteps).
+If `startStep` is not provided, the workflow's entire history is discarded and it re-executes from the beginning.
+
+Unlike [`forkWorkflow`](#dbosforkworkflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID, and its child workflows keep the same IDs.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#dboscancelworkflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after `startStep`, restoring each such event to the last value it set before `startStep` (or removing it if there is none).
+- Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages.
+- Does not modify streamed values. Streams are append-only. New values will be appended to the end of existing streams. However, it does "un-close" any streams closed at or after `startStep`.
+- Does not modify child workflows, even those started after `startStep`. If you want to rerun child workflows, delete them or rewind them separately.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to rewind.
+- **startStep**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to `0`, the first step.
+- **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
+- **queueName**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
+- **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if `queueName` is a partitioned queue.
 
 #### Workflow Status
 
@@ -49594,8 +49865,12 @@ interface StepStatus {
   // For steps configured with `timeoutMS`: an AbortSignal that fires when the current attempt's timeout
   // expires, so the step can cancel its underlying operation. A fresh signal is issued for each retry attempt.
   timeoutSignal?: AbortSignal;
+  // An AbortSignal that fires when the step's workflow is cancelled, so the step can cancel its underlying operation.
+  cancelSignal: AbortSignal;
 }
 ```
+
+`cancelSignal` fires when the step's workflow is [cancelled](#dboscancelworkflow) (including by a [workflow timeout](../tutorials/workflow-tutorial.md#workflow-timeouts)).
 
 #### DBOS.isInTransaction()
 ```typescript
@@ -49996,7 +50271,7 @@ If the queue already exists in the database, the `onConflict` option controls wh
   - `'always_update'`: always overwrite the existing configuration.
   - `'never_update'`: leave the existing configuration unchanged. The returned queue reflects the persisted configuration, not the supplied parameters.
 
-Setting any partition limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queuePartitionKey`](./methods.md#dbosstartworkflow), and [deduplication](../tutorials/queue-tutorial.md#deduplication) is not supported.
+Setting any partition limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queuePartitionKey`](./methods.md#dbosstartworkflow), and [deduplication](../tutorials/queue-tutorial.md#deduplication) IDs are unique across the whole queue, including all its partitions.
 The queue-wide limits (`globalConcurrency`, `workerConcurrency`, and `rateLimit`) continue to apply across all partitions.
 
 Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database: if the queue is already registered by a **different** application, `registerQueue` throws an error regardless of `onConflict`.
@@ -51579,10 +51854,6 @@ await DBOS.registerQueue("tenant_queue", {
 
 Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
 
-:::note
-[Deduplication](#deduplication) is not supported on partitioned queues.
-:::
-
 #### Deduplication
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
@@ -52134,6 +52405,23 @@ async function workflowFunction() {
 ```
 
 A fresh `timeoutSignal` is issued for each retry attempt.
+
+Independently of any timeout, [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus) fires if the step's workflow is [cancelled](./workflow-management.md#cancelling-workflows).
+To stop a step promptly on either a timeout or a cancellation, combine the two signals:
+
+```typescript
+async function fetchData() {
+  // timeoutSignal is set because this step is run with timeoutMS
+  const { timeoutSignal, cancelSignal } = DBOS.stepStatus!;
+  const signal = AbortSignal.any([timeoutSignal!, cancelSignal]);
+  const response = await fetch("https://example.com", { signal });
+  return await response.text();
+}
+
+async function workflowFunction() {
+  return await DBOS.runStep(() => fetchData(), { name: "fetchData", timeoutMS: 5000 });
+}
+```
 
 ---
 
@@ -53116,6 +53404,17 @@ You can cancel the execution of a workflow from the web UI, programmatically via
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.
 
+A step that is executing when its workflow is cancelled is not interrupted, but it can stop early by observing [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus), an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that fires when the workflow is cancelled.
+Pass it to APIs that accept a signal (for example, `fetch`) to cancel the step's underlying operation:
+
+```typescript
+async function fetchData() {
+  // fetch aborts if the workflow is cancelled while the request is in flight
+  const response = await fetch("https://example.com", { signal: DBOS.stepStatus?.cancelSignal });
+  return await response.text();
+}
+```
+
 ### Resuming Workflows
 
 You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resumeWorkflow`](../reference/methods.md#dbosresumeworkflow), or through the command line with [`npx dbos workflow resume`](../reference/cli.md#npx-dbos-workflow-resume).
@@ -53132,6 +53431,27 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 You can fork a workflow programmatically using [`DBOS.forkWorkflow`](../reference/methods.md#dbosforkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
+
+### Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
+Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
+
+You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
+
+You can rewind a workflow programmatically using [`DBOS.rewindWorkflow`](../reference/methods.md#dbosrewindworkflow):
+
+```typescript
+// Re-execute the workflow from step 3, keeping its workflow ID
+const handle = await DBOS.rewindWorkflow(workflowID, { startStep: 3 });
+const result = await handle.getResult();
+```
 
 ---
 
@@ -53246,6 +53566,28 @@ async function main() {
 }
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead throw an error when a workflow ID is already in use, set `workflowIDReusePolicy: 'reject'` in [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow):
+
+```typescript
+import { DBOS, Error as DBOSErrors } from "@dbos-inc/dbos-sdk";
+
+async function submitOrder(orderID: string, order: Order) {
+  try {
+    const handle = await DBOS.startWorkflow(processOrder, {
+      workflowID: `order-${orderID}`,
+      workflowIDReusePolicy: 'reject',
+    })(order);
+    return await handle.getResult();
+  } catch (e) {
+    if (DBOSErrors.isWorkflowIDInUseError(e)) {
+      return 'already started';
+    }
+    throw e;
+  }
+}
+```
+
 ### Determinism
 
 Workflows are in most respects normal TypeScript functions.
@@ -53315,6 +53657,7 @@ Avoid using `Promise.all` because of how it handles errors and rejections.  When
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
 When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+A step that is executing when the workflow times out can observe the cancellation through [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus) and stop early.
 
 Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.

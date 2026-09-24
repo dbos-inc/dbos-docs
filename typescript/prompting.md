@@ -391,6 +391,9 @@ async function main() {
 }
 ```
 
+By default, starting a workflow with an ID that is already in use returns a handle to the existing workflow instead of starting a new one.
+To instead throw `DBOSWorkflowIDInUseError`, pass `workflowIDReusePolicy: 'reject'` to `DBOS.startWorkflow` (or in `DBOSClient.enqueue` options), and match the error with `isWorkflowIDInUseError` from the SDK's `Error` namespace (`import { Error as DBOSErrors } from "@dbos-inc/dbos-sdk"`) rather than `instanceof`.
+
 ## Determinism
 
 Workflows are in most respects normal TypeScript functions.
@@ -988,7 +991,7 @@ interface RegisterQueueOptions {
 
 Queue names must be unique within the system database, and names starting with `_dbos_` are reserved.
 
-Setting any partition limit makes the queue partitioned: every enqueue must supply a `queuePartitionKey`, and deduplication is not supported. The queue-wide limits still apply across all partitions.
+Setting any partition limit makes the queue partitioned: every enqueue must supply a `queuePartitionKey`, and deduplication IDs are unique across the whole queue, including all its partitions. The queue-wide limits still apply across all partitions.
 
 If a queue with this name already exists in the database, `onConflict` controls whether the configuration is overwritten:
 - `'update_if_latest_version'` (default): only overwrite when the running application is the latest registered version. Safe for rolling deploys.
@@ -1270,7 +1273,7 @@ await DBOS.registerQueue("tenant_queue", {
 ```
 
 Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
-Deduplication is not supported on partitioned queues.
+On a partitioned queue, deduplication IDs are unique across the whole queue, not per partition. To deduplicate within each partition separately, include the partition key in the deduplication ID.
 
 ### Deduplication
 
@@ -1604,8 +1607,12 @@ interface StepStatus {
   maxAttempts?: number;
   // For steps with a timeout, an AbortSignal that fires when the current attempt's timeout expires.
   timeoutSignal?: AbortSignal;
+  // An AbortSignal that fires (within about a second) when the step's workflow is cancelled.
+  cancelSignal: AbortSignal;
 }
 ```
+
+Pass `cancelSignal` to APIs like `fetch` so a step stops promptly when its workflow is cancelled; otherwise, a running step completes before cancellation takes effect at the next step.
 
 ### DBOS.applicationVersion
 
@@ -1794,6 +1801,26 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+
+### DBOS.rewindWorkflow
+
+```typescript
+static async rewindWorkflow<T>(
+  workflowID: string,
+  options?: {
+    startStep?: number;
+    applicationVersion?: string;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID (unlike `forkWorkflow`, which creates a new workflow).
+Steps with IDs greater than or equal to `startStep` are discarded and re-executed; `startStep` defaults to `0`, re-executing the whole workflow.
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
+Rewinding clears the workflow's output, rolls back events it set at or after `startStep`, deletes messages it received at or after `startStep`, and deletes the checkpoints of data source transactions at or after `startStep`.
+`applicationVersion`, `queueName`, and `queuePartitionKey` behave as in `forkWorkflow`.
 
 ## Upgrading Workflow Code
 

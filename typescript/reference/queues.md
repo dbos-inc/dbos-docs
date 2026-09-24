@@ -59,7 +59,7 @@ If the queue already exists in the database, the `onConflict` option controls wh
   - `'always_update'`: always overwrite the existing configuration.
   - `'never_update'`: leave the existing configuration unchanged. The returned queue reflects the persisted configuration, not the supplied parameters.
 
-Setting any partition limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queuePartitionKey`](./methods.md#dbosstartworkflow), and [deduplication](../tutorials/queue-tutorial.md#deduplication) is not supported.
+Setting any partition limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queuePartitionKey`](./methods.md#dbosstartworkflow), and [deduplication](../tutorials/queue-tutorial.md#deduplication) IDs are unique across the whole queue, including all its partitions.
 The queue-wide limits (`globalConcurrency`, `workerConcurrency`, and `rateLimit`) continue to apply across all partitions.
 
 Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database: if the queue is already registered by a **different** application, `registerQueue` throws an error regardless of `onConflict`.

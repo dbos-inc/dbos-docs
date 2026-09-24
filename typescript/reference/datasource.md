@@ -40,6 +40,8 @@ const dataSource = new KnexDataSource('knex-ds', config);
 
 Note that each datasource is given a `name` upon construction.  These names are used internally within DBOS and must be unique.
 
+DBOS tracks every datasource constructed in the process, so that [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) deletes the transaction checkpoints each one holds for the rewound steps.
+
 To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment variable should be checked within configuration to connect to the primary application database.
 
 ### Installing the DBOS Schema

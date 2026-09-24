@@ -8,7 +8,7 @@ import { FaHackerNews, FaSlack, FaForwardFast, FaPerson } from "react-icons/fa6"
 import { HiMiniQueueList } from "react-icons/hi2";
 import { BiAddToQueue } from "react-icons/bi";
 import { MdOutlineShoppingCart } from "react-icons/md";
-import { SiApachekafka, SiOpenai } from "react-icons/si";
+import { SiApachekafka } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { IoIosChatboxes } from "react-icons/io";

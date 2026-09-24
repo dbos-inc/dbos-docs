@@ -356,10 +356,6 @@ await DBOS.registerQueue("tenant_queue", {
 
 Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
 
-:::note
-[Deduplication](#deduplication) is not supported on partitioned queues.
-:::
-
 ### Deduplication
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.

@@ -86,6 +86,7 @@ class EnqueueOptions(TypedDict):
     workflow_name: str
     queue_name: str
     workflow_id: NotRequired[str]
+    workflow_id_reuse_policy: NotRequired[WorkflowIDReusePolicy]
     app_version: NotRequired[str]
     workflow_timeout: NotRequired[float]
     deduplication_id: NotRequired[str]
@@ -125,6 +126,9 @@ Additional but optional metadata includes:
 * `workflow_id`: The unique ID for the enqueued workflow. 
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). 
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* `workflow_id_reuse_policy`: What to do if a workflow with ID `workflow_id` already exists, whatever its status. Defaults to `"return-existing"`.
+  - `"return-existing"`: return a handle to the existing workflow without enqueueing a new one.
+  - `"reject"`: raise `DBOSWorkflowIDInUseError` without enqueueing a new workflow or modifying the existing one.
 * `app_version`: The version of your application that should process this workflow. 
 If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
@@ -1235,6 +1239,42 @@ client.fork_workflow_async(
 
 Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
 
+### rewind_workflow
+
+```python
+client.rewind_workflow(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandle[Any]
+```
+
+Similar to [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
+Only a workflow in a terminal state can be rewound.
+Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
+
+:::warning
+Client rewind does not delete [datasource](./datasources.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use datasources, use [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
+:::
+
+### rewind_workflow_async
+
+```python
+client.rewind_workflow_async(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandleAsync[Any]
+```
+
+Asynchronous version of [`DBOSClient.rewind_workflow`](#rewind_workflow).
+
 ### delete_workflow
 
 ```python
@@ -1296,7 +1336,7 @@ DebouncerClient(
 
 Similar to [`Debouncer.create`](./contexts.md#debouncercreate) but takes in a DBOSClient and `EnqueueOptions` instead of a workflow function.
 If `queue` (a queue or queue name) is set, it overrides the `queue_name` in `workflow_options`.
-`workflow_options` must not set `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`: `debounce` raises `DBOSException` if they are set.
+`workflow_options` must not set `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, `duplication_policy="return-existing"`, or `workflow_id_reuse_policy="reject"`: `debounce` raises `DBOSException` if they are set.
 `application_name` debounces on behalf of that application; it defaults to the `application_name` in `workflow_options`, then to the client's own.
 
 ### debounce

@@ -147,9 +147,12 @@ Additional but optional metadata includes:
 * **workflowClassName**: The name of the class the workflow method is a member of, if any.
 * **workflowConfigName**: If the workflow is an instance method (of class `workflowClassName`), the name of the [instance](./workflows-steps.md#instance-method-workflows).
 * **workflowID**: The unique ID for the enqueued workflow. If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* **workflowIDReusePolicy**: What to do if a workflow with ID `workflowID` already exists, whatever its status. Defaults to `'return-existing'`.
+  * `'return-existing'`: return a handle to the existing workflow without enqueueing a new one.
+  * `'reject'`: throw `DBOSWorkflowIDInUseError` without enqueueing a new workflow or modifying the existing one. Match it with `isWorkflowIDInUseError`, as described in [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow).
 * **appVersion**: The version of your application that should process this workflow. If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
-* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception. On a partitioned queue, deduplication IDs are unique across the whole queue, including all its partitions.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
 * **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -524,6 +527,28 @@ Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more i
 
 Start a new execution of a workflow from a specific step.
 Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more information.
+
+#### `rewindWorkflow`
+
+```typescript
+client.rewindWorkflow<T = unknown>(
+  workflowID: string,
+  options?: {
+    startStep?: number;
+    applicationVersion?: string;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID.
+Only a workflow in a terminal state can be rewound.
+See [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) for more information.
+
+:::warning
+Client rewind does not delete [data source](./datasource.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use data sources, use [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow).
+:::
 
 #### `deleteWorkflow`
 

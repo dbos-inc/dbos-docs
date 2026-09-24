@@ -172,3 +172,20 @@ async function workflowFunction() {
 ```
 
 A fresh `timeoutSignal` is issued for each retry attempt.
+
+Independently of any timeout, [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus) fires if the step's workflow is [cancelled](./workflow-management.md#cancelling-workflows).
+To stop a step promptly on either a timeout or a cancellation, combine the two signals:
+
+```typescript
+async function fetchData() {
+  // timeoutSignal is set because this step is run with timeoutMS
+  const { timeoutSignal, cancelSignal } = DBOS.stepStatus!;
+  const signal = AbortSignal.any([timeoutSignal!, cancelSignal]);
+  const response = await fetch("https://example.com", { signal });
+  return await response.text();
+}
+
+async function workflowFunction() {
+  return await DBOS.runStep(() => fetchData(), { name: "fetchData", timeoutMS: 5000 });
+}
+```

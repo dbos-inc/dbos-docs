@@ -1296,6 +1296,49 @@ If `timeout_seconds` is provided, it sets a [timeout](#setworkflowtimeout) for t
 
 Coroutine version of [`fork_workflow`](#fork_workflow).
 
+### rewind_workflow
+
+```python
+DBOS.rewind_workflow(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandle[Any]
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps with IDs greater than or equal to `start_step`, then re-enqueues the workflow so it re-executes from that step.
+Steps with an ID less than `start_step` are not re-executed; their recorded outputs are replayed.
+The input step ID must match the `function_id` of the step returned by [`list_workflow_steps`](#list_workflow_steps).
+If `start_step` is not provided, the workflow's entire history is discarded and it re-executes from the beginning.
+
+Unlike [`fork_workflow`](#fork_workflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID, and its child workflows keep the same IDs.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#cancel_workflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after `start_step`, restoring each such event to the last value it set before `start_step` (or removing it if there is none).
+- Deletes messages it consumed at or after `start_step`, as well as any unconsumed messages.
+- Does not modify streamed values. Streams are append-only. New values will be appended to the end of existing streams. However, it does "un-close" any streams closed at or after `start_step`.
+- Does not modify child workflows, even those started after `start_step`. If you want to rerun child workflows, delete them or rewind them separately.
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to rewind.
+- **start_step**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to the first step.
+- **application_version**: The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
+- **queue_name**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
+- **queue_partition_key**: The partition key to enqueue the rewound workflow under, if `queue_name` is a partitioned queue.
+
+### rewind_workflow_async
+
+Coroutine version of [`rewind_workflow`](#rewind_workflow).
+
 ### delete_workflow
 
 ```python
@@ -1830,8 +1873,6 @@ When the workflow eventually executes, it uses the **last** set of inputs passed
 
 Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
-`debounce` raises `DBOSException` if it is called inside a [`SetEnqueueOptions`](./queues.md#setenqueueoptions) block that sets `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`, because the debouncer controls these options itself.
-
 **Parameters:**
 - `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
 - `debounce_period_sec`: Delay this workflow's execution by this period.
@@ -1924,12 +1965,20 @@ Set the current authenticated user and granted roles into the current context.  
 
 ```python
 SetWorkflowID(
-    wfid: str
+    wfid: str,
+    *,
+    workflow_id_reuse_policy: Optional[WorkflowIDReusePolicy] = None,
 )
 ```
 
 Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow to run.
 Should be used in a `with` statement.
+
+**Parameters:**
+- **wfid**: The workflow ID to assign.
+- **workflow_id_reuse_policy**: What to do if a workflow with this ID already exists, whatever its status. Defaults to `"return-existing"`.
+  - `"return-existing"`: return a handle to the existing workflow (or, for a direct call, its result) without starting a new one. This is the idempotency behavior described in [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+  - `"reject"`: raise `DBOSWorkflowIDInUseError` without starting a new workflow or modifying the existing one. The exception has `workflow_id`, `workflow_status`, and `workflow_name` attributes describing the existing workflow. Cannot be used with a [debouncer](#debouncing).
 
 Example syntax:
 
@@ -1941,6 +1990,21 @@ def example_workflow():
 # The workflow will run with the supplied ID
 with SetWorkflowID("very-unique-id"):
     example_workflow()
+```
+
+Example of rejecting a reused workflow ID:
+
+```python
+from dbos import DBOS, SetWorkflowID
+from dbos import error as dboserror
+
+def submit_order(order_id: str, order: Order) -> str:
+    try:
+        with SetWorkflowID(f"order-{order_id}", workflow_id_reuse_policy="reject"):
+            handle = DBOS.start_workflow(process_order, order)
+        return handle.get_result()
+    except dboserror.DBOSWorkflowIDInUseError:
+        return "already started"
 ```
 
 ### SetWorkflowTimeout
