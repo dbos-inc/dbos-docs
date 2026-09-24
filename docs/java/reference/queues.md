@@ -200,6 +200,7 @@ public record Queue(
     Duration pollingInterval,
     String applicationName
 ) {
+    public QueueName queueName();         // the name as a QueueName
     public boolean hasLimiter();          // a queue-wide rate limit is set
     public boolean hasPartitionLimits();  // any per-partition limit is set
     public boolean isPartitioned();       // the queue dequeues per partition key

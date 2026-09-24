@@ -111,7 +111,7 @@ The workflow name and queue must not be null or empty.
 
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
-If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
+If left undefined, the workflow is enqueued without a version and is only dequeued by an executor running the owning application's latest registered version, which sets the version when it first dequeues it.
 - **`withTimeout(Duration timeout)`**, **`withTimeout(long value, TimeUnit unit)`**:  Set an explicit timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - **`withTimeout(Timeout timeout)`**, **`withNoTimeout()`**: Set the timeout as a [`Timeout`](./methods.md#timeout): explicit, none, or inherit. Inside a workflow, [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) resolves it as `startWorkflow` does, so an unset timeout inherits the enqueuing workflow's and `withNoTimeout()` declines it. From a client there is nothing to inherit, so an unset or inherited timeout means no timeout.
 - **`withDeadline(Instant deadline)`**:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.

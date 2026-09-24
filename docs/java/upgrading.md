@@ -240,7 +240,7 @@ Drain the queue before giving it its first per-partition limit, or re-enqueue it
 
 ### Deprecations
 
-The following APIs are deprecated in 1.1. All except the seven-argument `QueueOptions` constructor are marked for removal in 2.0.
+The following APIs are deprecated in 1.1 and will be removed in 2.0.
 
 | Deprecated | Replacement |
 |---|---|

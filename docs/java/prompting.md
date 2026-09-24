@@ -1324,7 +1324,7 @@ The constructors fix what to run and where: the workflow name, optionally its cl
 **Methods:**
 
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
-- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. If not set, the workflow is run by an executor on the latest application version.
+- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. If not set, only an executor on the owning application's latest registered version dequeues it.
 - **`withTimeout(Duration timeout)`** / **`withTimeout(Timeout timeout)`** / **`withNoTimeout()`**: Set a timeout for the enqueued workflow. Does not begin until the workflow is dequeued and starts execution. Inside a workflow, an unset timeout inherits the caller's; `withNoTimeout()` declines it.
 - **`withDeadline(Instant deadline)`**: Set an absolute deadline for the enqueued workflow.
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
