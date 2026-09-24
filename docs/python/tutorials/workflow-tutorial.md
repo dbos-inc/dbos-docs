@@ -134,7 +134,6 @@ To cancel an executing async step immediately rather than waiting for it to comp
 
 Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
-Timeouts are enforced by every process of your application, so a workflow times out even if the process that was executing it has crashed.
 
 Example syntax:
 

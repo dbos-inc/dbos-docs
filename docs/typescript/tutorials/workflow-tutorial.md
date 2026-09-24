@@ -208,7 +208,6 @@ A step that is executing when the workflow times out can observe the cancellatio
 
 Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
-Timeouts are enforced by every process of your application, which checks about once per second for workflows past their deadline, so a workflow times out even if the process that was executing it has crashed.
 
 Example syntax:
 

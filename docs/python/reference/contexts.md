@@ -2028,7 +2028,6 @@ Cancelling a workflow sets its status to `CANCELLED` and preempts its execution 
 
 Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
-Timeouts are enforced by every process of your application, which checks about once per second for workflows past their deadline, so a workflow times out even if the process that was executing it has crashed.
 
 Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
 If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout.

@@ -5,9 +5,6 @@ title: Datasources
 
 Datasources wrap a SQLAlchemy engine so that database transactions run inside DBOS workflows are tracked and replayed with exactly-once guarantees. See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.md) for a full walkthrough.
 
-Datasources must be created before [`DBOS.launch()`](./dbos-class.md#launch); creating one after launch raises a `DBOSException`.
-DBOS tracks every datasource created in the process, so that [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow) deletes the transaction checkpoints each one holds for the rewound steps.
-
 ## SQLAlchemyDatasource
 
 A synchronous datasource backed by a SQLAlchemy `Engine`. Use this for non-async code.
