@@ -67,7 +67,7 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withAdminServerPort(int port)`** *(deprecated since 0.9)*: The port on which the admin server runs. Defaults to 3001.
 
-- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
+- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. We recommend always setting it; if it is not set, DBOS computes a version from a hash of your workflow methods, which is only a fallback. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 - **`withExecutorId(String executorId)`**: A unique process ID used to identify this application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 

@@ -19,6 +19,7 @@ void registerQueue(String name, QueueOptions options, QueueConflictResolution on
 ```
 
 Register a queue and persist its configuration to the system database.
+The queue is owned by, and polled only by, this application.
 If the queue already exists in the database, the `onConflict` parameter controls whether its configuration is overwritten; it defaults to [`QueueConflictResolution.UPDATE_IF_LATEST_VERSION`](#queueconflictresolution).
 
 **Parameters:**

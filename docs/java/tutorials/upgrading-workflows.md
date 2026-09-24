@@ -101,13 +101,14 @@ Once all workflows with patch markers are complete, the patch may be safely remo
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
 All workflows are tagged with the application version on which they started.
-By default, application version is automatically computed from a hash of the DBOS SDK version, the application name, and the name, signature, and bytecode of each registered workflow method.
-Upgrading the DBOS SDK or renaming the application therefore also changes the computed version.
-However, you can set your own version through configuration.
+We recommend setting the application version explicitly through configuration, and changing it whenever you deploy changed workflow code:
 
 ```java
 var config = DBOSConfig.defaults("my-app-name").withAppVersion("1.0.0");
 ```
+
+If you don't set a version, DBOS computes one from a hash of the DBOS SDK version, the application name, and the name, signature, and bytecode of each registered workflow method.
+The computed version is a fallback: it does not change when you change steps or other code your workflows call, and it changes whenever you upgrade the DBOS SDK or rename the application, even if your workflows did not change.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents recovery of workflows that depend on different code.

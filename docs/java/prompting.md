@@ -588,7 +588,14 @@ public String exampleWorkflow(float timeToSleepSeconds, String task) throws Inte
 
 Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
 To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows, the DBOS version, and the application name (this can be overridden with the `withAppVersion` configuration method).
+Always set the application version explicitly with `withAppVersion`, and change it whenever you deploy changed workflow code:
+
+```java
+var config = DBOSConfig.defaultsFromEnv("my-app").withAppVersion("1.0.0");
+```
+
+If no version is set, DBOS computes one at launch from a hash of the DBOS version, the application name, and the name, signature, and bytecode of each registered workflow method.
+This computed version is only a fallback: it does not change when you change steps or other code a workflow calls, and it changes on every DBOS upgrade even when your workflows did not.
 All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
