@@ -1878,8 +1878,6 @@ When the workflow eventually executes, it uses the **last** set of inputs passed
 
 Once the debounce period expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
-`debounce` raises `DBOSException` if it is called inside a [`SetEnqueueOptions`](./queues.md#setenqueueoptions) block that sets `deduplication_id`, `delay_seconds`, `priority`, `queue_partition_key`, or `duplication_policy="return-existing"`, or inside a [`SetWorkflowID`](#setworkflowid) block that sets `workflow_id_reuse_policy="reject"`, because the debouncer controls these options itself.
-
 **Parameters:**
 - `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
 - `debounce_period_sec`: Delay this workflow's execution by this period.
