@@ -1329,7 +1329,7 @@ public EnqueueOptions(String workflowName, String className, QueueName queue)
 public EnqueueOptions(String workflowName, String className, String instanceName, QueueName queue)
 ```
 
-The constructors fix what to run and where: the workflow name, optionally its class and named instance, and the queue as a `QueueName` (for example `QueueName.of("my-queue")`). There is no `withClassName` or `withInstanceName`. A Java workflow is identified by its class, so always pass the class name (or its `@WorkflowClassName` value) when enqueuing a Java workflow. Omit it only for a workflow that isn't registered on a class, such as a Python workflow function.
+The constructors fix what to run and where: the workflow name, optionally its class and named instance, and the queue as a `QueueName` (for example `QueueName.of("my-queue")`). There is no `withClassName` or `withInstanceName`. A Java workflow is identified by its class, so always pass the fully qualified name of the class that implements it (or its `@WorkflowClassName` value) when enqueuing a Java workflow. Omit it only for a workflow that isn't registered on a class, such as a Python workflow function.
 
 **Methods:**
 

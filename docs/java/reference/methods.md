@@ -237,7 +237,7 @@ Inside a workflow, the enqueued workflow's timeout is resolved as for `startWork
 **Example Syntax:**
 
 ```java
-var options = new EnqueueOptions("processOrder", QueueName.of("orders"))
+var options = new EnqueueOptions("processOrder", "com.example.OrderServiceImpl", QueueName.of("orders"))
     .withApplicationName("order-service");
 WorkflowHandle<Object, Exception> handle =
     dbos.enqueueWorkflow(options, new Object[] {"order-123"});
@@ -653,10 +653,15 @@ List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds
 List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds, String queueName)
 ```
 
-Resume one or more workflows from their last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+Resume one or more workflows from their last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
+
+Resuming a workflow sets it back to `ENQUEUED`, on `queueName` if given and otherwise on the DBOS internal queue, which has no flow control, so the workflow starts as soon as an executor dequeues it.
+This works on a workflow that is already `ENQUEUED`, so you can also use it to start an enqueued workflow without waiting on its queue, or to move a workflow stranded on a deleted or [newly partitioned](./queues.md#queueoptions) queue.
+A resumed workflow keeps its application version, so it runs only on an executor of that version.
+Workflows that already completed with `SUCCESS` or `ERROR` are left unchanged.
 
 **Parameters:**
-- **queueName**: Optionally re-enqueue the resumed workflow on this queue instead of starting it immediately.
+- **queueName**: The queue to enqueue the resumed workflow on. If omitted or `null`, it is enqueued on the DBOS internal queue.
 
 ### deleteWorkflow
 

@@ -7,15 +7,12 @@ title: Upgrading
 
 Follow these steps for every DBOS upgrade.
 
-- **Don't skip minor releases.**
-Some changes are split across two releases so that executors on consecutive releases can share a system database: one release learns to read a new storage format, and the next starts writing it.
-Upgrade every executor to each minor release before any executor runs the one after it.
-For example, move all executors from 1.0 to 1.1 before running 1.2, and don't run 1.0 and 1.2 executors against the same system database.
 - **Deploy each upgrade as a new application version.**
 Set the version explicitly with `withAppVersion`, and change it when you upgrade.
 If you don't set it, the version DBOS computes changes on its own, because it includes the DBOS version.
 Either way, executors only dequeue and recover workflows of their own version, so keep some executors on the old release running until their workflows finish, as in a [blue-green deployment](./tutorials/upgrading-workflows.md#versioning).
 Executors on consecutive minor releases can run side by side on the same system database.
+If you use [patching](./tutorials/upgrading-workflows.md#patching), this doesn't apply: unless you set a version, every executor runs the fixed version `PATCHING_ENABLED`, so old and new executors share workflows. Shut down all executors on the old release before launching the new one.
 - **Migrate the system database before anything that needs the new schema.**
 With `withMigrate(true)` (the default), `dbos.launch()` migrates the system database.
 If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../production/dbosctl.md#dbosctl-sysdb-migrate) before deploying the upgrade.
@@ -24,10 +21,18 @@ An application or client that needs a newer schema than the system database has 
 
 ## Upgrading to v1.1
 
-Code written against the documented DBOS Transact Java 1.0 APIs compiles and runs on 1.1.
+Most code written against DBOS Transact Java 1.0 compiles and runs unchanged on 1.1; the exceptions are listed below.
 1.1 deprecates in-memory queues and a few other APIs, which will be removed in 2.0, and validates some inputs that 1.0 accepted.
 This section covers what might require a change to your code or configuration, and what to replace deprecated APIs with.
 For new features, see the [release notes](https://github.com/dbos-inc/dbos-transact-java/releases).
+
+### 1.1 Is Required Before 1.2
+
+If your application servers run 1.0, upgrade all of them to 1.1 before any server runs 1.2, and don't run 1.0 and 1.2 servers against the same system database.
+1.2 changes how two things are stored in the system database, and 1.1 is the release that understands both the old and the new formats:
+
+- **Debouncing.** 1.2 debounces by delaying the workflow itself on its queue, instead of through a separate debouncer workflow. 1.1 still debounces through a debouncer workflow, but when a workflow debounced by 1.2 already holds the key, 1.1 extends that workflow's delay and replaces its arguments, as 1.2 does. 1.0 doesn't recognize such a workflow: a 1.0 server debouncing the same key can wait on a workflow that never answers it and then run the work a second time.
+- **Workflow inputs and outputs.** 1.2 writes them to new tables. 1.1 reads both the new tables and the old columns, but 1.0 reads only the old columns, so it can't recover or return the result of a workflow started by 1.2.
 
 ### Changes That May Require Action
 
@@ -45,6 +50,8 @@ Use [`dbosctl`](../production/dbosctl.md#system-database-commands) instead:
 
 If you use [Conductor](../production/conductor.md) or DBOS Cloud, `dbos.launch()` now throws `IllegalArgumentException` if your application name doesn't follow the [naming rule](./reference/lifecycle.md#dbosconfig): 3–256 lowercase letters, numbers, dashes, and underscores.
 Self-hosted applications only log a warning.
+To fix a name, change the name passed to `DBOSConfig.defaults(...)` or `withAppName`. In Spring Boot, set `dbos.application.name`; without it, DBOS uses `spring.application.name`, which often contains uppercase letters or dots.
+Rows created before 1.1 aren't owned by any application, so changing the name as part of this upgrade doesn't require transferring ownership.
 
 #### Stricter Validation
 
@@ -55,6 +62,12 @@ These inputs used to be accepted and now throw `IllegalArgumentException`:
 - A priority on a debouncer that has no queue.
 
 Iterating `readStream` for a workflow ID that doesn't exist now throws `DBOSNonExistentWorkflowException` instead of ending as an empty stream.
+
+#### Workflows Enqueued Without a Version
+
+A workflow enqueued by [`DBOSClient`](./reference/client.md) without `withAppVersion` is now dequeued only by executors running the latest application version; in 1.0, any executor dequeued it.
+During a blue-green upgrade, such workflows therefore run on the new executors once they launch.
+If executors on an older version must run a workflow, set `withAppVersion` when enqueuing it.
 
 #### Several Applications Sharing a System Database
 
@@ -74,9 +87,12 @@ See [Unowned Rows](../explanations/sharing-a-system-database.md#unowned-rows).
 #### Constructors
 
 `DBOSConfig` and `ListWorkflowsInput` gained fields, so calls to their all-arguments constructors no longer compile.
-Neither of these types are designed to be constructed via their all-arguments constructors.
+Neither of these types is designed to be constructed via its all-arguments constructor.
 Build a base `DBOSConfig` with `DBOSConfig.defaults(...)` or `DBOSConfig.defaultsFromEnv(...)` and customize with its `with` methods.
-Build a base `ListWorkflowsInput` with its default constructor and customize with its `with` medhods.
+Build a base `ListWorkflowsInput` with its default constructor and customize with its `with` methods.
+
+`WorkflowStatus`, `StepInfo`, and `VersionInfo` also gained fields.
+DBOS returns these types rather than applications building them, so this should only affect test code that constructs them, for example to stub `listWorkflows` or `listWorkflowSteps` in a mock.
 
 The `DBOSSystemDatabaseException` constructor takes a `SQLException` instead of a `Throwable`.
 Code that constructs it must be updated and recompiled.
@@ -163,8 +179,6 @@ The following APIs are deprecated in 1.1 and will be removed in 2.0.
 | `Debouncer.withDeduplicationId`, `DebouncerClient.withDeduplicationId` | None. From the next release the debouncer sets the deduplication ID itself and ignores this setting. |
 | `ExternalState`, `DBOSIntegration.getExternalState`, `DBOSIntegration.upsertExternalState` (the `event_dispatch_kv` API) | Store integration state in your own table. A shared system database migration will drop the `event_dispatch_kv` table sometime after Java 2.0. |
 | `DBOSSystemDatabaseException.databaseException()` | `getCause()` |
-
-The [admin server](#admin-server), deprecated since 0.9, still ships in 1.1.
 
 ---
 

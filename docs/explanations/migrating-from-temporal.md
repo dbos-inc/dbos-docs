@@ -199,7 +199,7 @@ String result = handle.getResult();
 ```java
 // Starting a workflow from another application using the DBOS Client
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options = new EnqueueOptions("orderWorkflow", "OrderImpl", QueueName.of("orders"));
+var options = new EnqueueOptions("orderWorkflow", "com.example.OrderImpl", QueueName.of("orders"));
 var handle = client.enqueueWorkflow(options, new Object[]{order});
 Object result = handle.getResult();
 ```

@@ -104,7 +104,7 @@ public EnqueueOptions(String workflowName, String className, String instanceName
 ```
 
 The constructors fix what to run and where: the workflow name, optionally the class that contains it and the [named instance](../tutorials/workflow-classes.md) to run it on, and the queue, as a [`QueueName`](./queues.md#queuename).
-A Java workflow is identified by its class, so always pass the class name (or its `@WorkflowClassName` value) when enqueuing a Java workflow. Omit it only for a workflow that isn't registered on a class, such as a Python workflow function.
+A Java workflow is identified by its class, so always pass the fully qualified name of the class that implements it (or its `@WorkflowClassName` value) when enqueuing a Java workflow. Omit it only for a workflow that isn't registered on a class, such as a Python workflow function.
 The workflow name and queue must not be null or empty.
 
 **Methods:**
