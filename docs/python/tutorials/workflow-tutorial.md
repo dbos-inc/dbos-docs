@@ -74,6 +74,20 @@ with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to (or, for a direct call, the result of) the existing workflow instead of starting a new one.
+To instead raise an error when a workflow ID is already in use, set `workflow_id_reuse_policy="reject"` in [`SetWorkflowID`](../reference/contexts.md#setworkflowid):
+
+```python
+from dbos import error as dboserror
+
+try:
+    with SetWorkflowID("very-unique-id", workflow_id_reuse_policy="reject"):
+        example_workflow()
+except dboserror.DBOSWorkflowIDInUseError:
+    # A workflow with this ID already exists
+    ...
+```
+
 ## Determinism
 
 Workflows are in most respects normal Python functions.
@@ -120,6 +134,7 @@ To cancel an executing async step immediately rather than waiting for it to comp
 
 Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+Timeouts are enforced by every process of your application, so a workflow times out even if the process that was executing it has crashed.
 
 Example syntax:
 

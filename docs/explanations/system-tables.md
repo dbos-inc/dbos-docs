@@ -178,6 +178,7 @@ Each entry represents a different message.
 - **message_uuid**: The unique ID of the message.
 - **serialization**: The name of the serialization format used for the message. Null if the default serializer was used.
 - **consumed**: Whether the message has been consumed by a `DBOS.recv` call.
+- **consumed_by_function_id**: The ID of the step (the `DBOS.recv` call) that consumed the message, if it has been consumed. Used when [rewinding](../python/tutorials/workflow-management.md#rewinding-workflows) a workflow to delete the messages it consumed at or after the rewind step.
 
 ### dbos.workflow_events
 This table stores workflow events.

@@ -178,4 +178,7 @@ In this mode, only workflow and step metadata (but not data, like workflow or st
 As a result, workflow data will not be visible from the console.
 Note that Conductor does not store application data in any mode.
 
+You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings) or `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch).
+A process with this setting never sends workflow data to Conductor, including in error messages, and refuses Conductor requests for workflow events, messages, and streams and for workflow export and import.
+
 <img src={require('@site/static/img/conductor/metadata.png').default} alt="Workflow List" width="800" className="custom-img"/>

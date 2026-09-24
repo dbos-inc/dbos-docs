@@ -34,6 +34,9 @@ from dbos import AsyncSQLAlchemyDatasource
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
+Create all your datasources before calling [`DBOS.launch()`](../reference/dbos-class.md#launch): creating a datasource after launch raises a `DBOSException`.
+DBOS tracks every datasource created in the process so that [rewinding a workflow](./workflow-management.md#rewinding-workflows) also deletes the transaction checkpoints it holds.
+
 To use `AsyncSQLAlchemyDatasource` with SQLite, you must use an async driver URL such as `sqlite+aiosqlite:///app.sqlite` (install the driver with `pip install "dbos[aiosqlite]"`); a plain `sqlite:///` URL raises an error.
 
 :::warning

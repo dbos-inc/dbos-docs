@@ -113,6 +113,28 @@ async function main() {
 }
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead throw an error when a workflow ID is already in use, set `workflowIDReusePolicy: 'reject'` in [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow):
+
+```typescript
+import { DBOS, Error as DBOSErrors } from "@dbos-inc/dbos-sdk";
+
+async function submitOrder(orderID: string, order: Order) {
+  try {
+    const handle = await DBOS.startWorkflow(processOrder, {
+      workflowID: `order-${orderID}`,
+      workflowIDReusePolicy: 'reject',
+    })(order);
+    return await handle.getResult();
+  } catch (e) {
+    if (DBOSErrors.isWorkflowIDInUseError(e)) {
+      return 'already started';
+    }
+    throw e;
+  }
+}
+```
+
 ## Determinism
 
 Workflows are in most respects normal TypeScript functions.
@@ -182,9 +204,11 @@ Avoid using `Promise.all` because of how it handles errors and rejections.  When
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
 When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+A step that is executing when the workflow times out can observe the cancellation through [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus) and stop early.
 
 Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+Timeouts are enforced by every process of your application, which checks about once per second for workflows past their deadline, so a workflow times out even if the process that was executing it has crashed.
 
 Example syntax:
 

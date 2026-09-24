@@ -349,6 +349,10 @@ with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
+By default, starting a workflow with an ID that is already in use returns the existing workflow instead of starting a new one.
+To instead raise `DBOSWorkflowIDInUseError`, use `SetWorkflowID("very-unique-id", workflow_id_reuse_policy="reject")` (catch it with `from dbos import error as dboserror` and `except dboserror.DBOSWorkflowIDInUseError`).
+The same option is available as `workflow_id_reuse_policy` in `DBOSClient.enqueue` options.
+
 ## Determinism
 
 Workflows are in most respects normal Python functions.
@@ -1672,6 +1676,25 @@ The specified `start_step` is the step from which the new workflow will start, s
 The forked workflow will have a new workflow ID, which can be set with `SetWorkflowID`.
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+
+### rewind_workflow
+
+```python
+DBOS.rewind_workflow(
+    workflow_id: str,
+    *,
+    start_step: Optional[int] = None,
+    application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+) -> WorkflowHandle[Any]
+```
+
+Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID (unlike `fork_workflow`, which creates a new workflow).
+Steps with IDs greater than or equal to `start_step` are discarded and re-executed; if `start_step` is not provided, the whole workflow re-executes.
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
+Rewinding clears the workflow's output, rolls back events it set at or after `start_step`, deletes messages it received at or after `start_step`, and deletes the checkpoints of datasource transactions at or after `start_step`.
+`application_version`, `queue_name`, and `queue_partition_key` behave as in `fork_workflow`.
 
 ### Workflow Status
 
