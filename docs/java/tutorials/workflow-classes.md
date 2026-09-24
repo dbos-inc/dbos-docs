@@ -68,12 +68,12 @@ If DBOS tries to recover a workflow for an instance that hasn't been registered,
 
 ## Enqueueing to a Named Instance
 
-When enqueueing a workflow via `DBOSClient` from external code, use `withInstanceName` on `EnqueueOptions` to target a specific instance:
+When enqueueing a workflow via `DBOSClient` from external code, pass the instance name to the `EnqueueOptions` constructor, after the class name, to target a specific instance:
 
 ```java
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options = new DBOSClient.EnqueueOptions("process", "com.example.DataProcessorImpl", "my-queue")
-    .withInstanceName("service-a");
+var options = new EnqueueOptions(
+    "process", "com.example.DataProcessorImpl", "service-a", QueueName.of("my-queue"));
 client.enqueueWorkflow(options, new Object[]{"job-3"});
 ```
 

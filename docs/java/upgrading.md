@@ -123,7 +123,7 @@ Java 1.1 itself still writes inputs and outputs to `workflow_status`.
 Every object DBOS stores (workflows, steps, queues, schedules, and application versions) now records the application that owns it, taken from the name you pass to `DBOSConfig.defaults(...)`.
 Several applications can share one system database, each seeing only its own objects, or call each other's workflows deliberately.
 
-- `dbos.enqueueWorkflow(...)` and `dbos.enqueuePortableWorkflow(...)` take the same `EnqueueOptions` as [`DBOSClient`](./reference/client.md) and enqueue a workflow by name, so an application can enqueue a workflow implemented by another application, in any language, without a reference to its code.
+- `dbos.enqueueWorkflow(...)` takes the same [`EnqueueOptions`](./reference/client.md#enqueueoptions) as [`DBOSClient`](./reference/client.md) and enqueues a workflow by name, so an application can enqueue a workflow implemented by another application, in any language, without a reference to its code.
 - `EnqueueOptions.withApplicationName(...)` enqueues a workflow on behalf of another application.
 - `DBOSClient` constructors take an optional `applicationName`. Without one, a client owns nothing and sees every application's rows.
 - `ListWorkflowsInput.withApplicationName(...)`, `dbos.listQueues(List<String>)`, and `dbos.listSchedules` filter by owning application.
@@ -252,6 +252,7 @@ The following APIs are deprecated in 1.1. All except the seven-argument `QueueOp
 | `QueueOptions.setPriorityEnabled`, `withPriorityEnabled`, `andPriorityEnabled`, the `QueueOptions.priorityEnabled()` accessor, and `Queue.priorityEnabled()` | None. Every queue dequeues in priority order; set a priority on the workflow instead. |
 | `QueueOptions.setPartitionQueue`, `withPartitionQueue`, `andPartitionQueue`, and the `partitionQueue()` accessor | `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit` (and their `and`/`with` forms) |
 | The seven-argument `QueueOptions` constructor (without per-partition limits) | The static `QueueOptions.set...` factories |
+| `DBOSClient.EnqueueOptions`, and the `DBOSClient.enqueueWorkflow` / `enqueuePortableWorkflow` overloads that take it | The top-level `dev.dbos.transact.EnqueueOptions`, which `dbos.enqueueWorkflow` also takes. Its constructors take the queue as a `QueueName` and fix the target: `new EnqueueOptions(workflowName, [className, [instanceName,]] QueueName.of(queue))`; there is no `withClassName` or `withInstanceName`. For portable enqueue, set `withSerialization(SerializationStrategy.PORTABLE)` and call `enqueueWorkflow(options, positionalArgs, namedArgs)`. |
 | `Debouncer.withDeduplicationId`, `DebouncerClient.withDeduplicationId` | None. From the next release the debouncer sets the deduplication ID itself and ignores this setting. |
 | `ExternalState`, `DBOSIntegration.getExternalState`, `DBOSIntegration.upsertExternalState` (the `event_dispatch_kv` API) | Store integration state in your own table. A shared system database migration will drop the `event_dispatch_kv` table sometime after Java 2.0. |
 | `DBOSSystemDatabaseException.databaseException()` | `getCause()` |

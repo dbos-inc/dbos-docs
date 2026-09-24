@@ -78,7 +78,7 @@ result, err := handle.GetResult()
 <TabItem value="java" label="Java">
 
 ```java
-var options = new DBOSClient.EnqueueOptions("process_order", "orders")
+var options = new EnqueueOptions("process_order", QueueName.of("orders"))
     // The name of the application that implements process_order
     .withApplicationName("order-service");
 WorkflowHandle<Object, Exception> handle =

@@ -133,7 +133,7 @@ public class OrderService {
 
 When multiple beans of the same class exist, the `@Primary` one is registered under the default (empty) instance name.
 Additional beans of the same class are registered as [Workflow Class Instances](./workflow-classes.md) using their Spring bean name.
-Use `withInstanceName(String)` in `StartWorkflowOptions` or `EnqueueOptions` to target a specific bean.
+To target a specific bean, call `startWorkflow` through that bean, or pass its bean name as the instance name to the `EnqueueOptions` constructor: `new EnqueueOptions(workflowName, className, beanName, QueueName.of(queue))`.
 
 ## Lifecycle
 

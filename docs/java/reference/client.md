@@ -68,13 +68,16 @@ Return the application this client acts on behalf of, or `null` for an unnamed c
 ```java
 <T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
       EnqueueOptions options, Object[] args)
+<T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
+      EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
 ```
 
 Enqueue a workflow and return a handle to it.
 
 **Parameters:**
 - **options**: Configuration for the enqueued workflow, as defined below.
-- **args**: An array of the workflow's arguments. These will be serialized and passed into the workflow when it is dequeued.
+- **args** / **positionalArgs**: An array of the workflow's arguments. These will be serialized and passed into the workflow when it is dequeued.
+- **namedArgs**: Named arguments, for targets that take them, such as a Python workflow with keyword arguments. Only portable serialization carries named arguments, so passing any requires `withSerialization(SerializationStrategy.PORTABLE)` on the options; otherwise the call throws `IllegalArgumentException`.
 
 **Example Syntax:**
 
@@ -82,41 +85,39 @@ This code enqueues workflow `exampleWorkflow` in class `com.example.ExampleImpl`
 
 ```java
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options =
-    new DBOSClient.EnqueueOptions("exampleWorkflow", "com.example.ExampleImpl", "example-queue");
+var options = new EnqueueOptions(
+    "exampleWorkflow", "com.example.ExampleImpl", QueueName.of("example-queue"));
 var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argumentTwo"});
 ```
 
 #### EnqueueOptions
 
-`EnqueueOptions` is a with-based configuration record for parameterizing `client.enqueueWorkflow`.
+`EnqueueOptions` (`dev.dbos.transact.EnqueueOptions`) is a with-based configuration record for parameterizing `client.enqueueWorkflow`. The same record is used by [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) inside a DBOS application.
+The nested `DBOSClient.EnqueueOptions`, and the `DBOSClient` enqueue overloads that take it, are *(deprecated since 1.1)*.
 
 **Constructors:**
 
 ```java
-public EnqueueOptions(String workflowName, String queueName)
+public EnqueueOptions(String workflowName, QueueName queue)
+public EnqueueOptions(String workflowName, String className, QueueName queue)
+public EnqueueOptions(String workflowName, String className, String instanceName, QueueName queue)
 ```
 
-Specify the name of the workflow to enqueue and the queue. The class name defaults to `null` — DBOS searches all registered classes for a matching workflow name.
-
-```java
-public EnqueueOptions(String workflowName, String className, String queueName)
-```
-
-Specify the workflow name, class name, and queue name.
+The constructors fix what to run and where: the workflow name, optionally the class that contains it and the [named instance](../tutorials/workflow-classes.md) to run it on, and the queue, as a [`QueueName`](./queues.md#queuename).
+Without a class name, DBOS searches all registered classes for a matching workflow name; pass one when multiple classes have a workflow with the same name.
+The workflow name and queue must not be null or empty.
 
 **Methods:**
 
-- **`withClassName(String className)`**: The class containing the workflow method. Use when multiple classes have a workflow with the same name.
-- **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
 If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
-- **`withTimeout(Duration timeout)`**:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
+- **`withTimeout(Duration timeout)`**, **`withTimeout(long value, TimeUnit unit)`**:  Set an explicit timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
+- **`withTimeout(Timeout timeout)`**, **`withNoTimeout()`**: Set the timeout as a [`Timeout`](./methods.md#timeout): explicit, none, or inherit. Inside a workflow, [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) resolves it as `startWorkflow` does, so an unset timeout inherits the enqueuing workflow's and `withNoTimeout()` declines it. From a client there is nothing to inherit, so an unset or inherited timeout means no timeout.
 - **`withDeadline(Instant deadline)`**:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
 
 :::info
-Timeout and deadline cannot both be set
+An explicit timeout and a deadline cannot both be set.
 :::
 
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
@@ -143,19 +144,10 @@ Timeout and deadline cannot both be set
 
 - **`withApplicationName(String applicationName)`**: The application that owns the enqueued workflow. Only executors running that application dequeue and run it, so this is how one application enqueues work for another application sharing its system database. Defaults to the client's own [`applicationName`](#applicationname); on an unnamed client, the workflow is owned by no application. See [Sharing a System Database](../../explanations/sharing-a-system-database.md).
 
-### enqueuePortableWorkflow
+### enqueuePortableWorkflow *(deprecated since 1.1)*
 
-```java
-<T> WorkflowHandle<T, PortableWorkflowException> enqueuePortableWorkflow(
-      EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
-```
-
-Enqueue a workflow using portable JSON serialization for cross-language workflow initiation. Use this when the workflow function definition is not available in Java (e.g., calling a Python or TypeScript workflow from Java).
-
-**Parameters:**
-- **options**: Configuration for the enqueued workflow, as defined in [`EnqueueOptions`](#enqueueoptions).
-- **positionalArgs**: Positional arguments to pass to the workflow function.
-- **namedArgs**: Optional named arguments (for workflows that support them, e.g., Python kwargs).
+`enqueuePortableWorkflow` only takes the deprecated `DBOSClient.EnqueueOptions`.
+To enqueue a workflow written in another language, set `withSerialization(SerializationStrategy.PORTABLE)` on [`EnqueueOptions`](#enqueueoptions) and call [`enqueueWorkflow`](#enqueueworkflow), passing named arguments if the target takes them.
 
 ### send
 

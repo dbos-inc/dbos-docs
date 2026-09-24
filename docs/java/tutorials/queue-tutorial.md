@@ -213,10 +213,10 @@ If both applications [share a system database](../../explanations/sharing-a-syst
 Because the workflow is implemented elsewhere, workflow and queue metadata must be specified explicitly with [`EnqueueOptions`](../reference/client.md#enqueueoptions), and `withApplicationName` names the application that should run it:
 
 ```java
-var options = new DBOSClient.EnqueueOptions(
+var options = new EnqueueOptions(
   "dataPipeline",                  // Workflow name
   "com.example.DataPipelineImpl",  // Class name
-  "pipelineQueue"                  // Queue name
+  QueueName.of("pipelineQueue")    // Queue name
 ).withApplicationName("data-processing-service");
 
 WorkflowHandle<String, Exception> handle = dbos.enqueueWorkflow(
@@ -225,17 +225,17 @@ WorkflowHandle<String, Exception> handle = dbos.enqueueWorkflow(
 );
 ```
 
-Use `dbos.enqueuePortableWorkflow(options, positionalArgs, namedArgs)` instead when the target takes named arguments, such as a Python workflow with keyword arguments.
+When the target takes named arguments, such as a Python workflow with keyword arguments, set `withSerialization(SerializationStrategy.PORTABLE)` on the options and call `dbos.enqueueWorkflow(options, positionalArgs, namedArgs)`.
 
 From outside any DBOS application, use the [DBOS Client](../reference/client.md), which connects directly to the system database and takes the same `EnqueueOptions`:
 
 ```java
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
 
-var options = new DBOSClient.EnqueueOptions(
+var options = new EnqueueOptions(
   "dataPipeline",                  // Workflow name
   "com.example.DataPipelineImpl",  // Class name
-  "pipelineQueue"                  // Queue name
+  QueueName.of("pipelineQueue")    // Queue name
 );
 
 var handle = client.enqueueWorkflow(

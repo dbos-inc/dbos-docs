@@ -175,6 +175,7 @@ DBOS should be installed and imported from the `dev.dbos.transact` package.  Use
 ```java
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.DBOSClient;
+import dev.dbos.transact.EnqueueOptions;
 import dev.dbos.transact.StartWorkflowOptions;
 import dev.dbos.transact.config.DBOSConfig;
 import dev.dbos.transact.exceptions.DBOSQueueDuplicatedException;
@@ -1019,8 +1020,8 @@ var client = new DBOSClient(
 
 client.registerQueue("pipeline-queue", QueueOptions.empty());
 
-var options = new DBOSClient.EnqueueOptions(
-    "dataPipeline", "com.example.PipelineImpl", "pipeline-queue");
+var options = new EnqueueOptions(
+    "dataPipeline", "com.example.PipelineImpl", QueueName.of("pipeline-queue"));
 WorkflowHandle<String, Exception> handle =
     client.enqueueWorkflow(options, new Object[] {task});
 ```
@@ -1300,9 +1301,8 @@ This code enqueues workflow `exampleWorkflow` in class `com.example.ExampleImpl`
 
 ```java
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options =
-    new DBOSClient.EnqueueOptions(
-        "exampleWorkflow", "com.example.ExampleImpl", "example-queue");
+var options = new EnqueueOptions(
+    "exampleWorkflow", "com.example.ExampleImpl", QueueName.of("example-queue"));
 var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argumentTwo"});
 ```
 
@@ -1314,25 +1314,24 @@ var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argume
 **Constructors:**
 
 ```java
-public EnqueueOptions(String workflowName, String queueName)
-public EnqueueOptions(String workflowName, String className, String queueName)
+public EnqueueOptions(String workflowName, QueueName queue)
+public EnqueueOptions(String workflowName, String className, QueueName queue)
+public EnqueueOptions(String workflowName, String className, String instanceName, QueueName queue)
 ```
 
-Specify the workflow name and queue. `className` is optional — DBOS searches all registered classes if omitted.
+The constructors fix what to run and where: the workflow name, optionally its class and named instance, and the queue as a `QueueName` (for example `QueueName.of("my-queue")`). There is no `withClassName` or `withInstanceName`. If the class name is omitted, DBOS searches all registered classes.
 
 **Methods:**
 
-- **`withClassName(String className)`**: The class containing the workflow method.
-- **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. If not set, the workflow is run by an executor on the latest application version.
-- **`withTimeout(Duration timeout)`**: Set a timeout for the enqueued workflow. Does not begin until the workflow is dequeued and starts execution.
+- **`withTimeout(Duration timeout)`** / **`withTimeout(Timeout timeout)`** / **`withNoTimeout()`**: Set a timeout for the enqueued workflow. Does not begin until the workflow is dequeued and starts execution. Inside a workflow, an unset timeout inherits the caller's; `withNoTimeout()` declines it.
 - **`withDeadline(Instant deadline)`**: Set an absolute deadline for the enqueued workflow.
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 - **`withPriority(Integer priority)`**: Priority values range from `0` to `2,147,483,647`; lower numbers run first, and a negative priority throws.
 - **`withQueuePartitionKey(String key)`**: Partition key, for partitioned queues.
-- **`withSerialization(SerializationStrategy serialization)`**: Serialization format for the arguments, for example `SerializationStrategy.PORTABLE` to enqueue a workflow written in another language.
+- **`withSerialization(SerializationStrategy serialization)`**: Serialization format for the arguments, for example `SerializationStrategy.PORTABLE` to enqueue a workflow written in another language. Named arguments (`enqueueWorkflow(options, positionalArgs, namedArgs)`) require `PORTABLE`.
 - **`withApplicationName(String applicationName)`**: Enqueue the workflow for another application sharing the system database.
 
 ## Classes and Instances

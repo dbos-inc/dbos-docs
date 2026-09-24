@@ -213,7 +213,9 @@ Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgra
 
 ```java
 <T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
-    DBOSClient.EnqueueOptions options, Object[] args)
+    EnqueueOptions options, Object[] args)
+<T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
+    EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
 ```
 
 Enqueue a workflow by name, without a reference to its function, and return a handle to it.
@@ -225,33 +227,21 @@ The enqueued workflow is owned by this application unless [`EnqueueOptions.withA
 
 `enqueueWorkflow` may be called from inside a workflow, where the enqueued workflow is recorded as a child: if the calling workflow is recovered, it gets a handle to the original child rather than enqueueing a second one.
 It may not be called from inside a step; doing so throws `IllegalStateException`.
+Inside a workflow, the enqueued workflow's timeout is resolved as for `startWorkflow`: unless `EnqueueOptions` sets one, it inherits the calling workflow's timeout; `withNoTimeout()` declines it.
 
 **Parameters:**
-- **options**: The workflow name, queue name, and other options; see [`EnqueueOptions`](./client.md#enqueueoptions).
-- **args**: The workflow's positional arguments.
+- **options**: The workflow name, queue, and other options; see [`EnqueueOptions`](./client.md#enqueueoptions).
+- **args** / **positionalArgs**: The workflow's positional arguments.
+- **namedArgs**: The workflow's named arguments, for targets that take them (for example, a Python workflow with keyword arguments). Only [portable serialization](../../explanations/portable-workflows.md) carries named arguments, so passing any requires `withSerialization(SerializationStrategy.PORTABLE)` on the options; otherwise the call throws `IllegalArgumentException`.
 
 **Example Syntax:**
 
 ```java
-var options = new DBOSClient.EnqueueOptions("processOrder", "orders")
+var options = new EnqueueOptions("processOrder", QueueName.of("orders"))
     .withApplicationName("order-service");
 WorkflowHandle<Object, Exception> handle =
     dbos.enqueueWorkflow(options, new Object[] {"order-123"});
 ```
-
-### enqueuePortableWorkflow
-
-```java
-<T> WorkflowHandle<T, PortableWorkflowException> enqueuePortableWorkflow(
-    DBOSClient.EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
-```
-
-Like [`enqueueWorkflow`](#enqueueworkflow), but always uses [portable serialization](../../explanations/portable-workflows.md) and accepts named arguments, for targets that take them (for example, a Python workflow with keyword arguments).
-
-**Parameters:**
-- **options**: The workflow name, queue name, and other options; see [`EnqueueOptions`](./client.md#enqueueoptions).
-- **positionalArgs**: The workflow's positional arguments.
-- **namedArgs**: The workflow's named arguments, or `null`.
 
 ## Workflow Management Methods
 
