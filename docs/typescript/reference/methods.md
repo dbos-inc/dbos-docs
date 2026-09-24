@@ -17,6 +17,7 @@ static startWorkflow<Args extends unknown[], Return>(
 ```typescript
 interface StartWorkflowParams {
   workflowID?: string;
+  workflowIDReusePolicy?: 'return-existing' | 'reject';
   queueName?: string;
   timeoutMS?: number | null;
   enqueueOptions?: EnqueueOptions;
@@ -70,13 +71,16 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 - **target**: The workflow to start.
 - **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated (for a child workflow started from within a workflow, a deterministic ID derived from the parent workflow's ID is used instead).
+- **workflowIDReusePolicy**: What to do if a workflow with ID `workflowID` already exists, whatever its status. Defaults to `'return-existing'`.
+  - `'return-existing'`: return a handle to the existing workflow without starting a new one. This is the idempotency behavior described in [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+  - `'reject'`: throw `DBOSWorkflowIDInUseError` without starting a new workflow or modifying the existing one. The error has `workflowID`, `status`, and `workflowName` properties describing the existing workflow. Match it with the `isWorkflowIDInUseError` helper exported in the SDK's `Error` namespace rather than `instanceof`, because an error rethrown from a workflow's recorded history may not be an instance of the class.
 - **queueName**: The name of the queue on which to enqueue this workflow, if any. The queue must be registered with [`DBOS.registerQueue`](./queues.md#dbosregisterqueue); a workflow enqueued on an unregistered queue stays `ENQUEUED` until the queue is registered.
 - **timeoutMS**: The timeout of this workflow in milliseconds.
 - **duplicationPolicy**: How to handle a collision with another workflow that has the same `enqueueOptions.deduplicationID` on the same queue. Defaults to `'reject'`.
   - `'reject'`: throw `DBOSQueueDuplicatedError`.
   - `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `queueName` and `enqueueOptions.deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - **enqueueOptions**:
-  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) queue, deduplication IDs are unique across the whole queue, including all its partitions. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -569,7 +573,8 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+A currently executing step is not interrupted, but it can observe the cancellation through [`DBOS.stepStatus.cancelSignal`](#dbosstepstatus) and stop early.
 
 **Parameters:**
 - **workflowID**: The ID of the workflow to cancel.
@@ -672,6 +677,46 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 - **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
+
+### DBOS.rewindWorkflow
+
+```typescript
+static async rewindWorkflow<T>(
+  workflowID: string,
+  options?: {
+    startStep?: number;
+    applicationVersion?: string;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps with IDs greater than or equal to `startStep`, then re-enqueues the workflow so it re-executes from that step.
+Steps with an ID less than `startStep` are not re-executed; their recorded outputs are replayed.
+The input step ID must match the `functionID` of the step returned by [`listWorkflowSteps`](#dboslistworkflowsteps).
+If `startStep` is not provided, the workflow's entire history is discarded and it re-executes from the beginning.
+
+Unlike [`forkWorkflow`](#dbosforkworkflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID, and its child workflows keep the same IDs.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#dboscancelworkflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after `startStep`, restoring each such event to the last value it set before `startStep` (or removing it if there is none).
+- Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages.
+- Does not modify streamed values. Streams are append-only. New values will be appended to the end of existing streams. However, it does "un-close" any streams closed at or after `startStep`.
+- Does not modify child workflows, even those started after `startStep`. If you want to rerun child workflows, delete them or rewind them separately.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to rewind.
+- **startStep**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to `0`, the first step.
+- **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
+- **queueName**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
+- **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if `queueName` is a partitioned queue.
 
 ### Workflow Status
 
@@ -1110,8 +1155,12 @@ interface StepStatus {
   // For steps configured with `timeoutMS`: an AbortSignal that fires when the current attempt's timeout
   // expires, so the step can cancel its underlying operation. A fresh signal is issued for each retry attempt.
   timeoutSignal?: AbortSignal;
+  // An AbortSignal that fires when the step's workflow is cancelled, so the step can cancel its underlying operation.
+  cancelSignal: AbortSignal;
 }
 ```
+
+`cancelSignal` fires when the step's workflow is [cancelled](#dboscancelworkflow) (including by a [workflow timeout](../tutorials/workflow-tutorial.md#workflow-timeouts)).
 
 ### DBOS.isInTransaction()
 ```typescript

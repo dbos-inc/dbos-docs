@@ -49,6 +49,17 @@ You can cancel the execution of a workflow from the web UI, programmatically via
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.
 
+A step that is executing when its workflow is cancelled is not interrupted, but it can stop early by observing [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus), an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that fires when the workflow is cancelled.
+Pass it to APIs that accept a signal (for example, `fetch`) to cancel the step's underlying operation:
+
+```typescript
+async function fetchData() {
+  // fetch aborts if the workflow is cancelled while the request is in flight
+  const response = await fetch("https://example.com", { signal: DBOS.stepStatus?.cancelSignal });
+  return await response.text();
+}
+```
+
 ## Resuming Workflows
 
 You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resumeWorkflow`](../reference/methods.md#dbosresumeworkflow), or through the command line with [`npx dbos workflow resume`](../reference/cli.md#npx-dbos-workflow-resume).
@@ -67,3 +78,24 @@ You can fork a workflow programmatically using [`DBOS.forkWorkflow`](../referenc
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
 
 <img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
+## Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
+Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
+
+You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
+
+You can rewind a workflow programmatically using [`DBOS.rewindWorkflow`](../reference/methods.md#dbosrewindworkflow):
+
+```typescript
+// Re-execute the workflow from step 3, keeping its workflow ID
+const handle = await DBOS.rewindWorkflow(workflowID, { startStep: 3 });
+const result = await handle.getResult();
+```
