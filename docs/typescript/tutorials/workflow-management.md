@@ -85,8 +85,8 @@ You can re-execute a workflow from a specific step, keeping its workflow ID, by 
 When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
 The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
 
-Rewinding differs from [forking](#forking-workflows) in that the rewound workflow keeps its original workflow ID.
-Other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
 Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
 
 You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.

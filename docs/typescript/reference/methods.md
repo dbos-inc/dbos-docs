@@ -708,10 +708,8 @@ Rewinding a workflow:
 - Clears its recorded output or error.
 - Discards events it set at or after `startStep`, restoring each such event to the last value it set before `startStep` (or removing it if there is none).
 - Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages.
-- Keeps the entries it wrote to streams, but removes the "closed" marker of any stream it closed at or after `startStep`, so the rewound workflow can write to that stream again.
-- Deletes the checkpoints that transactions at or after `startStep` recorded in any [data source](./datasource.md) registered in this process.
-
-Messages the workflow sends and child workflows it starts at or after `startStep` are sent and started again when the workflow re-executes.
+- Does not modify streamed values. Streams are append-only. New values will be appended to the end of existing streams. However, it does "un-close" any streams closed at or after `startStep`.
+- Does not modify child workflows, even those started after `startStep`. If you want to rerun child workflows, delete them or rewind them separately.
 
 **Parameters:**
 - **workflowID**: The ID of the workflow to rewind.
