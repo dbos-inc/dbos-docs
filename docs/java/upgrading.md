@@ -5,13 +5,7 @@ title: Upgrading
 
 ## Upgrading a Running Application
 
-Follow these steps for every DBOS upgrade.
-
-- **A DBOS upgrade changes a computed application version.**
-If you don't set a version with `withAppVersion` or use [patching](./tutorials/upgrading-workflows.md#patching), DBOS computes one that includes the DBOS version, so executors on the new release run a new application version.
-Executors only dequeue and recover workflows of their own version, so keep some executors on the old release running until their workflows finish, as in a [blue-green deployment](./tutorials/upgrading-workflows.md#versioning).
-If you set the version yourself or use patching, upgrading DBOS doesn't change it, and old and new executors run each other's workflows.
-- **Migrate the system database before anything that needs the new schema.**
+For every DBOS upgrade, migrate the system database before anything that needs the new schema runs.
 With `withMigrate(true)` (the default), `dbos.launch()` migrates the system database.
 If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../production/dbosctl.md#dbosctl-sysdb-migrate) before deploying the upgrade.
 [`DBOSClient`](./reference/client.md) never migrates, so upgrade clients only after an upgraded application has launched or you have run `dbosctl sysdb migrate`.
