@@ -43,7 +43,7 @@ Use [`dbosctl`](../production/dbosctl.md#system-database-commands) instead:
 
 #### Application Names
 
-If you use [Conductor](../production/conductor.md) or DBOS Cloud, your application name must be 3–256 characters of lowercase letters, digits, `-`, and `_`; otherwise `dbos.launch()` throws `IllegalArgumentException`.
+If you use [Conductor](../production/conductor.md) or DBOS Cloud, `dbos.launch()` now throws `IllegalArgumentException` if your application name doesn't follow the [naming rule](./reference/lifecycle.md#dbosconfig): 3–256 lowercase letters, numbers, dashes, and underscores.
 Self-hosted applications only log a warning.
 
 #### Stricter Validation
