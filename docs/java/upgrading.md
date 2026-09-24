@@ -150,7 +150,7 @@ See the [queues tutorial](./tutorials/queue-tutorial.md) and the [queues referen
 
 `QueueName` is a small type for passing a queue's name where a bare `String` would be ambiguous.
 In particular, `new StartWorkflowOptions(String)` takes a *workflow ID*, so `new StartWorkflowOptions("my-queue")` silently starts an unqueued workflow; `new StartWorkflowOptions(QueueName.of("my-queue"))` enqueues it.
-`QueueName` overloads are accepted by `StartWorkflowOptions`, `ForkOptions.withQueue`, `ForkFromFailureOptions.withQueue`, `Debouncer.withQueue`, `DebouncerClient.withQueue`, and `DBOSConfig.withListenQueue`/`withListenQueues`.
+`QueueName` overloads are accepted by `StartWorkflowOptions`, `ForkOptions.withQueue`, `Debouncer.withQueue`, `DebouncerClient.withQueue`, and `DBOSConfig.withListenQueue`/`withListenQueues`.
 The `String` overloads are unchanged.
 
 #### Notification Coalescing and Polling Concurrency
@@ -248,7 +248,7 @@ The following APIs are deprecated in 1.1. All except the seven-argument `QueueOp
 | `Queue.partitioningEnabled()` | `Queue.isPartitioned()`, or `Queue.isLegacyPartitioned()` to detect a queue partitioned with the deprecated flag |
 | `dbos.registerQueue(Queue)`, `dbos.registerQueues(Queue...)` | `dbos.registerQueue(String, QueueOptions)` after launch |
 | `dbos.getQueue(String)` | `dbos.findQueue(String)` |
-| `Queue`-typed overloads: `new StartWorkflowOptions(Queue)`, `StartWorkflowOptions.withQueue(Queue)`, `ForkOptions.withQueue(Queue)`, `ForkFromFailureOptions.withQueue(Queue)`, `Debouncer.withQueue(Queue)`, `DebouncerClient.withQueue(Queue)`, `DBOSConfig.withListenQueue(Queue)`, `DBOSConfig.withListenQueues(Queue...)` | The `QueueName` or `String` overloads |
+| `Queue`-typed overloads: `new StartWorkflowOptions(Queue)`, `StartWorkflowOptions.withQueue(Queue)`, `ForkOptions.withQueue(Queue)`, `Debouncer.withQueue(Queue)`, `DebouncerClient.withQueue(Queue)`, `DBOSConfig.withListenQueue(Queue)`, `DBOSConfig.withListenQueues(Queue...)` | The `QueueName` or `String` overloads |
 | `QueueOptions.setPriorityEnabled`, `withPriorityEnabled`, `andPriorityEnabled`, the `QueueOptions.priorityEnabled()` accessor, and `Queue.priorityEnabled()` | None. Every queue dequeues in priority order; set a priority on the workflow instead. |
 | `QueueOptions.setPartitionQueue`, `withPartitionQueue`, `andPartitionQueue`, and the `partitionQueue()` accessor | `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit` (and their `and`/`with` forms) |
 | The seven-argument `QueueOptions` constructor (without per-partition limits) | The static `QueueOptions.set...` factories |

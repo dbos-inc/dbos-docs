@@ -235,14 +235,14 @@ var options = new StartWorkflowOptions(QueueName.of("example-queue"));
 var options2 = new StartWorkflowOptions().withQueue("example-queue");
 ```
 
-`QueueName` is accepted by the `StartWorkflowOptions(QueueName)` constructor, `StartWorkflowOptions.withQueue`, `ForkOptions.withQueue`, `ForkFromFailureOptions.withQueue`, `Debouncer.withQueue`, `DebouncerClient.withQueue`, and `DBOSConfig.withListenQueue(s)`.
+`QueueName` is accepted by the `StartWorkflowOptions(QueueName)` constructor, `StartWorkflowOptions.withQueue`, `ForkOptions.withQueue`, `Debouncer.withQueue`, `DebouncerClient.withQueue`, and `DBOSConfig.withListenQueue(s)`.
 The `String` overloads remain available; `QueueName` replaces the deprecated overloads that take a `Queue` object.
 
 ## Legacy: In-Memory Queues
 
 :::warning Deprecated
 In-memory queues are deprecated since 1.1 and will be removed in a future release.
-This covers the `Queue` constructors and `with*` methods, [`dbos.registerQueue(Queue)` and `dbos.registerQueues`](#dbosregisterqueue-legacy), [`dbos.getQueue`](./lifecycle.md#getqueue), and the overloads that take a `Queue` object (`StartWorkflowOptions(Queue)`, `StartWorkflowOptions.withQueue(Queue)`, `ForkOptions.withQueue(Queue)`, `ForkFromFailureOptions.withQueue(Queue)`, `DBOSConfig.withListenQueue(Queue)` / `withListenQueues(Queue...)`, `Debouncer.withQueue(Queue)`, and `DebouncerClient.withQueue(Queue)`).
+This covers the `Queue` constructors and `with*` methods, [`dbos.registerQueue(Queue)` and `dbos.registerQueues`](#dbosregisterqueue-legacy), [`dbos.getQueue`](./lifecycle.md#getqueue), and the overloads that take a `Queue` object (`StartWorkflowOptions(Queue)`, `StartWorkflowOptions.withQueue(Queue)`, `ForkOptions.withQueue(Queue)`, `DBOSConfig.withListenQueue(Queue)` / `withListenQueues(Queue...)`, `Debouncer.withQueue(Queue)`, and `DebouncerClient.withQueue(Queue)`).
 Register database-backed queues with [`dbos.registerQueue(String, QueueOptions)`](#dbosregisterqueue) after launch, look them up with [`dbos.findQueue`](#dbosfindqueue) (the replacement for `getQueue`), and refer to them by name or [`QueueName`](#queuename).
 :::
 

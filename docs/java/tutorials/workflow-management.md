@@ -58,40 +58,6 @@ You can also fork a workflow from a step from the web UI by clicking on that ste
 
 <img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-## Forking from Failure
-
-When a workflow fails and you want to re-run it from where it went wrong, use [`forkFromFailure`](../reference/methods.md#forkfromfailure). Unlike `forkWorkflow`, you don't need to look up the exact step number — DBOS finds it automatically based on the mode you choose.
-
-```java
-// Restart from the last step that recorded an error (most common)
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromLastFailure());
-
-// Restart from the very last step (whether it failed or succeeded)
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromLastStep());
-
-// Restart from a specific step number
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromStep(3));
-
-// Restart from the last occurrence of a named step
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromStepName("callPaymentAPI"));
-```
-
-All options support chaining `withApplicationVersion`, `withQueue`, and `withQueuePartitionKey`.
-
-You can also retry multiple failed workflows at once:
-
-```java
-dbos.forkFromFailure(List.of(id1, id2, id3),
-    new ForkFromFailureOptions.FromLastFailure()
-        .withApplicationVersion("v2.1"));
-```
-
-See [`ForkFromFailureOptions`](../reference/methods.md#forkfromfailureoptions) for the full API.
-
 ## Workflow Attributes
 
 You can attach custom metadata to any workflow as a `Map<String, Object>`. Attributes are stored as JSON and are searchable.
