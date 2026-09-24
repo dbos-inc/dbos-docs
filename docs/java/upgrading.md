@@ -60,7 +60,16 @@ Iterating `readStream` for a workflow ID that doesn't exist now throws `DBOSNonE
 
 Every workflow, queue, schedule, and application version is now owned by the application that created it, and listing operations return only the calling application's objects, plus those no application owns (such as everything created before 1.1).
 If several applications share one system database, give each [`DBOSClient`](./reference/client.md#named-and-unnamed-clients) the `applicationName` it acts for; a client without one sees every application's rows.
-See [Sharing a System Database](../explanations/sharing-a-system-database.md).
+
+Rows created before 1.1 are owned by no application, and every application treats them as its own: any application may dequeue an unowned workflow, and every application polls unowned queues and fires unowned schedules.
+Before adding a second application to a system database, transfer the unowned rows to the application that created them:
+
+```shell
+dbosctl sysdb rename-application --to my-app --adopt-unclaimed-rows
+```
+
+[`DBOSClient.renameApplication`](./reference/client.md#renameapplication) does the same from code.
+See [Unowned Rows](../explanations/sharing-a-system-database.md#unowned-rows).
 
 #### Constructors
 
