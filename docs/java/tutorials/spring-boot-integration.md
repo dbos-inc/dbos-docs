@@ -138,7 +138,7 @@ To target a specific bean, call `startWorkflow` through that bean, or pass its b
 ## Lifecycle
 
 `DBOSLifecycle` is a `SmartLifecycle` bean that calls `dbos.launch()` after all singletons are initialized and `dbos.shutdown()` when the context closes, so workflow beans are always registered before launch.
-Schedules and [queues](../reference/queues.md) are stored in the system database and can only be registered once DBOS is launched, so register them in an `ApplicationListener<ContextRefreshedEvent>` handler, which Spring runs after `DBOSLifecycle` has started, rather than in a `@PostConstruct` method:
+Schedules and [queues](../reference/queues.md) are stored in the system database and can only be registered once DBOS is launched, so register them in an `ApplicationListener<ContextRefreshedEvent>` handler, which Spring runs after `DBOSLifecycle` has started:
 
 ```java
 @Component

@@ -274,8 +274,9 @@ In-memory queues must be registered with [`dbos.registerQueue(Queue)`](#dbosregi
 **Example Syntax:**
 
 ```java
-// Deprecated
+// Deprecated, before dbos.launch()
 Queue queue = new Queue("example-queue").withWorkerConcurrency(5);
+dbos.registerQueue(queue);
 
 // Replacement, after dbos.launch()
 dbos.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
