@@ -12,16 +12,30 @@ toc_max_heading_level: 3
 DBOSClient(String url, String user, String password)
 DBOSClient(String url, String user, String password, String schema)
 DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer)
+DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer,
+           boolean useListenNotify)
+DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer,
+           boolean useListenNotify, String applicationName)
+
 DBOSClient(DataSource dataSource)
 DBOSClient(DataSource dataSource, String schema)
 DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer, String applicationName)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer, boolean useListenNotify)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer, boolean useListenNotify,
+           String applicationName)
 ```
 
 Construct the DBOSClient.
+`DBOSClient` implements `AutoCloseable`; call `close()` to release its database resources.
 
 :::danger
 DBOSClient requires a PostgreSQL database. Providing a non-PostgreSQL `DataSource` will throw an exception.
 :::
+
+The client never creates or migrates the system database.
+On construction, it checks that the system database schema has been migrated to a version compatible with this DBOS release, and throws `IllegalStateException` if the schema is missing or too old.
+Launch a DBOS application (or run [`dbosctl sysdb migrate`](../../production/dbosctl.md#dbosctl-sysdb-migrate)) against the system database first.
 
 **Parameters:**
 - **url**: The JDBC URL for your system database.
@@ -30,6 +44,22 @@ DBOSClient requires a PostgreSQL database. Providing a non-PostgreSQL `DataSourc
 - **schema**: The schema the DBOS System Database tables are stored in. Defaults to `dbos` if not provided.
 - **dataSource**: System Database data source. A `HikariDataSource` is created if not provided.
 - **serializer**: A custom [serializer](./lifecycle.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
+- **useListenNotify**: If `true`, the client runs a listener thread so [`getEvent`](#getevent) and [`readStream`](#readstream) are woken by PostgreSQL `LISTEN`/`NOTIFY` notifications instead of polling the database. Defaults to `false` on the constructors that do not take it, because it costs a dedicated connection and thread that only those two methods benefit from. Leave it `false` if the system database was migrated with `LISTEN`/`NOTIFY` disabled.
+- **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues, and queues and schedules it registers, are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications [share a system database](../../explanations/sharing-a-system-database.md).
+
+#### Named and unnamed clients
+
+A client constructed with an `applicationName` is a **named** client: it acts as that application.
+A client constructed without one is an **unnamed** client: the workflows, queues, and schedules it creates are owned by no application (so every application sharing the system database treats them as its own), and its listing operations return every application's rows.
+Individual operations can still target a specific application, for example with [`EnqueueOptions.withApplicationName`](#enqueueoptions).
+
+#### applicationName
+
+```java
+String applicationName()
+```
+
+Return the application this client acts on behalf of, or `null` for an unnamed client.
 
 ## Workflow Interaction Methods
 
@@ -38,13 +68,16 @@ DBOSClient requires a PostgreSQL database. Providing a non-PostgreSQL `DataSourc
 ```java
 <T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
       EnqueueOptions options, Object[] args)
+<T, E extends Exception> WorkflowHandle<T, E> enqueueWorkflow(
+      EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
 ```
 
 Enqueue a workflow and return a handle to it.
 
 **Parameters:**
 - **options**: Configuration for the enqueued workflow, as defined below.
-- **args**: An array of the workflow's arguments. These will be serialized and passed into the workflow when it is dequeued.
+- **args** / **positionalArgs**: An array of the workflow's arguments. These will be serialized and passed into the workflow when it is dequeued.
+- **namedArgs**: Named arguments, for targets that take them, such as a Python workflow with keyword arguments. Only portable serialization carries named arguments, so passing any requires `withSerialization(SerializationStrategy.PORTABLE)` on the options; otherwise the call throws `IllegalArgumentException`.
 
 **Example Syntax:**
 
@@ -52,48 +85,46 @@ This code enqueues workflow `exampleWorkflow` in class `com.example.ExampleImpl`
 
 ```java
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options =
-    new DBOSClient.EnqueueOptions("exampleWorkflow", "com.example.ExampleImpl", "example-queue");
+var options = new EnqueueOptions(
+    "exampleWorkflow", "com.example.ExampleImpl", QueueName.of("example-queue"));
 var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argumentTwo"});
 ```
 
 #### EnqueueOptions
 
-`EnqueueOptions` is a with-based configuration record for parameterizing `client.enqueueWorkflow`.
+`EnqueueOptions` (`dev.dbos.transact.EnqueueOptions`) is a with-based configuration record for parameterizing `client.enqueueWorkflow`. The same record is used by [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) inside a DBOS application.
+The nested `DBOSClient.EnqueueOptions`, and the `DBOSClient` enqueue overloads that take it, are *(deprecated since 1.1)*.
 
 **Constructors:**
 
 ```java
-public EnqueueOptions(String workflowName, String queueName)
+public EnqueueOptions(String workflowName, QueueName queue)
+public EnqueueOptions(String workflowName, String className, QueueName queue)
+public EnqueueOptions(String workflowName, String className, String instanceName, QueueName queue)
 ```
 
-Specify the name of the workflow to enqueue and the queue. The class name defaults to `null` — DBOS searches all registered classes for a matching workflow name.
-
-```java
-public EnqueueOptions(String workflowName, String className, String queueName)
-```
-
-Specify the workflow name, class name, and queue name.
+The constructors fix what to run and where: the workflow name, optionally the class that contains it and the [named instance](../tutorials/workflow-classes.md) to run it on, and the queue, as a [`QueueName`](./queues.md#queuename).
+A Java workflow is identified by its class, so always pass the fully qualified name of the class that implements it (or its `@WorkflowClassName` value) when enqueuing a Java workflow. Omit it only for a workflow that isn't registered on a class, such as a Python workflow function.
+The workflow name and queue must not be null or empty.
 
 **Methods:**
 
-- **`withClassName(String className)`**: The class containing the workflow method. Use when multiple classes have a workflow with the same name.
-- **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
-- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. 
-If left undefined, it will be updated to the current version when the workflow is first dequeued.
-- **`withTimeout(Duration timeout)`**:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
+- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
+If left undefined, the workflow is enqueued without a version and is only dequeued by an executor running the owning application's latest registered version, which sets the version when it first dequeues it.
+- **`withTimeout(Duration timeout)`**, **`withTimeout(long value, TimeUnit unit)`**:  Set an explicit timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
+- **`withTimeout(Timeout timeout)`**, **`withNoTimeout()`**: Set the timeout as a [`Timeout`](./methods.md#timeout): explicit, none, or inherit. Inside a workflow, [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) resolves it as `startWorkflow` does, so an unset timeout inherits the enqueuing workflow's and `withNoTimeout()` declines it. From a client there is nothing to inherit, so an unset or inherited timeout means no timeout.
 - **`withDeadline(Instant deadline)`**:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
 
 :::info
-Timeout and deadline cannot both be set
+An explicit timeout and a deadline cannot both be set.
 :::
 
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
-- **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority.
 - **`withSerialization(SerializationStrategy serialization)`**: Specify the [serialization strategy](./lifecycle.md#custom-serialization) for the workflow arguments. Options are `SerializationStrategy.DEFAULT`, `SerializationStrategy.PORTABLE`, or `SerializationStrategy.NATIVE`.
-- **`withQueuePartitionKey(String partitionKey)`**: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with `withPartitioningEnabled`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+- **`withQueuePartitionKey(String partitionKey)`**: Set a queue partition key for the workflow. Use if and only if the queue is partitioned, which it is when any per-partition limit (`partitionConcurrency`, `partitionWorkerConcurrency`, or `partitionRateLimit`) is set, or when it was registered with the deprecated `partitionQueue` flag. Per-partition limits apply to each partition key separately; queue-wide limits still apply to the queue as a whole, except on a queue registered with the deprecated `partitionQueue` flag, where they apply to each partition instead. See [Partitioning Queues](../tutorials/queue-tutorial.md#partitioning-queues).
 
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.
@@ -111,19 +142,12 @@ Timeout and deadline cannot both be set
 
 - **`withAttributes(Map<String, Object> attributes)`**: Attach custom JSON-serializable key-value metadata to the workflow. Searchable via `ListWorkflowsInput.withAttributes(Map)`.
 
-### enqueuePortableWorkflow
+- **`withApplicationName(String applicationName)`**: The application that owns the enqueued workflow. Only executors running that application dequeue and run it, so this is how one application enqueues work for another application sharing its system database. Defaults to the client's own [`applicationName`](#applicationname); on an unnamed client, the workflow is owned by no application. See [Sharing a System Database](../../explanations/sharing-a-system-database.md).
 
-```java
-<T> WorkflowHandle<T, PortableWorkflowException> enqueuePortableWorkflow(
-      EnqueueOptions options, Object[] positionalArgs, Map<String, Object> namedArgs)
-```
+### enqueuePortableWorkflow *(deprecated since 1.1)*
 
-Enqueue a workflow using portable JSON serialization for cross-language workflow initiation. Use this when the workflow function definition is not available in Java (e.g., calling a Python or TypeScript workflow from Java).
-
-**Parameters:**
-- **options**: Configuration for the enqueued workflow, as defined in [`EnqueueOptions`](#enqueueoptions).
-- **positionalArgs**: Positional arguments to pass to the workflow function.
-- **namedArgs**: Optional named arguments (for workflows that support them, e.g., Python kwargs).
+`enqueuePortableWorkflow` only takes the deprecated `DBOSClient.EnqueueOptions`.
+To enqueue a workflow written in another language, set `withSerialization(SerializationStrategy.PORTABLE)` on [`EnqueueOptions`](#enqueueoptions) and call [`enqueueWorkflow`](#enqueueworkflow), passing named arguments if the target takes them.
 
 ### send
 
@@ -180,6 +204,34 @@ Iterator<Object> readStream(String workflowId, String key)
 ```
 
 Similar to [`dbos.readStream`](./methods.md#readstream). Use this from external code that does not have access to a `DBOS` instance.
+If no workflow with the given ID exists, iterating throws `DBOSNonExistentWorkflowException`.
+
+### findWorkflowIdByDeduplicationId
+
+```java
+String findWorkflowIdByDeduplicationId(String queueName, String deduplicationId)
+```
+
+Return the ID of the active (`ENQUEUED`, `PENDING`, or `DELAYED`) workflow holding the given deduplication ID on the given queue, or `null` if there is none.
+
+### findDeduplicationHolder
+
+```java
+DeduplicationHolder findDeduplicationHolder(String queueName, String deduplicationId)
+
+public record DeduplicationHolder(
+    String workflowId,
+    String applicationName,
+    String workflowName,
+    String className,
+    String instanceName,
+    WorkflowState status,
+    boolean isDebounced)
+```
+
+Like [`findWorkflowIdByDeduplicationId`](#findworkflowidbydeduplicationid), but also returns the application that owns the holding workflow, along with its name and status.
+Deduplication IDs are unique across all applications sharing a system database, so the holder may belong to another application.
+Returns `null` if no active workflow holds the deduplication ID.
 
 ## Workflow Management Methods
 
@@ -289,6 +341,8 @@ void createSchedule(WorkflowSchedule schedule)
 ```
 
 Create a cron schedule. See [`WorkflowSchedule`](./methods.md#workflowschedule) for the schedule configuration.
+The schedule is owned by, and its workflows run by, the application named by [`WorkflowSchedule.withApplicationName`](./methods.md#workflowschedule), defaulting to the client's own [`applicationName`](#applicationname).
+A schedule created by an unnamed client without an application name is owned by no application, so every application sharing the system database runs it.
 
 ### getSchedule
 
@@ -305,6 +359,11 @@ List<WorkflowSchedule> listSchedules(
       List<ScheduleStatus> status,
       List<String> workflowName,
       List<String> namePrefix)
+List<WorkflowSchedule> listSchedules(
+      List<ScheduleStatus> status,
+      List<String> workflowName,
+      List<String> namePrefix,
+      List<String> applicationName)
 ```
 
 List schedules with optional filters. Pass `null` for any parameter to skip that filter.
@@ -313,6 +372,7 @@ List schedules with optional filters. Pass `null` for any parameter to skip that
 - **status**: Filter by [`ScheduleStatus`](./methods.md#workflowschedule). Pass `null` for no status filter.
 - **workflowName**: Filter by workflow name. Pass `null` for no workflow name filter.
 - **namePrefix**: Filter by schedule name prefix. Pass `null` for no prefix filter.
+- **applicationName**: List schedules owned by these applications, plus schedules no application owns. If `null` (or omitted), lists the client's own [`applicationName`](#applicationname)'s schedules; an unnamed client lists every application's schedules. Pass an empty list to list every application's schedules.
 
 ### deleteSchedule
 
@@ -382,9 +442,14 @@ See [Queues & Concurrency](../tutorials/queue-tutorial.md) in the tutorial for u
 ```java
 void registerQueue(String name, QueueOptions options)
 void registerQueue(String name, QueueOptions options, QueueConflictResolution onConflict)
+void registerQueue(String name, QueueOptions options, QueueConflictResolution onConflict,
+                   String applicationName)
 ```
 
 Register or update a queue in the system database. The default conflict resolution is `ALWAYS_UPDATE`.
+
+The queue is owned by, and polled only by, the application named by `applicationName`, defaulting to the client's own [`applicationName`](#applicationname) (or no application, for an unnamed client).
+Registering a queue whose name is already owned by a different application throws [`DBOSApplicationNameConflictException`](./methods.md#dbosapplicationnameconflictexception).
 
 :::info
 `QueueConflictResolution.UPDATE_IF_LATEST_VERSION` is not supported for `DBOSClient` because clients are not associated with an application version. Use `ALWAYS_UPDATE` or `NEVER_UPDATE`.
@@ -410,9 +475,12 @@ Look up a queue by name. Returns empty if no queue with that name exists.
 
 ```java
 List<Queue> listQueues()
+List<Queue> listQueues(List<String> applicationName)
 ```
 
-Return all queues registered in the system database.
+Return the queues registered in the system database.
+The queues listed are those owned by the given applications, plus queues no application owns.
+If `applicationName` is `null` (or omitted), lists the client's own [`applicationName`](#applicationname)'s queues; an unnamed client lists every application's queues. Pass an empty list to list every application's queues.
 
 ### deleteQueue
 
@@ -444,9 +512,43 @@ Get the most recently promoted application version.
 
 ```java
 void setLatestApplicationVersion(String versionName)
+void setLatestApplicationVersion(String versionName, String applicationName)
 ```
 
 Promote an existing version to be the latest application version by updating its timestamp. The version must already exist.
+
+**Parameters:**
+- **versionName**: The name of the version to promote.
+- **applicationName**: The application to act as. Defaults to the client's own [`applicationName`](#applicationname). Promoting a version registered by a different application throws [`DBOSApplicationNameConflictException`](./methods.md#dbosapplicationnameconflictexception). Promoting a version owned by no application claims it for this application.
+
+## Application Rename
+
+### renameApplication
+
+```java
+ApplicationRowCounts renameApplication(String oldName, String newName)
+ApplicationRowCounts renameApplication(
+      String oldName, String newName, Integer batchSize, boolean adoptUnclaimedRows)
+
+public record ApplicationRowCounts(
+      long queues, long schedules, long versions, long workflows, long steps)
+```
+
+Every workflow, step, queue, schedule, and application version is owned by the application that created it.
+After renaming an application, use this method (or the [`dbosctl sysdb rename-application`](../../production/dbosctl.md#dbosctl-sysdb-rename-application) command) to transfer everything owned by the old name to the new name.
+Returns the number of rows transferred, by table.
+The operation is idempotent: if interrupted, running it again resumes where it left off.
+
+:::warning
+Stop the application being renamed before running this.
+A running application would race the rename, creating new work under its old name.
+:::
+
+**Parameters:**
+- **oldName**: The application's previous name. If `null`, nothing is transferred except rows owned by no application, so `adoptUnclaimedRows` must be `true`.
+- **newName**: The application that ends up owning the rows.
+- **batchSize**: The number of completed workflows and steps transferred per transaction; queues, schedules, versions, and active workflows are transferred together in a single transaction. The two-argument overload uses 10,000. Pass `null` to transfer everything in a single transaction.
+- **adoptUnclaimedRows**: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. The two-argument overload passes `false`.
 
 ## Debouncing
 
@@ -465,11 +567,13 @@ Create a `DebouncerClient` for the named workflow. Similar to [`dbos.debouncer()
 - **`withClassName(String className)`**: The fully-qualified Java class name of the workflow implementation. **Required** — must be set before calling `debounce`.
 - **`withInstanceName(String instanceName)`**: The DBOS instance name of the target workflow implementation.
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key.
-- **`withQueue(String queueName)`** / **`withQueue(Queue queue)`**: Enqueue the user workflow on the specified queue when the debounce period elapses.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: Enqueue the user workflow on the specified queue when the debounce period elapses. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withTimeout(Duration timeout)`**: Set a timeout for the user workflow.
 - **`withAppVersion(String appVersion)`**: Target a specific application version.
-- **`withPriority(Integer priority)`**: Set the priority (only applies when a queue is configured).
-- **`withDeduplicationId(String deduplicationId)`**: Set a deduplication ID forwarded to the user workflow.
+- **`withPriority(Integer priority)`**: Set the priority for the user workflow. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
+- **`withAttributes(Map<String, Object> attributes)`**: Attach custom JSON-serializable key-value metadata to the user workflow.
+- **`withSerialization(SerializationStrategy serialization)`**: The [serialization strategy](./methods.md#serialization-strategy) for the user workflow's arguments. It should match the strategy the workflow is registered with.
+- **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Set a deduplication ID forwarded to the user workflow. This will be ignored from the next release, where the debouncer sets the deduplication ID itself, and removed in 2.0.
 
 ### DebouncerClient.debounce
 

@@ -233,17 +233,26 @@ Create workflow options with all fields set to their defaults.
 ```java
 new StartWorkflowOptions(String workflowId)
 ```
-Shortcut for `new StartWorkflowOptions().withWorkflowId(workflowId)`
+Shortcut for `new StartWorkflowOptions().withWorkflowId(workflowId)`.
+Note that the `String` argument is a **workflow ID**, not a queue name: `new StartWorkflowOptions("my-queue")` starts the workflow with ID `my-queue` rather than enqueueing it.
+To enqueue, use the `QueueName` constructor below.
+
+```java
+new StartWorkflowOptions(QueueName queue)
+```
+Shortcut for `new StartWorkflowOptions().withQueue(queue)`.
+[`QueueName`](./queues.md#queuename) wraps a queue's name so it cannot be confused with a workflow ID; create one with `QueueName.of("my-queue")`.
 
 ```java
 new StartWorkflowOptions(Queue queue)
 ```
-Shortcut for `new StartWorkflowOptions().withQueue(queue)`
+*(deprecated since 1.1)* Use `new StartWorkflowOptions(QueueName.of(queue.name()))` instead.
 
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
-- **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
+  `withQueue(Queue queue)` is *(deprecated since 1.1)*; pass the queue's name instead.
 
 - **`withTimeout(Timeout timeout)`** - Set a timeout using a [`Timeout`](./methods.md#timeout) object. Use this overload to pass `Timeout.none()` (opt out of any inherited timeout) or `Timeout.inherit()` (explicitly inherit from the calling context).
 
@@ -265,11 +274,11 @@ Shortcut for `new StartWorkflowOptions().withQueue(queue)`
 An explicit timeout and deadline cannot both be set.
 :::
 
-- **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority. Priority works on every queue; no queue configuration is needed.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
-- **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with `withPartitioningEnabled`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+- **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned, which it is when any per-partition limit (`partitionConcurrency`, `partitionWorkerConcurrency`, or `partitionRateLimit`) is set, or when it was registered with the deprecated `partitionQueue` flag. Per-partition limits apply to each partition key separately; queue-wide limits still apply to the queue as a whole, except on a queue registered with the deprecated `partitionQueue` flag, where they apply to each partition instead. See [Partitioning Queues](../tutorials/queue-tutorial.md#partitioning-queues).
 
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.

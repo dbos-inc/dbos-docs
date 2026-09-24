@@ -82,7 +82,7 @@ The endpoint accepts an [idempotency key](../tutorials/workflow-tutorial.md#work
 public ResponseEntity<String> checkout(@PathVariable String key) {
   logger.info("Checkout requested with key: " + key);
 
-  var options = new StartWorkflowOptions(key);
+  var options = new StartWorkflowOptions().withWorkflowId(key);
   dbos.startWorkflow(() -> service.checkoutWorkflow(), options);
   var paymentId = dbos.<String>getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
   if (paymentId.isEmpty()) {

@@ -64,6 +64,12 @@ Common optional configuration via `with` methods:
 | `withQueueName(String)` | Enqueue executions on this queue instead of the default scheduler queue. |
 | `withStatus(ScheduleStatus.PAUSED)` | Create the schedule in a paused state. |
 | `withContext(Object)` | Attach a serializable context object passed to the workflow. |
+| `withApplicationName(String)` | The application that owns the schedule and runs its workflows, when several applications [share a system database](../../explanations/sharing-a-system-database.md). Defaults to the creating application. |
+
+:::info
+Scheduled runs always record their inputs with the application's configured serializer.
+A `serializationStrategy` declared on the scheduled workflow's `@Workflow` annotation is ignored for scheduled runs, whether they are fired by the cron, [backfilled](#backfill), or [triggered](#triggering-a-schedule-immediately).
+:::
 
 ## Runtime Schedule Management
 

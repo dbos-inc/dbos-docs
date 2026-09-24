@@ -116,14 +116,17 @@ const handle = await client.enqueue(
 <TabItem value="java" label="Java">
 
 ```java
-import dev.dbos.transact.client.DBOSClient;
-import dev.dbos.transact.client.EnqueueOptions;
+import dev.dbos.transact.DBOSClient;
+import dev.dbos.transact.EnqueueOptions;
+import dev.dbos.transact.workflow.QueueName;
 import dev.dbos.transact.workflow.SerializationStrategy;
 
-DBOSClient client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options = new EnqueueOptions("OrderProcessor", "processOrder", "orders")
+var client = new DBOSClient(dbUrl, dbUser, dbPassword);
+var options = new EnqueueOptions("process_order", QueueName.of("orders"))
+    // The name of the application that implements process_order
+    .withApplicationName("order-service")
     .withSerialization(SerializationStrategy.PORTABLE);
-var handle = client.enqueue(options, "order-123");
+var handle = client.enqueueWorkflow(options, new Object[] {"order-123"});
 ```
 
 </TabItem>
@@ -250,7 +253,7 @@ However, individual operations can override this&mdash;for example, a workflow r
 Each language's `setEvent` and `writeStream` methods accept a serialization parameter for this purpose.
 
 `send` is a special case, because messages target a different workflow and the sender does not know what serialization that workflow expects.
-In Python, TypeScript, and Go, a `send` from inside a workflow defaults to that workflow's serialization format, but in Java it always uses the default serializer.
+In every language, a `send` from inside a workflow defaults to that workflow's serialization format.
 You should therefore always set the serialization format explicitly on `send` when communicating cross-language.
 
 You can also send a message to a workflow using the PL/pgSQL function [`dbos.send_message`](system-tables.md#dbossend_message).
@@ -355,7 +358,7 @@ import dev.dbos.transact.DBOS;
 import dev.dbos.transact.workflow.SerializationStrategy;
 
 // Send a message readable by any language
-DBOS.send(
+dbos.send(
     "workflow-123",
     Map.of("status", "complete", "count", 42),
     "updates",
@@ -364,7 +367,7 @@ DBOS.send(
 );
 
 // Set an event readable by any language
-DBOS.setEvent(
+dbos.setEvent(
     "progress",
     Map.of("percent", 75),
     SerializationStrategy.PORTABLE

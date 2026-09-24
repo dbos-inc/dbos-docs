@@ -179,6 +179,12 @@ Overload that takes explicit field values rather than deriving them from a `@Wor
 ExternalState upsertExternalState(ExternalState state)
 ```
 
+:::warning Deprecated
+`upsertExternalState`, `getExternalState`, and `ExternalState` are *(deprecated since 1.1)* and will be removed in DBOS Java 2.0.
+The system database table behind them, `event_dispatch_kv`, is being retired: it holds dispatch bookkeeping for in-memory event receivers that the other DBOS SDKs have removed or never implemented, and a shared system database migration will drop it sometime after Java 2.0.
+Store integration state in your own table instead.
+:::
+
 Insert or update a value in the DBOS system database for the given key. If a value already exists, it is updated unless `updateTime` or `updateSeq` on the new value is less than what is already stored. Returns the current stored state (which may have a higher version than what was submitted).
 
 ### getExternalState
@@ -186,6 +192,8 @@ Insert or update a value in the DBOS system database for the given key. If a val
 ```java
 Optional<ExternalState> getExternalState(String service, String workflowName, String key)
 ```
+
+*(deprecated since 1.1)*
 
 Retrieve a value stored by an external service. Returns empty if no value exists for the key.
 
@@ -200,6 +208,8 @@ public record ExternalState(
     Instant updateTime,
     BigInteger updateSeq) {}
 ```
+
+*(deprecated since 1.1)*
 
 Key fields — together these form a unique record per plugin entry:
 - **service**: Unique identifier for the event receiver; separates entries from different plugins.
