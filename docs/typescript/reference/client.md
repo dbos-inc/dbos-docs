@@ -547,7 +547,7 @@ client.rewindWorkflow<T = unknown>(
 
 Rewind a workflow to a specific step and re-execute it from that step, keeping its workflow ID.
 Only a workflow in a terminal state can be rewound.
-Please see [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) for more information.
+See [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow) for more information.
 
 :::warning
 Client rewind does not delete [data source](./datasource.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use data sources, use [`DBOS.rewindWorkflow`](./methods.md#dbosrewindworkflow).
