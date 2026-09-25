@@ -1,15 +1,30 @@
 ---
-sidebar_position: 15
-title: Self-Hosting Conductor
+sidebar_position: 1
+title: Self-Hosting Guide
 ---
 
 :::info
 Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license) and requires a [license key](#licensing).
 :::
 
-There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
+You can self-host Conductor and the DBOS Console on any infrastructure that runs containers.
+This guide covers what a self-hosted deployment consists of and what it needs in production, independent of where you run it.
+For a complete walkthrough on a specific platform, see [Deploying on Kubernetes](./hosting-conductor-with-kubernetes.md).
 
-## Getting Started with Docker Compose
+## Components
+
+A self-hosted deployment has three parts:
+
+| Component | Image | Port | Role |
+|---|---|---|---|
+| **Conductor** | [`dbosdev/conductor`](https://hub.docker.com/r/dbosdev/conductor) | 8090 | The control plane your applications connect to over WebSocket. Stateless; all its state lives in Postgres. |
+| **DBOS Console** | [`dbosdev/console`](https://hub.docker.com/r/dbosdev/console) | 8080 | The web UI. Stateless; it talks only to Conductor. |
+| **Postgres** | Any Postgres | 5432 | Conductor's own database, holding its registry of applications, users, and settings. |
+
+Conductor's database is separate from the system databases your DBOS applications use.
+Conductor never connects to your applications' databases; it exchanges workflow metadata and commands with your applications over their WebSocket connections.
+
+## Trying It Locally with Docker Compose
 
 For development and trial purposes, you can self-host Conductor and the DBOS Console on your development machine using Docker Compose.
 To do this, you need a development license key, which can be obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key).
@@ -134,7 +149,7 @@ volumes:
 Start Conductor and the DBOS Console with `docker compose up`.
 After all containers have launched, navigate to http://localhost to view the self-hosted console.
 
-## Connecting to Self-Hosted Conductor
+## Connecting Applications
 
 To connect your application to self-hosted Conductor, first [follow these steps](../overview.md#connecting-to-conductor) in your self-hosted DBOS Console to register an application, generate an API key, and set it in your application.
 
@@ -143,7 +158,8 @@ When self-hosting Conductor, make sure you register your application and generat
 :::
 
 Then, provide your application with a websockets URL to your self-hosted Conductor server.
-For example, for the Docker compose setup above, this URL is `ws://localhost:8090/`.
+For example, for the Docker Compose setup above, this URL is `ws://localhost:8090/`.
+In production, use a `wss://` URL that goes through your [reverse proxy](#reverse-proxy-and-tls).
 
 <Tabs groupId="language" queryString="language">
 <TabItem value="python" label="Python">
@@ -208,32 +224,52 @@ For development, testing, or evaluation purposes, you can obtain a trial Conduct
 
 You can provide your key to Conductor using the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable.
 
-## Hosting Conductor in Production
+## Deploying to Production
 
-You can self-host DBOS Conductor in production by deploying two services: the [Conductor](https://hub.docker.com/r/dbosdev/conductor) service and the [DBOS Console](https://hub.docker.com/r/dbosdev/console).
-
-For a complete Kubernetes walkthrough covering infrastructure, secrets, ingress, and deployment, see [Self-Hosting Conductor with Kubernetes](./hosting-conductor-with-kubernetes.md).
+The Docker Compose setup above is for development only.
+A production deployment runs the same containers with a managed Postgres database, a reverse proxy, secret storage, and [authentication](#security).
 
 ### Conductor
 
-To deploy the Conductor service to production, it must connect to a Postgres database.
-This database is purely for Conductor internal data (e.g., its registry of applications), it **is not** the database your DBOS applications connect to (Conductor does not need direct access to that database).
-You can configure this database by setting the `DBOS__CONDUCTOR_DB_URL` environment variable in the Conductor container.
+Run Conductor as a stateless container service; any orchestrator works (Kubernetes, ECS, Cloud Run, Nomad, or plain VMs).
+Because all state lives in Postgres, instances are interchangeable, and you can run several for [high availability](#high-availability).
+Conductor requires these environment variables:
 
-When deploying to production, we recommend placing the Conductor service behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
-All traffic should be forwarded to the Conductor service container on port 8090.
-You should also configure [authentication](#security).
+| Environment variable | Description |
+|---|---|
+| `DBOS__CONDUCTOR_DB_URL` | Connection string for Conductor's Postgres database. We recommend a dedicated database role. |
+| `DBOS_CONDUCTOR_LICENSE_KEY` | Your [license key](#licensing). |
 
 ### DBOS Console
 
-To deploy the DBOS Console to production, it must connect to your Conductor service.
-You can provide the URL of this service by setting the `DBOS_CONDUCTOR_URL` environment variable in your Console container.
+Run the Console as a stateless container service listening on port 8080.
+Set `DBOS_CONDUCTOR_URL` in the Console container to the bare `host:port` of your Conductor service (for example, `conductor.internal:8090`).
+This differs from the `DBOS_CONDUCTOR_URL` your applications use, which is a full WebSocket URL.
 
-When deploying to production, we recommend placing the Console container behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
-All traffic should be forwarded to the Console service container on port 8080.
-You should also configure [authentication](#security).
-Without OAuth authentication, there is no user or organization management.
-In order to enable these features, you must set up Conductor with an OAuth-compatible single-sign on solution.
+Without [OAuth authentication](#security), the Console has no user or organization management.
+
+### Reverse Proxy and TLS
+
+Put Conductor and the Console behind a reverse proxy or load balancer (such as Nginx, an ingress controller, or a cloud load balancer) that:
+
+- **Terminates TLS.** Conductor and the Console serve plain HTTP, so TLS must be terminated in front of them. Your applications then connect with `wss://`.
+- **Supports WebSockets.** Each application executor holds a long-lived WebSocket connection to Conductor.
+- **Uses long idle timeouts.** Set idle timeouts on the proxy and on any load balancer in front of it high enough to ride out network hiccups (for example, 3600 seconds). The DBOS SDK sends periodic pings and reconnects automatically after a disconnect.
+- **Routes traffic** to Conductor on port 8090 and to the Console on port 8080, either by hostname or by path.
+
+### Network Access
+
+- **Outbound HTTPS from Conductor.** Conductor validates its license key against `https://cloud.dbos.dev` at startup and exits if it cannot reach it. Hosts in private networks need a route to the internet, such as a NAT gateway.
+- **Console to Conductor.** The Console must reach Conductor on port 8090.
+- **Conductor to Conductor.** In a [highly available](#high-availability) deployment, Conductor instances must reach each other directly.
+- **Nothing else inbound.** Conductor never needs access to your applications' databases, and your applications need only outbound access to the reverse proxy.
+
+### Secrets
+
+Conductor's database URL and license key are secrets.
+Store them in your platform's secret store (such as Kubernetes Secrets, AWS Secrets Manager, or Vault) and inject them as environment variables.
+The Conductor API keys your applications use to connect are also secrets, and belong in each application's secret store.
+The OAuth settings below are not secrets and can be set directly in your deployment configuration.
 
 ## High Availability
 
@@ -266,7 +302,13 @@ Set the `DBOS__ADVERTISE_ADDRESS` environment variable to a routable address (a 
 ## Security
 
 To securely self-host Conductor in production, you should set up authentication and authorization for all API calls made to it.
-Without these, your Conductor service could be accessed by unwanted entities.
+
+:::warning
+Conductor performs **no authentication** unless OAuth is enabled.
+Without it, all API requests run as a built-in `local` organization admin, and Conductor does not verify API keys on incoming WebSocket connections.
+Anyone who can reach Conductor can register applications, cancel, resume, fork, or delete workflows, and create API keys.
+Configure OAuth before exposing Conductor to any untrusted network.
+:::
 
 You can integrate Conductor with any OAuth-compatible single-sign on (SSO) experience.
 To do this, first register the DBOS Console as an application and Conductor as an API (audience) with your OAuth provider.

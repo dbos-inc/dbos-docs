@@ -1,6 +1,6 @@
 ---
-sidebar_position: 70
-title: Self-Hosting Conductor With Kubernetes
+sidebar_position: 2
+title: Deploying on Kubernetes
 ---
 
 :::info
@@ -10,7 +10,8 @@ Self-hosting Conductor for commercial or production use requires a [license key]
 
 ## Overview
 
-This guide covers deploying DBOS Conductor on Kubernetes so your applications get durable workflow execution, automatic workflow recovery, workflow management and observability — all running on infrastructure you control.
+This guide covers deploying DBOS Conductor and the DBOS Console on Kubernetes.
+It maps the components and production requirements from the [Self-Hosting Guide](./hosting-conductor.md) onto Kubernetes resources, then walks through a full deployment on AWS EKS.
 
 The Kubernetes manifests are portable to any conformant cluster.
 
@@ -18,20 +19,14 @@ The Kubernetes manifests are portable to any conformant cluster.
 
 ## Deployments
 
-**Database** — Conductor needs a PostgreSQL database, which we recommend configuring with a dedicated database role.
+**Database** — Conductor's [Postgres database](./hosting-conductor.md#components) runs outside the cluster (this guide uses RDS).
 
-**Conductor** — A stateless, single-container Deployment listening on port 8090.
-All state lives in PostgreSQL: use a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) and not a [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/).
-Required environment variables:
-- `DBOS__CONDUCTOR_DB_URL` (connection string to the `dbos_conductor` database)
-- `DBOS_CONDUCTOR_LICENSE_KEY` ([obtain a license key](./hosting-conductor.md#licensing))
+**Conductor** — A single-container [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), not a [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/), because all state lives in Postgres.
+It listens on port 8090 and reads its [required environment variables](./hosting-conductor.md#conductor) from Secrets.
+To run multiple replicas for [high availability](./hosting-conductor.md#high-availability), each pod must advertise its own address; `conductor.yaml` below sets `DBOS__ADVERTISE_ADDRESS` from the pod IP.
 
-Conductor is out of the critical path and a single Conductor instance can serve tens of thousands of application servers.
-You can still run multiple replicas for [high availability](./hosting-conductor.md#high-availability); each pod must then advertise its own address, which `conductor.yaml` below does from the pod IP.
-
-**Console** — A stateless, single-container Deployment listening on port 8080 (the Service in front of it publishes port 80.)
-It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`, set to a bare `host:port` (for example `conductor.dbos.svc.cluster.local:8090`).
-Note that your *applications* also use a variable named `DBOS_CONDUCTOR_URL`, but it takes a full WebSocket URL (see *Register applications* below.)
+**Console** — A single-container Deployment listening on port 8080, behind a Service that publishes port 80.
+Its `DBOS_CONDUCTOR_URL` is the in-cluster Conductor Service address, `conductor.dbos.svc.cluster.local:8090`.
 
 :::info Updating Conductor
 
@@ -56,14 +51,11 @@ Because this is a `wss://` connection, your application verifies the Ingress TLS
 
 ## Authentication
 
-Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authentication setup guide](./hosting-conductor.md#security).
+Conductor supports OAuth 2.0 with any OIDC-compliant provider. See [Security](./hosting-conductor.md#security) for the provider setup and environment variables.
 
 :::warning
-Conductor performs **no authentication** unless OAuth is enabled. Without it, all
-API requests run as a built-in `local` organization admin, and Conductor does not
-verify API keys on incoming WebSocket connections. Anyone who can reach the Ingress
-can register applications, cancel, resume, fork, or delete workflows, and create API
-tokens. Configure OAuth before exposing this deployment to any untrusted network.
+Conductor performs **no authentication** unless OAuth is enabled, so anyone who can reach the Ingress has full admin access.
+Configure OAuth before exposing this deployment to any untrusted network.
 :::
 
 When configuring your OAuth provider, the callback URL and allowed web origin are your Ingress hostname (`https://<your-elb-hostname>/oauth/callback` and `https://<your-elb-hostname>`).
@@ -71,21 +63,19 @@ The OAuth settings are not secrets, so they can be set directly in the Deploymen
 
 ## Ingress
 
-In this guide, all external traffic enters through a reverse proxy that performs **TLS termination**, supports **WebSockets**, and routes by path: `/conductor-api/...` to Conductor, everything else to the Console.
+All external traffic enters through an Ingress that meets the [reverse proxy requirements](./hosting-conductor.md#reverse-proxy-and-tls) and routes by path: `/conductor-api/...` to Conductor, everything else to the Console.
 
-This guide uses [ingress-nginx](https://kubernetes.github.io/ingress-nginx/), but any reverse proxy meeting those requirements will work. The `ingress.yaml` below defines the routing it must implement.
-
-The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (this guide uses 3600s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
+This guide uses [ingress-nginx](https://kubernetes.github.io/ingress-nginx/), but any ingress controller meeting those requirements will work. The `ingress.yaml` below defines the routing it must implement.
+Set idle timeouts to 3600 seconds on both the ingress controller and the cloud load balancer in front of it (for example, AWS ELB).
 
 
 ## Security Best Practices
 
-**Secret management** — Conductor deployments need credentials for PostgreSQL, a license key, and an API key.
-Store these as Kubernetes Secrets and inject them via `secretKeyRef`.
+**Secret management** — Store the [Conductor secrets](./hosting-conductor.md#secrets) as Kubernetes Secrets and inject them via `secretKeyRef`.
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager (AWS Secrets Manager, [Vault](https://developer.hashicorp.com/vault/docs/platform/k8s/vso), etc.).
 
 **Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. If Conductor and Console are co-located, allow traffic from the Console to Conductor on port 8090.
-Conductor validates its license key against `https://cloud.dbos.dev` at startup and exits if it cannot reach it, so keep outbound HTTPS open from the Conductor pod (this also means its nodes need a route to the internet, such as a NAT gateway for private subnets).
+Keep [outbound HTTPS](./hosting-conductor.md#network-access) open from the Conductor pod for license validation, which means its nodes need a route to the internet, such as a NAT gateway for private subnets.
 
 **RBAC** — Restrict which ServiceAccounts can read Secrets in the namespace. Conductor credentials (database URLs, license key, API key) should only be accessible to the pods that need them.
 
