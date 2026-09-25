@@ -39,7 +39,7 @@ import { FaHackerNews } from "react-icons/fa6";
   />
   <IndexCardLink
     label="Operate with DBOS Conductor"
-    href="/production/checklist"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -71,7 +71,7 @@ import { FaHackerNews } from "react-icons/fa6";
   />
   <IndexCardLink
     label="Operate with DBOS Conductor"
-    href="/production/checklist"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -103,7 +103,7 @@ import { FaHackerNews } from "react-icons/fa6";
   />
   <IndexCardLink
     label="Operate with DBOS Conductor"
-    href="/production/checklist"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -135,7 +135,7 @@ import { FaHackerNews } from "react-icons/fa6";
   />
   <IndexCardLink
     label="Operate with DBOS Conductor"
-    href="/production/checklist"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -245,7 +245,7 @@ import { PiQueueBold } from "react-icons/pi";
   />
   <IndexCardLink
     label="Built-in Observability"
-    href="/production/workflow-management"
+    href="/conductor/workflow-management"
     description="Interactively view, search, and manage your workflows from a graphical UI."
     index="4"
     icon={<SiOpentelemetry color="var(--ifm-color-primary-lightest)" size={30}/>}

@@ -41,7 +41,7 @@ Applications seamlessly reconnect to the new Conductor version with no impact on
 :::
 
 :::info Register applications
-After deploying Conductor and Console, [register your application, and generate an API key](./conductor.md#connecting-to-conductor).
+After deploying Conductor and Console, [register your application, and generate an API key](../overview.md#connecting-to-conductor).
 The application connects to Conductor via WebSocket using this API key and the Conductor URL.
 
 With the [Ingress](#ingress) below, that URL is your Ingress hostname plus the `/conductor-api` prefix:
@@ -756,7 +756,7 @@ console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
 
 **Access the Console and Generate an API Key**
 
-At this point, your self-hosted Conductor deployment is fully operational! Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
+At this point, your self-hosted Conductor deployment is fully operational! Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](../overview.md#connecting-to-conductor) to:
 
 1. Register your application
 2. Generate an API key

@@ -23,7 +23,7 @@ When sizing your database for DBOS, we recommend using that number (scaled to yo
 
 ### Why is my queue stuck?
 
-If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./production/workflow-management.md)
+If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./conductor/workflow-management.md)
 If you need to, you can cancel tasks to remove them from the queue.
 
 ### Why is my workflow not finishing?
@@ -38,7 +38,7 @@ If you are using versioning, check that your app version matches the version of 
 
 ### How can I cancel or fork a large number of workflows in a batch?
 
-On the [DBOS Console](./production/workflow-management.md), filter for all workflows that meet your criteria, then select them all and apply a batch operation.
+On the [DBOS Console](./conductor/workflow-management.md), filter for all workflows that meet your criteria, then select them all and apply a batch operation.
 Alternatively, write a script using the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md#newclient), [Java](./java/reference/client.md)) to list all the workflows that fit your criteria, then process them.
 
 ### Why am I seeing errors that objects cannot be deserialized?
@@ -67,7 +67,7 @@ To make a workflow deterministic, make sure all non-deterministic operations (su
 
 Yes, you can call (or start, or enqueue) a workflow from inside another workflow.
 That workflow becomes a **child** of its caller and is by default assigned a workflow ID derived from its parent's.
-If you view a workflow's trace from the [DBOS console](./production/workflow-management.md), it will include the workflow's children.
+If you view a workflow's trace from the [DBOS console](./conductor/workflow-management.md), it will include the workflow's children.
 
 ### Can I call a step from a step?
 
@@ -85,7 +85,7 @@ If you enqueue a workflow with the ID of a workflow that already exists, it's a 
 
 ### How can I reset all my DBOS state during development?
 
-You can reset your DBOS system database and all internal DBOS state with the [`dbosctl sysdb reset`](./production/dbosctl.md#dbosctl-sysdb-reset) command.
+You can reset your DBOS system database and all internal DBOS state with the [`dbosctl sysdb reset`](./conductor/reference/dbosctl.md#dbosctl-sysdb-reset) command.
 It empties the DBOS tables and leaves the schema migrated, so nothing has to provision the database again between runs, and it works the same way whatever language your application is written in.
 Pass `--app` to reset just one application's state in a [shared system database](./explanations/sharing-a-system-database.md), or `--drop-database` to drop the database outright.
 
@@ -105,7 +105,7 @@ You can connect a DBOS application to its system database through a connection p
 DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbosctl sysdb migrate`](./production/dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables.
+In that case, the [`dbosctl sysdb migrate`](./conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables.
 Then, a DBOS application can run without privilege (requiring only access to the system database).
 
 ### What database privileges does DBOS need, and how do I grant them manually?
@@ -131,7 +131,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT ALL ON SEQUENCES TO "your_app_ro
 ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT EXECUTE ON FUNCTIONS TO "your_app_role";
 ```
 
-The [`dbosctl sysdb migrate`](./production/dbosctl.md#dbosctl-sysdb-migrate) command does this automatically if you supply an application role with `-r`/`--app-role`.
+The [`dbosctl sysdb migrate`](./conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) command does this automatically if you supply an application role with `-r`/`--app-role`.
 
 ### How does DBOS scale?
 
@@ -144,7 +144,7 @@ Conductor is required for correct workflow recovery in applications that use mor
 ### Why is my application not connecting to Conductor?
 
 The most common reason an application fails to connect to Conductor is that the name the application is registered with in its DBOS configuration does not match the name it was registered with in Conductor.
-Additionally, if you are [self-hosting Conductor](./production/hosting-conductor.md) with a free license, you may connect at most one executor per application to Conductor, so additional executors may see their connections rejected.
+Additionally, if you are [self-hosting Conductor](./conductor/self-hosting/hosting-conductor.md) with a free license, you may connect at most one executor per application to Conductor, so additional executors may see their connections rejected.
 To connect multiple executors, upgrade to a paid license.
 
 ### Why is my Conductor dashboard flickering?
@@ -152,7 +152,7 @@ To connect multiple executors, upgrade to a paid license.
 The most common cause of flickering is that you have connected multiple executors using different system databases to the same Conductor application (for example, both an executor from your dev environment and one from your prod environment), causing Conductor to receive inconsistent data.
 For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
 For example, you may want to have separate dev, staging, and prod Conductor apps.
-See [the docs](./production/conductor.md#managing-conductor-applications) for more information.
+See [the docs](./conductor/overview.md#managing-conductor-applications) for more information.
 
 ### How are "checkpoints" calculated in Conductor pricing?
 

@@ -1139,7 +1139,7 @@ public class DBOSApplicationNameConflictException extends RuntimeException {
 
 Thrown when registering a queue, creating or applying a schedule, or promoting an application version whose name is already owned by a different application sharing the system database.
 Queue, schedule, and version names are unique across all applications sharing a system database.
-Either choose a different name or, if the owning application was renamed, transfer its rows first with [`dbosctl sysdb rename-application`](../../production/dbosctl.md#dbosctl-sysdb-rename-application) or [`DBOSClient.renameApplication`](./client.md#renameapplication).
+Either choose a different name or, if the owning application was renamed, transfer its rows first with [`dbosctl sysdb rename-application`](../../conductor/reference/dbosctl.md#dbosctl-sysdb-rename-application) or [`DBOSClient.renameApplication`](./client.md#renameapplication).
 See [Sharing a System Database](../../explanations/sharing-a-system-database.md).
 
 ### DBOSSystemDatabaseException

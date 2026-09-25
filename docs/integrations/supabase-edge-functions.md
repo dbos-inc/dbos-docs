@@ -13,7 +13,7 @@ We recommend the following architecture:
 3. Configure a [pg_cron](https://supabase.com/docs/guides/cron) job that starts your worker whenever there is new work for it to execute.
 
 Both functions connect to your project's Postgres database, so DBOS checkpoints your workflows next to the rest of your data.
-Because an Edge Function is terminated when it exhausts its CPU or wall-clock budget, connect your worker to [Conductor](../production/conductor.md), which detects the disconnect and recovers interrupted workflows onto the next worker that starts.
+Because an Edge Function is terminated when it exhausts its CPU or wall-clock budget, connect your worker to [Conductor](../conductor/overview.md), which detects the disconnect and recovers interrupted workflows onto the next worker that starts.
 
 :::info
 

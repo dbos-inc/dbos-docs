@@ -3,9 +3,9 @@ sidebar_position: 34
 title: dbosctl CLI Reference
 ---
 
-`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](./hosting-conductor.md), with the target selected by a named **profile**.
+`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
 
-The [`dbosctl sysdb`](#system-database-commands) commands are the exception: they manage the Postgres [system database](../explanations/system-tables.md) directly, so they take a database URL rather than a profile.
+The [`dbosctl sysdb`](#system-database-commands) commands are the exception: they manage the Postgres [system database](../../explanations/system-tables.md) directly, so they take a database URL rather than a profile.
 
 ## Installation
 
@@ -256,7 +256,7 @@ Shows one application's details.
 ### `dbosctl app register`
 
 **Description:**
-Registers an application with Conductor. The name must match the application name in your DBOS configuration — see [Connecting To Conductor](./conductor.md#connecting-to-conductor).
+Registers an application with Conductor. The name must match the application name in your DBOS configuration — see [Connecting To Conductor](../overview.md#connecting-to-conductor).
 
 **Arguments:**
 - `<name>`: The application's name.
@@ -273,7 +273,7 @@ Updates an application's tuning settings. Only the flags you pass are changed.
 - `<name>`: The application's name.
 - `--executor-timeout-secs <int>`: Seconds before an idle executor is considered gone.
 - `--global-timeout-ms <int>`: Global workflow timeout, in milliseconds.
-- `--gc-rows-threshold <int>`: Number of most recently completed workflows whose history is kept; history of older completed workflows is garbage-collected. See [Workflow Retention Policies](./retention.md).
+- `--gc-rows-threshold <int>`: Number of most recently completed workflows whose history is kept; history of older completed workflows is garbage-collected. See [Workflow Retention Policies](../retention.md).
 - `--gc-time-threshold-ms <int>`: Time, in milliseconds, after a workflow completes before its history is garbage-collected.
 - `--private-mode`: Whether the application is in private mode, in which it does not send workflow payload data — inputs, outputs, and events — to Conductor. Pass `--private-mode=false` to turn it back off.
 
@@ -532,7 +532,7 @@ Lists the organization's API keys. Secrets are not shown.
 ### `dbosctl api-key create`
 
 **Description:**
-Creates an API key and prints its secret. **The secret is shown once and cannot be retrieved afterwards.** By default the key is unscoped; narrow it with `--app` and `--permission`. See [Permissions and API Keys](./permissions.md).
+Creates an API key and prints its secret. **The secret is shown once and cannot be retrieved afterwards.** By default the key is unscoped; narrow it with `--app` and `--permission`. See [Permissions and API Keys](../permissions.md).
 
 **Arguments:**
 - `<name>`: A name for the key.
@@ -572,7 +572,7 @@ Lists the permissions that can be granted to an API key or a role.
 ## System Database Commands
 
 `dbosctl sysdb` groups the commands that open a database instead of calling Conductor.
-They connect to a Postgres (or CockroachDB) [system database](../explanations/system-tables.md) directly, so they take a database URL rather than a profile, and accept none of the [common flags](#common-flags) that resolve one.
+They connect to a Postgres (or CockroachDB) [system database](../../explanations/system-tables.md) directly, so they take a database URL rather than a profile, and accept none of the [common flags](#common-flags) that resolve one.
 
 The system schema is shared by every DBOS SDK and the migrations are built into the `dbosctl` binary.
 
@@ -593,7 +593,7 @@ DBOS_SYSTEM_DATABASE_URL=postgres://user:password@host:5432/dbos_sys dbosctl sys
 ### `dbosctl sysdb migrate`
 
 **Description:**
-Creates or upgrades the DBOS [system database](../explanations/system-tables.md), applying every migration the schema is missing and creating the database and schema if they do not exist yet.
+Creates or upgrades the DBOS [system database](../../explanations/system-tables.md), applying every migration the schema is missing and creating the database and schema if they do not exist yet.
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, the `migrate` command can be run with a privileged user to create all DBOS database tables.
@@ -688,7 +688,7 @@ The schema itself is left migrated and immediately usable, so the database does 
 Prompts for confirmation when run interactively.
 
 **Arguments:**
-- `-a, --app <name>`: Empty only the specified application's rows, for a [shared system database](../explanations/sharing-a-system-database.md). Unlike the `--app` argument used by Conductor commands, this argument is only read from the command line — never from `$DBOS_APP` or a profile.
+- `-a, --app <name>`: Empty only the specified application's rows, for a [shared system database](../../explanations/sharing-a-system-database.md). Unlike the `--app` argument used by Conductor commands, this argument is only read from the command line — never from `$DBOS_APP` or a profile.
 - `--drop-database`: Drop the whole database instead of emptying the DBOS tables. Cannot be combined with `--app` or `--schema`.
 - `--force`: Skip the confirmation prompt. Required when running non-interactively.
 - `-o, --output <format>`: Output format for the row counts — `table` (default) or `json`.

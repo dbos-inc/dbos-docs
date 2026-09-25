@@ -136,7 +136,7 @@ After all containers have launched, navigate to http://localhost to view the sel
 
 ## Connecting to Self-Hosted Conductor
 
-To connect your application to self-hosted Conductor, first [follow these steps](./conductor.md#connecting-to-conductor) in your self-hosted DBOS Console to register an application, generate an API key, and set it in your application.
+To connect your application to self-hosted Conductor, first [follow these steps](../overview.md#connecting-to-conductor) in your self-hosted DBOS Console to register an application, generate an API key, and set it in your application.
 
 :::tip
 When self-hosting Conductor, make sure you register your application and generate your key in your self-hosted console, not at https://console.dbos.dev.

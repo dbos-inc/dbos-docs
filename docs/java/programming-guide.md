@@ -358,12 +358,12 @@ Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
 ## 4. Connecting to DBOS Conductor
 
-[Conductor](../production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](../conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 Once you connect your app to Conductor, you can view and manage all its workflows and queued tasks from the [DBOS console](https://console.dbos.dev).
 
 To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
 
-Then, install [`dbosctl`](../production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](../conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 
 ```shell
@@ -405,7 +405,7 @@ export DBOS_CONDUCTOR_KEY=<your-api-key>
 
 Your app is now connected to Conductor!
 Launch a workflow by visiting http://localhost:8080, then watch it execute in real time from the [DBOS console](https://console.dbos.dev).
-Learn more about Conductor [here](../production/conductor.md).
+Learn more about Conductor [here](../conductor/overview.md).
 
 Congratulations!  You've finished the DBOS Java guide.
 Next, you should:

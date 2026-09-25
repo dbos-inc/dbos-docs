@@ -119,10 +119,10 @@ A system database ahead of the required version is accepted, so a process with m
 
 ### Conductor Settings
 
-- **conductor_key**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **conductor_key**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
-- **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../production/conductor.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.
+- **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../conductor/overview.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.
 
 
 ### Logging and Tracing Settings
@@ -154,7 +154,7 @@ A system database ahead of the required version is accepted, so a process with m
 
 ## DBOS Configuration File
 
-Some tools in the DBOS ecosystem, including [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
+Some tools in the DBOS ecosystem, including [DBOS Cloud](../../conductor/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
 
 You can create a `dbos-config.yaml` with default parameters with:
 
@@ -177,7 +177,7 @@ This connection string is used by the DBOS [CLI](cli.md).
 It has the same format as the `system_database_url` you pass to the DBOS constructor.
 - **runtimeConfig**:
   - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
-  - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
+  - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../conductor/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 

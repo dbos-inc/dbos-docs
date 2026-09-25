@@ -5,7 +5,7 @@ title: Conductor API
 
 Conductor is the control plane for your durable workflows, and this HTTP API is how you drive it programmatically: register applications with Conductor and tune their settings, search workflows, cancel or fork them, inspect queues and schedules, drive schedules, read metrics and audit logs, and manage members, roles, and API keys.
 
-This is the Conductor half of the [DBOS console](https://console.dbos.dev) — what the console shows for an application connected to Conductor, whether that application runs on your own infrastructure or on DBOS Cloud. DBOS Cloud's own operations, such as [deploying an application](./dbos-cloud/deploying-to-cloud.md) or [provisioning a database](./dbos-cloud/database-management.md), are not part of this API; they have their own [CLI](./dbos-cloud/cloud-cli.md).
+This is the Conductor half of the [DBOS console](https://console.dbos.dev) — what the console shows for an application connected to Conductor, whether that application runs on your own infrastructure or on DBOS Cloud. DBOS Cloud's own operations, such as [deploying an application](../dbos-cloud/deploying-to-cloud.md) or [provisioning a database](../dbos-cloud/database-management.md), are not part of this API; they have their own [CLI](../dbos-cloud/cloud-cli.md).
 
 The API is described by an OpenAPI 3.1 specification generated directly from the running server, so it is never out of date with the deployment serving it. Both the console and the [`dbosctl` CLI](./dbosctl.md) drive Conductor through this API, using clients generated from that spec.
 
@@ -14,7 +14,7 @@ The API is described by an OpenAPI 3.1 specification generated directly from the
 | Deployment | Base URL |
 | --- | --- |
 | DBOS-managed Conductor | `https://cloud.dbos.dev/conductor` |
-| [Self-hosted Conductor](./hosting-conductor.md) | `http://<your-conductor-host>:8090` (port `8090` by default) |
+| [Self-hosted Conductor](../self-hosting/hosting-conductor.md) | `http://<your-conductor-host>:8090` (port `8090` by default) |
 
 Every path is relative to that base, so the full URL of an operation is, for example:
 
@@ -52,7 +52,7 @@ The spec served here is Conductor's own, with only its `servers` entry repointed
 | `/docs` | Interactive API browser |
 | `/schemas/*` | The JSON Schema documents referenced by the spec |
 
-For example, with the Docker Compose setup from [Self-Hosting Conductor](./hosting-conductor.md), open `http://localhost:8090/docs` to explore the API in your browser.
+For example, with the Docker Compose setup from [Self-Hosting Conductor](../self-hosting/hosting-conductor.md), open `http://localhost:8090/docs` to explore the API in your browser.
 
 **From the Conductor image.** Conductor's `openapi` subcommand prints the spec to stdout without connecting to a database or requiring any runtime configuration, which is convenient in CI and code generation pipelines. The image's entrypoint starts the server, so override it to reach the subcommand:
 
@@ -87,7 +87,7 @@ Conductor accepts two kinds of token, distinguished by their prefix:
 
 Both are sent the same way; Conductor tells them apart by the `dbos_` prefix.
 
-Authorization is enforced per operation using the permission model described in [Permissions and API Keys](./permissions.md) — a caller needs `application.read` to list workflows, `application.write` to cancel one, `organization.write` to manage members, and so on. An unauthenticated request returns `401`; an authenticated request lacking the required permission returns `403`.
+Authorization is enforced per operation using the permission model described in [Permissions and API Keys](../permissions.md) — a caller needs `application.read` to list workflows, `application.write` to cancel one, `organization.write` to manage members, and so on. An unauthenticated request returns `401`; an authenticated request lacking the required permission returns `403`.
 
 ## Resource Naming
 
@@ -209,7 +209,7 @@ Create an API key with an optional body scoping it to particular applications an
 }
 ```
 
-The response contains the key's secret. It is returned **once**, at creation, and cannot be retrieved afterwards. A key can be renamed afterwards with `PATCH /v2/orgs/{orgName}/tokens/{tokenName}` and a body of `{"newName": "..."}`; the secret itself never changes, so rotating it means deleting the key and creating a new one. See [Permissions and API Keys](./permissions.md) for the full list of permissions.
+The response contains the key's secret. It is returned **once**, at creation, and cannot be retrieved afterwards. A key can be renamed afterwards with `PATCH /v2/orgs/{orgName}/tokens/{tokenName}` and a body of `{"newName": "..."}`; the secret itself never changes, so rotating it means deleting the key and creating a new one. See [Permissions and API Keys](../permissions.md) for the full list of permissions.
 
 ### Applications
 
@@ -225,10 +225,10 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | List executors | `GET /v2/orgs/{orgName}/apps/{appName}/executors` |
 | List metrics | `GET /v2/orgs/{orgName}/apps/{appName}/metrics` |
 
-`PATCH .../apps/{appName}` is where an application's tuning settings live: the executor timeout, the global workflow timeout, the [workflow retention thresholds](./retention.md), and private mode.
+`PATCH .../apps/{appName}` is where an application's tuning settings live: the executor timeout, the global workflow timeout, the [workflow retention thresholds](../retention.md), and private mode.
 
 :::info
-`GET .../metrics` returns metrics for one application over a time window. If you want to scrape Conductor from Prometheus, Datadog, or Grafana, use the OpenMetrics endpoint described in [Metrics](./metrics.md) instead.
+`GET .../metrics` returns metrics for one application over a time window. If you want to scrape Conductor from Prometheus, Datadog, or Grafana, use the OpenMetrics endpoint described in [Metrics](../metrics.md) instead.
 :::
 
 ### Workflows
@@ -255,7 +255,7 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Bulk delete | `POST .../workflows/bulk-delete` |
 | Bulk fork from failure | `POST .../workflows/bulk-fork-from-failure` |
 
-The semantics of cancelling, resuming, and forking are described in [Workflow Management](./workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+The semantics of cancelling, resuming, and forking are described in [Workflow Management](../workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
 
 ### Queues
 
@@ -274,7 +274,7 @@ The semantics of cancelling, resuming, and forking are described in [Workflow Ma
 | Desired executors, all versions | `GET /v2/orgs/{orgName}/apps/{appName}/autoscale` |
 | Desired executors, one version | `GET /v2/orgs/{orgName}/apps/{appName}/autoscale/versions/{version}` |
 
-The policy names the queue whose backlog drives the executor count; the two `autoscale` operations return how many executors each application version needs right now. `{version}` is a registered version or `latest`. See [Autoscaling and Version Management](./autoscaling.md).
+The policy names the queue whose backlog drives the executor count; the two `autoscale` operations return how many executors each application version needs right now. `{version}` is a registered version or `latest`. See [Autoscaling and Version Management](../autoscaling.md).
 
 ### Schedules
 
@@ -298,11 +298,11 @@ The policy names the queue whose backlog drives the executor count; the two `aut
 | Delete alerting rule | `DELETE /v2/orgs/{orgName}/apps/{appName}/alerting-rules/{ruleId}` |
 | List audit logs | `GET /v2/orgs/{orgName}/audit-logs` |
 
-Alerting rules are described in [Alerting](./alerting.md). Audit log listing accepts `startTime`, `endTime`, `operation`, `subject`, and `target` filters alongside `limit` and `offset`; see [Audit Logs](./audit-logs.md).
+Alerting rules are described in [Alerting](../alerting.md). Audit log listing accepts `startTime`, `endTime`, `operation`, `subject`, and `target` filters alongside `limit` and `offset`; see [Audit Logs](../audit-logs.md).
 
 ## Self-Hosted Differences
 
-A self-hosted Conductor can run with OIDC authentication enabled or with authentication disabled entirely (see [Self-Hosting Conductor](./hosting-conductor.md)). In no-auth mode there is no user identity and no multi-organization concept, so the operations that depend on them are **not registered at all** and respond `404`:
+A self-hosted Conductor can run with OIDC authentication enabled or with authentication disabled entirely (see [Self-Hosting Conductor](../self-hosting/hosting-conductor.md)). In no-auth mode there is no user identity and no multi-organization concept, so the operations that depend on them are **not registered at all** and respond `404`:
 
 - every organization operation: `getOrg`, `updateOrg`, `joinOrg`, `generateSecret`, `listMembers`, `removeMember`, `listDomainClaims`, `requestDomainClaim`, and `releaseDomainClaim`;
 - every role operation: `listRoles`, `createRole`, `deleteRole`, `grantRole`;

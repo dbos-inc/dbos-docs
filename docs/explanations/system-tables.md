@@ -136,7 +136,7 @@ Each row represents a different workflow execution and is written when the workf
 **Columns:**
 - **workflow_uuid**: The unique identifier of the workflow execution.
 - **inputs**: The serialized inputs of the workflow execution.
-- **retention_timestamp**: The epoch timestamp (in milliseconds) when this row was written. Used when applying [retention policies](../production/retention.md).
+- **retention_timestamp**: The epoch timestamp (in milliseconds) when this row was written. Used when applying [retention policies](../conductor/retention.md).
 
 ### dbos.workflow_output
 This table stores workflow outputs.
@@ -146,7 +146,7 @@ Each row represents a different workflow execution and is written when the workf
 - **workflow_uuid**: The unique identifier of the workflow execution.
 - **output**: The serialized workflow output, if any.
 - **error**: The serialized error thrown by the workflow, if any.
-- **retention_timestamp**: The epoch timestamp (in milliseconds) when this row was written. Used when applying [retention policies](../production/retention.md).
+- **retention_timestamp**: The epoch timestamp (in milliseconds) when this row was written. Used when applying [retention policies](../conductor/retention.md).
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
@@ -164,7 +164,7 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 - **completed_at_epoch_ms**: The epoch timestamp of when this step completed.
 - **serialization**: The name of the serialization format used for this step's output and error. Null if the workflow's default serializer was used.
 - **application_name**: The application that ran this step.
-- **retention_timestamp**: The epoch timestamp (in milliseconds) when this row was written. Used when applying [retention policies](../production/retention.md).
+- **retention_timestamp**: The epoch timestamp (in milliseconds) when this row was written. Used when applying [retention policies](../conductor/retention.md).
 
 ### dbos.notifications
 This table stores workflow messages/notifications.

@@ -201,7 +201,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-The [DBOS CLI](./reference/cli.md) and [DBOS Cloud](../production/dbos-cloud/deploying-to-cloud.md) still use [`dbos-config.yaml`](./reference/configuration.md#dbos-configuration-file).
+The [DBOS CLI](./reference/cli.md) and [DBOS Cloud](../conductor/dbos-cloud/deploying-to-cloud.md) still use [`dbos-config.yaml`](./reference/configuration.md#dbos-configuration-file).
 
 ### HTTP Serving and Role-Based Authorization
 
