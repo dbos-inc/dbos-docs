@@ -38,7 +38,7 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
+    label="Operate with DBOS Conductor"
     href="/production/checklist"
     description="Run your durable application anywhere"
     index="4"
@@ -70,7 +70,7 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
+    label="Operate with DBOS Conductor"
     href="/production/checklist"
     description="Run your durable application anywhere"
     index="4"
@@ -102,7 +102,7 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
+    label="Operate with DBOS Conductor"
     href="/production/checklist"
     description="Run your durable application anywhere"
     index="4"
@@ -134,7 +134,7 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
+    label="Operate with DBOS Conductor"
     href="/production/checklist"
     description="Run your durable application anywhere"
     index="4"

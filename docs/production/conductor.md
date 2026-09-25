@@ -1,6 +1,6 @@
 ---
-sidebar_position: 10
-title: DBOS Conductor
+sidebar_position: 1
+title: DBOS Conductor Overview
 ---
 
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
