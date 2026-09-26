@@ -93,7 +93,7 @@ APP_ROLE_PASSWORD='choose-another-secure-password'
 CONDUCTOR_API_KEY='your-api-key'
 
 # Conductor URL
-# DBOS Cloud: wss://cloud.dbos.dev/conductor/v1alpha1
+# DBOS-hosted Conductor: wss://cloud.dbos.dev/conductor/v1alpha1
 # Self-hosted (same cluster): ws://conductor.dbos.svc.cluster.local:8090
 # Self-hosted (external): wss://your-conductor-hostname/conductor/
 CONDUCTOR_URL='wss://cloud.dbos.dev/conductor/v1alpha1'
@@ -128,7 +128,7 @@ aws sts get-caller-identity
 **DBOS Conductor**
 
 This walkthrough connects the application to [DBOS Conductor](../conductor/overview.md) for workflow recovery and observability.
-You can use either [DBOS Cloud](https://console.dbos.dev/) or a [self-hosted Conductor](../conductor/self-hosting/hosting-conductor-with-kubernetes.md).
+You can use either [DBOS-hosted Conductor](https://console.dbos.dev/) or a [self-hosted Conductor](../conductor/self-hosting/hosting-conductor-with-kubernetes.md).
 You'll need the **Conductor URL** and an **API key** — both are available from the Console after [registering your application](../conductor/overview.md#connecting-to-conductor).
 
 **Create an EKS Cluster**
@@ -649,7 +649,7 @@ spec:
 ```
 
 Replace `${CONDUCTOR_URL}` with the value you set earlier:
-- **DBOS Cloud**: `wss://cloud.dbos.dev/conductor/v1alpha1`
+- **DBOS-hosted Conductor**: `wss://cloud.dbos.dev/conductor/v1alpha1`
 - **Self-hosted (same cluster)**: `ws://conductor.dbos.svc.cluster.local:8090`
 - **Self-hosted (external)**: `wss://<your-conductor-hostname>/conductor/`
 

@@ -232,7 +232,7 @@ import { PiQueueBold } from "react-icons/pi";
   <IndexCardLink
     label="Run Anywhere"
     href="/production/checklist"
-    description="Run DBOS workflows in any environment, or serverlessly deploy them to DBOS Cloud"
+    description="Run DBOS workflows in any environment"
     index="2"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />

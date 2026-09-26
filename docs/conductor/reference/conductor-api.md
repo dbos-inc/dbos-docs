@@ -40,7 +40,7 @@ If your toolchain does not yet support OpenAPI 3.1, request the 3.0 downgrade in
 curl -O https://cloud.dbos.dev/conductor/v2/openapi-3.0.json
 ```
 
-The spec served here is Conductor's own, with only its `servers` entry repointed at `/conductor` so that generated clients resolve paths correctly through DBOS Cloud.
+The spec served here is Conductor's own, with only its `servers` entry repointed at `/conductor` so that generated clients resolve paths correctly through DBOS-hosted Conductor.
 
 **From a self-hosted Conductor.** The server mounts the spec and an interactive browser at its root, all unauthenticated:
 
