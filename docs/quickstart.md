@@ -118,7 +118,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
 To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
 </article>
@@ -127,7 +127,7 @@ To connect your app to Conductor, first sign up for an account on the [DBOS cons
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -289,7 +289,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
 To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
 </article>
@@ -298,7 +298,7 @@ To connect your app to Conductor, first sign up for an account on the [DBOS cons
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -446,7 +446,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
 To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
 </article>
@@ -455,7 +455,7 @@ To connect your app to Conductor, first sign up for an account on the [DBOS cons
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -608,7 +608,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
 To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
 </article>
@@ -617,7 +617,7 @@ To connect your app to Conductor, first sign up for an account on the [DBOS cons
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 

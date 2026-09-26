@@ -17,13 +17,13 @@ Pods are stateless and interchangeable and should use a standard [Deployment](ht
 
 ## Configuration
 
-DBOS configuration contains sensitive values: the [system database URL](../explanations/system-tables.md) and, if using [Conductor](./conductor.md), an API key.
+DBOS configuration contains sensitive values: the [system database URL](../explanations/system-tables.md) and, if using [Conductor](../conductor/overview.md), an API key.
 Store these as [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/) and inject them via [`secretKeyRef`](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables).
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager.
 
 :::info Connecting to DBOS Conductor
 If you use [DBOS managed Conductor](https://console.dbos.dev/), no `DBOS_CONDUCTOR_URL` is needed. The SDK connects automatically.
-If you [self-host Conductor](./hosting-conductor.md), set `DBOS_CONDUCTOR_URL` in your application's environment.
+If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md), set `DBOS_CONDUCTOR_URL` in your application's environment.
 
 When Conductor is in a different cluster, use `wss://` so the WebSocket connection is encrypted. In the same cluster, use `ws://`, as Conductor requires TLS termination at the ingress layer.
 :::
@@ -33,7 +33,7 @@ When Conductor is in a different cluster, use `wss://` so the WebSocket connecti
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
 
-Run [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
+Run [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
 
 `dbosctl sysdb migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline. It is a single static binary carrying the migrations, so the Job needs no SDK toolchain and no copy of your application.
 
@@ -45,7 +45,7 @@ In addition to [general tips](./checklist.md) for running a DBOS-enabled app in 
 
 **Resource limits** — DBOS doesn't add significant CPU or memory overhead, but all DBOS SDKs run background tasks; setting more than 1000m CPU can significantly improve the performance of a busy application.
 
-**Replicas** — configure more than one replica. Each replica starts an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues. Each replica should have a unique executor ID (which is automatically assigned when using [DBOS Conductor](./conductor.md))
+**Replicas** — configure more than one replica. Each replica starts an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues. Each replica should have a unique executor ID (which is automatically assigned when using [DBOS Conductor](../conductor/overview.md))
 
 ## Upgrading Workflow Code
 
@@ -59,7 +59,7 @@ Two patterns support this:
 ## Scaling with KEDA
 
 [KEDA](https://keda.sh/) scales application pods based on external metrics.
-A simple pattern for scaling based on DBOS queue depth. When using [DBOS Conductor](./conductor.md), you can install an [autoscaling policy](./autoscaling.md#attaching-a-policy-with-the-api) for your application and configure a KEDA [ScaledObject](https://keda.sh/docs/latest/concepts/scaling-deployments/) to size your application based on the [policy recommendation](./autoscaling.md#reading-the-desired-executor-count).
+A simple pattern for scaling based on DBOS queue depth. When using [DBOS Conductor](../conductor/overview.md), you can install an [autoscaling policy](../conductor/autoscaling.md#attaching-a-policy-with-the-api) for your application and configure a KEDA [ScaledObject](https://keda.sh/docs/latest/concepts/scaling-deployments/) to size your application based on the [policy recommendation](../conductor/autoscaling.md#reading-the-desired-executor-count).
 
 ---
 
@@ -93,7 +93,7 @@ APP_ROLE_PASSWORD='choose-another-secure-password'
 CONDUCTOR_API_KEY='your-api-key'
 
 # Conductor URL
-# DBOS Cloud: wss://cloud.dbos.dev/conductor/v1alpha1
+# DBOS-hosted Conductor: wss://cloud.dbos.dev/conductor/v1alpha1
 # Self-hosted (same cluster): ws://conductor.dbos.svc.cluster.local:8090
 # Self-hosted (external): wss://your-conductor-hostname/conductor/
 CONDUCTOR_URL='wss://cloud.dbos.dev/conductor/v1alpha1'
@@ -127,9 +127,9 @@ aws sts get-caller-identity
 
 **DBOS Conductor**
 
-This walkthrough connects the application to [DBOS Conductor](./conductor.md) for workflow recovery and observability.
-You can use either [DBOS Cloud](https://console.dbos.dev/) or a [self-hosted Conductor](./hosting-conductor-with-kubernetes.md).
-You'll need the **Conductor URL** and an **API key** — both are available from the Console after [registering your application](./conductor.md#connecting-to-conductor).
+This walkthrough connects the application to [DBOS Conductor](../conductor/overview.md) for workflow recovery and observability.
+You can use either [DBOS-hosted Conductor](https://console.dbos.dev/) or a [self-hosted Conductor](../conductor/self-hosting/hosting-conductor-with-kubernetes.md).
+You'll need the **Conductor URL** and an **API key** — both are available from the Console after [registering your application](../conductor/overview.md#connecting-to-conductor).
 
 **Create an EKS Cluster**
 
@@ -431,7 +431,7 @@ postgres-admin      Opaque   2      10s
 
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
-We use a separate Kubernetes Job that runs [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
+We use a separate Kubernetes Job that runs [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
 
 This separation follows the principle of least privilege: the application never holds the keys to alter its own schema.
 
@@ -649,7 +649,7 @@ spec:
 ```
 
 Replace `${CONDUCTOR_URL}` with the value you set earlier:
-- **DBOS Cloud**: `wss://cloud.dbos.dev/conductor/v1alpha1`
+- **DBOS-hosted Conductor**: `wss://cloud.dbos.dev/conductor/v1alpha1`
 - **Self-hosted (same cluster)**: `ws://conductor.dbos.svc.cluster.local:8090`
 - **Self-hosted (external)**: `wss://<your-conductor-hostname>/conductor/`
 

@@ -6,7 +6,7 @@ description: How DBOS detects concurrent executions of the same workflow and con
 
 DBOS guarantees that every workflow runs to completion: if an executor crashes or becomes unreachable, another executor recovers its `PENDING` workflows and re-executes them from their last completed step.
 
-The component responsible for recovery, e.g., [DBOS Conductor](../production/conductor.md), detects unhealthy executors and triggers recovery of its workflows. Sometimes, for example during the rollout of a new application image, that observation can be wrong, and a "zombie" executor could still be running your workflow.
+The component responsible for recovery, e.g., [DBOS Conductor](../conductor/overview.md), detects unhealthy executors and triggers recovery of its workflows. Sometimes, for example during the rollout of a new application image, that observation can be wrong, and a "zombie" executor could still be running your workflow.
 
 This means the same workflow instance could be running on two executors. (DBOS detects and prevents concurrent executions of the same workflow on the same executor.)
 

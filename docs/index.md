@@ -38,8 +38,8 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
-    href="/production/checklist"
+    label="Operate with DBOS Conductor"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -70,8 +70,8 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
-    href="/production/checklist"
+    label="Operate with DBOS Conductor"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -102,8 +102,8 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
-    href="/production/checklist"
+    label="Operate with DBOS Conductor"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -134,8 +134,8 @@ import { FaHackerNews } from "react-icons/fa6";
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Deploy to Production"
-    href="/production/checklist"
+    label="Operate with DBOS Conductor"
+    href="/conductor/overview"
     description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -232,7 +232,7 @@ import { PiQueueBold } from "react-icons/pi";
   <IndexCardLink
     label="Run Anywhere"
     href="/production/checklist"
-    description="Run DBOS workflows in any environment, or serverlessly deploy them to DBOS Cloud"
+    description="Run DBOS workflows in any environment"
     index="2"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -245,7 +245,7 @@ import { PiQueueBold } from "react-icons/pi";
   />
   <IndexCardLink
     label="Built-in Observability"
-    href="/production/workflow-management"
+    href="/conductor/workflow-management"
     description="Interactively view, search, and manage your workflows from a graphical UI."
     index="4"
     icon={<SiOpentelemetry color="var(--ifm-color-primary-lightest)" size={30}/>}

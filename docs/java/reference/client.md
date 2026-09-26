@@ -35,7 +35,7 @@ DBOSClient requires a PostgreSQL database. Providing a non-PostgreSQL `DataSourc
 
 The client never creates or migrates the system database.
 On construction, it checks that the system database schema has been migrated to a version compatible with this DBOS release, and throws `IllegalStateException` if the schema is missing or too old.
-Launch a DBOS application (or run [`dbosctl sysdb migrate`](../../production/dbosctl.md#dbosctl-sysdb-migrate)) against the system database first.
+Launch a DBOS application (or run [`dbosctl sysdb migrate`](../../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate)) against the system database first.
 
 **Parameters:**
 - **url**: The JDBC URL for your system database.
@@ -535,7 +535,7 @@ public record ApplicationRowCounts(
 ```
 
 Every workflow, step, queue, schedule, and application version is owned by the application that created it.
-After renaming an application, use this method (or the [`dbosctl sysdb rename-application`](../../production/dbosctl.md#dbosctl-sysdb-rename-application) command) to transfer everything owned by the old name to the new name.
+After renaming an application, use this method (or the [`dbosctl sysdb rename-application`](../../conductor/reference/dbosctl.md#dbosctl-sysdb-rename-application) command) to transfer everything owned by the old name to the new name.
 Returns the number of rows transferred, by table.
 The operation is idempotent: if interrupted, running it again resumes where it left off.
 

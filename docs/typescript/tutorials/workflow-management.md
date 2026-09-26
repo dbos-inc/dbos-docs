@@ -3,13 +3,13 @@ sidebar_position: 50
 title: Workflow Management
 ---
 
-You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md), programmatically, or via command line.
+You can view and manage your durable workflow executions via the [DBOS Console](../../conductor/workflow-management.md), programmatically, or via command line.
 
 ## Listing Workflows
 
 You can list your application's workflows programmatically via [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) or from the command line with [`npx dbos workflow list`](../reference/cli.md#npx-dbos-workflow-list).
 
-You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../production/workflow-management.md).
+You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../conductor/workflow-management.md).
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
@@ -17,7 +17,7 @@ You can also view a searchable and expandable list of your application's workflo
 
 You can list the steps of a workflow programmatically via [`DBOS.listWorkflowSteps`](../reference/methods.md#dboslistworkflowsteps) or from the command line with [`npx dbos workflow steps`](../reference/cli.md#npx-dbos-workflow-steps).
 
-You can also visualize a workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../production/workflow-management.md).
+You can also visualize a workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../conductor/workflow-management.md).
 For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>

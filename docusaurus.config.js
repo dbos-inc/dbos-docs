@@ -199,10 +199,30 @@ const config = {
             to: '/ai/ai-quickstart',
           },
         ],
-        // Blanket redirect from /cloud-tutorials to /production/dbos-cloud
+        // Conductor docs moved from /production to /conductor, and DBOS Cloud docs
+        // moved from /cloud-tutorials and /production/dbos-cloud to /conductor/reference/dbos-cloud.
         createRedirects(existingPath) {
-          if (existingPath.startsWith('/production/dbos-cloud')) {
-            return [existingPath.replace('/production/dbos-cloud', '/cloud-tutorials')];
+          if (existingPath.startsWith('/conductor/reference/dbos-cloud')) {
+            return ['/cloud-tutorials', '/production/dbos-cloud'].map((oldPrefix) =>
+              existingPath.replace('/conductor/reference/dbos-cloud', oldPrefix),
+            );
+          }
+          const movedFromProduction = {
+            '/conductor/overview': '/production/conductor',
+            '/conductor/workflow-management': '/production/workflow-management',
+            '/conductor/retention': '/production/retention',
+            '/conductor/metrics': '/production/metrics',
+            '/conductor/alerting': '/production/alerting',
+            '/conductor/autoscaling': '/production/autoscaling',
+            '/conductor/permissions': '/production/permissions',
+            '/conductor/audit-logs': '/production/audit-logs',
+            '/conductor/self-hosting/hosting-conductor': '/production/hosting-conductor',
+            '/conductor/self-hosting/hosting-conductor-with-kubernetes': '/production/hosting-conductor-with-kubernetes',
+            '/conductor/reference/conductor-api': '/production/conductor-api',
+            '/conductor/reference/dbosctl': '/production/dbosctl',
+          };
+          if (movedFromProduction[existingPath]) {
+            return [movedFromProduction[existingPath]];
           }
           return undefined;
         },

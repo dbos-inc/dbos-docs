@@ -1,10 +1,10 @@
 ---
-sidebar_position: 20
+sidebar_position: 10
 title: Workflow Management
 ---
 
 :::info
-Workflow observability and management features are only available for applications connected to [Conductor](./conductor.md).
+Workflow observability and management features are only available for applications connected to [Conductor](./overview.md).
 :::
 
 ## Viewing Workflows

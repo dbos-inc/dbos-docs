@@ -3,7 +3,7 @@ sidebar_position: 50
 title: Reliable Customer Service Agent
 ---
 
-In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/) and serverlessly deploy it to DBOS Cloud. This example demonstrates how **DBOS makes it easy to connect your AI agent to your existing production systems**, especially when integrating **human decision-making** into automated processes.
+In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/). This example demonstrates how **DBOS makes it easy to connect your AI agent to your existing production systems**, especially when integrating **human decision-making** into automated processes.
 
 You can chat with this LLM-powered AI agent to check the status of your purchase order, or request a refund for your order.
 Even if the agent is interrupted during refund processing, upon restart it automatically recovers, finishes processing the refund, then proceeds to the next step in its workflow.

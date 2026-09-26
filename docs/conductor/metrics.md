@@ -1,10 +1,10 @@
 ---
-sidebar_position: 24
+sidebar_position: 40
 title: Metrics
 toc_max_heading_level: 3
 ---
 
-If you are using [Conductor](./conductor.md), you can scrape metrics about your applications' workflows, steps, and executors from a [Prometheus](https://prometheus.io/)-compatible endpoint.
+If you are using [Conductor](./overview.md), you can scrape metrics about your applications' workflows, steps, and executors from a [Prometheus](https://prometheus.io/)-compatible endpoint.
 This lets you monitor your DBOS applications in Prometheus, Grafana, or any other tool that understands the [OpenMetrics](https://prometheus.io/docs/specs/om/open_metrics_spec/) format.
 
 :::info

@@ -39,9 +39,9 @@ This configuration can be adjusted by using `with` methods that produce new conf
 
 - **`withAppName(String appName)`**: Your application's name. Required.
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
-An application connecting to [Conductor](../../production/conductor.md) (with a Conductor key set) or running on DBOS Cloud fails to launch with a name outside that rule, because Conductor refuses to register it: `dbos.launch()` throws `IllegalArgumentException`. A self-hosted application logs a warning and launches.
+An application connecting to [Conductor](../../conductor/overview.md) (with a Conductor key set) or running on DBOS Cloud fails to launch with a name outside that rule, because Conductor refuses to register it: `dbos.launch()` throws `IllegalArgumentException`. A self-hosted application logs a warning and launches.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
-If you rename an application, transfer ownership of its data with [`DBOSClient.renameApplication`](./client.md#renameapplication) or [`dbosctl sysdb rename-application`](../../production/dbosctl.md#dbosctl-sysdb-rename-application).
+If you rename an application, transfer ownership of its data with [`DBOSClient.renameApplication`](./client.md#renameapplication) or [`dbosctl sysdb rename-application`](../../conductor/reference/dbosctl.md#dbosctl-sysdb-rename-application).
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. We recommend always setting it; if it is not set, DBOS computes a version from a hash of your workflow methods, which is only a fallback. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
@@ -61,13 +61,13 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
 
-- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
 - **`withConductorDomain(String domain)`**: The domain of the DBOS Conductor instance to connect to. Only needed when using a self-hosted Conductor.
 
 - **`withConductorExecutorMetadata(Map<String, Object> metadata)`**: Arbitrary key-value metadata attached to this executor and reported to Conductor.
 
-- **`withAdminServer(boolean enable)`** *(deprecated since 0.9)*: Whether to run the built-in HTTP admin server. Use [DBOS Conductor](../../production/conductor.md) for remote administration instead.
+- **`withAdminServer(boolean enable)`** *(deprecated since 0.9)*: Whether to run the built-in HTTP admin server. Use [DBOS Conductor](../../conductor/overview.md) for remote administration instead.
 
 - **`enableAdminServer()`** / **`disableAdminServer()`** *(deprecated since 0.9)*: Convenience methods equivalent to `withAdminServer(true)` and `withAdminServer(false)`.
 

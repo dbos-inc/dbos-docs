@@ -241,4 +241,4 @@ For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting
 
 ### Metrics
 
-Using [Conductor](../../production/conductor.md), you can also scrape metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint. See [Metrics](../../production/metrics.md) for details.
+Using [Conductor](../../conductor/overview.md), you can also scrape metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint. See [Metrics](../../conductor/metrics.md) for details.
