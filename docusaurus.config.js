@@ -200,13 +200,12 @@ const config = {
           },
         ],
         // Conductor docs moved from /production to /conductor, and DBOS Cloud docs
-        // moved from /cloud-tutorials and /production/dbos-cloud to /conductor/dbos-cloud.
+        // moved from /cloud-tutorials and /production/dbos-cloud to /conductor/reference/dbos-cloud.
         createRedirects(existingPath) {
-          if (existingPath.startsWith('/conductor/dbos-cloud')) {
-            return [
-              existingPath.replace('/conductor/dbos-cloud', '/cloud-tutorials'),
-              existingPath.replace('/conductor/dbos-cloud', '/production/dbos-cloud'),
-            ];
+          if (existingPath.startsWith('/conductor/reference/dbos-cloud')) {
+            return ['/cloud-tutorials', '/production/dbos-cloud'].map((oldPrefix) =>
+              existingPath.replace('/conductor/reference/dbos-cloud', oldPrefix),
+            );
           }
           const movedFromProduction = {
             '/conductor/overview': '/production/conductor',

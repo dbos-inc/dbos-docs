@@ -32,7 +32,7 @@ export OTEL_EXPORTER_OTLP_HEADERS='Authorization=your-write-token'
 
 :::tip
 
-If you're deploying your app on DBOS Cloud, make sure to set `OTEL_EXPORTER_OTLP_HEADERS` in your application's [environment variables](../conductor/dbos-cloud/secrets).
+If you're deploying your app on DBOS Cloud, make sure to set `OTEL_EXPORTER_OTLP_HEADERS` in your application's [environment variables](../conductor/reference/dbos-cloud/secrets).
 
 :::
 
@@ -95,7 +95,7 @@ export LOGFIRE_TOKEN='your-write-token'
 
 :::tip
 
-If you're deploying your app on DBOS Cloud, make sure to set `LOGFIRE_TOKEN` in your application's [environment variables](../conductor/dbos-cloud/secrets).
+If you're deploying your app on DBOS Cloud, make sure to set `LOGFIRE_TOKEN` in your application's [environment variables](../conductor/reference/dbos-cloud/secrets).
 
 :::
 

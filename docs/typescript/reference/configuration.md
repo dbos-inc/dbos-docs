@@ -55,7 +55,7 @@ export interface DBOSConfig {
 }
 ```
 
-In [DBOS Cloud](../../conductor/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
+In [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
 The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there, as is `enablePatching`'s effect on the application version (it still enables [`DBOS.patch`](./workflows-steps.md#patch)).
 
 ### Application Settings
@@ -161,7 +161,7 @@ await DBOS.launch();
 
 ## DBOS Configuration File
 
-Some tools in the DBOS ecosystem, including [DBOS Cloud](../../conductor/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
+Some tools in the DBOS ecosystem, including [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
 Your application itself does not read this file; configure it with [`DBOS.setConfig`](#configuring-dbos).
 
 Here is an example configuration file with default parameters:
@@ -190,7 +190,7 @@ This connection string is used by the DBOS [CLI](cli.md).
 It has the same format as the `systemDatabaseUrl` you pass to `DBOS.setConfig()`.
 - **runtimeConfig**:
   - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`npx dbos start`](./cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
-  - **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../conductor/dbos-cloud/application-management.md#customizing-microvm-setup).
+  - **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../conductor/reference/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 

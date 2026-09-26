@@ -154,7 +154,7 @@ A system database ahead of the required version is accepted, so a process with m
 
 ## DBOS Configuration File
 
-Some tools in the DBOS ecosystem, including [DBOS Cloud](../../conductor/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
+Some tools in the DBOS ecosystem, including [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
 
 You can create a `dbos-config.yaml` with default parameters with:
 
@@ -177,7 +177,7 @@ This connection string is used by the DBOS [CLI](cli.md).
 It has the same format as the `system_database_url` you pass to the DBOS constructor.
 - **runtimeConfig**:
   - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
-  - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../conductor/dbos-cloud/application-management.md#customizing-microvm-setup).
+  - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../conductor/reference/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 
