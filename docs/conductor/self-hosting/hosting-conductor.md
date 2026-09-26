@@ -229,6 +229,11 @@ You can provide your key to Conductor using the `DBOS_CONDUCTOR_LICENSE_KEY` env
 The Docker Compose setup above is for development only.
 A production deployment runs the same containers with a managed Postgres database, a reverse proxy, secret storage, and [authentication](#security).
 
+:::tip
+For a complete production deployment, including infrastructure, secrets, ingress, and authentication, follow the [Kubernetes guide](./hosting-conductor-with-kubernetes.md).
+The requirements below apply to any platform.
+:::
+
 ### Conductor
 
 Run Conductor as a stateless container service; any orchestrator works (Kubernetes, ECS, Cloud Run, Nomad, or plain VMs).
