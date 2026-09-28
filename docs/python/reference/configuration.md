@@ -119,7 +119,7 @@ A system database ahead of the required version is accepted, so a process with m
 
 ### Conductor Settings
 
-- **conductor_key**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **conductor_key**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application connects to Conductor. API keys can be created from the [DBOS Console](https://console.dbos.dev).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
 - **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../conductor/overview.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.

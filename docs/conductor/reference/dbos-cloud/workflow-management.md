@@ -23,7 +23,7 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 
 ## Workflow Management
 
-You can manage individual workflows directly from the DBOS console.
+You can manage individual workflows directly from the DBOS Console.
 
 #### Cancelling Workflows
 

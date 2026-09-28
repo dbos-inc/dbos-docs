@@ -61,7 +61,7 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
 
-- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS Console](https://console.dbos.dev).
 
 - **`withConductorDomain(String domain)`**: The domain of the DBOS Conductor instance to connect to. Only needed when using a self-hosted Conductor.
 
