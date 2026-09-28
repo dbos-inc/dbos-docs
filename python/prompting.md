@@ -1829,7 +1829,7 @@ sqlite:///[application_name].sqlite
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
-- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS console.
+- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console.
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.

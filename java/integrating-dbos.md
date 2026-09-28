@@ -10,7 +10,7 @@ Add DBOS to your application by including it in your build configuration.
 
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:0.8.0'
+    implementation 'dev.dbos:transact:1.1.0'
 }
 ```
 
@@ -21,7 +21,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>0.8.0</version>
+        <version>1.1.0</version>
     </dependency>
 </dependencies>
 ```
@@ -40,12 +40,14 @@ public class MyApp {
     // Configure DBOS
     DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter")
         .withAppVersion("0.1.0");
-    DBOS dbos = new DBOS(config);
+    DBOS dbos = new DBOS(dbosConfig);
 
-    // Register your workflows and queues (see step 4)
+    // Register your workflows (see step 4)
 
     // Launch DBOS
     dbos.launch();
+
+    // Register your queues, which are stored in the system database
   }
 }
 ```
@@ -125,8 +127,9 @@ dbos.launch();
 proxy.workflow();
 ```
 
-**Important:** You must create all workflow proxies and queues before calling `dbos.launch()`.
+**Important:** You must create all workflow proxies before calling `dbos.launch()`.
 Workflow recovery begins after `dbos.launch()`, so all workflows must be registered before this point.
+Queues are the opposite: their configuration is stored in the system database, so register them with [`dbos.registerQueue`](./reference/queues.md#dbosregisterqueue) after `dbos.launch()`.
 
 You can add DBOS to your application incrementally—it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.

@@ -1,0 +1,159 @@
+# DBOS Conductor Overview
+
+> When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
+> Conductor is the control plane for your durable workflows, providing:
+
+- [**High availability**](./distributed-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when a workflow is interrupted (for example, if its executor disconnects or crashes) and recovers the workflow to another healthy executor.
+- [**Workflow and queue observability**](./workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue management**](./workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
+- [**Managed Retention Policies**](./retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
+- [**Autoscaling and version management**](./autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
+- [**Observability Integrations**](./metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
+- [**Programmatic access**](./reference/conductor-api.md): Conductor's workflow, queue, and schedule management is available over an OpenAPI-described HTTP API and from the [`dbosctl` command-line client](./reference/dbosctl.md), so you can script incident response and wire Conductor into your own tooling.
+
+Architecturally, Conductor is not part of your workflows orchestration path.
+If your connection to Conductor is interrupted, your applications will continue operating normally.
+Recovery, observability, and workflow management will automatically resume once connectivity is restored.
+
+## Connecting To Conductor
+
+To connect your application to Conductor, first register your application on the [DBOS Console](https://console.dbos.dev).
+**The name you register must match the name you give your application in its configuration.**
+
+Next, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+By default, API keys do not expire, though they may be revoked at any time.
+
+Finally, supply that API key to your DBOS application to connect it to Conductor.
+This initiates a websocket connection with Conductor:
+
+:::tip
+The application name in your DBOS configuration must match the name with which you registered your app in Conductor.
+The name also identifies the application's data in its system database; see [sharing a system database](../explanations/sharing-a-system-database.md) for more information.
+:::
+
+**Python**
+
+```python
+config: DBOSConfig = {
+    "name": "my-app-name",
+    "application_version": "0.1.0",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
+}
+DBOS(config=config)
+```
+
+**TypeScript**
+
+```typescript
+DBOS.setConfig({
+    "name": "my-app-name",
+    "applicationVersion": "0.1.0",
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+});
+const conductorKey = process.env.DBOS_CONDUCTOR_KEY
+await DBOS.launch({conductorKey})
+```
+
+**Go**
+
+```go
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
+dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    AppName:            "dbos-starter",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey:    conductorKey,
+})
+```
+
+**Java**
+
+```java
+String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
+
+DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
+    .withAppVersion("0.1.0")
+    .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+    .withConductorKey(conductorKey)
+```
+
+## Managing Conductor Applications
+
+You can view all applications registered with Conductor on the DBOS Console:
+
+On your application's page, you can see all executors (processes) running that application that are currently connected to Conductor.
+Executors are identified by a unique ID that they generate and print on startup.
+When you restart an executor, it generates a new ID.
+You can tag executors with custom metadata (such as region or instance type) using the `conductor_executor_metadata` configuration option (in TypeScript, the `conductorExecutorMetadata` launch option). This metadata is displayed on the dashboard to help you identify executors.
+
+Conductor uses a WebSocket-based protocol to exchange workflow metadata and commands with your application.  An application is shown as _available_ in Conductor when at least one of its processes is connected.  Conductor has no access to your application's database or other private data.  As a result, workflow-related features are only available while your application is connected to Conductor over this metadata-only connection.
+
+:::tip
+For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
+For example, you may want to have separate dev, staging, and prod Conductor apps.
+To facilitate this, pass in your application name as an environment variable, for example:
+
+**Python**
+
+```python
+config: DBOSConfig = {
+    "name": os.environ.get("DBOS_APPLICATION_NAME"),
+    "application_version": "0.1.0",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
+}
+DBOS(config=config)
+```
+
+**TypeScript**
+
+```typescript
+DBOS.setConfig({
+    "name": process.env.DBOS_APPLICATION_NAME!,
+    "applicationVersion": "0.1.0",
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+});
+const conductorKey = process.env.DBOS_CONDUCTOR_KEY
+await DBOS.launch({conductorKey})
+```
+
+**Go**
+
+```go
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
+dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    AppName:            os.Getenv("DBOS_APPLICATION_NAME"),
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey:    conductorKey,
+})
+```
+
+**Java**
+
+```java
+String appName = System.getenv("DBOS_APPLICATION_NAME")
+String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
+
+DBOSConfig config = DBOSConfig.defaults(appName)
+    .withAppVersion("0.1.0")
+    .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+    .withConductorKey(conductorKey)
+```
+
+:::
+
+### Metadata-Only Mode
+
+:::info
+
+Metadata-Only mode requires at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
+:::
+
+If an application handles especially sensitive data, you may consider enabling metadata-only mode for it.
+In this mode, only workflow and step metadata (but not data, like workflow or step inputs or outputs) is sent to Conductor.
+As a result, workflow data will not be visible from the console.
+Note that Conductor does not store application data in any mode.
+
+You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings) or `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch).

@@ -1,18 +1,18 @@
 # Workflow Management
 
-> You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md) or programmatically.
+> You can view and manage your durable workflow executions via the [DBOS Console](../../conductor/workflow-management.md) or programmatically.
 
 ## Listing Workflows
 
 You can list your application's workflows programmatically via [`dbos.listWorkflows`](../reference/methods.md#listworkflows) or using the [`DBOSClient`](../reference/client.md#listworkflows).
 
-You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../production/workflow-management.md).
+You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../conductor/workflow-management.md).
 
 ## Listing Workflow Steps
 
 You can list the steps of a workflow programmatically via [`dbos.listWorkflowSteps`](../reference/methods.md#listworkflowsteps) or using the [`DBOSClient`](../reference/client.md#listworkflowsteps).
 
-You can also visualize a workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../production/workflow-management.md).
+You can also visualize a workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../conductor/workflow-management.md).
 For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueuing child workflows:
 
 ## Cancelling Workflows
@@ -48,40 +48,6 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 You can fork a workflow programmatically using [`dbos.forkWorkflow`](../reference/methods.md#forkworkflow) or using the [`DBOSClient`](../reference/client.md#forkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's graph visualization:
-
-## Forking from Failure
-
-When a workflow fails and you want to re-run it from where it went wrong, use [`forkFromFailure`](../reference/methods.md#forkfromfailure). Unlike `forkWorkflow`, you don't need to look up the exact step number — DBOS finds it automatically based on the mode you choose.
-
-```java
-// Restart from the last step that recorded an error (most common)
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromLastFailure());
-
-// Restart from the very last step (whether it failed or succeeded)
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromLastStep());
-
-// Restart from a specific step number
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromStep(3));
-
-// Restart from the last occurrence of a named step
-dbos.forkFromFailure(failedWorkflowId,
-    new ForkFromFailureOptions.FromStepName("callPaymentAPI"));
-```
-
-All options support chaining `withApplicationVersion`, `withQueue`, and `withQueuePartitionKey`.
-
-You can also retry multiple failed workflows at once:
-
-```java
-dbos.forkFromFailure(List.of(id1, id2, id3),
-    new ForkFromFailureOptions.FromLastFailure()
-        .withApplicationVersion("v2.1"));
-```
-
-See [`ForkFromFailureOptions`](../reference/methods.md#forkfromfailureoptions) for the full API.
 
 ## Workflow Attributes
 

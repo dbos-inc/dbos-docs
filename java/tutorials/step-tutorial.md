@@ -14,9 +14,16 @@ Here's a simple example:
 
 ```java
 class ExampleImpl implements Example {
+
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
+
     @Workflow
     public int workflowFunction(int n) {
-        int randomNumber = DBOS.runStep(
+        int randomNumber = dbos.runStep(
             () -> ThreadLocalRandom.current().nextInt(n), // generate a random number as a checkpointed step
             "generateRandomNumber" // A name for the step
         );
@@ -126,6 +133,12 @@ For example, let's write a step that fetches a website, and configure it to retr
 ```java
 class ExampleImpl implements Example {
 
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
+
     private String fetchStep(String url) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -142,7 +155,7 @@ class ExampleImpl implements Example {
 
     @Workflow
     public String fetchWorkflow(String inputURL) throws Exception {
-        return DBOS.runStep(
+        return dbos.runStep(
             () -> fetchStep(inputURL),
             new StepOptions("fetchStep")
                 .withMaxAttempts(10)

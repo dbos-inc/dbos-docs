@@ -1,6 +1,6 @@
 # Parseable
 
-> [Parseable](https://www.parseable.com/) can ingest OpenTelemetry logs and traces from DBOS application processes as well as [Conductor Metrics](../production/metrics.md).
+> [Parseable](https://www.parseable.com/) can ingest OpenTelemetry logs and traces from DBOS application processes as well as [Conductor Metrics](../conductor/metrics.md).
 
 # Use DBOS With Parseable
 

@@ -86,8 +86,8 @@ Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md)
 ```java
 @Workflow(name = "orderWorkflow")
 public String orderWorkflow(Order order) {
-    String result = DBOS.runStep(() -> validateOrder(order), "validateOrder");
-    String confirmation = DBOS.runStep(() -> processPayment(result), "processPayment");
+    String result = dbos.runStep(() -> validateOrder(order), "validateOrder");
+    String confirmation = dbos.runStep(() -> processPayment(result), "processPayment");
     return confirmation;
 }
 ```
@@ -174,7 +174,7 @@ Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md)
 
 ```java
 // Starting a workflow from in your application
-WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
     () -> proxy.orderWorkflow(order),
     new StartWorkflowOptions().withWorkflowId("order-123")
 );
@@ -184,7 +184,7 @@ String result = handle.getResult();
 ```java
 // Starting a workflow from another application using the DBOS Client
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options = new DBOSClient.EnqueueOptions("OrderImpl", "orderWorkflow", "orders");
+var options = new EnqueueOptions("orderWorkflow", "com.example.OrderImpl", QueueName.of("orders"));
 var handle = client.enqueueWorkflow(options, new Object[]{order});
 Object result = handle.getResult();
 ```
@@ -227,7 +227,7 @@ Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#
 **Java**
 
 ```java
-DBOS.startWorkflow(
+dbos.startWorkflow(
     () -> proxy.orderWorkflow(order),
     new StartWorkflowOptions().withWorkflowId("payment-idempotency-key")
 );
@@ -277,7 +277,7 @@ Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#
 **Java**
 
 ```java
-DBOS.sleep(Duration.ofHours(24));
+dbos.sleep(Duration.ofHours(24));
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#durable-sleep).
@@ -350,8 +350,8 @@ Learn more in the [steps tutorial](../golang/tutorials/step-tutorial.md).
 **Java**
 
 ```java
-// Steps are called inline using DBOS.runStep
-boolean result = DBOS.runStep(() -> sendEmail(to, body), "sendEmail");
+// Steps are called inline using dbos.runStep
+boolean result = dbos.runStep(() -> sendEmail(to, body), "sendEmail");
 ```
 
 Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md).
@@ -422,12 +422,11 @@ Learn more in the [steps tutorial](../golang/tutorials/step-tutorial.md#configur
 **Java**
 
 ```java
-boolean result = DBOS.runStep(
+boolean result = dbos.runStep(
     () -> sendEmail(to, body),
     new StepOptions("sendEmail")
-        .withRetriesAllowed(true)
         .withMaxAttempts(5)
-        .withIntervalSeconds(1.0)
+        .withRetryInterval(Duration.ofSeconds(1))
         .withBackoffRate(2.0)
 );
 ```
@@ -582,8 +581,8 @@ Learn more in the [workflow communication tutorial](../golang/tutorials/workflow
 @Workflow(name = "orderWorkflow")
 public void orderWorkflow(Order order) {
     // ... start order processing ...
-    String paymentStatus = (String) DBOS.recv("payment_status", Duration.ofHours(1));
-    if (paymentStatus != null && paymentStatus.equals("paid")) {
+    Optional<String> paymentStatus = dbos.recv("payment_status", Duration.ofHours(1));
+    if (paymentStatus.map("paid"::equals).orElse(false)) {
         // handle success
     } else {
         // handle failure
@@ -591,7 +590,7 @@ public void orderWorkflow(Order order) {
 }
 
 // Sending the message
-DBOS.send("order-123", "paid", "payment_status");
+dbos.send("order-123", "paid", "payment_status");
 ```
 
 Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
@@ -682,14 +681,14 @@ Learn more in the [workflow communication tutorial](../golang/tutorials/workflow
 ```java
 @Workflow(name = "orderWorkflow")
 public void orderWorkflow(Order order) {
-    DBOS.setEvent("progress", 25);
+    dbos.setEvent("progress", 25);
     // ... validate order ...
-    DBOS.setEvent("progress", 50);
+    dbos.setEvent("progress", 50);
     // ...
 }
 
 // Reading workflow state
-int progress = (int) DBOS.getEvent("order-123", "progress", Duration.ofSeconds(30));
+Optional<Integer> progress = dbos.getEvent("order-123", "progress", Duration.ofSeconds(30));
 ```
 
 Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-events).
@@ -761,14 +760,13 @@ Learn more in the [queues tutorial](../golang/tutorials/queue-tutorial.md).
 **Java**
 
 ```java
-// Define a queue with concurrency limits
-Queue orderQueue = new Queue("order-processing").withConcurrency(10);
-DBOS.registerQueue(orderQueue);
+// Register a queue with concurrency limits (after dbos.launch())
+dbos.registerQueue("order-processing", QueueOptions.setConcurrency(10));
 
 // Enqueue a workflow
-WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
     () -> proxy.orderWorkflow(order),
-    new StartWorkflowOptions().withQueue(orderQueue)
+    new StartWorkflowOptions().withQueue("order-processing")
 );
 String result = handle.getResult();
 ```
@@ -904,7 +902,7 @@ public String parentWorkflow() {
     String result = proxy.childWorkflow(data);
 
     // Or start in background
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.childWorkflow(data),
         new StartWorkflowOptions()
     );

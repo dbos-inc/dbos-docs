@@ -1,6 +1,6 @@
 # Deploying With Google Cloud Run
 
-> This guide covers deploying a DBOS application to [Google Cloud Run](https://cloud.google.com/run) with a [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres) database. It includes best practices for security, availability, and scalability. This guide assumes [DBOS Conductor](./conductor.md) is hosted separately.
+> This guide covers deploying a DBOS application to [Google Cloud Run](https://cloud.google.com/run) with a [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres) database. It includes best practices for security, availability, and scalability. This guide assumes [DBOS Conductor](../conductor/overview.md) is hosted separately.
 
 # Deploying a DBOS App on Google Cloud Run
 
@@ -46,7 +46,7 @@ Deploying a DBOS application to Cloud Run is no different from deploying any oth
 The one DBOS-specific detail is the **database connection string**: it must be provided in `key=value` format (e.g., `user=postgres password=secret database=myappdb host=/cloudsql/...`). On Cloud Run, use the `--add-cloudsql-instances` flag to mount the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-run) Unix socket, then pass the socket path as the `host` parameter. This gives your app a private, encrypted path to the database with no public IP.
 
 :::tip Schema migration
-By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with a privileged user before deploying.
+By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) with a privileged user before deploying.
 :::
 
 <details>
@@ -140,7 +140,7 @@ echo -n "[YOUR_STRONG_PASSWORD]" | gcloud secrets create db-password \
   --replication-policy="automatic"
 ```
 
-Store the [DBOS Conductor](./conductor.md) API key:
+Store the [DBOS Conductor](../conductor/overview.md) API key:
 
 ```bash
 echo -n "[YOUR_CONDUCTOR_API_KEY]" | gcloud secrets create conductor-api-key \
@@ -462,7 +462,7 @@ To migrate them, [fork](../golang/tutorials/workflow-management.md#forking-workf
 
 #### Patching
 
-With a fixed application version and patching enabled, the new worker pool instances automatically recover workflows from the previous deployment. [Conductor](./conductor.md) detects that the old instances went down and that new instances with the same version are available, triggering recovery without any manual intervention.
+With a fixed application version and patching enabled, the new worker pool instances automatically recover workflows from the previous deployment. [Conductor](../conductor/overview.md) detects that the old instances went down and that new instances with the same version are available, triggering recovery without any manual intervention.
 
 ### Advanced scenarios
 
