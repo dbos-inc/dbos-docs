@@ -2138,7 +2138,7 @@ def my_handler(rule_type: str, message: str, metadata: Dict[str, str]) -> None:
     ...
 ```
 
-Register a function to handle [alerts](../../production/alerting.md) received from Conductor.
+Register a function to handle [alerts](../../conductor/alerting.md) received from Conductor.
 The handler function is called with three arguments:
 
 - **rule_type**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.

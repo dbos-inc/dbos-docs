@@ -1,10 +1,10 @@
 ---
-sidebar_position: 32
+sidebar_position: 80
 title: Audit Logs
 toc_max_heading_level: 3
 ---
 
-If you are using [Conductor](./conductor.md), you can retrieve an **audit log** of the mutating operations performed against your organization: registering and deleting applications, managing workflows and schedules, creating and revoking API keys, changing roles and membership, and updating organization settings.
+If you are using [Conductor](./overview.md), you can retrieve an **audit log** of the mutating operations performed against your organization: registering and deleting applications, managing workflows and schedules, creating and revoking API keys, changing roles and membership, and updating organization settings.
 The audit log is append-only and records who did what, when, from where, and whether the operation succeeded.
 
 :::info
@@ -13,7 +13,7 @@ Audit logs require a [DBOS Enterprise](https://www.dbos.dev/dbos-pricing) plan.
 
 ## The Audit Logs Endpoint
 
-Conductor exposes an organization's audit log through the [Conductor API](./conductor-api.md) at:
+Conductor exposes an organization's audit log through the [Conductor API](./reference/conductor-api.md) at:
 
 ```
 GET https://cloud.dbos.dev/conductor/v2/orgs/{orgName}/audit-logs
@@ -34,7 +34,7 @@ curl -G https://cloud.dbos.dev/conductor/v2/orgs/my_org/audit-logs \
 ```
 
 :::note
-Audit logs are an organization-level concept, so a [self-hosted Conductor](./hosting-conductor.md) running with authentication disabled does not register this operation and responds `404`. See [Self-hosted differences](./conductor-api.md#self-hosted-differences).
+Audit logs are an organization-level concept, so a [self-hosted Conductor](./self-hosting/hosting-conductor.md) running with authentication disabled does not register this operation and responds `404`. See [Self-hosted differences](./reference/conductor-api.md#self-hosted-differences).
 :::
 
 Entries are returned newest first (by emit time).

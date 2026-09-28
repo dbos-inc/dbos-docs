@@ -15,7 +15,7 @@ These behaviors are especially hard to diagnose in a complex or long-running age
 
 Durable workflows help by making it easier to **observe** the root cause of the failure, deterministically **reproduce** the failure, and **test or apply** fixes.
 Because workflows checkpoint the outcome of each step of your workflow, you can review these checkpoints to see the cause of the failure and audit every step that led to it.
-For example, using the [DBOS Console dashboard](../production/workflow-management.md), you might see that your agent failed because of a validation error caused by a malformed structured output:
+For example, using the [DBOS Console dashboard](../conductor/workflow-management.md), you might see that your agent failed because of a validation error caused by a malformed structured output:
 
 <img src={require('@site/static/img/why-dbos-agents/agent-fail.png').default} alt="Failing Agent" width="750" className="custom-img"/>
 

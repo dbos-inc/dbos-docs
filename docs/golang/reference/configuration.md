@@ -33,14 +33,14 @@ type Config struct {
 
 :::warning Deprecated
 `AdminServer` and `AdminServerPort` are deprecated and will be removed in v1.5.0.
-Use [DBOS Conductor](../../production/conductor.md) for remote workflow management instead.
+Use [DBOS Conductor](../../conductor/overview.md) for remote workflow management instead.
 :::
 
 `ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
 
 `AppName` identifies your application.
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
-An application connecting to [Conductor](../../production/conductor.md) (with `ConductorAPIKey` set) fails to start with a name outside that rule, because Conductor refuses to register it; a self-hosted application logs a warning and starts.
+An application connecting to [Conductor](../../conductor/overview.md) (with `ConductorAPIKey` set) fails to start with a name outside that rule, because Conductor refuses to register it; a self-hosted application logs a warning and starts.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`RenameApplication`](./methods.md#renameapplication) or the `dbos rename-application` CLI command.
 

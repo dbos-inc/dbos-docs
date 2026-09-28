@@ -1,12 +1,12 @@
 ---
-sidebar_position: 31
+sidebar_position: 70
 title: Permissions and API Keys
 ---
 
 DBOS Conductor controls access to your organization's applications, workflows, and settings using **role-based access control (RBAC)** for users and **scoped API keys** for applications and automation.
 This page describes the permission model, the built-in and custom roles, and how to create and manage API keys.
 
-You manage permissions and API keys from the [DBOS console](https://console.dbos.dev).
+You manage permissions and API keys from the [DBOS Console](https://console.dbos.dev).
 
 ## Permissions
 
@@ -76,7 +76,7 @@ Like a role, every API key carries a set of permissions.
 They can also be scoped to specific applications.
 
 API keys do not expire, but can be revoked at any time.
-A key can be renamed after creation without changing its secret, from the console, with [`dbosctl api-key rename`](./dbosctl.md#dbosctl-api-key-rename), or through the [Conductor API](./conductor-api.md#roles-permissions-and-api-keys).
+A key can be renamed after creation without changing its secret, from the console, with [`dbosctl api-key rename`](./reference/dbosctl.md#dbosctl-api-key-rename), or through the [Conductor API](./reference/conductor-api.md#roles-permissions-and-api-keys).
 
 ### Permissions and application scope
 
@@ -89,7 +89,7 @@ For example, an API key with only `application.read` scoped to a single applicat
 
 ### Using an API key
 
-Supply the key to your DBOS application to connect it to Conductor, as described in [Connecting to Conductor](./conductor.md#connecting-to-conductor).
+Supply the key to your DBOS application to connect it to Conductor, as described in [Connecting to Conductor](./overview.md#connecting-to-conductor).
 
 You can also use an API key to authenticate HTTP calls to the Conductor API (for example the [metrics endpoint](./metrics.md)), passing the key as a bearer token:
 

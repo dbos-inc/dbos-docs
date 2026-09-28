@@ -1,10 +1,10 @@
 ---
-sidebar_position: 22
+sidebar_position: 60
 title: Autoscaling and Version Management
 toc_max_heading_level: 3
 ---
 
-[Conductor](./conductor.md) lets you attach autoscaling policies to your applications. An autoscaling policy computes how many executors your application needs, per application version, to drain one of your application's queues. A common example is configuring a [KEDA](https://keda.sh/) ScaledObject to size your application deployments based on queue utilization.
+[Conductor](./overview.md) lets you attach autoscaling policies to your applications. An autoscaling policy computes how many executors your application needs, per application version, to drain one of your application's queues. A common example is configuring a [KEDA](https://keda.sh/) ScaledObject to size your application deployments based on queue utilization.
 
 :::info
 Autoscaling requires a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
@@ -15,7 +15,7 @@ To use policies:
 1. **Attach an autoscaling policy** to an application, naming the queue whose backlog drives the executor count.
 2. **Poll the desired executor count**, either one version at a time or for all active versions at once.
 
-All endpoints on this page are part of the [Conductor API](./conductor-api.md); see that page for the base URL and authentication.
+All endpoints on this page are part of the [Conductor API](./reference/conductor-api.md); see that page for the base URL and authentication.
 The examples below use `$CONDUCTOR` for the base URL and `$CONDUCTOR_KEY` for an [API key](./permissions.md).
 
 ## How It Works

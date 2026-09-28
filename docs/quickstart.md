@@ -118,16 +118,16 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
+To connect your app to Conductor, first sign up for an account on the [DBOS Console](https://console.dbos.dev/login-redirect).
 </article>
 
 <article className="col col--6">
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -175,7 +175,7 @@ python3 main.py
 
 <article className="col col--6">
 Your app is now connected to Conductor!
-You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+You can view and manage its workflows from the [DBOS Console](https://console.dbos.dev).
 </article>
 
 <article className="col col--6">
@@ -289,16 +289,16 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
+To connect your app to Conductor, first sign up for an account on the [DBOS Console](https://console.dbos.dev/login-redirect).
 </article>
 
 <article className="col col--6">
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -346,7 +346,7 @@ npm run start
 
 <article className="col col--6">
 Your app is now connected to Conductor!
-You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+You can view and manage its workflows from the [DBOS Console](https://console.dbos.dev).
 </article>
 
 <article className="col col--6">
@@ -446,16 +446,16 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
+To connect your app to Conductor, first sign up for an account on the [DBOS Console](https://console.dbos.dev/login-redirect).
 </article>
 
 <article className="col col--6">
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -503,7 +503,7 @@ go run main.go
 
 <article className="col col--6">
 Your app is now connected to Conductor!
-You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+You can view and manage its workflows from the [DBOS Console](https://console.dbos.dev).
 </article>
 
 <article className="col col--6">
@@ -608,16 +608,16 @@ Congratulations, you've run your first durable workflow with DBOS!
 <section className="row list">
 
 <article className="col col--6">
-[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+[Conductor](./conductor/overview.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
+To connect your app to Conductor, first sign up for an account on the [DBOS Console](https://console.dbos.dev/login-redirect).
 </article>
 
 <article className="col col--6">
 </article>
 
 <article className="col col--6">
-Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+Then, install [`dbosctl`](./conductor/reference/dbosctl.md), the Conductor command-line client.
 On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
 </article>
 
@@ -665,7 +665,7 @@ export DBOS_CONDUCTOR_KEY=<your-api-key>
 
 <article className="col col--6">
 Your app is now connected to Conductor!
-You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+You can view and manage its workflows from the [DBOS Console](https://console.dbos.dev).
 </article>
 
 <article className="col col--6">

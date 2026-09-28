@@ -1,9 +1,9 @@
 ---
-sidebar_position: 27
+sidebar_position: 20
 title: Workflow Retention Policies
 ---
 
-If you are using [Conductor](./conductor.md), you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
+If you are using [Conductor](./overview.md), you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
 These settings let you configure how long workflow history is retained in your application's [system database](../explanations/system-tables.md).
 This is useful for managing the database disk usage of workflow history.
 

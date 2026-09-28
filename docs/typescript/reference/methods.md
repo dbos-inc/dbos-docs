@@ -1297,7 +1297,7 @@ DBOS.setAlertHandler(
 ): void
 ```
 
-Register a handler to receive [alerts](../../production/alerting.md) from Conductor.
+Register a handler to receive [alerts](../../conductor/alerting.md) from Conductor.
 The handler function is called with three arguments:
 
 - **ruleType**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.

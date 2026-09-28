@@ -53,7 +53,7 @@ All properties are in the `dbos.*` namespace.
 ### Admin Server
 
 :::warning
-`dbos.admin-server.*` properties are deprecated since 0.9 and will be removed before 1.0. Use [DBOS Conductor](../../production/conductor.md) instead.
+`dbos.admin-server.*` properties are deprecated since 0.9 and will be removed before 1.0. Use [DBOS Conductor](../../conductor/overview.md) instead.
 :::
 
 | Property | Type | Default | Description |

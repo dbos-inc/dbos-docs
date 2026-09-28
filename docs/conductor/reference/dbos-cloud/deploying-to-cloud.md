@@ -5,6 +5,9 @@ hide_table_of_contents: true
 ---
 import InstallNode from '@site/docs/partials/_install_node.mdx';
 
+:::info
+To use DBOS Cloud, please [contact sales](https://dbos.dev/contact).
+:::
 
 Any application built with DBOS can be deployed to DBOS Cloud.
 DBOS Cloud is a serverless platform for durably executed applications.
@@ -67,7 +70,7 @@ pip freeze > requirements.txt
 #### 3. Define a Start Command
 <section className="row list">
 <article className="col col--6">
-Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../../python/reference/configuration.md) to your application's launch command.
+Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../../../python/reference/configuration.md) to your application's launch command.
 
 If your application includes an HTTP server, configure it to listen on port 8000.
 
@@ -132,7 +135,7 @@ npm i @dbos-inc/otel@latest
 <section className="row list">
 <article className="col col--6">
 
-Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../../typescript/reference/configuration.md) to your application's launch command.
+Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../../../typescript/reference/configuration.md) to your application's launch command.
 
 If your application includes an HTTP server, configure it to listen on port 3000.
 
@@ -203,7 +206,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <section className="row list">
 <article className="col col--6">
 
-Your DBOSContext [Config](../../golang/reference/dbos-context.md) must be set with:
+Your DBOSContext [Config](../../../golang/reference/dbos-context.md) must be set with:
 - `DatabaseURL` (or your custom `pgxpool`) must point to an environment variable named `DBOS_SYSTEM_DATABASE_URL`
 
 </article>

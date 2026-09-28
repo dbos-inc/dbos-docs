@@ -15,13 +15,13 @@ Here are some recommendations for configuring a Postgres database to best work w
 
 **If using a connection pooler, use it in session mode** - Connect your DBOS applications to your Postgres database either directly or using a connection pooler in session mode. Do not use a connection pooler in transaction mode as some Postgres features that DBOS uses (e.g., LISTEN/NOTIFY) are not compatible with it. [This page](https://www.pgbouncer.org/features.html) documents the differences.
 
-**Configure a retention policy** - You should configure a [retention policy](./retention.md) for the workflows in your DBOS application to limit the total amount of storage DBOS uses.
+**Configure a retention policy** - You should limit how much workflow history DBOS keeps in your system database. If you use Conductor, you can configure a [retention policy](../conductor/retention.md) for your application from the DBOS Console.
 
 
 **Manage the DBOS schema** - DBOS creates tables for its internal state in its [system database](../explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables or migrate them to the latest version.
+In that case, the [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables or migrate them to the latest version.
 Then, a DBOS application can run with lower privilege (requiring only access to the DBOS tables in the system database).
 If your database is managed by a DBA, `dbosctl sysdb migrate` can also print the SQL for them to apply instead of running it itself.
 
@@ -54,8 +54,7 @@ Note that there is nothing DBOS-specific about this&mdash;we recommend following
 If your Postgres database does become unavailable, all DBOS applications connected to it will pause workflow execution until they reconnect.
 When your database becomes available again, they will seamlessly resume.
 
-It is worth noting that DBOS Conductor is entirely out-of-band and off your application's workflow execution path.
-Thus, its availability does not affect the availability of your applications.
+If you use [DBOS Conductor](../conductor/overview.md), note that it is out-of-band and off your application's workflow execution path, so its availability does not affect the availability of your applications.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
 All Conductor features (recovery, observability, workflow management) will automatically resume once connectivity is restored.
 

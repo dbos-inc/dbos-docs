@@ -1,10 +1,10 @@
 ---
-sidebar_position: 25
+sidebar_position: 50
 title: Alerting
 toc_max_heading_level: 3
 ---
 
-If you are using [Conductor](./conductor.md), you can configure automatic alerts when certain failure conditions are met.
+If you are using [Conductor](./overview.md), you can configure automatic alerts when certain failure conditions are met.
 You can configure alerts either in Conductor directly or on [Conductor-exported metrics](#metrics-based-alerts) using your existing observability stack.
 
 :::info

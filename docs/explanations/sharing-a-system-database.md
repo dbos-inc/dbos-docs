@@ -18,7 +18,7 @@ Ownership determines which application runs what:
 - A schedule is fired only by the application that created it, and its workflows are owned by that application.
 - Application versions are tracked per application, so one application's deployments do not affect which version its peers consider latest.
 
-[Retention policies](../production/retention.md) are an exception: their time and rows thresholds apply to the entire system database, including workflows owned by other applications. The global timeout remains scoped to the application that configures it.
+[Retention policies](../conductor/retention.md) are an exception: their time and rows thresholds apply to the entire system database, including workflows owned by other applications. The global timeout remains scoped to the application that configures it.
 
 Queue, schedule, and version names remain globally unique across all applications sharing a system database; registering a name that a different application already owns raises an error.
 Workflow IDs are also unique across the entire system database, so ID-addressed operations (retrieving a workflow's handle, status, or result by ID, and sending messages or reading events and streams) work across applications regardless of ownership.
@@ -114,7 +114,7 @@ dbosctl sysdb rename-application --to my-app --adopt-unclaimed-rows
 ## Renaming an Application
 
 Because ownership is recorded under the application's name, renaming an application requires transferring ownership of its rows.
-To rename an application, first stop it, then run [`dbosctl sysdb rename-application`](../production/dbosctl.md#dbosctl-sysdb-rename-application), then restart it under its new name:
+To rename an application, first stop it, then run [`dbosctl sysdb rename-application`](../conductor/reference/dbosctl.md#dbosctl-sysdb-rename-application), then restart it under its new name:
 
 ```shell
 dbosctl sysdb rename-application --from old-name --to new-name --db-url <Postgres connection URL>

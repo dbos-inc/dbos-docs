@@ -120,11 +120,11 @@ When operating DBOS durable workflows in production, we strongly recommend conne
 Conductor is the control plane for your durable workflows, providing:
 
 - [**High availability**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./production/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
-- [**Workflow and queue management**](./production/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
-- [**Managed Retention Policies**](./production/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
-- [**Autoscaling and version management**](./production/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
-- [**Observability Integrations**](./production/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
+- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue management**](./conductor/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
+- [**Managed Retention Policies**](./conductor/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
+- [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
+- [**Observability Integrations**](./conductor/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 
 Architecturally, Conductor looks like this:
 
@@ -140,4 +140,4 @@ This architecture has two useful implications:
 2. Conductor is **off your workflows orchestration path**. Conductor drives observability, recovery, and retention policies, and is never involved in workflow execution (unlike the external orchestrators of other workflow systems).
 If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
 
-For more information on Conductor, see [its docs](./production/conductor.md).
+For more information on Conductor, see [its docs](./conductor/overview.md).

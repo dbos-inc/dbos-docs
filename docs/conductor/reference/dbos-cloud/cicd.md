@@ -27,8 +27,8 @@ If you manually specify the application database name by setting `app_db_name` i
 :::
 
 ## Authentication
-You should use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
+You should use [refresh tokens](./account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
 
 :::info
-Upgrading to a DBOS Cloud paid plan will unlock [multi-user organizations](account-management#organization-management) which you can use to setup dedicated users for CI/CD.
+Upgrading to a DBOS Cloud paid plan will unlock [multi-user organizations](./account-management#organization-management) which you can use to setup dedicated users for CI/CD.
 :::

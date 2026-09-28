@@ -7,7 +7,7 @@ title: Upgrading
 
 For every DBOS upgrade, migrate the system database before anything that needs the new schema runs.
 With `withMigrate(true)` (the default), `dbos.launch()` migrates the system database.
-If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../production/dbosctl.md#dbosctl-sysdb-migrate) before deploying the upgrade.
+If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) before deploying the upgrade.
 [`DBOSClient`](./reference/client.md) never migrates, so upgrade clients only after an upgraded application has launched or you have run `dbosctl sysdb migrate`.
 An application or client that needs a newer schema than the system database has throws `IllegalStateException` at launch or construction.
 
@@ -31,16 +31,16 @@ If your application servers run 1.0, upgrade all of them to 1.1 before any serve
 #### Java CLI Removed
 
 The Java `dbos` CLI (the `transact-cli` module and its native binaries) has been removed.
-Use [`dbosctl`](../production/dbosctl.md#system-database-commands) instead:
+Use [`dbosctl`](../conductor/reference/dbosctl.md#system-database-commands) instead:
 
 | Before (1.0) | After (1.1) |
 |---|---|
-| `dbos migrate` | [`dbosctl sysdb migrate`](../production/dbosctl.md#dbosctl-sysdb-migrate) |
-| `dbos reset` | [`dbosctl sysdb reset`](../production/dbosctl.md#dbosctl-sysdb-reset) |
+| `dbos migrate` | [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) |
+| `dbos reset` | [`dbosctl sysdb reset`](../conductor/reference/dbosctl.md#dbosctl-sysdb-reset) |
 
 #### Application Names
 
-If you use [Conductor](../production/conductor.md) or DBOS Cloud, `dbos.launch()` now throws `IllegalArgumentException` if your application name doesn't follow the [naming rule](./reference/lifecycle.md#dbosconfig): 3–256 lowercase letters, numbers, dashes, and underscores.
+If you use [Conductor](../conductor/overview.md) or DBOS Cloud, `dbos.launch()` now throws `IllegalArgumentException` if your application name doesn't follow the [naming rule](./reference/lifecycle.md#dbosconfig): 3–256 lowercase letters, numbers, dashes, and underscores.
 Self-hosted applications only log a warning.
 To fix a name, change the name passed to `DBOSConfig.defaults(...)` or `withAppName`. In Spring Boot, set `dbos.application.name`; without it, DBOS uses `spring.application.name`, which often contains uppercase letters or dots.
 Rows created before 1.1 aren't owned by any application, so changing the name as part of this upgrade doesn't require transferring ownership.
@@ -230,12 +230,12 @@ Note: `Timeout` itself is still used by `StartWorkflowOptions` and `WorkflowOpti
 
 The `dbos postgres` and `dbos workflow` subcommand groups have been removed from the CLI. The CLI now only supports `dbos migrate` and `dbos reset`.
 
-Use the [`DBOSClient`](./reference/client.md) API or the [DBOS Console](../production/workflow-management.md) to manage workflows programmatically.
+Use the [`DBOSClient`](./reference/client.md) API or the [DBOS Console](../conductor/workflow-management.md) to manage workflows programmatically.
 
 Additionally, the CLI now ships as a pre-compiled native binary (via GraalVM AOT compilation) for Linux, macOS, and Windows. Download the appropriate binary from the GitHub Releases page — no JVM required.
 
 :::note
-The Java CLI was removed in v1.1 in favor of [`dbosctl`](../production/dbosctl.md). See [Java CLI Removed](#java-cli-removed).
+The Java CLI was removed in v1.1 in favor of [`dbosctl`](../conductor/reference/dbosctl.md). See [Java CLI Removed](#java-cli-removed).
 :::
 
 #### Jackson upgraded to 3.1.x
