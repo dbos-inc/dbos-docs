@@ -22,7 +22,7 @@ Store these as [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configur
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager.
 
 :::info Connecting to DBOS Conductor
-If you use [DBOS managed Conductor](https://console.dbos.dev/), no `DBOS_CONDUCTOR_URL` is needed. The SDK connects automatically.
+If you use [DBOS-hosted Conductor](https://console.dbos.dev/), no `DBOS_CONDUCTOR_URL` is needed. The SDK connects automatically.
 If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md), set `DBOS_CONDUCTOR_URL` in your application's environment.
 
 When Conductor is in a different cluster, use `wss://` so the WebSocket connection is encrypted. In the same cluster, use `ws://`, as Conductor requires TLS termination at the ingress layer.
@@ -700,7 +700,7 @@ Store the certificate as a Kubernetes Secret, mount it into an init container th
 </details>
 
 :::tip
-When using DBOS managed Conductor, you don't need to set `DBOS_CONDUCTOR_URL` in the manifest.
+When using DBOS-hosted Conductor, you don't need to set `DBOS_CONDUCTOR_URL` in the manifest.
 :::
 
 **Deploy the Application**

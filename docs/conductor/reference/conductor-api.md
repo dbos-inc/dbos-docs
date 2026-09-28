@@ -5,7 +5,7 @@ title: Conductor API
 
 Conductor is the control plane for your durable workflows, and this HTTP API is how you drive it programmatically: register applications with Conductor and tune their settings, search workflows, cancel or fork them, inspect queues and schedules, drive schedules, read metrics and audit logs, and manage members, roles, and API keys.
 
-This is the Conductor half of the [DBOS console](https://console.dbos.dev) — what the console shows for an application connected to Conductor, whether that application runs on your own infrastructure or on DBOS Cloud. DBOS Cloud's own operations, such as [deploying an application](./dbos-cloud/deploying-to-cloud.md) or [provisioning a database](./dbos-cloud/database-management.md), are not part of this API; they have their own [CLI](./dbos-cloud/cloud-cli.md).
+This is the Conductor half of the [DBOS Console](https://console.dbos.dev) — what the console shows for an application connected to Conductor, whether that application runs on your own infrastructure or on DBOS Cloud. DBOS Cloud's own operations, such as [deploying an application](./dbos-cloud/deploying-to-cloud.md) or [provisioning a database](./dbos-cloud/database-management.md), are not part of this API; they have their own [CLI](./dbos-cloud/cloud-cli.md).
 
 The API is described by an OpenAPI 3.1 specification generated directly from the running server, so it is never out of date with the deployment serving it. Both the console and the [`dbosctl` CLI](./dbosctl.md) drive Conductor through this API, using clients generated from that spec.
 
@@ -13,7 +13,7 @@ The API is described by an OpenAPI 3.1 specification generated directly from the
 
 | Deployment | Base URL |
 | --- | --- |
-| DBOS-managed Conductor | `https://cloud.dbos.dev/conductor` |
+| DBOS-hosted Conductor | `https://cloud.dbos.dev/conductor` |
 | [Self-hosted Conductor](../self-hosting/hosting-conductor.md) | `http://<your-conductor-host>:8090` (port `8090` by default) |
 
 Every path is relative to that base, so the full URL of an operation is, for example:
@@ -28,7 +28,7 @@ The paths themselves are identical in both deployments; only the base differs.
 
 There are three ways to obtain the spec.
 
-**From DBOS-managed Conductor.** The spec is served publicly (no authentication required) and reflects the currently deployed version:
+**From DBOS-hosted Conductor.** The spec is served publicly (no authentication required) and reflects the currently deployed version:
 
 ```shell
 curl -O https://cloud.dbos.dev/conductor/v2/openapi.json
@@ -52,7 +52,7 @@ The spec served here is Conductor's own, with only its `servers` entry repointed
 | `/docs` | Interactive API browser |
 | `/schemas/*` | The JSON Schema documents referenced by the spec |
 
-For example, with the Docker Compose setup from [Self-Hosting Conductor](../self-hosting/hosting-conductor.md), open `http://localhost:8090/docs` to explore the API in your browser.
+For example, with the Docker Compose setup from the [Self-Hosting Guide](../self-hosting/hosting-conductor.md), open `http://localhost:8090/docs` to explore the API in your browser.
 
 **From the Conductor image.** Conductor's `openapi` subcommand prints the spec to stdout without connecting to a database or requiring any runtime configuration, which is convenient in CI and code generation pipelines. The image's entrypoint starts the server, so override it to reach the subcommand:
 
@@ -184,7 +184,7 @@ The tables below are a map of the whole API. The generated spec is the authorita
 | Claim a domain | `POST /v2/orgs/{orgName}/domain-claims` |
 | Release a domain claim | `DELETE /v2/orgs/{orgName}/domain-claims/{domain}` |
 
-A **domain claim** automatically adds users who register with an email at that domain to your organization. On DBOS-managed Conductor a claim takes effect only after DBOS approves it; on a self-hosted deployment it takes effect immediately. Claims apply to new registrations only: approving one never moves users who already have accounts, and releasing one never removes them.
+A **domain claim** automatically adds users who register with an email at that domain to your organization. On DBOS-hosted Conductor a claim takes effect only after DBOS approves it; on a self-hosted deployment it takes effect immediately. Claims apply to new registrations only: approving one never moves users who already have accounts, and releasing one never removes them.
 
 ### Roles, permissions, and API keys
 
@@ -302,7 +302,7 @@ Alerting rules are described in [Alerting](../alerting.md). Audit log listing ac
 
 ## Self-Hosted Differences
 
-A self-hosted Conductor can run with OIDC authentication enabled or with authentication disabled entirely (see [Self-Hosting Conductor](../self-hosting/hosting-conductor.md)). In no-auth mode there is no user identity and no multi-organization concept, so the operations that depend on them are **not registered at all** and respond `404`:
+A self-hosted Conductor can run with OIDC authentication enabled or with authentication disabled entirely (see the [Self-Hosting Guide](../self-hosting/hosting-conductor.md)). In no-auth mode there is no user identity and no multi-organization concept, so the operations that depend on them are **not registered at all** and respond `404`:
 
 - every organization operation: `getOrg`, `updateOrg`, `joinOrg`, `generateSecret`, `listMembers`, `removeMember`, `listDomainClaims`, `requestDomainClaim`, and `releaseDomainClaim`;
 - every role operation: `listRoles`, `createRole`, `deleteRole`, `grantRole`;

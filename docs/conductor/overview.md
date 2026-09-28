@@ -22,7 +22,7 @@ Recovery, observability, and workflow management will automatically resume once 
 
 ## Connecting To Conductor
 
-To connect your application to Conductor, first register your application on the [DBOS console](https://console.dbos.dev).
+To connect your application to Conductor, first register your application on the [DBOS Console](https://console.dbos.dev).
 **The name you register must match the name you give your application in its configuration.**
 
 <img src={require('@site/static/img/conductor/register-app.png').default} alt="Workflow List" width="800" className="custom-img"/>

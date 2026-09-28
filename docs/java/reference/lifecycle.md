@@ -104,9 +104,9 @@ When deploying to DBOS Cloud, several environment variables are automatically se
 |----------|-------------|
 | `DBOS__CLOUD` | Set to `true` by DBOS Cloud. Enables cloud mode: `DBOS_APP_NAME` becomes required and the admin server is forced to port 3001. |
 | `DBOS_APP_NAME` | Overrides `DBOSConfig.appName()`. Required when `DBOS__CLOUD=true`; `launch()` throws if absent. |
-| `DBOS__CONDUCTOR_URL` | URL of the DBOS Cloud Conductor. Overrides `withConductorDomain(...)`. |
+| `DBOS__CONDUCTOR_URL` | URL of DBOS Conductor. Overrides `withConductorDomain(...)`. |
 | `DBOS__CONDUCTOR_APP_NAME` | Application name used to identify this executor with Conductor. |
-| `DBOS__CONDUCTOR_KEY` | API key for DBOS Cloud Conductor. Overrides `withConductorKey(...)`. Set by the cloud platform; avoids putting credentials in `DBOSConfig`. |
+| `DBOS__CONDUCTOR_KEY` | API key for DBOS Conductor. Overrides `withConductorKey(...)`. Set by the cloud platform; avoids putting credentials in `DBOSConfig`. |
 | `DBOS__VMID` | The executor ID of this process. Overrides `withExecutorId(...)` when `DBOS__CLOUD=true`. |
 
 These variables take precedence over any values set in `DBOSConfig`. In local development you do not need to set them.

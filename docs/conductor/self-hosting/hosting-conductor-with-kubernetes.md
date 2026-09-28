@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Deploying on Kubernetes
+title: Deploying Conductor on Kubernetes
 ---
 
 :::info

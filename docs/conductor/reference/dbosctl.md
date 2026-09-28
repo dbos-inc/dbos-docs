@@ -3,7 +3,7 @@ sidebar_position: 34
 title: dbosctl CLI Reference
 ---
 
-`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
+`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-hosted Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
 
 The [`dbosctl sysdb`](#system-database-commands) commands are the exception: they manage the Postgres [system database](../../explanations/system-tables.md) directly, so they take a database URL rather than a profile.
 
@@ -36,7 +36,7 @@ However you install it, `dbosctl version` reports what you have — a downloaded
 
 ## Quick Start
 
-Against DBOS-managed Conductor:
+Against DBOS-hosted Conductor:
 
 ```shell
 dbosctl config set managed --managed   # create a profile pointing at cloud.dbos.dev
@@ -67,11 +67,11 @@ dbosctl app list --profile local
 
 A profile is a named bundle of connection settings: which Conductor to talk to, how to authenticate, and the default organization and application. Profiles are stored in `config.yaml` under your OS configuration directory — `~/.config/dbos/config.yaml` on Linux, `~/Library/Application Support/dbos/config.yaml` on macOS.
 
-A profile must target either DBOS-managed Conductor (`--managed`) or a self-hosted one (`--url`); the two are mutually exclusive. There are three common shapes:
+A profile must target either DBOS-hosted Conductor (`--managed`) or a self-hosted one (`--url`); the two are mutually exclusive. There are three common shapes:
 
 | Shape | How to create it | Authentication | Identity |
 | --- | --- | --- | --- |
-| DBOS-managed | `dbosctl config set <name> --managed` | User JWT or `dbos_` API key | Your real user, or none for an API key |
+| DBOS-hosted | `dbosctl config set <name> --managed` | User JWT or `dbos_` API key | Your real user, or none for an API key |
 | Self-hosted with OIDC | `dbosctl config set <name> --url <url> --issuer <url> --client-id <id>` | User JWT or `dbos_` API key | Your real user, or none for an API key |
 | Self-hosted, no auth | `dbosctl config set <name> --url <url>` | None | Always `local` |
 
@@ -223,7 +223,7 @@ Creates or updates a profile. Only the flags you pass are changed; fields you do
 
 **Arguments:**
 - `<profile>`: The profile to create or update.
-- `--managed`: Make this a DBOS-managed Conductor profile (production domain `cloud.dbos.dev`). Mutually exclusive with `--url`.
+- `--managed`: Make this a DBOS-hosted Conductor profile (production domain `cloud.dbos.dev`). Mutually exclusive with `--url`.
 - `--url <string>`: Base URL of a self-hosted Conductor. Mutually exclusive with `--managed`.
 - `--issuer <string>`: OIDC issuer URL. Implies bearer authentication.
 - `--client-id <string>`: OIDC client ID. Implies bearer authentication.
