@@ -9,7 +9,7 @@ Self-hosted Conductor is released under a [proprietary license](https://www.dbos
 
 You can self-host Conductor and the DBOS Console on any infrastructure that runs containers.
 This guide covers what a self-hosted deployment consists of and what it needs in production, independent of where you run it.
-For a complete walkthrough on a specific platform, see [Deploying on Kubernetes](./hosting-conductor-with-kubernetes.md).
+See our [Kubernetes guide](./hosting-conductor-with-kubernetes.md) for a specific walkthrough.
 
 ## Components
 
@@ -17,12 +17,13 @@ A self-hosted deployment has three parts:
 
 | Component | Image | Port | Role |
 |---|---|---|---|
-| **Conductor** | [`dbosdev/conductor`](https://hub.docker.com/r/dbosdev/conductor) | 8090 | The control plane your applications connect to over WebSocket. Stateless; all its state lives in Postgres. |
-| **DBOS Console** | [`dbosdev/console`](https://hub.docker.com/r/dbosdev/console) | 8080 | The web UI. Stateless; it talks only to Conductor. |
+| **Conductor** | [`dbosdev/conductor`](https://hub.docker.com/r/dbosdev/conductor) | 8090 | The control plane your applications connect to over WebSocket. |
+| **DBOS Console** | [`dbosdev/console`](https://hub.docker.com/r/dbosdev/console) | 8080 | Conductor's web UI. |
 | **Postgres** | Any Postgres | 5432 | Conductor's own database, holding its registry of applications, users, and settings. |
 
 Conductor's database is separate from the system databases your DBOS applications use.
 Conductor never connects to your applications' databases; it exchanges workflow metadata and commands with your applications over their WebSocket connections.
+In addition to the Console, you can use [Conductor's API](../reference/conductor-api.md) and the [dbosctl CLI](../reference/dbosctl.md) to manage your applications and their workflows.
 
 ## Trying It Locally with Docker Compose
 
@@ -236,7 +237,7 @@ The requirements below apply to any platform.
 
 ### Conductor
 
-Run Conductor as a stateless container service; any orchestrator works (Kubernetes, ECS, Cloud Run, Nomad, or plain VMs).
+Run Conductor as a stateless container service with an orchestrator like Kubernetes, ECS, Cloud Run, Nomad, or plain VMs.
 Because all state lives in Postgres, instances are interchangeable, and you can run several for [high availability](#high-availability).
 Conductor requires these environment variables:
 
@@ -255,19 +256,17 @@ Without [OAuth authentication](#security), the Console has no user or organizati
 
 ### Reverse Proxy and TLS
 
-Put Conductor and the Console behind a reverse proxy or load balancer (such as Nginx, an ingress controller, or a cloud load balancer) that:
+Place Conductor and the Console behind a reverse proxy or load balancer (such as Nginx, an ingress controller, or a cloud load balancer) that **supports WebSockets** and does **TLS termination** (Conductor and the Console serve plain HTTP). Route traffic to Conductor on port 8090 and to the Console on port 8080.
 
-- **Terminates TLS.** Conductor and the Console serve plain HTTP, so TLS must be terminated in front of them. Your applications then connect with `wss://`.
-- **Supports WebSockets.** Each application executor holds a long-lived WebSocket connection to Conductor.
-- **Uses long idle timeouts.** Set idle timeouts on the proxy and on any load balancer in front of it high enough to ride out network hiccups (for example, 3600 seconds). The DBOS SDK sends periodic pings and reconnects automatically after a disconnect.
-- **Routes traffic** to Conductor on port 8090 and to the Console on port 8080, either by hostname or by path.
+We recommend setting long idle timeouts on the proxy and on any load balancer in front of it to handle network hiccups (for example, 3600 seconds). The DBOS SDK sends periodic pings and reconnects automatically after a disconnect.
 
 ### Network Access
 
-- **Outbound HTTPS from Conductor.** Conductor validates its license key against `https://cloud.dbos.dev` at startup and exits if it cannot reach it. Hosts in private networks need a route to the internet, such as a NAT gateway.
+- **Outbound HTTPS from Conductor.** Conductor validates its license key against `https://cloud.dbos.dev` at startup and exits if it cannot reach it. Hosts in private networks need a route to the internet, such as a NAT gateway. For air-gapped deployments, [contact sales](https://www.dbos.dev/contact).
 - **Console to Conductor.** The Console must reach Conductor on port 8090.
 - **Conductor to Conductor.** In a [highly available](#high-availability) deployment, Conductor instances must reach each other directly.
-- **Nothing else inbound.** Conductor never needs access to your applications' databases, and your applications need only outbound access to the reverse proxy.
+
+Conductor never needs access to your applications' databases, and your applications need only outbound access to the reverse proxy.
 
 ### Secrets
 
