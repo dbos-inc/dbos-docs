@@ -89,6 +89,35 @@ In a test environment, after this completes DBOS can be re-configured and `launc
 - **deregister**: If true, all current function, instance, data source, event receiver, and any other in-process registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Queues and schedules persisted in the system database are not affected. Useful for testing.
 - **workflowCompletionTimeoutMS**: Wait this many milliseconds for workflows running in this process to complete before shutting down. Defaults to not waiting.
 
+### DBOS.migrate
+
+```typescript
+DBOS.migrate(
+  systemDatabaseUrl: string,
+  options?: {
+    schemaName?: string;
+    applicationRole?: string;
+  }
+): Promise<void>
+```
+
+Create or migrate the DBOS [system database](../../explanations/system-tables.md) without launching DBOS.
+This is the programmatic equivalent of the [`npx dbos schema`](./cli.md#npx-dbos-schema) command.
+Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`runMigrations: false`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
+
+**Parameters:**
+- **systemDatabaseUrl**: The system database to create or migrate. The database is created if it does not exist.
+- **schemaName**: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
+- **applicationRole**: A Postgres role to grant access to the DBOS system schema once it is migrated.
+
+**Example:**
+```typescript
+// In your migration script, run with a privileged role:
+await DBOS.migrate(process.env.ADMIN_SYSTEM_DATABASE_URL!, { applicationRole: 'my_app_role' });
+```
+
+To migrate the tables used by [datasources](./datasource.md), use your datasource's [`initializeDBOSSchema`](./datasource.md#installing-the-dbos-schema) method.
+
 ### DBOS.logRegisteredEndpoints
 
 ```typescript
