@@ -389,6 +389,7 @@ def example_workflow(friend: str):
         step_two()
 ```
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it raises a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
 
 ## Workflow Timeouts
 

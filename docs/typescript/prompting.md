@@ -462,6 +462,8 @@ If you need to run sequences of operations concurrently, start child workflows w
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it throws a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
+
 ## Workflow Timeouts
 
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
