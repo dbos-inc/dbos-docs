@@ -38,6 +38,7 @@ class DBOSConfig(TypedDict):
     notification_listener_polling_interval_sec: Optional[float]
     notification_coalesce_sec: Optional[float]
     observability_query_timeout_sec: Optional[float]
+    sys_db_idle_transaction_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -116,6 +117,7 @@ A system database ahead of the required version is accepted, so a process with m
 - **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`; the minimum is `0.001`. Used when polling (when `use_listen_notify` is `False` or the system database is SQLite), and as the default `polling_interval_sec` of [`read_stream`](./contexts.md#read_stream) and [`read_stream_offset`](./contexts.md#read_stream_offset).
 - **notification_coalesce_sec**: Interval in seconds at which DBOS batches and sends the LISTEN/NOTIFY notifications that wake readers of [events](./contexts.md#get_event) and [streams](./contexts.md#read_stream). This bounds how long a waiting reader may be delayed and caps the rate of notifying commits regardless of write throughput. Defaults to `0.01`; the minimum is `0.001`. Only used on Postgres when `use_listen_notify` is `True`.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
+- **sys_db_idle_transaction_timeout_sec**: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections DBOS creates. Defaults to 60 seconds.
 
 ### Conductor Settings
 
