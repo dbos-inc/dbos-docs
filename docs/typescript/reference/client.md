@@ -37,7 +37,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -70,8 +70,8 @@ class DBOSClient {
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
     cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
-    resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
-    resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
     deleteWorkflow(workflowID: string, deleteChildren?: boolean): Promise<void>;
     deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
@@ -115,6 +115,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
 - **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
+- **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 
 Example:
 
@@ -518,12 +519,12 @@ Please see [`DBOS.setWorkflowDelay`](./methods.md#dbossetworkflowdelay) for more
 
 #### `resumeWorkflow`
 
-Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts).
+Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts) and returns a handle to it.
 Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more information.
 
 #### `resumeWorkflows`
 
-Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs.
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
 Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more information.
 
 #### `forkWorkflow`

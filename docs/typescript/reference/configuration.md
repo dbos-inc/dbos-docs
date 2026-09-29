@@ -34,6 +34,7 @@ export interface DBOSConfig {
   systemDatabasePool?: Pool;
   runMigrations?: boolean;
   observabilityQueryTimeoutMs?: number;
+  systemDatabaseIdleTransactionTimeoutMs?: number;
   useListenNotify?: boolean;
   notificationCoalesceMs?: number;
 
@@ -85,10 +86,11 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead. The pool remains yours: its configuration is your responsibility (we recommend attaching an `error` handler to it so connection failures are handled), and `DBOS.shutdown` does not close it.
 - **runMigrations**: Whether to create and migrate the system database on launch. Defaults to true.
-Set to false for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`npx dbos schema`](./cli.md#npx-dbos-schema).
+Set to false for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`npx dbos schema`](./cli.md#npx-dbos-schema) or [`DBOS.migrate`](./dbos-class.md#dbosmigrate).
 Launch then verifies the schema instead of changing it: a system database that is missing, or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
 - **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries (such as [listing workflows](./methods.md#dboslistworkflows), [queued workflows](./methods.md#dboslistqueuedworkflows), and [workflow steps](./methods.md#dboslistworkflowsteps)), so a slow query on a large system database does not hold resources indefinitely. A query that exceeds the timeout throws a `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
+- **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections DBOS creates. Defaults to 60000 (60 seconds).
 - **useListenNotify**: Whether to use Postgres `LISTEN/NOTIFY` to promptly wake operations waiting on messages, events, or streams (such as [`recv`](./methods.md#dbosrecv), [`getEvent`](./methods.md#dbosgetevent), and [`readStream`](./methods.md#dbosreadstream)). Defaults to true. Set to false if your database does not support `LISTEN/NOTIFY` (for example, [CockroachDB](../../integrations/cockroachdb.md)); DBOS then polls the database instead, which can increase the latency of these operations.
 - **notificationCoalesceMs**: When `useListenNotify` is enabled, the interval, in milliseconds, over which DBOS batches the notifications for events and stream values this process writes before sending them. This bounds the extra latency before waiting readers are woken. Defaults to 10. Must be at least 1.
 

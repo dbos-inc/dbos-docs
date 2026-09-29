@@ -343,8 +343,29 @@ Such methods will be run inside datasource transactions when called.
 ### Installing the DBOS Schema
 
 DBOS datasources require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run exactly once.
+Once a workflow completes, DBOS deletes its records from this table.
 
-This table can be installed by running the `initializeDBOSSchema` method of your datasource. You may do this as part of database schema migrations or at app startup. For example, here is a Knex migration file that installs the DBOS schema in Knex:
+By default, each datasource creates or migrates this table when DBOS launches, which requires privileges to run DDL in your database.
+Alternatively, you can install it with the static `initializeDBOSSchema` method of your datasource, for example as part of your database schema migrations, run with a privileged role:
+
+```typescript
+static initializeDBOSSchema(
+  config, // A connection configuration or client; the type depends on the datasource
+  schemaName: string = 'dbos',
+  options: { applicationRole?: string } = {},
+): Promise<void>
+```
+
+If `applicationRole` is set, that Postgres role is granted the minimal permissions it needs to use the datasource: usage on the schema, `SELECT`, `INSERT`, and `DELETE` on the `transaction_completion` table, and `SELECT` on the `dbos_transaction_completion_migrations` version table.
+
+Then, construct your datasource with `runMigrations: false` in its final options argument, so your application's role needs no DDL privileges.
+At launch, the datasource then verifies that its schema is migrated instead of altering it, throwing a `DBOSInitializationError` if it is not:
+
+```typescript
+const dataSource = new KnexDataSource('knex-ds', config, 'dbos', { runMigrations: false });
+```
+
+For example, here is a Knex migration file that installs the DBOS schema in Knex:
 
 ```ts
 const {

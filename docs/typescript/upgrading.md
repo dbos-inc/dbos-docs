@@ -208,7 +208,7 @@ The [DBOS CLI](./reference/cli.md) and [DBOS Cloud](../conductor/reference/dbos-
 The `@dbos-inc/koa-serve` package, `DBOS.request`, `DBOS.runWithContext`, and the `@DBOS.requiredRole` and `@DBOS.defaultRequiredRole` decorators have been removed.
 Instead, serve requests with the web framework of your choice and call or start workflows from your request handlers, passing them any request data they need as arguments, as shown in [Add DBOS To Your App](./integrating-dbos.md#2-launch-dbos-in-your-app).
 
-To associate an authenticated user and roles with a workflow, run it inside [`DBOS.withAuthedContext`](./reference/plugins.md#setting-authenticated-user-and-roles), then check `DBOS.authenticatedRoles` in your workflow.
+To associate an authenticated user and roles with a workflow, run it inside `DBOS.withAuthedContext`, then check `DBOS.authenticatedRoles` in your workflow.
 
 **Before:**
 

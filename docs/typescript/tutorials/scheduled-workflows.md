@@ -52,20 +52,7 @@ When `DBOS.applySchedules` updates an existing schedule, it replaces the entire 
 For example, if a schedule was routed to a named queue and you re-apply it without setting `queueName`, it reverts to the internal queue.
 The schedule's status and last-fired time are preserved.
 
-To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-Valid cron schedules contain 5 or 6 items, separated by spaces:
-
-```
- ┌────────────── second (optional)
- │ ┌──────────── minute
- │ │ ┌────────── hour
- │ │ │ ┌──────── day of month
- │ │ │ │ ┌────── month
- │ │ │ │ │ ┌──── day of week
- │ │ │ │ │ │
- │ │ │ │ │ │
- * * * * * *
-```
+DBOS uses [node-cron](https://github.com/node-cron/node-cron) to parse cron expressions, so schedules support its full [cron syntax](https://github.com/node-cron/node-cron#cron-syntax), including an optional seconds field.
 
 Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option (inside `options` for `DBOS.createSchedule`, or as a top-level field for `DBOS.applySchedules`) to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
 
