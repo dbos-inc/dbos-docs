@@ -70,8 +70,8 @@ class DBOSClient {
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
     cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
-    resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
-    resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
     deleteWorkflow(workflowID: string, deleteChildren?: boolean): Promise<void>;
     deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
@@ -518,12 +518,12 @@ Please see [`DBOS.setWorkflowDelay`](./methods.md#dbossetworkflowdelay) for more
 
 #### `resumeWorkflow`
 
-Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts).
+Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts) and returns a handle to it.
 Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more information.
 
 #### `resumeWorkflows`
 
-Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs.
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
 Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more information.
 
 #### `forkWorkflow`

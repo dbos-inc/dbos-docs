@@ -1788,6 +1788,7 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 ### DBOS.forkWorkflow
 

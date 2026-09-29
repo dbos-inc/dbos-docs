@@ -87,7 +87,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version. If `applicationName` names another application, it is instead left unset by default, so the workflow is only dequeued by an executor of that application running its latest registered version.
   - **applicationName**: The application that owns and runs the enqueued workflow. Defaults to this application. Set to enqueue the workflow on behalf of another application sharing the system database. To enqueue another application's workflow without a reference to its function, use [`DBOS.enqueueWorkflowWithOptions`](./queues.md#dbosenqueueworkflowwithoptions) instead.
 - **workflowAttributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](#workflow-status), are **not inherited** by child workflows, and are searchable via the `attributes` filter of [`DBOS.listWorkflows`](#dboslistworkflows). Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
-- **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with [`DBOS.withAuthedContext`](./plugins.md#setting-authenticated-user-and-roles)).
+- **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with `DBOS.withAuthedContext`).
 - **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`. Defaults to the caller's authenticated roles, if any.
 
 ### DBOS.waitFirst
@@ -607,6 +607,8 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 
 If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 
+Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
+
 ### DBOS.resumeWorkflows
 
 ```typescript
@@ -617,6 +619,7 @@ DBOS.resumeWorkflows<T>(
 ```
 
 Resume multiple workflows. Behaves like [`resumeWorkflow`](#dbosresumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
+If any workflow does not exist, throws `DBOSNonExistentWorkflowError` and resumes none of them.
 
 ### DBOS.deleteWorkflow
 
