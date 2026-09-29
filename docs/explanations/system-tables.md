@@ -118,7 +118,8 @@ Each row represents a different workflow execution.
 - **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
 - **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution.
-- **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
+- **owner_xid**: The ownership token of the execution currently running this workflow, used to [detect concurrent executions](./concurrent-executions.md#workflow-ownership). Null when no execution owns the workflow.
+- **creator_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.
 - **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
 - **rate_limited**: Whether this workflow was dequeued from a rate-limited queue.
