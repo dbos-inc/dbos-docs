@@ -15,10 +15,12 @@ SQLAlchemyDatasource.create(
     engine: Optional[sa.Engine] = None,
     schema: Optional[str] = None,
     serializer: Optional[Serializer] = None,
+    sessionmaker: Optional[sessionmaker] = None,
+    run_migrations: bool = True,
 ) -> SQLAlchemyDatasource
 ```
 
-Factory method. Creates (or reuses) a SQLAlchemy engine and runs the schema migrations that install the `datasource_outputs` tracking table.
+Factory method. Creates (or reuses) a SQLAlchemy engine and creates or migrates the datasource's `datasource_outputs` tracking table, unless `run_migrations` is `False`.
 
 **Parameters:**
 - `database_url`: A SQLAlchemy-compatible connection URL (e.g., `"postgresql+psycopg://..."` or `"sqlite:///./my.db"`).
@@ -26,12 +28,44 @@ Factory method. Creates (or reuses) a SQLAlchemy engine and runs the schema migr
 - `engine`: Provide an existing `sa.Engine` instead of creating one from `database_url`. When set, `engine_kwargs` is ignored.
 - `schema`: The PostgreSQL schema in which the `datasource_outputs` table is created. Defaults to `"dbos"`. Has no effect for SQLite.
 - `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS default serializer (`pickle`, then Base64-encoded), not the `serializer` set in [`DBOSConfig`](./configuration.md#serialization-settings).
+- `sessionmaker`: A custom `sqlalchemy.orm.sessionmaker` used to create the session for each transaction, for example to use a custom `Session` subclass, session options, or event hooks. DBOS always binds sessions to the datasource's engine, so any `bind` you set is ignored, and a sessionmaker that sets `binds` raises a `DBOSException`. Defaults to `sessionmaker(expire_on_commit=False)`.
+- `run_migrations`: Whether to create and migrate the datasource's tables. Defaults to `True`. Set to `False` if your application's database role cannot run DDL: the datasource then only verifies that its tables are migrated, raising a `DBOSInitializationError` if they are not. Migrate them separately with [`SQLAlchemyDatasource.migrate`](#sqlalchemydatasourcemigrate).
 
 **Example:**
 ```python
 from dbos import SQLAlchemyDatasource
 
 ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+```
+
+### `SQLAlchemyDatasource.migrate`
+
+```python
+SQLAlchemyDatasource.migrate(
+    database_url: str,
+    *,
+    schema: Optional[str] = None,
+    application_role: Optional[str] = None,
+) -> None
+```
+
+Create or migrate a datasource's tables without creating a datasource.
+Run this with a privileged database role (for example, as part of your deployment's migration step), then create your datasources with `run_migrations=False` so your application's role needs no DDL privileges.
+
+**Parameters:**
+- `database_url`: The connection URL of the datasource's database.
+- `schema`: The PostgreSQL schema holding the datasource's tables. Defaults to `"dbos"`. Has no effect for SQLite.
+- `application_role`: A PostgreSQL role to grant the minimal permissions a datasource needs at runtime: usage on the schema, `SELECT`, `INSERT`, and `DELETE` on the `datasource_outputs` table, and `SELECT` on the migration version table. Not supported for SQLite.
+
+**Example:**
+```python
+from dbos import SQLAlchemyDatasource
+
+# In your migration script, run with a privileged role:
+SQLAlchemyDatasource.migrate(os.environ["ADMIN_DATABASE_URL"], application_role="my_app_role")
+
+# In your application, run with my_app_role:
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"], run_migrations=False)
 ```
 
 ### `SQLAlchemyDatasource.transaction`
@@ -119,10 +153,12 @@ await AsyncSQLAlchemyDatasource.create(
     engine: Optional[AsyncEngine] = None,
     schema: Optional[str] = None,
     serializer: Optional[Serializer] = None,
+    sessionmaker: Optional[async_sessionmaker] = None,
+    run_migrations: bool = True,
 ) -> AsyncSQLAlchemyDatasource
 ```
 
-Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs the schema migrations that install the `datasource_outputs` tracking table.
+Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and creates or migrates the datasource's `datasource_outputs` tracking table, unless `run_migrations` is `False`.
 
 **Parameters:**
 - `database_url`: A SQLAlchemy-compatible async connection URL (e.g., `"postgresql+psycopg://..."` or `"sqlite+aiosqlite:///./my.db"`).
@@ -130,6 +166,8 @@ Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs th
 - `engine`: Provide an existing `AsyncEngine` instead of creating one from `database_url`. When set, `engine_kwargs` is ignored.
 - `schema`: The PostgreSQL schema in which the `datasource_outputs` table is created. Defaults to `"dbos"`. Has no effect for SQLite.
 - `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS default serializer (`pickle`, then Base64-encoded), not the `serializer` set in [`DBOSConfig`](./configuration.md#serialization-settings).
+- `sessionmaker`: A custom `sqlalchemy.ext.asyncio.async_sessionmaker` used to create the session for each transaction, for example to use a custom `AsyncSession` subclass, session options, or event hooks. DBOS always binds sessions to the datasource's engine, so any `bind` you set is ignored, and a sessionmaker that sets `binds` raises a `DBOSException`. Defaults to `async_sessionmaker(expire_on_commit=False)`.
+- `run_migrations`: Whether to create and migrate the datasource's tables. Defaults to `True`. Set to `False` if your application's database role cannot run DDL: the datasource then only verifies that its tables are migrated, raising a `DBOSInitializationError` if they are not. Migrate them separately with [`AsyncSQLAlchemyDatasource.migrate`](#asyncsqlalchemydatasourcemigrate).
 
 **Example:**
 
@@ -144,6 +182,20 @@ from dbos import AsyncSQLAlchemyDatasource
 # so it can be used from the event loop that runs your application.
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
+
+### `AsyncSQLAlchemyDatasource.migrate`
+
+```python
+await AsyncSQLAlchemyDatasource.migrate(
+    database_url: str,
+    *,
+    schema: Optional[str] = None,
+    application_role: Optional[str] = None,
+) -> None
+```
+
+Coroutine version of [`SQLAlchemyDatasource.migrate`](#sqlalchemydatasourcemigrate).
+Create or migrate a datasource's tables without creating a datasource, then create your datasources with `run_migrations=False`.
 
 ### `AsyncSQLAlchemyDatasource.transaction`
 

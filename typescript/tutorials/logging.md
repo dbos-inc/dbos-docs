@@ -62,7 +62,7 @@ const client = await DBOSClient.create({
 When a custom logger is set, DBOS directs all its internal logging to it (including `DBOS.logger` calls in your workflows and steps), replacing the built-in console and OTLP log sinks.
 Keep the following contract in mind when implementing `DLogger`:
 
-- **Log entries arrive as strings.** DBOS stringifies non-string entries before delegating. `error()` receives the message of an `Error`, with its stack trace in `metadata.stack`.
+- **Log entries arrive as strings.** DBOS stringifies non-string entries before delegating. `error()` receives the message of an `Error`, with its stack trace (including its `cause` chain and, for an `AggregateError`, its `errors`) in `metadata.stack` and the original `Error` object in `metadata.error`, so loggers that serialize errors themselves can use it.
 - **Context metadata is provided via the span.** When called from a workflow or step with tracing enabled (`tracingEnabled` or `enableOTLP`), `metadata.span?.attributes` carries the operation context (workflow ID, operation name and type, etc.); without tracing, `metadata.span` is undefined.
 - **Level routing is your responsibility.** DBOS does not filter by `logLevel` before delegating; your implementation decides what to do with each level.
 - **OTLP log export is disabled.** Logs are not sent over OTLP even if `enableOTLP` is on (tracing is unaffected).

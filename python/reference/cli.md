@@ -125,6 +125,8 @@ In that case, this command can be run with a privileged user to create all DBOS 
 After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the system database.
 Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`run_migrations=False`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
+You can also run these migrations from code with [`DBOS.migrate`](./dbos-class.md#migrate).
+This command does not migrate the tables used by [datasources](./datasources.md); use [`SQLAlchemyDatasource.migrate`](./datasources.md#sqlalchemydatasourcemigrate) for those.
 
 **Arguments:**
 

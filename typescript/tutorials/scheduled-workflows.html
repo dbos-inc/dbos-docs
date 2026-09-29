@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.183a1e4a.js" defer="defer"></script>
-<script src="/assets/js/main.685f4c50.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2d2442a1.js" defer="defer"></script>
+<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -34,9 +34,7 @@ If you&#x27;re defining a set of static schedules to be created on program start
 <p>When <code>DBOS.applySchedules</code> updates an existing schedule, it replaces the entire definition with the new entry, so any optional field left unset is cleared.
 For example, if a schedule was routed to a named queue and you re-apply it without setting <code>queueName</code>, it reverts to the internal queue.
 The schedule&#x27;s status and last-fired time are preserved.</p>
-<p>To learn more about crontab syntax, see <a href="https://docs.gitlab.com/ee/topics/cron/" target="_blank" rel="noopener noreferrer" class="">this guide</a> or <a href="https://crontab.guru/" target="_blank" rel="noopener noreferrer" class="">this crontab editor</a>.
-Valid cron schedules contain 5 or 6 items, separated by spaces:</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain"> ┌────────────── second (optional)</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ ┌──────────── minute</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ ┌────────── hour</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ ┌──────── day of month</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ ┌────── month</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ │ ┌──── day of week</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ │ │</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ │ │</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> * * * * * *</span><br></div></code></pre></div></div>
+<p>DBOS uses <a href="https://github.com/node-cron/node-cron" target="_blank" rel="noopener noreferrer" class="">node-cron</a> to parse cron expressions, so schedules support its full <a href="https://github.com/node-cron/node-cron#cron-syntax" target="_blank" rel="noopener noreferrer" class="">cron syntax</a>, including an optional seconds field.</p>
 <p>Cron expressions are evaluated in the system&#x27;s local timezone by default. You can set the <code>cronTimezone</code> option (inside <code>options</code> for <code>DBOS.createSchedule</code>, or as a top-level field for <code>DBOS.applySchedules</code>) to an <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener noreferrer" class="">IANA timezone name</a> (e.g. <code>&quot;America/New_York&quot;</code>) to evaluate the expression in a specific timezone.</p>
 <p>You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:</p>

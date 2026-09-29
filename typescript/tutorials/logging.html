@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.183a1e4a.js" defer="defer"></script>
-<script src="/assets/js/main.685f4c50.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2d2442a1.js" defer="defer"></script>
+<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -39,7 +39,7 @@ To route all of DBOS&#x27;s internal logging to your own logging system instead,
 <p>When a custom logger is set, DBOS directs all its internal logging to it (including <code>DBOS.logger</code> calls in your workflows and steps), replacing the built-in console and OTLP log sinks.
 Keep the following contract in mind when implementing <code>DLogger</code>:</p>
 <ul>
-<li class=""><strong>Log entries arrive as strings.</strong> DBOS stringifies non-string entries before delegating. <code>error()</code> receives the message of an <code>Error</code>, with its stack trace in <code>metadata.stack</code>.</li>
+<li class=""><strong>Log entries arrive as strings.</strong> DBOS stringifies non-string entries before delegating. <code>error()</code> receives the message of an <code>Error</code>, with its stack trace (including its <code>cause</code> chain and, for an <code>AggregateError</code>, its <code>errors</code>) in <code>metadata.stack</code> and the original <code>Error</code> object in <code>metadata.error</code>, so loggers that serialize errors themselves can use it.</li>
 <li class=""><strong>Context metadata is provided via the span.</strong> When called from a workflow or step with tracing enabled (<code>tracingEnabled</code> or <code>enableOTLP</code>), <code>metadata.span?.attributes</code> carries the operation context (workflow ID, operation name and type, etc.); without tracing, <code>metadata.span</code> is undefined.</li>
 <li class=""><strong>Level routing is your responsibility.</strong> DBOS does not filter by <code>logLevel</code> before delegating; your implementation decides what to do with each level.</li>
 <li class=""><strong>OTLP log export is disabled.</strong> Logs are not sent over OTLP even if <code>enableOTLP</code> is on (tracing is unaffected).</li>

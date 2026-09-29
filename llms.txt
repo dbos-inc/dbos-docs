@@ -163,7 +163,6 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/reference/datasource.md): Different JavaScript libraries have different mechanisms for starting transactions and accessing the database. The *DBOS datasource* layer provides...
 - [DBOS Lifecycle](https://docs.dbos.dev/typescript/reference/dbos-class.md): The DBOS class is a singleton&mdash;it must be configured and launched exactly once in a program's lifetime, before running any DBOS workflows.
 - [DBOS Methods & Variables](https://docs.dbos.dev/typescript/reference/methods.md): ```typescript
-- [DBOS Plugin Architecture](https://docs.dbos.dev/typescript/reference/plugins.md): :::tip
 - [Queues](https://docs.dbos.dev/typescript/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 - [Workflows & Steps](https://docs.dbos.dev/typescript/reference/workflows-steps.md): ```typescript
 - [Kafka Integration](https://docs.dbos.dev/typescript/tutorials/externalmessages.md): In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) messages with exactly...

@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.183a1e4a.js" defer="defer"></script>
-<script src="/assets/js/main.685f4c50.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2d2442a1.js" defer="defer"></script>
+<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -71,6 +71,7 @@ Instead, you should do all non-deterministic operations in <a class="" href="/ty
 <p>Here, <code>step2</code> and <code>step4</code> may be started in either order since their execution depends on the relative time taken by <code>step1</code> and <code>step3</code>.</p>
 <p>If you need to run sequences of operations concurrently, start child workflows with <a href="#starting-workflows-in-the-background" class=""><code>startWorkflow</code></a> and await the results from their <code>WorkflowHandle</code>s.</p>
 <p>Avoid using <code>Promise.all</code> because of how it handles errors and rejections.  When any promise rejects, <code>Promise.all</code> immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer <code>Promise.allSettled</code>, which safely waits for all promises to complete and reports their outcomes.</p>
+<p>If DBOS detects that a single execution of a workflow recorded different results for the same step, it throws a <code>DBOSStepNondeterminismError</code>, indicating the workflow is not deterministic.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="workflow-timeouts">Workflow Timeouts<a href="#workflow-timeouts" class="hash-link" aria-label="Direct link to Workflow Timeouts" title="Direct link to Workflow Timeouts" translate="no">​</a></h2>
 <p>You can set a timeout for a workflow by passing a <code>timeoutMS</code> argument to <code>DBOS.startWorkflow</code>.
 When the timeout expires, the workflow <strong>and all its children</strong> are cancelled.

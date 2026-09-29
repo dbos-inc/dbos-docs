@@ -458,6 +458,8 @@ If you need to run sequences of operations concurrently, start child workflows w
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it throws a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
+
 ## Workflow Timeouts
 
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
@@ -1772,6 +1774,7 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 ### DBOS.forkWorkflow
 
@@ -1973,6 +1976,7 @@ export interface DBOSConfig {
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
   observabilityQueryTimeoutMs?: number;
+  systemDatabaseIdleTransactionTimeoutMs?: number;
 
   enableOTLP?: boolean;
   logLevel?: string;
@@ -2007,9 +2011,10 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries against the system database (such as `DBOS.listWorkflows`, `DBOS.listQueuedWorkflows`, and `DBOS.listWorkflowSteps`), so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
+- **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections DBOS creates. Defaults to 60000 (60 seconds).
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False (True in DBOS Cloud).
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
-- **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
+- **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle). `error()` receives the message of an `Error`, with its stack trace in `metadata.stack` and the original `Error` object in `metadata.error`.
 - **otlpTracesEndpoints**: A list of OTLP-compatible receivers to which to send traces. Only used when `enableOTLP` is enabled.
 - **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.

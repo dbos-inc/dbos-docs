@@ -29,10 +29,14 @@ Versions matter because a queued workflow is executed only by executors running 
 When you roll out a new version, its executors pick up new work while old version's executors must stay available until the old version's backlog drains.
 Conductor therefore reports the latest version as needing at least one executor, and reports an old version at zero once nothing is left for it on the queue.
 
-The policy queue must be **unpartitioned** and have a **worker concurrency** set.
+The policy queue must have a **worker concurrency** set.
 Work outside the policy queue, such as workflows started directly or enqueued on another queue, is not visible to the policy.
 
 Recommendations are computed from your application's [system database](../explanations/system-tables.md) through one of its healthy executors.
+
+:::info
+[Partitioned queues](../python/tutorials/queue-tutorial.md#partitioning-queues) are also sized by their queue-wide concurrency parameters, their per-partition limits are not considered.
+:::
 
 ## Autoscaling From the Console
 
@@ -68,7 +72,7 @@ The policy has one required field and an optional `rollout` section governing ho
 
 | Field | Description |
 | --- | --- |
-| `queue` | The queue whose utilization should drive the desired executor count. It must exist, not be partitioned, and have a worker concurrency set. |
+| `queue` | The queue whose utilization should drive the desired executor count. It must exist and have a worker concurrency set. |
 | `rollout.maxOldApplicationVersions` | How many old application versions the [all-versions endpoint](#all-versions-at-once) may include, newest first. Defaults to `0`, which means that only the latest version is reported. |
 | `rollout.maxExecutorsForOldApplicationVersions` | Cap every old version's recommendation at this many executors, regardless of its backlog. `0` is valid and reports old versions at zero. Omit to size old versions from their own backlog, uncapped. |
 
@@ -170,7 +174,7 @@ This shape suits a controller that owns the full set of deployments: it can crea
 
 | Status | Meaning |
 | --- | --- |
-| `400` | The policy names no queue, a queue the application does not define, or a queue that is partitioned or has no worker concurrency.  |
+| `400` | The policy names no queue, a queue the application does not define, or a queue that has no worker concurrency.  |
 | `404` | The application has no autoscaling policy, or the requested version was never registered. |
 | `502` / `503` | No healthy executor of the application is connected, or every executor failed to answer. |
 

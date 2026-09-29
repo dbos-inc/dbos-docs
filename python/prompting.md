@@ -383,6 +383,8 @@ def example_workflow(friend: str):
         step_two()
 ```
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it raises a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
+
 ## Workflow Timeouts
 
 You can set a timeout for a workflow with `SetWorkflowTimeout`.
@@ -1781,6 +1783,7 @@ class DBOSConfig(TypedDict):
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
     observability_query_timeout_sec: Optional[float]
+    sys_db_idle_transaction_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -1829,6 +1832,7 @@ sqlite:///[application_name].sqlite
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
+- **sys_db_idle_transaction_timeout_sec**: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections DBOS creates. Defaults to 60 seconds.
 - **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console.
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.

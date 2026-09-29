@@ -90,6 +90,37 @@ Useful for testing.
 - `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
 - `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
 
+### migrate
+
+```python
+DBOS.migrate(
+    system_database_url: str,
+    *,
+    schema: str = "dbos",
+    application_role: Optional[str] = None,
+)
+```
+
+Create or migrate the DBOS [system database](../../explanations/system-tables.md) without launching DBOS.
+This is the programmatic equivalent of the [`dbos migrate`](./cli.md#dbos-migrate) command.
+Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`run_migrations=False`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
+It can be called before or without constructing a DBOS instance.
+
+**Parameters:**
+- `system_database_url`: The system database to create or migrate. The database is created if it does not exist.
+- `schema`: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
+- `application_role`: A Postgres role to grant access to the DBOS system schema once it is migrated. Not supported for SQLite.
+
+**Example:**
+```python
+from dbos import DBOS
+
+# In your migration script, run with a privileged role:
+DBOS.migrate(os.environ["ADMIN_SYSTEM_DATABASE_URL"], application_role="my_app_role")
+```
+
+To migrate the tables used by [datasources](./datasources.md), use [`SQLAlchemyDatasource.migrate`](./datasources.md#sqlalchemydatasourcemigrate).
+
 ### reset_system_database
 
 ```python

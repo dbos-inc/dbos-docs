@@ -1410,10 +1410,14 @@ Versions matter because a queued workflow is executed only by executors running 
 When you roll out a new version, its executors pick up new work while old version's executors must stay available until the old version's backlog drains.
 Conductor therefore reports the latest version as needing at least one executor, and reports an old version at zero once nothing is left for it on the queue.
 
-The policy queue must be **unpartitioned** and have a **worker concurrency** set.
+The policy queue must have a **worker concurrency** set.
 Work outside the policy queue, such as workflows started directly or enqueued on another queue, is not visible to the policy.
 
 Recommendations are computed from your application's [system database](../explanations/system-tables.md) through one of its healthy executors.
+
+:::info
+[Partitioned queues](../python/tutorials/queue-tutorial.md#partitioning-queues) are also sized by their queue-wide concurrency parameters, their per-partition limits are not considered.
+:::
 
 ### Autoscaling From the Console
 
@@ -1449,7 +1453,7 @@ The policy has one required field and an optional `rollout` section governing ho
 
 | Field | Description |
 | --- | --- |
-| `queue` | The queue whose utilization should drive the desired executor count. It must exist, not be partitioned, and have a worker concurrency set. |
+| `queue` | The queue whose utilization should drive the desired executor count. It must exist and have a worker concurrency set. |
 | `rollout.maxOldApplicationVersions` | How many old application versions the [all-versions endpoint](#all-versions-at-once) may include, newest first. Defaults to `0`, which means that only the latest version is reported. |
 | `rollout.maxExecutorsForOldApplicationVersions` | Cap every old version's recommendation at this many executors, regardless of its backlog. `0` is valid and reports old versions at zero. Omit to size old versions from their own backlog, uncapped. |
 
@@ -1551,7 +1555,7 @@ This shape suits a controller that owns the full set of deployments: it can crea
 
 | Status | Meaning |
 | --- | --- |
-| `400` | The policy names no queue, a queue the application does not define, or a queue that is partitioned or has no worker concurrency.  |
+| `400` | The policy names no queue, a queue the application does not define, or a queue that has no worker concurrency.  |
 | `404` | The application has no autoscaling policy, or the requested version was never registered. |
 | `502` / `503` | No healthy executor of the application is connected, or every executor failed to answer. |
 
@@ -6012,12 +6016,23 @@ This means the same workflow instance could be running on two executors. (DBOS d
 
 DBOS is designed so that step and workflow invariants are preserved during these situations: steps get at-least-once guarantees and workflow outcomes are persisted exactly-once.
 
-A concurrent execution is detected at two points: when an execution checkpoints a completed step, and when it records the workflow's terminal outcome.
-In both cases, DBOS detects whether a conflicting checkpoint already exists for the step/workflow, and if so, **parks** the execution, _i.e._, it waits for the workflow's recorded outcome to become visible in the database, then delivers that recorded outcome through its own handle.
+### Workflow Ownership
 
-When DBOS detects a concurrent execution at the step boundary, it throws an exception (`DBOSWorkflowConflictIDError` in Python, `DBOSWorkflowConflictError` in TypeScript, `DBOSWorkflowExecutionConflictException` in Java) or returns an error ([`ErrConflictingWorkflowID`](../golang/reference/workflows-steps.md#errors) in Go). Do not ignore that error: no subsequent work in the workflow will be made durable.
+DBOS detects concurrent executions by tracking which execution **owns** each workflow.
+When an execution starts running a workflow (because the workflow was started, dequeued, recovered, or resumed), it generates a unique ownership token, records it in the workflow's row in the [`workflow_status`](./system-tables.md#dbosworkflow_status) table, and keeps it in memory.
+Control-plane operations, such as cancelling, resuming, rewinding, or recovering a workflow, clear the recorded token.
 
-Further, in the case of checkpointing the outcome of a workflow, if DBOS finds that the workflow status is not `PENDING`, DBOS decides that the current execution doesn't own the outcome anymore, and parks.
+Every time an execution writes a checkpoint for the workflow, it first checks, in the same database transaction, that the recorded token still matches its own.
+If the token no longer matches, the execution has lost ownership: another execution has taken over the workflow, or it was cancelled.
+The checkpoint is not written, and the execution stops running the workflow and **parks**, _i.e._, it waits for the workflow's recorded outcome to become visible in the database, then delivers that recorded outcome through its own handle.
+For example, if a "zombie" executor keeps running a workflow after it has been recovered elsewhere, its next checkpoint fails the ownership check, so it stops, and its handle returns the result recorded by the execution that owns the workflow.
+Similarly, when you cancel a running workflow, its execution stops at its next checkpoint.
+
+When an execution loses ownership, DBOS throws an exception inside the workflow (`DBOSWorkflowConflictIDError` in Python, `DBOSWorkflowConflictError` in TypeScript, `DBOSWorkflowExecutionConflictException` in Java) or returns an error ([`ErrConflictingWorkflowID`](../golang/reference/workflows-steps.md#errors) in Go).
+Do not catch and ignore that error: no subsequent work in the workflow will be made durable.
+
+Separately, if a single execution records a result for a step and then tries to record a different result for the same step, DBOS throws a step nondeterminism error (`DBOSStepNondeterminismError` in Python and TypeScript).
+This indicates that the workflow is not deterministic (see determinism requirements in [Python](../python/tutorials/workflow-tutorial.md#determinism) and [TypeScript](../typescript/tutorials/workflow-tutorial.md#determinism)).
 
 ---
 
@@ -7791,7 +7806,8 @@ Each row represents a different workflow execution.
 - **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
 - **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution.
-- **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
+- **owner_xid**: The ownership token of the execution currently running this workflow, used to [detect concurrent executions](./concurrent-executions.md#workflow-ownership). Null when no execution owns the workflow.
+- **creator_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.
 - **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
 - **rate_limited**: Whether this workflow was dequeued from a rate-limited queue.
@@ -33850,6 +33866,8 @@ def example_workflow(friend: str):
         step_two()
 ```
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it raises a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
+
 ### Workflow Timeouts
 
 You can set a timeout for a workflow with `SetWorkflowTimeout`.
@@ -35248,6 +35266,7 @@ class DBOSConfig(TypedDict):
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
     observability_query_timeout_sec: Optional[float]
+    sys_db_idle_transaction_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -35296,6 +35315,7 @@ sqlite:///[application_name].sqlite
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
+- **sys_db_idle_transaction_timeout_sec**: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections DBOS creates. Defaults to 60 seconds.
 - **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console.
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
@@ -35569,6 +35589,8 @@ In that case, this command can be run with a privileged user to create all DBOS 
 After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the system database.
 Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`run_migrations=False`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
+You can also run these migrations from code with [`DBOS.migrate`](./dbos-class.md#migrate).
+This command does not migrate the tables used by [datasources](./datasources.md); use [`SQLAlchemyDatasource.migrate`](./datasources.md#sqlalchemydatasourcemigrate) for those.
 
 **Arguments:**
 
@@ -35663,6 +35685,7 @@ DBOSClient(
     lazy: bool = False,
     retry_connection_errors: bool = True,
     observability_query_timeout_sec: Optional[float] = None,
+    sys_db_idle_transaction_timeout_sec: Optional[float] = None,
 )
 ```
 **Parameters:**
@@ -35677,6 +35700,7 @@ DBOSClient(
 - `retry_connection_errors`: Whether a client operation that loses its database connection blocks and retries until the connection recovers. Defaults to `True`. Set to `False` to raise connection errors instead, so an unreachable database surfaces as an error rather than a wait.
 - `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
+- `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
 
 **Example syntax:**
 
@@ -37330,6 +37354,7 @@ class DBOSConfig(TypedDict):
     notification_listener_polling_interval_sec: Optional[float]
     notification_coalesce_sec: Optional[float]
     observability_query_timeout_sec: Optional[float]
+    sys_db_idle_transaction_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -37401,12 +37426,13 @@ sqlite:///[application_name].sqlite
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 On Postgres, this setting determines which notification triggers are created with the system database, so do not change it after the system database is first created.
 - **run_migrations**: Whether to create and migrate the system database on launch. Defaults to `True`.
-Set to `False` for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`dbos migrate`](./cli.md#dbos-migrate).
+Set to `False` for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`dbos migrate`](./cli.md#dbos-migrate) or [`DBOS.migrate`](./dbos-class.md#migrate).
 Launch then verifies the schema instead of changing it: a system database whose DBOS tables are missing (including a SQLite file that does not exist) or behind the version this build of DBOS requires fails launch with a `DBOSInitializationError`, and a Postgres database that does not exist fails launch with a connection error.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
 - **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`; the minimum is `0.001`. Used when polling (when `use_listen_notify` is `False` or the system database is SQLite), and as the default `polling_interval_sec` of [`read_stream`](./contexts.md#read_stream) and [`read_stream_offset`](./contexts.md#read_stream_offset).
 - **notification_coalesce_sec**: Interval in seconds at which DBOS batches and sends the LISTEN/NOTIFY notifications that wake readers of [events](./contexts.md#get_event) and [streams](./contexts.md#read_stream). This bounds how long a waiting reader may be delayed and caps the rate of notifying commits regardless of write throughput. Defaults to `0.01`; the minimum is `0.001`. Only used on Postgres when `use_listen_notify` is `True`.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
+- **sys_db_idle_transaction_timeout_sec**: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections DBOS creates. Defaults to 60 seconds.
 
 #### Conductor Settings
 
@@ -39724,10 +39750,12 @@ SQLAlchemyDatasource.create(
     engine: Optional[sa.Engine] = None,
     schema: Optional[str] = None,
     serializer: Optional[Serializer] = None,
+    sessionmaker: Optional[sessionmaker] = None,
+    run_migrations: bool = True,
 ) -> SQLAlchemyDatasource
 ```
 
-Factory method. Creates (or reuses) a SQLAlchemy engine and runs the schema migrations that install the `datasource_outputs` tracking table.
+Factory method. Creates (or reuses) a SQLAlchemy engine and creates or migrates the datasource's `datasource_outputs` tracking table, unless `run_migrations` is `False`.
 
 **Parameters:**
 - `database_url`: A SQLAlchemy-compatible connection URL (e.g., `"postgresql+psycopg://..."` or `"sqlite:///./my.db"`).
@@ -39735,12 +39763,44 @@ Factory method. Creates (or reuses) a SQLAlchemy engine and runs the schema migr
 - `engine`: Provide an existing `sa.Engine` instead of creating one from `database_url`. When set, `engine_kwargs` is ignored.
 - `schema`: The PostgreSQL schema in which the `datasource_outputs` table is created. Defaults to `"dbos"`. Has no effect for SQLite.
 - `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS default serializer (`pickle`, then Base64-encoded), not the `serializer` set in [`DBOSConfig`](./configuration.md#serialization-settings).
+- `sessionmaker`: A custom `sqlalchemy.orm.sessionmaker` used to create the session for each transaction, for example to use a custom `Session` subclass, session options, or event hooks. DBOS always binds sessions to the datasource's engine, so any `bind` you set is ignored, and a sessionmaker that sets `binds` raises a `DBOSException`. Defaults to `sessionmaker(expire_on_commit=False)`.
+- `run_migrations`: Whether to create and migrate the datasource's tables. Defaults to `True`. Set to `False` if your application's database role cannot run DDL: the datasource then only verifies that its tables are migrated, raising a `DBOSInitializationError` if they are not. Migrate them separately with [`SQLAlchemyDatasource.migrate`](#sqlalchemydatasourcemigrate).
 
 **Example:**
 ```python
 from dbos import SQLAlchemyDatasource
 
 ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+```
+
+#### `SQLAlchemyDatasource.migrate`
+
+```python
+SQLAlchemyDatasource.migrate(
+    database_url: str,
+    *,
+    schema: Optional[str] = None,
+    application_role: Optional[str] = None,
+) -> None
+```
+
+Create or migrate a datasource's tables without creating a datasource.
+Run this with a privileged database role (for example, as part of your deployment's migration step), then create your datasources with `run_migrations=False` so your application's role needs no DDL privileges.
+
+**Parameters:**
+- `database_url`: The connection URL of the datasource's database.
+- `schema`: The PostgreSQL schema holding the datasource's tables. Defaults to `"dbos"`. Has no effect for SQLite.
+- `application_role`: A PostgreSQL role to grant the minimal permissions a datasource needs at runtime: usage on the schema, `SELECT`, `INSERT`, and `DELETE` on the `datasource_outputs` table, and `SELECT` on the migration version table. Not supported for SQLite.
+
+**Example:**
+```python
+from dbos import SQLAlchemyDatasource
+
+# In your migration script, run with a privileged role:
+SQLAlchemyDatasource.migrate(os.environ["ADMIN_DATABASE_URL"], application_role="my_app_role")
+
+# In your application, run with my_app_role:
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"], run_migrations=False)
 ```
 
 #### `SQLAlchemyDatasource.transaction`
@@ -39828,10 +39888,12 @@ await AsyncSQLAlchemyDatasource.create(
     engine: Optional[AsyncEngine] = None,
     schema: Optional[str] = None,
     serializer: Optional[Serializer] = None,
+    sessionmaker: Optional[async_sessionmaker] = None,
+    run_migrations: bool = True,
 ) -> AsyncSQLAlchemyDatasource
 ```
 
-Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs the schema migrations that install the `datasource_outputs` tracking table.
+Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and creates or migrates the datasource's `datasource_outputs` tracking table, unless `run_migrations` is `False`.
 
 **Parameters:**
 - `database_url`: A SQLAlchemy-compatible async connection URL (e.g., `"postgresql+psycopg://..."` or `"sqlite+aiosqlite:///./my.db"`).
@@ -39839,6 +39901,8 @@ Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs th
 - `engine`: Provide an existing `AsyncEngine` instead of creating one from `database_url`. When set, `engine_kwargs` is ignored.
 - `schema`: The PostgreSQL schema in which the `datasource_outputs` table is created. Defaults to `"dbos"`. Has no effect for SQLite.
 - `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS default serializer (`pickle`, then Base64-encoded), not the `serializer` set in [`DBOSConfig`](./configuration.md#serialization-settings).
+- `sessionmaker`: A custom `sqlalchemy.ext.asyncio.async_sessionmaker` used to create the session for each transaction, for example to use a custom `AsyncSession` subclass, session options, or event hooks. DBOS always binds sessions to the datasource's engine, so any `bind` you set is ignored, and a sessionmaker that sets `binds` raises a `DBOSException`. Defaults to `async_sessionmaker(expire_on_commit=False)`.
+- `run_migrations`: Whether to create and migrate the datasource's tables. Defaults to `True`. Set to `False` if your application's database role cannot run DDL: the datasource then only verifies that its tables are migrated, raising a `DBOSInitializationError` if they are not. Migrate them separately with [`AsyncSQLAlchemyDatasource.migrate`](#asyncsqlalchemydatasourcemigrate).
 
 **Example:**
 
@@ -39853,6 +39917,20 @@ from dbos import AsyncSQLAlchemyDatasource
 # so it can be used from the event loop that runs your application.
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
+
+#### `AsyncSQLAlchemyDatasource.migrate`
+
+```python
+await AsyncSQLAlchemyDatasource.migrate(
+    database_url: str,
+    *,
+    schema: Optional[str] = None,
+    application_role: Optional[str] = None,
+) -> None
+```
+
+Coroutine version of [`SQLAlchemyDatasource.migrate`](#sqlalchemydatasourcemigrate).
+Create or migrate a datasource's tables without creating a datasource, then create your datasources with `run_migrations=False`.
 
 #### `AsyncSQLAlchemyDatasource.transaction`
 
@@ -40033,6 +40111,37 @@ Useful for testing.
 **Parameters:**
 - `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
 - `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
+
+#### migrate
+
+```python
+DBOS.migrate(
+    system_database_url: str,
+    *,
+    schema: str = "dbos",
+    application_role: Optional[str] = None,
+)
+```
+
+Create or migrate the DBOS [system database](../../explanations/system-tables.md) without launching DBOS.
+This is the programmatic equivalent of the [`dbos migrate`](./cli.md#dbos-migrate) command.
+Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`run_migrations=False`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
+It can be called before or without constructing a DBOS instance.
+
+**Parameters:**
+- `system_database_url`: The system database to create or migrate. The database is created if it does not exist.
+- `schema`: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
+- `application_role`: A Postgres role to grant access to the DBOS system schema once it is migrated. Not supported for SQLite.
+
+**Example:**
+```python
+from dbos import DBOS
+
+# In your migration script, run with a privileged role:
+DBOS.migrate(os.environ["ADMIN_SYSTEM_DATABASE_URL"], application_role="my_app_role")
+```
+
+To migrate the tables used by [datasources](./datasources.md), use [`SQLAlchemyDatasource.migrate`](./datasources.md#sqlalchemydatasourcemigrate).
 
 #### reset_system_database
 
@@ -42355,7 +42464,7 @@ Datasources wrap a SQLAlchemy engine with DBOS transaction tracking, ensuring th
 
 #### Creating a Datasource
 
-Create a datasource by calling the `create` factory method with a database URL. The factory automatically sets up the `datasource_outputs` tracking table in the target database.
+Create a datasource by calling the `create` factory method with a database URL. By default, the factory creates or migrates the `datasource_outputs` tracking table in the target database (see [Running Datasource Migrations Separately](#running-datasource-migrations-separately) if your application's database role cannot run DDL).
 
 Use `SQLAlchemyDatasource` for synchronous (non-async) code and `AsyncSQLAlchemyDatasource` for async code:
 
@@ -42396,6 +42505,25 @@ Both `create` methods take a required `database_url` and accept optional argumen
 | `engine` | `Engine` / `AsyncEngine` | Provide your own SQLAlchemy engine instead of creating one |
 | `schema` | `str` | Postgres schema name for the `datasource_outputs` table (defaults to `"dbos"`; ignored for SQLite) |
 | `serializer` | `Serializer` | Custom serializer for transaction outputs |
+| `sessionmaker` | `sessionmaker` / `async_sessionmaker` | Custom SQLAlchemy sessionmaker for transaction sessions, for example to use a custom `Session` subclass or event hooks. Sessions are always bound to the datasource's engine. |
+| `run_migrations` | `bool` | Whether to create and migrate the `datasource_outputs` table (defaults to `True`). If `False`, only verify it is migrated. |
+
+#### Running Datasource Migrations Separately
+
+By default, creating a datasource creates its `datasource_outputs` table (and the schema containing it) if they do not exist, which requires DDL privileges.
+If your application's database role should not have those privileges, run the datasource migrations separately with a privileged role, using [`SQLAlchemyDatasource.migrate`](../reference/datasources.md#sqlalchemydatasourcemigrate) (or [`AsyncSQLAlchemyDatasource.migrate`](../reference/datasources.md#asyncsqlalchemydatasourcemigrate)).
+Pass `application_role` to grant your application's role the minimal permissions it needs to use the datasource.
+Then, create your datasources with `run_migrations=False`, so they only verify their tables are migrated:
+
+```python
+# In your migration script, run with a privileged role:
+SQLAlchemyDatasource.migrate(os.environ["ADMIN_DATABASE_URL"], application_role="my_app_role")
+
+# In your application, run with my_app_role:
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"], run_migrations=False)
+```
+
+You can similarly migrate the DBOS system database separately with [`DBOS.migrate`](../reference/dbos-class.md#migrate) or the [`dbos migrate`](../reference/cli.md#dbos-migrate) command.
 
 #### Using a Datasource
 
@@ -42521,6 +42649,7 @@ The first argument to `run_tx_step` / `run_tx_step_async` is a dict with optiona
 #### How Datasource Transactions Work
 
 When a datasource transaction runs inside a DBOS workflow, DBOS records the outcome atomically in the same database transaction. If the workflow is interrupted and replayed, DBOS detects the existing record and returns the stored result without re-executing the function&mdash;exactly-once semantics even for side effects on your application database.
+Once the workflow completes, its outcome is recorded in the system database, so DBOS deletes its records from the `datasource_outputs` table.
 
 Outside a workflow, datasource transactions execute normally as plain SQLAlchemy transactions with no recording overhead.
 
@@ -43142,6 +43271,8 @@ def example_workflow(friend: str):
     else:
         step_two()
 ```
+
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it raises a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
 
 ### Workflow Timeouts
 
@@ -46319,6 +46450,8 @@ If you need to run sequences of operations concurrently, start child workflows w
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it throws a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
+
 ### Workflow Timeouts
 
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
@@ -47633,6 +47766,7 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 #### DBOS.forkWorkflow
 
@@ -47834,6 +47968,7 @@ export interface DBOSConfig {
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
   observabilityQueryTimeoutMs?: number;
+  systemDatabaseIdleTransactionTimeoutMs?: number;
 
   enableOTLP?: boolean;
   logLevel?: string;
@@ -47868,9 +48003,10 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries against the system database (such as `DBOS.listWorkflows`, `DBOS.listQueuedWorkflows`, and `DBOS.listWorkflowSteps`), so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
+- **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections DBOS creates. Defaults to 60000 (60 seconds).
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False (True in DBOS Cloud).
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
-- **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
+- **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle). `error()` receives the message of an `Error`, with its stack trace in `metadata.stack` and the original `Error` object in `metadata.error`.
 - **otlpTracesEndpoints**: A list of OTLP-compatible receivers to which to send traces. Only used when `enableOTLP` is enabled.
 - **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
@@ -48001,6 +48137,8 @@ In that case, this command can be run with a privileged user to create all DBOS 
 After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the system database.
 Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`runMigrations: false`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
+You can also run these migrations from code with [`DBOS.migrate`](./dbos-class.md#dbosmigrate).
+This command does not migrate the tables used by [datasources](./datasource.md); use your datasource's [`initializeDBOSSchema`](./datasource.md#installing-the-dbos-schema) method for those.
 
 **Arguments:**
 
@@ -48105,7 +48243,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -48138,8 +48276,8 @@ class DBOSClient {
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
     cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
-    resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
-    resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
     deleteWorkflow(workflowID: string, deleteChildren?: boolean): Promise<void>;
     deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
@@ -48183,6 +48321,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
 - **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
+- **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 
 Example:
 
@@ -48586,12 +48725,12 @@ Please see [`DBOS.setWorkflowDelay`](./methods.md#dbossetworkflowdelay) for more
 
 ##### `resumeWorkflow`
 
-Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts).
+Resumes a workflow that had stopped during execution (due to cancellation or exceeding its maximum recovery attempts) and returns a handle to it.
 Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more information.
 
 ##### `resumeWorkflows`
 
-Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs.
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
 Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more information.
 
 ##### `forkWorkflow`
@@ -49044,6 +49183,7 @@ export interface DBOSConfig {
   systemDatabasePool?: Pool;
   runMigrations?: boolean;
   observabilityQueryTimeoutMs?: number;
+  systemDatabaseIdleTransactionTimeoutMs?: number;
   useListenNotify?: boolean;
   notificationCoalesceMs?: number;
 
@@ -49095,10 +49235,11 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead. The pool remains yours: its configuration is your responsibility (we recommend attaching an `error` handler to it so connection failures are handled), and `DBOS.shutdown` does not close it.
 - **runMigrations**: Whether to create and migrate the system database on launch. Defaults to true.
-Set to false for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`npx dbos schema`](./cli.md#npx-dbos-schema).
+Set to false for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`npx dbos schema`](./cli.md#npx-dbos-schema) or [`DBOS.migrate`](./dbos-class.md#dbosmigrate).
 Launch then verifies the schema instead of changing it: a system database that is missing, or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
 - **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries (such as [listing workflows](./methods.md#dboslistworkflows), [queued workflows](./methods.md#dboslistqueuedworkflows), and [workflow steps](./methods.md#dboslistworkflowsteps)), so a slow query on a large system database does not hold resources indefinitely. A query that exceeds the timeout throws a `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
+- **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections DBOS creates. Defaults to 60000 (60 seconds).
 - **useListenNotify**: Whether to use Postgres `LISTEN/NOTIFY` to promptly wake operations waiting on messages, events, or streams (such as [`recv`](./methods.md#dbosrecv), [`getEvent`](./methods.md#dbosgetevent), and [`readStream`](./methods.md#dbosreadstream)). Defaults to true. Set to false if your database does not support `LISTEN/NOTIFY` (for example, [CockroachDB](../../integrations/cockroachdb.md)); DBOS then polls the database instead, which can increase the latency of these operations.
 - **notificationCoalesceMs**: When `useListenNotify` is enabled, the interval, in milliseconds, over which DBOS batches the notifications for events and stream values this process writes before sending them. This bounds the extra latency before waiting readers are woken. Defaults to 10. Must be at least 1.
 
@@ -49248,8 +49389,15 @@ class KnexDataSource {
   /**
    * @param name - A unique name for the datasource.
    * @param config - A Knex configuration for the datasource. Passed directly into the Knex pool object.
+   * @param schemaName - The schema holding the DBOS `transaction_completion` table. Defaults to `dbos`.
+   * @param options.runMigrations - Whether to create and migrate the DBOS schema at launch. Defaults to true.
    */
-  constructor(name: string, config: Knex.Config)
+  constructor(
+    name: string,
+    config: Knex.Config,
+    schemaName: string = 'dbos',
+    options: { runMigrations?: boolean } = {},
+  )
 }
 
 const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
@@ -49265,8 +49413,29 @@ To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment variable sho
 #### Installing the DBOS Schema
 
 DBOS datasources require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run exactly once.
+Once a workflow completes, DBOS deletes its records from this table.
 
-This table can be installed by running the `initializeDBOSSchema` method of your datasource. You may do this as part of database schema migrations or at app startup. For example, here is a Knex migration file that installs the DBOS schema in Knex:
+By default, each datasource creates or migrates this table when DBOS launches, which requires privileges to run DDL in your database.
+Alternatively, you can install it with the static `initializeDBOSSchema` method of your datasource, for example as part of your database schema migrations, run with a privileged role:
+
+```typescript
+static initializeDBOSSchema(
+  config, // A connection configuration or client; the type depends on the datasource
+  schemaName: string = 'dbos',
+  options: { applicationRole?: string } = {},
+): Promise<void>
+```
+
+If `applicationRole` is set, that Postgres role is granted the minimal permissions it needs to use the datasource: usage on the schema, `SELECT`, `INSERT`, and `DELETE` on the `transaction_completion` table, and `SELECT` on the `dbos_transaction_completion_migrations` version table.
+
+Then, construct your datasource with `runMigrations: false` in its final options argument, so your application's role needs no DDL privileges.
+At launch, the datasource then verifies that its schema is migrated instead of altering it, throwing a `DBOSInitializationError` if it is not:
+
+```typescript
+const dataSource = new KnexDataSource('knex-ds', config, 'dbos', { runMigrations: false });
+```
+
+For example, here is a Knex migration file that installs the DBOS schema in Knex:
 
 ```ts
 const {
@@ -49505,6 +49674,35 @@ In a test environment, after this completes DBOS can be re-configured and `launc
 - **deregister**: If true, all current function, instance, data source, event receiver, and any other in-process registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Queues and schedules persisted in the system database are not affected. Useful for testing.
 - **workflowCompletionTimeoutMS**: Wait this many milliseconds for workflows running in this process to complete before shutting down. Defaults to not waiting.
 
+#### DBOS.migrate
+
+```typescript
+DBOS.migrate(
+  systemDatabaseUrl: string,
+  options?: {
+    schemaName?: string;
+    applicationRole?: string;
+  }
+): Promise<void>
+```
+
+Create or migrate the DBOS [system database](../../explanations/system-tables.md) without launching DBOS.
+This is the programmatic equivalent of the [`npx dbos schema`](./cli.md#npx-dbos-schema) command.
+Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`runMigrations: false`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
+
+**Parameters:**
+- **systemDatabaseUrl**: The system database to create or migrate. The database is created if it does not exist.
+- **schemaName**: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
+- **applicationRole**: A Postgres role to grant access to the DBOS system schema once it is migrated.
+
+**Example:**
+```typescript
+// In your migration script, run with a privileged role:
+await DBOS.migrate(process.env.ADMIN_SYSTEM_DATABASE_URL!, { applicationRole: 'my_app_role' });
+```
+
+To migrate the tables used by [datasources](./datasource.md), use your datasource's [`initializeDBOSSchema`](./datasource.md#installing-the-dbos-schema) method.
+
 #### DBOS.logRegisteredEndpoints
 
 ```typescript
@@ -49601,7 +49799,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version. If `applicationName` names another application, it is instead left unset by default, so the workflow is only dequeued by an executor of that application running its latest registered version.
   - **applicationName**: The application that owns and runs the enqueued workflow. Defaults to this application. Set to enqueue the workflow on behalf of another application sharing the system database. To enqueue another application's workflow without a reference to its function, use [`DBOS.enqueueWorkflowWithOptions`](./queues.md#dbosenqueueworkflowwithoptions) instead.
 - **workflowAttributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](#workflow-status), are **not inherited** by child workflows, and are searchable via the `attributes` filter of [`DBOS.listWorkflows`](#dboslistworkflows). Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
-- **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with [`DBOS.withAuthedContext`](./plugins.md#setting-authenticated-user-and-roles)).
+- **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with `DBOS.withAuthedContext`).
 - **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`. Defaults to the caller's authenticated roles, if any.
 
 #### DBOS.waitFirst
@@ -50120,6 +50318,8 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 
 If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 
+Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
+
 #### DBOS.resumeWorkflows
 
 ```typescript
@@ -50130,6 +50330,7 @@ DBOS.resumeWorkflows<T>(
 ```
 
 Resume multiple workflows. Behaves like [`resumeWorkflow`](#dbosresumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
+If any workflow does not exist, throws `DBOSNonExistentWorkflowError` and resumes none of them.
 
 #### DBOS.deleteWorkflow
 
@@ -50839,177 +51040,6 @@ The available values are:
 - **`undefined`** (default): Uses the serializer configured in [`DBOSConfig`](./configuration.md#custom-serialization) (defaults to SuperJSON). Inside a workflow that uses portable serialization, uses `'portable'` instead.
 - **`'portable'`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
 - **`'native'`**: Explicitly uses the native TypeScript serializer.
-
----
-
-## DBOS Plugin Architecture(Reference)
-
-:::tip
-Unless you intend to extend the DBOS Transact library, you can ignore this topic.
-:::
-
-DBOS Transact for TypeScript currently provides two explicit extension mechanisms:
-* [Datasources](#datasources) integrate database clients, ORMs, or other resources with the DBOS lifecycle and transaction functions.
-* [External Event Receivers](#event-receivers) integrate event receivers (pollers, inbound sockets, timers, etc.) with the DBOS lifecycle, and initiate workflow functions upon receiving events.
-
-### Datasources
-
-#### Method Of Operation
-
-The principle behind DBOS datasources is that DBOS and the datasource work together to execute functions in a checkpointed, transactional context.
-1. App code calls a transaction function (which does not have to be registered in advance).  This call is made to the datasource instance, as it provides full type checking for the transaction configuration.
-2. DBOS runs its step wrapper first, consulting the system database, and skipping the step if it has already run.
-3. If the step should be run, DBOS calls the datasource to start a transaction.
-4. The datasource starts a transaction and calls the transaction function, making the transactional datasource client available to that function via context.
-5. Upon completion of the function, the datasource writes its own completion checkpoint before ending the transaction.  Including this checkpoint in the transaction ensures exactly-once processing of the transaction.
-6. Control returns to the DBOS step wrapper, which writes the step result to the system database and emits tracing information.
-7. The transaction's result is returned to the caller.
-
-To guarantee exactly-once execution, datasources must maintain a completion checkpoint table in the same database used by the transaction function.  This check may be implemented optimistically (by rolling back the transaction upon a checkpoint write conflict in step 5 above) or pessimistically (by querying the checkpoint table before calling the transaction function in step 4 above).
-
-#### Datasource Interfaces
-
-Datasource integration is based on 3 key interfaces:
- - `DBOSDataSource`: User-facing datasource API.  Part interface and part guideline, this is technically just a suggestion, but following it ensures a consistent developer experience across datasources.
- - `DataSourceTransactionHandler`: This interface is provided by the datasource to DBOS, so that DBOS can control transaction scope.
- - `@dbos-inc/dbos-sdk/datasource`: Exports from this submodule are used by datasources to do register themselves and initiate transactions.
-
-##### `DBOSDataSource`
-
-`DBOSDataSource` is the API for datasources to present to the application developer.  It provides a consistent, type-safe way to register and call transaction functions.
-`DBOSDataSource` is templatized on its `Config` type, which describes datasource-specific configuration for a transaction function.  `Config` typically covers transaction isolation, read-write/read-only, and the transaction's name.
-
- - `runTransaction` should run its callback, via the `runTransaction` function [below](#dbos-incdbos-sdkdatasource)
- - `registerTransaction` should register the provided function and return an invocation wrapper via `registerTransaction` [below](#dbos-incdbos-sdkdatasource)
- - `transaction` should be a decorator that registers its target method and installs it via `registerTransaction` [below](#dbos-incdbos-sdkdatasource)
-
-In addition to implementing the `DBOSDataSource` interface, datasource classes should also provide:
- - A way to access the transactional client.  The preferred method is with an instance `get` method: `get client(): <client type>;`.
- - A function to install any necessary transaction checkpoint tables, particularly as a helper for use within the test environment.
-
-##### `DataSourceTransactionHandler`
-
-A `DataSourceTransactionHandler` must be provided at datasource registration, and implements the transaction lifecycle using its underlying data access library.
- - `initialize`: This will be called during `DBOS.launch()`, and should validate that a connection can be established and that any required schemas are installed.  If not, a clear error should be thrown.
- - `destroy`: This is called during `DBOS.shutdown()` and should close any connections and perform any other cleanup.
- - `invokeTransactionFunction`: This should execute the provided function within a datasource transaction.  This is called by DBOS from within its step processing code, which keeps system database records and provides tracing.
-
-##### `@dbos-inc/dbos-sdk/datasource`
-The primary purpose of this submodule export is to provide the functions datasources need for registration and transaction invocation.
- - `registerDataSource`: Called by a datasource constructor to self-register the datasource with DBOS.
- - `registerTransaction`: Called by a datasource to create the transaction wrapper for a transaction function.  The returned function should be called in lieu of the original.  This is used within the datasource's `registerTransaction` method.
- - `runTransaction`: Called by a datasource implementation of `runTransaction` to run code within a transaction step wrapper.  The datasource must pass its registered name as the `dsName` option.
-
-This export also includes some utilities for datasource implementations based on Postgres:
- - `PGIsolationLevel` and `PGTransactionConfig`: These types should be used to represent transaction isolation settings in Postgres-based datasources.
- - `createTransactionCompletionSchemaPG` and `createTransactionCompletionTablePG`: These functions take a schema name (default `dbos`) and return the SQL statements used to create the transaction checkpoint schema and table.
- - `isPGRetriableTransactionError`: Transactions that throw errors are retried by datasources under some circumstances.  This function establishes whether a transaction is eligible to be retried based on the thrown error.
- - `isPGKeyConflictError`: Indicates if the error is a key conflict.  Such errors, if thrown from the transaction checkpoint insert, indicate that the transaction may already be complete.
-
-#### Datasource Examples
-The best examples are found in the DBOS [github repository](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages).  Datasource package names end with `-datasource`, such as [`knex-datasource`](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/knex-datasource)
-
-### Event Receivers
-Event receivers are a broad category of extensions that run in a DBOS app and handle requests or other outside events.  Examples include:
- - Kafka message consumers
- - Clock-based schedulers
-
-What event receivers have in common is that they run in the background and execute DBOS functions in response to externally-triggered circumstances.
-
-#### Event Receiver Architecture
-
-During program initialization, event receivers are constructed and associated with DBOS functions and methods.  Configuration information is collected during initialization, but no actions are taken until `DBOS.launch()` is called.  Upon `launch`, event receivers should review their registrations and connect to any outside resources and report clear error messages if this fails.  After any initialization is complete, event receivers should commence processing events and initiating DBOS function calls in response.  Event receivers are also told to deinitialize when DBOS shuts down.
-
-#### Lifecycle
-
-DBOS event receiver objects should implement the `DBOSLifecycleCallback` interface:
-```typescript
-/**
- * Interface for integrating into the DBOS startup/shutdown lifecycle
- */
-export interface DBOSLifecycleCallback {
-  /** Called back during DBOS launch */
-  initialize?(): Promise<void>;
-  /** Called back upon shutdown (usually in tests) to close connections and free resources */
-  destroy?(): Promise<void>;
-  /** Called by `DBOS.logRegisteredEndpoints`; implementers should emit a diagnostic list of all registrations */
-  logRegisteredEndpoints?(): void;
-}
-```
-
-Upon construction, event receivers should register themselves via `DBOS.registerLifecycleCallback`.  Upon `DBOS.launch()`, all registered `initialize()` methods will be called.  Upon `DBOS.shutdown()`, all registered `destroy()` methods will be called.  Event receivers should implement a `logRegisteredEndpoints()` function, which is a [diagnostic aid](../reference/dbos-class.md#dboslogregisteredendpoints) that logs all associations between events and functions to [`DBOS.logger`](../tutorials/logging.md#logging).
-
-#### Associating Information With Classes And Methods
-As program initialization is nonlinear, the DBOS library provides infrastructure to help register the classes and functions associated with an event receiver.  A cohesive picture of this registration information is then available during `initialize`.
-
-The following `DBOS.` static methods are used to collect registration information during initialization:
-```typescript
-  associateClassWithInfo(external: AnyConstructor | object | string, cls: AnyConstructor | string): object;
-
-  associateFunctionWithInfo<This, Args extends unknown[], Return>(
-    external: AnyConstructor | object | string,
-    func: (this: This, ...args: Args) => Promise<Return>,
-    target: FunctionName,
-  ) : { registration: MethodRegistrationBase; regInfo: object };
-```
-
-The parameters to these functions are:
- - `external`: A key that identifies the event receiver; this can be its constructor, an instance, or a name string.
- - `cls`: For `associateClassWithInfo`, the constructor of the class receiving the registration
- - `func`: For `associateFunctionWithInfo`, the function receiving the registration information
- - `target`: For `associateFunctionWithInfo`, this is the name to assign to the function (if it does not already have one)
-
-Each of these methods returns an `object` that is specific to the event receiver (for `associateFunctionWithInfo`, this is `regInfo`); this object can be used by the event receiver to store any details.
-
-#### Finding And Invoking Registered Methods
-At the time its `initialize` method is called, an event receiver can retrieve all its registration information via `DBOS.getAssociatedInfo`:
-
-```typescript
-getAssociatedInfo(
-  external: AnyConstructor | object | string,
-  cls?: object | string,
-  funcName?: string,
-): readonly ExternalRegistration[]
-
-interface ExternalRegistration {
-  classConfig?: unknown;
-  methodConfig?: unknown;
-  methodReg: MethodRegistrationBase;
-}
-```
-
-The value of `external` should match the value provided to [`associateClassWithInfo` and `associateFunctionWithInfo` above](#associating-information-with-classes-and-methods).
-
-If `cls` or `funcName` are provided, these are used to filter the registrations, otherwise all registrations are retrieved.
-
-The returned `ExternalRegistration` array contains one entry per retrieved function:
- - `classConfig` is the same `object` returned by `associateClassWithInfo`
- - `methodConfig` is the same `regInfo` object returned by `associateFunctionWithInfo`
- - `methodReg` is the method registration structure, which allow the target (and any associated wrappers) to be invoked.
- 
-In response to events, receivers should take one of the following approaches to call the target functions:
- - For synchronous calls, event receivers should call the `invoke` method of `methodReg`.  `invoke` ensures that any DBOS wrappers are executed in addition to the function's code.
- - For starting workflows, event receivers should call `DBOS.startWorkflow` with `methodReg.registeredFunction` as the workflow.  The workflow ID, queue, and other parameters may be specified to `startWorkflow`.
-
-#### Setting Authenticated User And Roles
-When dispatching events and requests, it is possible to set the authenticated user and roles using `DBOS.withAuthedContext`.  This function sets the context for the duration of its `callback`:
-```typescript
-// Set the authenticated user, and roles allowed by the authentication system for the scope of the callback() function
-DBOS.withAuthedContext<R>(authedUser: string, authedRoles: string[], callback: () => Promise<R>): Promise<R>
-```
-
-In the following example, the `Secured.workflow` function is executed for authenticated user "joe", with role "user".
-DBOS does not check roles itself; the workflow can read them from `DBOS.authenticatedUser` and `DBOS.authenticatedRoles`.
-````typescript
-  const hijoe = await DBOS.withAuthedContext('joe', ['user'], async() => {
-    return await Secured.workflow('args go here');
-  });
-````
-
-When starting a workflow, you can instead pass `authenticatedUser` and `authenticatedRoles` to [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow), which override the ones set by `DBOS.withAuthedContext`.
-
-#### Event Receiver Examples
-The best examples are found in the DBOS [github repository](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages).  Event receiver names end with `-receive`, such as [`kafkajs-receive`](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/kafkajs-receive).
 
 ---
 
@@ -52126,7 +52156,7 @@ const client = await DBOSClient.create({
 When a custom logger is set, DBOS directs all its internal logging to it (including `DBOS.logger` calls in your workflows and steps), replacing the built-in console and OTLP log sinks.
 Keep the following contract in mind when implementing `DLogger`:
 
-- **Log entries arrive as strings.** DBOS stringifies non-string entries before delegating. `error()` receives the message of an `Error`, with its stack trace in `metadata.stack`.
+- **Log entries arrive as strings.** DBOS stringifies non-string entries before delegating. `error()` receives the message of an `Error`, with its stack trace (including its `cause` chain and, for an `AggregateError`, its `errors`) in `metadata.stack` and the original `Error` object in `metadata.error`, so loggers that serialize errors themselves can use it.
 - **Context metadata is provided via the span.** When called from a workflow or step with tracing enabled (`tracingEnabled` or `enableOTLP`), `metadata.span?.attributes` carries the operation context (workflow ID, operation name and type, etc.); without tracing, `metadata.span` is undefined.
 - **Level routing is your responsibility.** DBOS does not filter by `logLevel` before delegating; your implementation decides what to do with each level.
 - **OTLP log export is disabled.** Logs are not sent over OTLP even if `enableOTLP` is on (tracing is unaffected).
@@ -52880,20 +52910,7 @@ When `DBOS.applySchedules` updates an existing schedule, it replaces the entire 
 For example, if a schedule was routed to a named queue and you re-apply it without setting `queueName`, it reverts to the internal queue.
 The schedule's status and last-fired time are preserved.
 
-To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-Valid cron schedules contain 5 or 6 items, separated by spaces:
-
-```
- ┌────────────── second (optional)
- │ ┌──────────── minute
- │ │ ┌────────── hour
- │ │ │ ┌──────── day of month
- │ │ │ │ ┌────── month
- │ │ │ │ │ ┌──── day of week
- │ │ │ │ │ │
- │ │ │ │ │ │
- * * * * * *
-```
+DBOS uses [node-cron](https://github.com/node-cron/node-cron) to parse cron expressions, so schedules support its full [cron syntax](https://github.com/node-cron/node-cron#cron-syntax), including an optional seconds field.
 
 Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option (inside `options` for `DBOS.createSchedule`, or as a top-level field for `DBOS.applySchedules`) to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
 
@@ -53752,8 +53769,29 @@ Such methods will be run inside datasource transactions when called.
 #### Installing the DBOS Schema
 
 DBOS datasources require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run exactly once.
+Once a workflow completes, DBOS deletes its records from this table.
 
-This table can be installed by running the `initializeDBOSSchema` method of your datasource. You may do this as part of database schema migrations or at app startup. For example, here is a Knex migration file that installs the DBOS schema in Knex:
+By default, each datasource creates or migrates this table when DBOS launches, which requires privileges to run DDL in your database.
+Alternatively, you can install it with the static `initializeDBOSSchema` method of your datasource, for example as part of your database schema migrations, run with a privileged role:
+
+```typescript
+static initializeDBOSSchema(
+  config, // A connection configuration or client; the type depends on the datasource
+  schemaName: string = 'dbos',
+  options: { applicationRole?: string } = {},
+): Promise<void>
+```
+
+If `applicationRole` is set, that Postgres role is granted the minimal permissions it needs to use the datasource: usage on the schema, `SELECT`, `INSERT`, and `DELETE` on the `transaction_completion` table, and `SELECT` on the `dbos_transaction_completion_migrations` version table.
+
+Then, construct your datasource with `runMigrations: false` in its final options argument, so your application's role needs no DDL privileges.
+At launch, the datasource then verifies that its schema is migrated instead of altering it, throwing a `DBOSInitializationError` if it is not:
+
+```typescript
+const dataSource = new KnexDataSource('knex-ds', config, 'dbos', { runMigrations: false });
+```
+
+For example, here is a Knex migration file that installs the DBOS schema in Knex:
 
 ```ts
 const {
@@ -54455,6 +54493,8 @@ If you need to run sequences of operations concurrently, start child workflows w
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
+If DBOS detects that a single execution of a workflow recorded different results for the same step, it throws a `DBOSStepNondeterminismError`, indicating the workflow is not deterministic.
+
 ### Workflow Timeouts
 
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
@@ -54746,7 +54786,7 @@ The [DBOS CLI](./reference/cli.md) and [DBOS Cloud](../conductor/reference/dbos-
 The `@dbos-inc/koa-serve` package, `DBOS.request`, `DBOS.runWithContext`, and the `@DBOS.requiredRole` and `@DBOS.defaultRequiredRole` decorators have been removed.
 Instead, serve requests with the web framework of your choice and call or start workflows from your request handlers, passing them any request data they need as arguments, as shown in [Add DBOS To Your App](./integrating-dbos.md#2-launch-dbos-in-your-app).
 
-To associate an authenticated user and roles with a workflow, run it inside [`DBOS.withAuthedContext`](./reference/plugins.md#setting-authenticated-user-and-roles), then check `DBOS.authenticatedRoles` in your workflow.
+To associate an authenticated user and roles with a workflow, run it inside `DBOS.withAuthedContext`, then check `DBOS.authenticatedRoles` in your workflow.
 
 **Before:**
 

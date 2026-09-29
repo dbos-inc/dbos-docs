@@ -11,7 +11,7 @@ Datasources wrap a SQLAlchemy engine with DBOS transaction tracking, ensuring th
 
 ### Creating a Datasource
 
-Create a datasource by calling the `create` factory method with a database URL. The factory automatically sets up the `datasource_outputs` tracking table in the target database.
+Create a datasource by calling the `create` factory method with a database URL. By default, the factory creates or migrates the `datasource_outputs` tracking table in the target database (see [Running Datasource Migrations Separately](#running-datasource-migrations-separately) if your application's database role cannot run DDL).
 
 Use `SQLAlchemyDatasource` for synchronous (non-async) code and `AsyncSQLAlchemyDatasource` for async code:
 
@@ -52,6 +52,25 @@ Both `create` methods take a required `database_url` and accept optional argumen
 | `engine` | `Engine` / `AsyncEngine` | Provide your own SQLAlchemy engine instead of creating one |
 | `schema` | `str` | Postgres schema name for the `datasource_outputs` table (defaults to `"dbos"`; ignored for SQLite) |
 | `serializer` | `Serializer` | Custom serializer for transaction outputs |
+| `sessionmaker` | `sessionmaker` / `async_sessionmaker` | Custom SQLAlchemy sessionmaker for transaction sessions, for example to use a custom `Session` subclass or event hooks. Sessions are always bound to the datasource's engine. |
+| `run_migrations` | `bool` | Whether to create and migrate the `datasource_outputs` table (defaults to `True`). If `False`, only verify it is migrated. |
+
+### Running Datasource Migrations Separately
+
+By default, creating a datasource creates its `datasource_outputs` table (and the schema containing it) if they do not exist, which requires DDL privileges.
+If your application's database role should not have those privileges, run the datasource migrations separately with a privileged role, using [`SQLAlchemyDatasource.migrate`](../reference/datasources.md#sqlalchemydatasourcemigrate) (or [`AsyncSQLAlchemyDatasource.migrate`](../reference/datasources.md#asyncsqlalchemydatasourcemigrate)).
+Pass `application_role` to grant your application's role the minimal permissions it needs to use the datasource.
+Then, create your datasources with `run_migrations=False`, so they only verify their tables are migrated:
+
+```python
+# In your migration script, run with a privileged role:
+SQLAlchemyDatasource.migrate(os.environ["ADMIN_DATABASE_URL"], application_role="my_app_role")
+
+# In your application, run with my_app_role:
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"], run_migrations=False)
+```
+
+You can similarly migrate the DBOS system database separately with [`DBOS.migrate`](../reference/dbos-class.md#migrate) or the [`dbos migrate`](../reference/cli.md#dbos-migrate) command.
 
 ### Using a Datasource
 
@@ -177,5 +196,6 @@ The first argument to `run_tx_step` / `run_tx_step_async` is a dict with optiona
 ### How Datasource Transactions Work
 
 When a datasource transaction runs inside a DBOS workflow, DBOS records the outcome atomically in the same database transaction. If the workflow is interrupted and replayed, DBOS detects the existing record and returns the stored result without re-executing the function&mdash;exactly-once semantics even for side effects on your application database.
+Once the workflow completes, its outcome is recorded in the system database, so DBOS deletes its records from the `datasource_outputs` table.
 
 Outside a workflow, datasource transactions execute normally as plain SQLAlchemy transactions with no recording overhead.

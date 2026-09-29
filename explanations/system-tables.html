@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.183a1e4a.js" defer="defer"></script>
-<script src="/assets/js/main.685f4c50.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2d2442a1.js" defer="defer"></script>
+<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -93,7 +93,8 @@ Each row represents a different workflow execution.</p>
 <li class=""><strong>was_forked_from</strong>: Whether this workflow has ever been forked from by another workflow.</li>
 <li class=""><strong>parent_workflow_id</strong>: The ID of the parent workflow, if this workflow was started as a child of another workflow.</li>
 <li class=""><strong>delay_until_epoch_ms</strong>: For workflows in the <code>DELAYED</code> state, the epoch timestamp at which the workflow should transition to <code>ENQUEUED</code> and become eligible for execution.</li>
-<li class=""><strong>owner_xid</strong>: Internal transaction ID used to prevent duplicate workflow starts.</li>
+<li class=""><strong>owner_xid</strong>: The ownership token of the execution currently running this workflow, used to <a class="" href="/explanations/concurrent-executions#workflow-ownership">detect concurrent executions</a>. Null when no execution owns the workflow.</li>
+<li class=""><strong>creator_xid</strong>: Internal transaction ID used to prevent duplicate workflow starts.</li>
 <li class=""><strong>application_id</strong>: Internal field used only in DBOS Cloud.</li>
 <li class=""><strong>serialization</strong>: The name of the serialization format used for this workflow&#x27;s inputs, output, and error (e.g. <code>java_jackson</code>, <code>py_pickle</code>, <code>portable_json</code>). Null if the default serializer was used.</li>
 <li class=""><strong>rate_limited</strong>: Whether this workflow was dequeued from a rate-limited queue.</li>
