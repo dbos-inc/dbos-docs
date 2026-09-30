@@ -48,7 +48,7 @@ console.log(await researchAgent('Why did the agent cross the road?'));
 npm install @dbos-inc/vercel-ai @dbos-inc/dbos-sdk ai
 ```
 
-Requires DBOS v4.21+ or v5, AI SDK v7+, and a Postgres database for DBOS.
+Requires DBOS v4.27+ or v5, AI SDK v7+, and a Postgres database for DBOS.
 
 ## Durable Model Calls
 
@@ -86,41 +86,9 @@ durableCalls({
   shouldRetry?: (error: unknown) => boolean;  // default: skip provider-declared non-retryable errors and aborts
   timeoutMS?: number;         // per-attempt timeout
   durableStream?: string;     // stream each call's output to this durable stream
+  include?: { requestBody?: boolean; responseBody?: boolean };  // checkpoint raw provider bodies; match generateText's `include` (default: false)
 });
 ```
-
-## Durable Streams
-
-You can [**durably stream**](../typescript/tutorials/workflow-communication.md#workflow-streaming) agent or model output so it can be read by an external client or UI.
-To do this, configure `durableCalls` or `durableTools`/`durableMCPTools` with a durable stream name:
-
-```ts
-import { createUIMessageStreamResponse, streamText } from 'ai';
-import { durableCalls, durableTools, readDurableStream } from '@dbos-inc/vercel-ai';
-
-const model = wrapLanguageModel({ model: openai('gpt-5'), middleware: durableCalls({ durableStream: 'ui' }) });
-const tools = durableTools(myTools, { durableStream: 'ui' });
-
-const chatTurn = DBOS.registerWorkflow(async (messages: ModelMessage[]) => {
-  const result = streamText({ model, messages, tools, stopWhen: stepCountIs(10) });
-  return await result.text;
-}, { name: 'chatTurn' });
-
-const handle = await DBOS.startWorkflow(chatTurn)(messages);
-return createUIMessageStreamResponse({
-  stream: readDurableStream({ workflowID: handle.workflowID, key: 'ui', messageId }),
-});
-```
-
-You can read from a durable stream using `readDurableStream`, for example to stream it to a UI.
-It emits a stream of AI SDK `UIMessageChunk`.
-You can also pass a [`DBOSClient`](../typescript/reference/client.md) into `readDurableStream` to read it from a different process.
-
-You can write your own data to a stream with `writeDurableStream(key, chunks)`.
-Your streams are closed when your workflow finishes; you can also close a stream early using `closeDurableStream`.
-
-If a workflow is interrupted during a model call, when the workflow recovers, it restarts the model call and streams its output again.
-Readers that connect afterwards see the model's output once; live readers receive a transient `data-dbos-superseded` chunk indicating the model call has been restarted.
 
 ## Durable Tools
 
@@ -160,6 +128,73 @@ const tools = durableTools(myTools, {
 
 When using durable tools, to ensure the ordering of parallel tool calls is consistent during recovery, do not await I/O in callbacks that run before a tool executes, such as `onToolExecutionStart`.
 
+## Durable Streams
+
+You can [**durably stream**](../typescript/tutorials/workflow-communication.md#workflow-streaming) agent or model output so it can be read by an external client or UI.
+To do this, configure `durableCalls` or `durableTools`/`durableMCPTools` with a durable stream name:
+
+```ts
+import { createUIMessageStreamResponse, streamText } from 'ai';
+import { durableCalls, durableTools, readDurableStream } from '@dbos-inc/vercel-ai';
+
+const model = wrapLanguageModel({ model: openai('gpt-5'), middleware: durableCalls({ durableStream: 'ui' }) });
+const tools = durableTools(myTools, { durableStream: 'ui' });
+
+const chatTurn = DBOS.registerWorkflow(async (messages: ModelMessage[]) => {
+  const result = streamText({ model, messages, tools, stopWhen: stepCountIs(10) });
+  return await result.text;
+}, { name: 'chatTurn' });
+
+export async function POST(req: Request) {
+  const { messages, messageId } = (await req.json()) as { messages: ModelMessage[]; messageId: string };
+  const handle = await DBOS.startWorkflow(chatTurn)(messages);
+  return createUIMessageStreamResponse({
+    stream: readDurableStream({ workflowID: handle.workflowID, key: 'ui', messageId }),
+  });
+}
+```
+
+You can read from a durable stream using `readDurableStream`, for example to stream it to a UI.
+It emits a stream of AI SDK `UIMessageChunk`.
+You can also pass a [`DBOSClient`](../typescript/reference/client.md) into `readDurableStream` to read it from a different process.
+
+You can write your own data to a stream with `writeDurableStream(key, chunks)`.
+Tools can also write chunks with `toolWriter()`, which returns a `UIMessageStreamWriter` bound to the current tool call.
+Chunks from a tool call are written when the tool call succeeds (`transient: true` data parts are written live instead).
+To also include them in the response message your workflow builds, pass your `createUIMessageStream` writer to `durableTools`:
+
+```ts
+import { consumeStream, createUIMessageStream, streamText } from 'ai';
+import { durableTools, toolWriter } from '@dbos-inc/vercel-ai';
+
+const search = tool({
+  inputSchema: z.object({ q: z.string() }),
+  execute: async ({ q }) => {
+    const writer = toolWriter();
+    writer.write({ type: 'data-progress', data: { pct: 50 }, transient: true });
+    writer.write({ type: 'source-url', sourceId: 's1', url: 'https://example.com' });
+    return runSearch(q);
+  },
+});
+
+const chatTurn = DBOS.registerWorkflow(async (messages: ModelMessage[]) => {
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => {
+      const tools = durableTools({ search }, { durableStream: 'ui', writer });
+      writer.merge(streamText({ model, messages, tools, stopWhen: stepCountIs(10) }).toUIMessageStream());
+    },
+    onFinish: ({ responseMessage }) => saveMessage(responseMessage),
+  });
+  await consumeStream({ stream });
+}, { name: 'chatTurn' });
+```
+
+Your streams are closed when your workflow finishes; you can also close a stream early using `closeDurableStream`.
+
+If a workflow is interrupted during a model call, when the workflow recovers, it restarts the model call and streams its output again.
+Readers that connect afterwards see the model's output once; live readers, including readers resumed from an `offset`, receive a transient `data-dbos-superseded` chunk indicating the model call has been restarted.
+Likewise, if a tool call is re-executed and writes different chunks, readers that connect afterwards see only the re-execution's chunks; live readers receive a transient `data-dbos-tool-superseded` chunk naming the `toolCallId` whose earlier chunks to discard.
+
 ### Durable MCP Tools
 
 `durableMCPTools` wraps an [MCP](https://modelcontextprotocol.io/) client (for example, from [`@ai-sdk/mcp`](https://www.npmjs.com/package/@ai-sdk/mcp)) so both the tool listing and every tool call run as durable steps:
@@ -170,9 +205,13 @@ import { durableMCPTools } from '@dbos-inc/vercel-ai';
 
 const agent = DBOS.registerWorkflow(async (question: string) => {
   const mcpClient = await createMCPClient({ transport: { type: 'http', url: MCP_URL } });
-  const tools = await durableMCPTools(mcpClient);
-  const result = await generateText({ model, prompt: question, tools, stopWhen: stepCountIs(10) });
-  return result.text;
+  try {
+    const tools = await durableMCPTools(mcpClient);
+    const result = await generateText({ model, prompt: question, tools, stopWhen: stepCountIs(10) });
+    return result.text;
+  } finally {
+    await mcpClient.close();
+  }
 }, { name: 'mcpAgent' });
 ```
 
@@ -224,7 +263,10 @@ const embeddingModel = wrapEmbeddingModel({
   middleware: durableEmbeddingCalls({ retriesAllowed: true }),
 });
 
-const { embeddings } = await embedMany({ model: embeddingModel, values: chunks });
+const embedChunks = DBOS.registerWorkflow(async (chunks: string[]) => {
+  const { embeddings } = await embedMany({ model: embeddingModel, values: chunks });
+  return embeddings;
+}, { name: 'embedChunks' });
 ```
 
 ## Durable Image Models
@@ -237,7 +279,10 @@ import { durableImageCalls } from '@dbos-inc/vercel-ai';
 
 const imageModel = wrapImageModel({ model: openai.imageModel('gpt-image-1'), middleware: durableImageCalls() });
 
-const { images } = await generateImage({ model: imageModel, prompt: 'a durable cat' });
+const drawImage = DBOS.registerWorkflow(async (prompt: string) => {
+  const { images } = await generateImage({ model: imageModel, prompt });
+  return images.map((image) => image.base64);
+}, { name: 'drawImage' });
 ```
 
 ## Learn More
