@@ -20,6 +20,8 @@ If you use [patching](./tutorials/upgrading-workflows.md#patching), shut down al
 - **Upgrade applications that use [`DBOSClient`](./reference/client.md) along with your DBOS processes.**
 A DBOS 4.x client cannot retrieve the inputs or results of workflows created by DBOS 5.0.
 A DBOS 5.0 client requires the new schema, so launch a DBOS 5.0 process (or run [`npx dbos schema`](./reference/cli.md#npx-dbos-schema)) before using it.
+- **Be careful reusing the IDs of workflows created by DBOS 4.x.**
+If DBOS 5.0 starts or enqueues a workflow with the same [ID](./tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) as a workflow created by DBOS 4.x but with different inputs, the new inputs can replace that workflow's recorded inputs, and if it hasn't completed yet, it may run with them.
 
 ## Breaking Changes
 

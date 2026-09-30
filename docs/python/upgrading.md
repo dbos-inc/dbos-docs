@@ -18,6 +18,8 @@ If you set `application_version` yourself, change it when you upgrade.
 If you use [patching](./tutorials/upgrading-workflows.md#patching), shut down all DBOS 2.x processes before launching DBOS 3.0 processes.
 - **Upgrade applications that use [`DBOSClient`](./reference/client.md) along with your DBOS processes.**
 A DBOS 2.x client cannot retrieve the inputs or results of workflows created by DBOS 3.0.
+- **Be careful reusing the IDs of workflows created by DBOS 2.x.**
+If DBOS 3.0 starts or enqueues a workflow with the same [ID](./tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) as a workflow created by DBOS 2.x but with different inputs, the new inputs can replace that workflow's recorded inputs, and if it hasn't completed yet, it may run with them.
 
 ## Breaking Changes
 
