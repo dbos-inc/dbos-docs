@@ -13,7 +13,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.2d2442a1.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8ad446d1.js" defer="defer"></script>
 <script src="/assets/js/main.6d991d34.js" defer="defer"></script>
 </head>
 <body>
@@ -32,6 +32,8 @@ If you set <code>application_version</code> yourself, change it when you upgrade
 If you use <a class="" href="/python/tutorials/upgrading-workflows#patching">patching</a>, shut down all DBOS 2.x processes before launching DBOS 3.0 processes.</li>
 <li class=""><strong>Upgrade applications that use <a class="" href="/python/reference/client"><code>DBOSClient</code></a> along with your DBOS processes.</strong>
 A DBOS 2.x client cannot retrieve the inputs or results of workflows created by DBOS 3.0.</li>
+<li class=""><strong>Be careful reusing the IDs of workflows created by DBOS 2.x.</strong>
+If DBOS 3.0 starts or enqueues a workflow with the same <a class="" href="/python/tutorials/workflow-tutorial#workflow-ids-and-idempotency">ID</a> as a workflow created by DBOS 2.x but with different inputs, the new inputs can replace that workflow&#x27;s recorded inputs, and if it hasn&#x27;t completed yet, it may run with them.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="breaking-changes">Breaking Changes<a href="#breaking-changes" class="hash-link" aria-label="Direct link to Breaking Changes" title="Direct link to Breaking Changes" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="dbostransaction-and-the-application-database"><code>@DBOS.transaction</code> and the Application Database<a href="#dbostransaction-and-the-application-database" class="hash-link" aria-label="Direct link to dbostransaction-and-the-application-database" title="Direct link to dbostransaction-and-the-application-database" translate="no">​</a></h3>
