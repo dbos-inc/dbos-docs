@@ -38,7 +38,7 @@ DBOS still reads those columns for workflows written by earlier releases, but if
 #### Debouncing
 
 The debouncer no longer starts a separate debouncer workflow.
-The first `debounce` call on a key enqueues your workflow itself in the `DELAYED` state on its queue, with `workflowName-debounceKey` as its deduplication ID, and later calls push back its start and replace its arguments.
+The first `debounce` call on a key enqueues your workflow itself in the `DELAYED` state on its queue, with `workflowName-debounceKey` as its deduplication ID, and each later call resets its start to one debounce period after that call and replaces its arguments.
 Without `withQueue`, it goes on the DBOS internal queue instead of being started directly.
 While it waits, the workflow appears in `listWorkflows` as `DELAYED`, with `isDebounced()` set to `true`.
 
@@ -61,7 +61,7 @@ A queued child that is dequeued after its inherited deadline is cancelled. Other
 
 - Options given for a call replace the whole bound set by `WorkflowOptions`. In 1.1, the timeout and deadline merged field by field, so a deadline from `WorkflowOptions` could override a timeout given for the call.
 - An inner `WorkflowOptions` block that sets a timeout, deadline, or `Timeout.none()` replaces the outer block's timeout and deadline together.
-- A child that inherited its bound has no `workflow_timeout_ms`, so `WorkflowStatus.timeout()` is `null` for it, and `DBOSContext.getTimeout()` returns `null` inside it.
+- A child that inherited its bound has no `workflow_timeout_ms`, so `WorkflowStatus.timeout()` is `null` for it.
 - Resuming a child that inherited only a deadline leaves it without a bound, because resume clears the deadline and keeps the timeout.
 - Building a `StartWorkflowOptions` with both an explicit timeout and a deadline now throws `IllegalArgumentException` immediately, as `EnqueueOptions` already did.
 
@@ -94,7 +94,7 @@ The following APIs are deprecated in 1.2 and will be removed in a future release
 | `QueueOptions.empty()` | `new QueueOptions()` |
 | The static `QueueOptions.setConcurrency`, `setWorkerConcurrency`, `setRateLimit`, `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit`, and `setPollingInterval` factories, and their `and...` counterparts | `new QueueOptions()` and the matching [`with...` builder](./reference/queues.md#queueoptions), such as `new QueueOptions().withConcurrency(10)` |
 | The `QueueOptions.with...` overloads that take a `Field` or an `Optional` | The plain-value overloads. To clear a limit on `updateQueue`, pass a cast `null`, such as `withConcurrency((Integer) null)`. |
-| `withDeadline` and `deadline()` on `StartWorkflowOptions`, `EnqueueOptions`, and `WorkflowOptions` | `withTimeout`. For a workflow that starts right away, a timeout of `Duration.between(Instant.now(), deadline)` is the same bound. |
+| `withDeadline` and `deadline()` on `StartWorkflowOptions`, `EnqueueOptions`, and `WorkflowOptions` | `withTimeout`. For a workflow that starts right away, a timeout of `Duration.between(Instant.now(), deadline)` is the same bound while the deadline is in the future. A deadline that is now or past gives a zero or negative timeout, which throws `IllegalArgumentException`. |
 
 To move to the new `QueueOptions` builders:
 

@@ -941,7 +941,7 @@ Obtain a `Debouncer` via `dbos.debouncer()`:
 `Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
 
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
-- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): a debounced workflow has no partition key, and partitioned queues don't support deduplication IDs. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
 - **`withPriority(Integer priority)`**: Set the priority for the user workflow. A negative priority throws `IllegalArgumentException` when set. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
 - **`withTimeout(Duration timeout)`**: Set a timeout for every user workflow this debouncer starts, timed from when that workflow is dequeued. It takes precedence over a timeout set with [`WorkflowOptions`](./workflows-steps.md#workflowoptions) around the `debounce` call, which applies when this isn't set. A zero or negative timeout throws `IllegalArgumentException` when set.
@@ -962,10 +962,10 @@ The user workflow never inherits the calling workflow's timeout or deadline, and
 Submit a workflow for execution but delay it by `debouncePeriod`. Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounceTimeout`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the delay expires and the workflow becomes `ENQUEUED`, the next call to `debounce` starts the debouncing process again for a new workflow execution, even if the first workflow is still waiting on a busy queue.
 
 The first call on a key enqueues the user workflow itself in the `DELAYED` state on its queue, with `workflowName-debounceKey` as its [deduplication ID](../tutorials/queue-tutorial.md#deduplication).
-Each later call on the key pushes back its start and replaces its arguments.
+Each later call on the key resets its start to `debouncePeriod` after that call, never past the debounce timeout, and replaces its arguments.
 When the delay expires, the workflow becomes `ENQUEUED`, releases the key, and runs like any other queued workflow.
 
 **Parameters:**
