@@ -11,10 +11,107 @@ If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../conductor
 [`DBOSClient`](./reference/client.md) never migrates, so upgrade clients only after an upgraded application has launched or you have run `dbosctl sysdb migrate`.
 An application or client that needs a newer schema than the system database has throws `IllegalStateException` at launch or construction.
 
+## Upgrading to v1.2
+
+Most code written against DBOS Transact Java 1.1 compiles and runs unchanged on 1.2; the exceptions are listed below.
+1.2 deprecates the old `QueueOptions` builders and absolute workflow deadlines, which will be removed in a future release.
+This section covers what might require a change to your code, configuration, or operations, and what to replace deprecated APIs with.
+For new features, see the [release notes](https://github.com/dbos-inc/dbos-transact-java/releases).
+
+### Upgrade to 1.1 First
+
+Every server must run 1.1 before any server runs 1.2. Don't run 1.0 and 1.2 servers against the same system database, and don't roll a 1.2 deployment back to 1.0.
+1.1 and 1.2 servers can share a system database, and you can roll 1.2 back to 1.1.
+See [1.1 Is Required Before 1.2](#11-is-required-before-12) for why.
+
+1.2 migrates the system database to version 114. Migration 113 changes the `enqueue_workflow` SQL function to write inputs to `workflow_input`, and migration 114 drops a duplicate index on `notifications`.
+The minimum schema version is still 111, so 1.1 servers and clients keep working against a migrated database.
+
+### Changes That May Require Action
+
+#### Workflow Inputs and Outputs Have Moved
+
+1.2 writes workflow inputs to [`dbos.workflow_input`](../explanations/system-tables.md#dbosworkflow_input), and outputs and errors to [`dbos.workflow_output`](../explanations/system-tables.md#dbosworkflow_output).
+For workflows started by 1.2, the `inputs`, `output`, and `error` columns of `dbos.workflow_status` are `NULL`.
+DBOS still reads those columns for workflows written by earlier releases, but if you query them directly, for example from a dashboard or a script, read the new tables instead.
+
+#### Debouncing
+
+The debouncer no longer starts a separate debouncer workflow.
+The first `debounce` call on a key enqueues your workflow itself in the `DELAYED` state on its queue, with `workflowName-debounceKey` as its deduplication ID, and each later call resets its start to one debounce period after that call and replaces its arguments.
+Without `withQueue`, it goes on the DBOS internal queue instead of being started directly.
+While it waits, the workflow appears in `listWorkflows` as `DELAYED`, with `isDebounced()` set to `true`.
+
+- `withDeduplicationId` on `Debouncer` and `DebouncerClient` is now ignored.
+- A negative `withPriority` or a zero or negative `withTimeout` now throws `IllegalArgumentException` when set, not at `debounce`.
+- Outside a workflow, a timeout set with `WorkflowOptions` around `debounce` now limits your workflow, not an internal debouncer workflow. The new [`Debouncer.withTimeout`](./reference/methods.md#debouncer) sets it on the debouncer instead.
+- A 1.1 debouncer workflow that still holds a key is taken over by the next 1.2 `debounce` call on that key, after about 5 seconds: 1.2 cancels it and creates the workflow it promised. If your application version changes with the upgrade, 1.2 servers don't run 1.1 debouncer workflows, so cancel any leftover `debouncerWorkflow` workflows whose keys will never be debounced again.
+
+#### Child Workflow Timeouts
+
+A child workflow started without a timeout of its own now inherits its parent's **deadline**, not its timeout.
+In 1.1, a queued child copied its parent's timeout and started a fresh copy of it when dequeued, so it could outlive its parent.
+Now a child's bound is the first of these that is set:
+
+1. the timeout, `Timeout.none()`, `Timeout.inherit()`, or deadline given in the call's `StartWorkflowOptions` or `EnqueueOptions`;
+2. the timeout or deadline set by an enclosing `WorkflowOptions` block;
+3. the parent's deadline.
+
+A queued child that is dequeued after its inherited deadline is cancelled. Other effects:
+
+- Options given for a call replace the whole bound set by `WorkflowOptions`. In 1.1, the timeout and deadline merged field by field, so a deadline from `WorkflowOptions` could override a timeout given for the call.
+- An inner `WorkflowOptions` block that sets a timeout, deadline, or `Timeout.none()` replaces the outer block's timeout and deadline together.
+- A child that inherited its bound has no `workflow_timeout_ms`, so `WorkflowStatus.timeout()` is `null` for it.
+- Resuming a child that inherited only a deadline leaves it without a bound, because resume clears the deadline and keeps the timeout.
+- Building a `StartWorkflowOptions` with both an explicit timeout and a deadline now throws `IllegalArgumentException` immediately, as `EnqueueOptions` already did.
+
+#### Exporting and Importing Workflows
+
+A workflow exported from 1.2 carries its stored payloads unchanged, so its inputs, output, error, and step outputs keep their Java types when imported.
+Import a 1.2 export only into 1.1.1 or later.
+Imported into 1.1.0 or 1.0, it is accepted without any error, but its inputs, output, error, and step outputs import as `NULL`.
+Exports from 1.1.0 and earlier still import correctly into 1.2.
+
+#### New Record Components
+
+These public records gained components. Code that calls their canonical constructors directly must pass the new values, and code compiled against 1.1 that calls them fails with `NoSuchMethodError`:
+
+- [`WorkflowStatus`](./reference/methods.md#workflowstatus) gains `isDebounced` and `debounceDeadline`, after `applicationName`. Its `equals` and `hashCode` now also compare `applicationName`.
+- `ListWorkflowsInput` gains `isFork`, after `wasForkedFrom`. Code that starts from `new ListWorkflowsInput()` and uses the `with...` methods is unaffected.
+- `ExportedWorkflow` gains `payloads`. Pass `null` when there are no stored payloads.
+
+#### Other Behavior Changes
+
+- Workflow and queue timestamps in the system database (`created_at`, `updated_at`, `completed_at`, `started_at_epoch_ms`, and rate-limit windows) now come from the database's clock instead of each server's clock, as in the other DBOS SDKs. Delays, deadlines, and durable sleeps still use the server's clock.
+- A workflow enqueued without a class name, such as one meant for a Python application, now fails on a Java server with `DBOSWorkflowFunctionNotFoundException` and stays `PENDING`, instead of throwing `NullPointerException`. To target a Java workflow, always pass its class name to `EnqueueOptions`.
+
+### Deprecations
+
+The following APIs are deprecated in 1.2 and will be removed in a future release.
+
+| Deprecated | Replacement |
+|---|---|
+| `QueueOptions.empty()` | `new QueueOptions()` |
+| The static `QueueOptions.setConcurrency`, `setWorkerConcurrency`, `setRateLimit`, `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit`, and `setPollingInterval` factories, and their `and...` counterparts | `new QueueOptions()` and the matching [`with...` builder](./reference/queues.md#queueoptions), such as `new QueueOptions().withConcurrency(10)` |
+| The `QueueOptions.with...` overloads that take a `Field` or an `Optional` | The plain-value overloads. To clear a limit on `updateQueue`, pass a cast `null`, such as `withConcurrency((Integer) null)`. |
+| `withDeadline` and `deadline()` on `StartWorkflowOptions`, `EnqueueOptions`, and `WorkflowOptions` | `withTimeout`. For a workflow that starts right away, a timeout of `Duration.between(Instant.now(), deadline)` is the same bound while the deadline is in the future. A deadline that is now or past gives a zero or negative timeout, which throws `IllegalArgumentException`. |
+
+To move to the new `QueueOptions` builders:
+
+```java
+// Before
+dbos.registerQueue("email", QueueOptions.setConcurrency(10).andRateLimit(100, Duration.ofSeconds(60)));
+
+// After
+dbos.registerQueue("email", new QueueOptions().withConcurrency(10).withRateLimit(100, Duration.ofSeconds(60)));
+```
+
+---
+
 ## Upgrading to v1.1
 
 Most code written against DBOS Transact Java 1.0 compiles and runs unchanged on 1.1; the exceptions are listed below.
-1.1 deprecates in-memory queues and a few other APIs, which will be removed in 2.0, and validates some inputs that 1.0 accepted.
+1.1 deprecates in-memory queues and a few other APIs, which will be removed in a future release, and validates some inputs that 1.0 accepted.
 This section covers what might require a change to your code or configuration, and what to replace deprecated APIs with.
 For new features, see the [release notes](https://github.com/dbos-inc/dbos-transact-java/releases).
 
@@ -161,7 +258,7 @@ Workflows already stranded this way can be moved to a queue that is not partitio
 
 ### Deprecations
 
-The following APIs are deprecated in 1.1 and will be removed in 2.0.
+The following APIs are deprecated in 1.1 and will be removed in a future release.
 
 | Deprecated | Replacement |
 |---|---|
@@ -171,11 +268,11 @@ The following APIs are deprecated in 1.1 and will be removed in 2.0.
 | `dbos.getQueue(String)` | `dbos.findQueue(String)` |
 | `Queue`-typed overloads: `new StartWorkflowOptions(Queue)`, `StartWorkflowOptions.withQueue(Queue)`, `ForkOptions.withQueue(Queue)`, `Debouncer.withQueue(Queue)`, `DebouncerClient.withQueue(Queue)`, `DBOSConfig.withListenQueue(Queue)`, `DBOSConfig.withListenQueues(Queue...)` | The `QueueName` or `String` overloads |
 | `QueueOptions.setPriorityEnabled`, `withPriorityEnabled`, `andPriorityEnabled`, the `QueueOptions.priorityEnabled()` accessor, and `Queue.priorityEnabled()` | None. Every queue dequeues in priority order; set a priority on the workflow instead. |
-| `QueueOptions.setPartitionQueue`, `withPartitionQueue`, `andPartitionQueue`, and the `partitionQueue()` accessor | `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit` (and their `and`/`with` forms) |
-| The seven-argument `QueueOptions` constructor (without per-partition limits) | The static `QueueOptions.set...` factories |
+| `QueueOptions.setPartitionQueue`, `withPartitionQueue`, `andPartitionQueue`, and the `partitionQueue()` accessor | `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit` (and their `and`/`with` forms); from 1.2, `new QueueOptions().withPartitionConcurrency(...)` and the other `with...` builders |
+| The seven-argument `QueueOptions` constructor (without per-partition limits) | The static `QueueOptions.set...` factories; from 1.2, `new QueueOptions()` and the `with...` builders |
 | `DBOSClient.EnqueueOptions`, and the `DBOSClient.enqueueWorkflow` / `enqueuePortableWorkflow` overloads that take it | The top-level [`dev.dbos.transact.EnqueueOptions`](./reference/client.md#enqueueoptions), whose constructors take the workflow name, optional class and instance names, and a `QueueName`. For portable enqueue, set `withSerialization(SerializationStrategy.PORTABLE)` and call `enqueueWorkflow(options, positionalArgs, namedArgs)`. |
-| `Debouncer.withDeduplicationId`, `DebouncerClient.withDeduplicationId` | None. From the next release the debouncer sets the deduplication ID itself and ignores this setting. |
-| `ExternalState`, `DBOSIntegration.getExternalState`, `DBOSIntegration.upsertExternalState` (the `event_dispatch_kv` API) | Store integration state in your own table. A shared system database migration will drop the `event_dispatch_kv` table sometime after Java 2.0. |
+| `Debouncer.withDeduplicationId`, `DebouncerClient.withDeduplicationId` | None. From 1.2 the debouncer sets the deduplication ID itself and ignores this setting. |
+| `ExternalState`, `DBOSIntegration.getExternalState`, `DBOSIntegration.upsertExternalState` (the `event_dispatch_kv` API) | Store integration state in your own table. A shared system database migration will drop the `event_dispatch_kv` table sometime after this API is removed. |
 | `DBOSSystemDatabaseException.databaseException()` | `getCause()` |
 
 ---

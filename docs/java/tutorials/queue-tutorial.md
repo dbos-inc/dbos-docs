@@ -13,7 +13,7 @@ Queue configuration is persisted to the system database, so queues are visible t
 
 ```java
 dbos.launch();
-dbos.registerQueue("example-queue", QueueOptions.empty());
+dbos.registerQueue("example-queue", new QueueOptions());
 ```
 
 You can then enqueue any workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
@@ -120,7 +120,7 @@ public class App {
     dbos.launch();
 
     // Register the queue
-    dbos.registerQueue("example-queue", QueueOptions.empty());
+    dbos.registerQueue("example-queue", new QueueOptions());
     impl.setQueueName("example-queue");
 
     // Run the queue workflow
@@ -279,7 +279,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```java
-dbos.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
+dbos.registerQueue("example-queue", new QueueOptions().withWorkerConcurrency(5));
 ```
 
 #### Global Concurrency
@@ -293,7 +293,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```java
-dbos.registerQueue("example-queue", QueueOptions.setConcurrency(10));
+dbos.registerQueue("example-queue", new QueueOptions().withConcurrency(10));
 ```
 
 ### Rate Limiting
@@ -303,7 +303,7 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```java
-dbos.registerQueue("example-queue", QueueOptions.setRateLimit(100, 60, TimeUnit.SECONDS));
+dbos.registerQueue("example-queue", new QueueOptions().withRateLimit(100, 60, TimeUnit.SECONDS));
 ```
 
 Rate limits are especially useful when working with a rate-limited API.
@@ -315,10 +315,10 @@ Use `dbos.updateQueue` to modify a queue's configuration. Workers pick up the ne
 
 ```java
 // Change the queue's concurrency
-dbos.updateQueue("example-queue", QueueOptions.setConcurrency(20));
+dbos.updateQueue("example-queue", new QueueOptions().withConcurrency(20));
 
 // Change its rate limit
-dbos.updateQueue("example-queue", QueueOptions.setRateLimit(25, 30, TimeUnit.SECONDS));
+dbos.updateQueue("example-queue", new QueueOptions().withRateLimit(25, 30, TimeUnit.SECONDS));
 ```
 
 :::warning
@@ -345,13 +345,13 @@ You can do all of this from a [`DBOSClient`](../reference/client.md#queue-manage
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
 
 // Register or update a queue
-client.registerQueue("example-queue", QueueOptions.setConcurrency(10));
+client.registerQueue("example-queue", new QueueOptions().withConcurrency(10));
 
 // Register only if it doesn't already exist
-client.registerQueue("example-queue", QueueOptions.setConcurrency(10), QueueConflictResolution.NEVER_UPDATE);
+client.registerQueue("example-queue", new QueueOptions().withConcurrency(10), QueueConflictResolution.NEVER_UPDATE);
 
 // Update only the concurrency of an existing queue
-client.updateQueue("example-queue", QueueOptions.setConcurrency(20));
+client.updateQueue("example-queue", new QueueOptions().withConcurrency(20));
 
 // Find a queue by name
 Optional<Queue> queue = client.findQueue("example-queue");
@@ -372,6 +372,9 @@ Cancelling a workflow sets its status to `CANCELLED` and preempts its execution 
 Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
+A workflow enqueued from inside another workflow without a timeout of its own inherits its parent's **deadline** instead.
+If it is still waiting in the queue when that deadline passes, it is cancelled when it is dequeued.
+
 Example syntax:
 
 ```java
@@ -381,6 +384,11 @@ var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
 ```
 
 ### Setting Deadlines
+
+:::warning Deprecated
+`withDeadline` is deprecated since 1.2 and will be removed in a future release, because the other DBOS SDKs bound workflows with timeouts only.
+Use [`withTimeout`](#setting-timeouts) instead.
+:::
 
 You can set a deadline for an enqueued workflow via the `withDeadline` function on `StartWorkflowOptions`.
 A deadline is an **absolute point in time** by which the workflow must complete; if the deadline passes before the workflow finishes, the workflow **and all its children** are cancelled.
@@ -435,7 +443,7 @@ You can do this with a queue whose `partitionConcurrency` is 1, where the partit
 **Example Syntax**
 
 ```java
-dbos.registerQueue("example-queue", QueueOptions.setPartitionConcurrency(1));
+dbos.registerQueue("example-queue", new QueueOptions().withPartitionConcurrency(1));
 
 void onUserTaskSubmission(String userID, Task task) {
     // Partition the task queue by user ID. As the queue has a
@@ -463,7 +471,7 @@ For example, this "fair queue" runs at most one task per user, but no more than 
 
 ```java
 dbos.registerQueue("fair-queue",
-    QueueOptions.setPartitionConcurrency(1).andWorkerConcurrency(10));
+    new QueueOptions().withPartitionConcurrency(1).withWorkerConcurrency(10));
 ```
 
 Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
@@ -473,12 +481,13 @@ Each queue-wide limit has a per-partition counterpart, so you can mix and match 
 // at most 10 tasks running per process and 2 per tenant per process,
 // and at most 1000 tasks started per minute globally and 50 per tenant.
 dbos.registerQueue("tenant-queue",
-    QueueOptions.setConcurrency(100)
-        .andWorkerConcurrency(10)
-        .andRateLimit(1000, Duration.ofSeconds(60))
-        .andPartitionConcurrency(25)
-        .andPartitionWorkerConcurrency(2)
-        .andPartitionRateLimit(50, Duration.ofSeconds(60)));
+    new QueueOptions()
+        .withConcurrency(100)
+        .withWorkerConcurrency(10)
+        .withRateLimit(1000, Duration.ofSeconds(60))
+        .withPartitionConcurrency(25)
+        .withPartitionWorkerConcurrency(2)
+        .withPartitionRateLimit(50, Duration.ofSeconds(60)));
 ```
 
 When both are set, each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`; limits that are not set are not compared.
@@ -577,8 +586,8 @@ DBOS dbos = new DBOS(config);
 // register workflows...
 dbos.launch();
 
-dbos.registerQueue("cpuQueue", QueueOptions.empty());
-dbos.registerQueue("gpuQueue", QueueOptions.empty());
+dbos.registerQueue("cpuQueue", new QueueOptions());
+dbos.registerQueue("gpuQueue", new QueueOptions());
 ```
 
 Note that `withListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
