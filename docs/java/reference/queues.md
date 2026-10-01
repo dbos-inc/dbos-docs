@@ -31,8 +31,9 @@ If the queue already exists in the database, the `onConflict` parameter controls
 
 ```java
 dbos.registerQueue("email",
-    QueueOptions.setConcurrency(10)
-        .andRateLimit(100, Duration.ofSeconds(60)));
+    new QueueOptions()
+        .withConcurrency(10)
+        .withRateLimit(100, Duration.ofSeconds(60)));
 ```
 
 ### dbos.updateQueue
@@ -47,7 +48,13 @@ Update the configuration of an existing queue. Only fields set on `options` are 
 
 ```java
 // Change only the concurrency — rate limit and other fields are untouched
-dbos.updateQueue("email", QueueOptions.setConcurrency(20));
+dbos.updateQueue("email", new QueueOptions().withConcurrency(20));
+
+// Change only the rate limit's max — the stored period is kept
+dbos.updateQueue("email", new QueueOptions().withRateLimitMax(200));
+
+// Remove the concurrency limit
+dbos.updateQueue("email", new QueueOptions().withConcurrency((Integer) null));
 ```
 
 The updated configuration is validated as a whole (see [`QueueOptions`](#queueoptions)), and an update that would produce an invalid queue throws `IllegalArgumentException`.
@@ -93,50 +100,51 @@ Workflows already stuck on a deleted queue can be moved to a registered queue wi
 Each field uses [`Field<T>`](#fieldt) tri-state semantics: absent fields are ignored (leave the current database value unchanged), a present field with a value sets it, and a present field with `null` clears it.
 
 ```java
-// Empty options (all fields absent)
-QueueOptions.empty()
+// Options with every field absent
+new QueueOptions()
 
-// Static factories — each creates options with a single field set
-QueueOptions.setConcurrency(Integer value)
-QueueOptions.setWorkerConcurrency(Integer value)
-QueueOptions.setRateLimit(Integer max, Duration period)
-QueueOptions.setRateLimit(int max, long period, TimeUnit unit)
-QueueOptions.setPartitionConcurrency(Integer value)
-QueueOptions.setPartitionWorkerConcurrency(Integer value)
-QueueOptions.setPartitionRateLimit(Integer max, Duration period)
-QueueOptions.setPartitionRateLimit(int max, long period, TimeUnit unit)
-QueueOptions.setPollingInterval(Duration value)
+// Builders — each returns a copy with the given field set
+QueueOptions withConcurrency(Integer value)
+QueueOptions withWorkerConcurrency(Integer value)
+QueueOptions withRateLimit(Integer max, Duration period)
+QueueOptions withRateLimit(int max, long period, TimeUnit unit)
+QueueOptions withRateLimitMax(Integer max)
+QueueOptions withRateLimitPeriod(Duration period)
+QueueOptions withPartitionConcurrency(Integer value)
+QueueOptions withPartitionWorkerConcurrency(Integer value)
+QueueOptions withPartitionRateLimit(Integer max, Duration period)
+QueueOptions withPartitionRateLimit(int max, long period, TimeUnit unit)
+QueueOptions withPartitionRateLimitMax(Integer max)
+QueueOptions withPartitionRateLimitPeriod(Duration period)
+QueueOptions withPollingInterval(Duration value)
+```
 
-// Chainable setters — start from any factory and chain additional fields
-QueueOptions andConcurrency(Integer value)
-QueueOptions andWorkerConcurrency(Integer value)
-QueueOptions andRateLimit(Integer max, Duration period)
-QueueOptions andRateLimit(int max, long period, TimeUnit unit)
-QueueOptions andPartitionConcurrency(Integer value)
-QueueOptions andPartitionWorkerConcurrency(Integer value)
-QueueOptions andPartitionRateLimit(Integer max, Duration period)
-QueueOptions andPartitionRateLimit(int max, long period, TimeUnit unit)
-QueueOptions andPollingInterval(Duration value)
+**Example syntax:**
 
-// Deprecated since 1.1: set a per-partition limit instead
-QueueOptions.setPartitionQueue(boolean value)
-QueueOptions andPartitionQueue(boolean value)
-
-// Deprecated since 1.1: every queue is a priority queue
-QueueOptions.setPriorityEnabled(boolean value)
-QueueOptions andPriorityEnabled(boolean value)
+```java
+new QueueOptions()
+    .withConcurrency(100)
+    .withWorkerConcurrency(10)
+    .withRateLimit(1000, Duration.ofSeconds(60))
 ```
 
 **Parameters:**
 - **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit.
 - **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit.
-- **rateLimit**: A limit on the maximum number of workflows (`max`) that may be started in a given `period`. Pass `null` for both to remove the limit.
+- **rateLimit**: A limit on the maximum number of workflows (`max`) that may be started in a given `period`. Pass `null` for both to remove the limit. On [`updateQueue`](#dbosupdatequeue), `withRateLimitMax` or `withRateLimitPeriod` changes one half of the stored limit and keeps the other.
 - **partitionConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit.
 - **partitionWorkerConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit.
-- **partitionRateLimit**: A limit on the maximum number of workflows (`max`) that may be started from any one partition in a given `period`. Pass `null` for both to remove the limit.
+- **partitionRateLimit**: A limit on the maximum number of workflows (`max`) that may be started from any one partition in a given `period`. Pass `null` for both to remove the limit. On [`updateQueue`](#dbosupdatequeue), `withPartitionRateLimitMax` or `withPartitionRateLimitPeriod` changes one half of the stored limit and keeps the other.
 - **priorityEnabled** *(deprecated since 1.1)*: Ignored. Every queue dequeues workflows in priority order, so priority needs no queue configuration, and the queue is always stored as a priority queue.
 - **pollingInterval**: How often DBOS polls the database for new workflows to dequeue. Defaults to 1 second.
 - **partitionQueue** *(deprecated since 1.1)*: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) with the queue-wide limits (`concurrency`, `workerConcurrency`, `rateLimit`) enforced per partition rather than across the queue. Set a per-partition limit instead. If a per-partition limit is also set at registration, this flag has no effect.
+
+Passing `null` to a builder clears that limit on `updateQueue`.
+While the deprecated `Field` overloads below exist, a bare `null` is ambiguous and doesn't compile, so write it with a cast: `withConcurrency((Integer) null)`.
+
+The following forms are deprecated:
+- *Since 1.2:* `QueueOptions.empty()` (use `new QueueOptions()`); the static `setConcurrency`, `setWorkerConcurrency`, `setRateLimit`, `setPartitionConcurrency`, `setPartitionWorkerConcurrency`, `setPartitionRateLimit` and `setPollingInterval` factories and their `and...` counterparts (use the matching `with...` builder); and every `with...` overload that takes a [`Field`](#fieldt) or `Optional` (use the plain-value overload).
+- *Since 1.1:* `setPartitionQueue`, `andPartitionQueue` and `withPartitionQueue` (set a per-partition limit instead); `setPriorityEnabled`, `andPriorityEnabled` and `withPriorityEnabled` (every queue is a priority queue, so remove the call).
 
 Setting any per-partition limit [partitions](../tutorials/queue-tutorial.md#partitioning-queues) the queue: every workflow enqueued on it must supply a partition key, and the per-partition limits are enforced for each partition key alongside the queue-wide limits.
 Partitioning a queue that already has enqueued workflows strands them: they have no partition key, so they are never dequeued. Drain a queue before partitioning it.
@@ -144,7 +152,7 @@ Workflows stranded this way can be moved to a queue that is not partitioned with
 
 The limits are validated when a queue is registered or updated, and an invalid combination throws `IllegalArgumentException`:
 - Every concurrency limit, rate-limit `max`, rate-limit `period`, and `pollingInterval` must be greater than zero.
-- A rate limit's `max` and `period` go together: registering a queue with only one of them set, or an update that would leave only one set, throws. Pass `null` for both to register without a limit or to clear one.
+- A rate limit's `max` and `period` go together: registering a queue with only one of them set, or an update that would leave only one set, throws. Pass `null` for both to register without a limit or to clear one. `withRateLimitMax` and `withRateLimitPeriod` (and their partition counterparts) are only useful on `updateQueue` for a queue that already has a stored limit.
 - A concurrency limit must be less than or equal to any wider limit that is also set; limits that are not set are not compared:
   - `workerConcurrency` and `partitionConcurrency` must each be less than or equal to `concurrency`.
   - `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`, `workerConcurrency`, and `concurrency`.
@@ -185,8 +193,7 @@ public sealed interface Field<T> permits Field.Absent, Field.Present {
 - `Field.Present(value)` — the field was specified with a non-null value; the database value is set to `value`.
 - `Field.Present(null)` — the field was specified with `null`; the database value is cleared (removed).
 
-Use `Field.absent()` and `Field.of(value)` to construct values directly.
-The `QueueOptions` convenience methods (`set*` / `and*`) call these automatically, so you rarely need to construct `Field` values by hand.
+The `QueueOptions` builders create these values for you, so you rarely need to construct `Field` values by hand.
 
 ## Queue
 
@@ -279,7 +286,7 @@ Queue queue = new Queue("example-queue").withWorkerConcurrency(5);
 dbos.registerQueue(queue);
 
 // Replacement, after dbos.launch()
-dbos.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
+dbos.registerQueue("example-queue", new QueueOptions().withWorkerConcurrency(5));
 ```
 
 ### dbos.registerQueue {#dbosregisterqueue-legacy}

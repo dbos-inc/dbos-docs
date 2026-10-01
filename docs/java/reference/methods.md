@@ -317,7 +317,11 @@ public record WorkflowStatus(
     // The name of the schedule that started this workflow, if any
     String scheduleName,
     // The application that owns this workflow, or null if no application owns it
-    String applicationName
+    String applicationName,
+    // Whether this is a debounced workflow, whose deduplication ID is its debounce key
+    Boolean isDebounced,
+    // The latest a debounced workflow's start may be pushed back to, or null for no cap
+    Instant debounceDeadline
 )
 ```
 
@@ -516,6 +520,14 @@ ListWorkflowsInput withWasForkedFrom(Boolean wasForkedFrom)
 ```
 
 Filter to workflows from which another workflow was forked.
+
+#### withIsFork
+
+```java
+ListWorkflowsInput withIsFork(Boolean isFork)
+```
+
+Filter to workflows that are forks of another workflow (`true`), or that are not (`false`).
 
 #### withHasParent
 
@@ -929,10 +941,13 @@ Obtain a `Debouncer` via `dbos.debouncer()`:
 `Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
 
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
-- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: Enqueue the user workflow on the specified queue when the debounce period elapses instead of starting it directly. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
-- **`withPriority(Integer priority)`**: Set the priority for the user workflow. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
-- **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Set a deduplication ID forwarded to the user workflow. This will be ignored from the next release, where the debouncer sets the deduplication ID itself, and removed in 2.0.
+- **`withPriority(Integer priority)`**: Set the priority for the user workflow. A negative priority throws `IllegalArgumentException` when set. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
+- **`withTimeout(Duration timeout)`**: Set a timeout for every user workflow this debouncer starts, timed from when that workflow is dequeued. It takes precedence over a timeout set with [`WorkflowOptions`](./workflows-steps.md#workflowoptions) around the `debounce` call, which applies when this isn't set. A zero or negative timeout throws `IllegalArgumentException` when set.
+- **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Ignored since 1.2. The debounced workflow holds its debounce key as its deduplication ID.
+
+The user workflow never inherits the calling workflow's timeout or deadline, and a deadline set with `WorkflowOptions` around the call is ignored, because the workflow may start long after the call.
 
 ### debouncer.debounce
 
@@ -948,6 +963,10 @@ Submit a workflow for execution but delay it by `debouncePeriod`. Returns a hand
 The workflow may be debounced again, which further delays its execution (up to `debounceTimeout`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
 After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+The first call on a key enqueues the user workflow itself in the `DELAYED` state on its queue, with `workflowName-debounceKey` as its [deduplication ID](../tutorials/queue-tutorial.md#deduplication).
+Each later call on the key pushes back its start and replaces its arguments.
+When the delay expires, the workflow becomes `ENQUEUED`, releases the key, and runs like any other queued workflow.
 
 **Parameters:**
 - **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows are debounced separately.
@@ -1043,13 +1062,15 @@ import dev.dbos.transact.workflow.Timeout;
 
 - **`Timeout.of(Duration duration)`** — Set an explicit timeout of the given duration.
 - **`Timeout.of(long value, TimeUnit unit)`** — Set an explicit timeout.
-- **`Timeout.none()`** — Opt out of any inherited timeout. The workflow will run without a timeout regardless of what the calling context specifies.
-- **`Timeout.inherit()`** — Explicitly inherit the timeout from the calling context (the default behavior when no timeout is set).
+- **`Timeout.none()`** — Run without a timeout, and don't inherit the calling workflow's deadline. A deadline set on the same options still applies.
+- **`Timeout.inherit()`** — Bound the workflow by the calling workflow's deadline, if any (the default behavior when no timeout is set). Outside a workflow, this means no timeout.
+
+A child workflow inherits its parent's deadline, not its timeout: a queued child doesn't start a fresh copy of the parent's timeout when it is dequeued.
 
 **Example:**
 
 ```java
-// Detach a child workflow from the parent's timeout
+// Detach a child workflow from the parent's deadline
 dbos.startWorkflow(() -> proxy.longRunningChild(),
     new StartWorkflowOptions().withTimeout(Timeout.none()));
 ```

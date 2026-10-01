@@ -113,8 +113,8 @@ The workflow name and queue must not be null or empty.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
 If left undefined, the workflow is enqueued without a version and is only dequeued by an executor running the owning application's latest registered version, which sets the version when it first dequeues it.
 - **`withTimeout(Duration timeout)`**, **`withTimeout(long value, TimeUnit unit)`**:  Set an explicit timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
-- **`withTimeout(Timeout timeout)`**, **`withNoTimeout()`**: Set the timeout as a [`Timeout`](./methods.md#timeout): explicit, none, or inherit. Inside a workflow, [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) resolves it as `startWorkflow` does, so an unset timeout inherits the enqueuing workflow's and `withNoTimeout()` declines it. From a client there is nothing to inherit, so an unset or inherited timeout means no timeout.
-- **`withDeadline(Instant deadline)`**:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
+- **`withTimeout(Timeout timeout)`**, **`withNoTimeout()`**: Set the timeout as a [`Timeout`](./methods.md#timeout): explicit, none, or inherit. Inside a workflow, [`dbos.enqueueWorkflow`](./methods.md#enqueueworkflow) resolves it as `startWorkflow` does, so an unset timeout inherits the enqueuing workflow's deadline and `withNoTimeout()` declines it. From a client there is nothing to inherit, so an unset or inherited timeout means no timeout.
+- **`withDeadline(Instant deadline)`** *(deprecated since 1.2)*: Use `withTimeout` instead; no other DBOS SDK lets a caller set a deadline. Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
 
 :::info
 An explicit timeout and a deadline cannot both be set.
@@ -567,13 +567,13 @@ Create a `DebouncerClient` for the named workflow. Similar to [`dbos.debouncer()
 - **`withClassName(String className)`**: The fully-qualified Java class name of the workflow implementation. **Required** — must be set before calling `debounce`.
 - **`withInstanceName(String instanceName)`**: The DBOS instance name of the target workflow implementation.
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key.
-- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: Enqueue the user workflow on the specified queue when the debounce period elapses. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
-- **`withTimeout(Duration timeout)`**: Set a timeout for the user workflow.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
+- **`withTimeout(Duration timeout)`**: Set a timeout for the user workflow, timed from when it is dequeued. A zero or negative timeout throws `IllegalArgumentException` when set.
 - **`withAppVersion(String appVersion)`**: Target a specific application version.
-- **`withPriority(Integer priority)`**: Set the priority for the user workflow. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
+- **`withPriority(Integer priority)`**: Set the priority for the user workflow. A negative priority throws `IllegalArgumentException` when set. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
 - **`withAttributes(Map<String, Object> attributes)`**: Attach custom JSON-serializable key-value metadata to the user workflow.
 - **`withSerialization(SerializationStrategy serialization)`**: The [serialization strategy](./methods.md#serialization-strategy) for the user workflow's arguments. It should match the strategy the workflow is registered with.
-- **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Set a deduplication ID forwarded to the user workflow. This will be ignored from the next release, where the debouncer sets the deduplication ID itself, and removed in 2.0.
+- **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Ignored since 1.2. The debounced workflow holds its debounce key as its deduplication ID.
 
 ### DebouncerClient.debounce
 

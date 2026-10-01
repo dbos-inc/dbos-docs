@@ -180,8 +180,8 @@ ExternalState upsertExternalState(ExternalState state)
 ```
 
 :::warning Deprecated
-`upsertExternalState`, `getExternalState`, and `ExternalState` are *(deprecated since 1.1)* and will be removed in DBOS Java 2.0.
-The system database table behind them, `event_dispatch_kv`, is being retired: it holds dispatch bookkeeping for in-memory event receivers that the other DBOS SDKs have removed or never implemented, and a shared system database migration will drop it sometime after Java 2.0.
+`upsertExternalState`, `getExternalState`, and `ExternalState` are *(deprecated since 1.1)* and will be removed in a future release.
+The system database table behind them, `event_dispatch_kv`, is being retired: it holds dispatch bookkeeping for in-memory event receivers that the other DBOS SDKs have removed or never implemented, and a shared system database migration will drop it sometime after the Java API is removed.
 Store integration state in your own table instead.
 :::
 

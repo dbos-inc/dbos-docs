@@ -254,24 +254,29 @@ new StartWorkflowOptions(Queue queue)
 - **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
   `withQueue(Queue queue)` is *(deprecated since 1.1)*; pass the queue's name instead.
 
-- **`withTimeout(Timeout timeout)`** - Set a timeout using a [`Timeout`](./methods.md#timeout) object. Use this overload to pass `Timeout.none()` (opt out of any inherited timeout) or `Timeout.inherit()` (explicitly inherit from the calling context).
+- **`withTimeout(Timeout timeout)`** - Set a timeout using a [`Timeout`](./methods.md#timeout) object. Use this overload to pass `Timeout.none()` (run without a timeout and don't inherit the parent's deadline) or `Timeout.inherit()` (bound the workflow by the calling workflow's deadline).
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set an explicit timeout duration for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
   Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
-  Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with its own explicit timeout (or `Timeout.none()`) to override the propagated timeout.
+  A child workflow inherits its parent's **deadline** (the moment the parent's timeout expires), not its timeout, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled, including children still waiting in a queue. A child's bound is the first of these that is set:
+  1. the timeout, `Timeout.none()`, `Timeout.inherit()`, or deadline given in this `StartWorkflowOptions`;
+  2. the timeout or deadline set by an enclosing [`WorkflowOptions`](#workflowoptions) block;
+  3. the parent's deadline.
+
+  To detach a child workflow from its parent's deadline, start it with its own explicit timeout, or with `Timeout.none()`.
 
 - **`withNoTimeout()`** - Explicitly remove any inherited timeout or deadline from this workflow.
 
-- **`withDeadline(Instant deadline)`** - Set a deadline for this workflow. If the workflow is executing at the time of the deadline, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+- **`withDeadline(Instant deadline)`** *(deprecated since 1.2)* - Use `withTimeout` instead; no other DBOS SDK lets a caller set a deadline. Set a deadline for this workflow. If the workflow is executing at the time of the deadline, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
   Deadlines are **durable**: they are stored in the database and persist across restarts.
 
-  Deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's deadline, you can start it with a different explicit deadline.
+  Deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
 
 :::info
-An explicit timeout and deadline cannot both be set.
+An explicit timeout and deadline cannot both be set: building a `StartWorkflowOptions` with both throws `IllegalArgumentException`.
 :::
 
 - **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority. Priority works on every queue; no queue configuration is needed.
@@ -430,17 +435,19 @@ Shortcut for `new WorkflowOptions().withWorkflowId(workflowId)`.
 **Fields:**
 - **workflowId**: The ID to be assigned to a workflow called within the `try` block
 - **timeout**: The timeout to be assigned to all workflows called within the `try` block
-- **deadline**: The deadline to be assigned to all workflows called within the `try` block
+- **deadline** *(deprecated since 1.2)*: The deadline to be assigned to all workflows called within the `try` block
 
 **Methods:**
 
 - **`withWorkflowId(String workflowId)`** - Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow run.
 
-- **`withTimeout(Timeout timeout)`** / **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for all enclosed workflow invocations. When the timeout expires, the workflow **and all its children** are cancelled. Timeouts are **start-to-completion**: the timeout does not begin until the workflow starts execution. Timeouts are also **durable**: they persist across restarts. Timeout deadlines are propagated to child workflows by default.
+- **`withTimeout(Timeout timeout)`** / **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for all enclosed workflow invocations. When the timeout expires, the workflow **and all its children** are cancelled. Timeouts are **start-to-completion**: the timeout does not begin until the workflow starts execution. Timeouts are also **durable**: they persist across restarts. Child workflows inherit the workflow's deadline, not its timeout.
+
+  A timeout or deadline set here replaces both the timeout and the deadline set by an enclosing `WorkflowOptions` block, which return when this block closes. A timeout, `Timeout.none()`, `Timeout.inherit()`, or deadline given for a call in [`StartWorkflowOptions`](#startworkflowoptions) or `EnqueueOptions` replaces both of those set here.
 
 - **`withNoTimeout()`** - Explicitly opt out of any inherited timeout. The workflow called within the `try` block will run without a timeout regardless of any timeout in the surrounding context.
 
-- **`withDeadline(Instant deadline)`** - Set an absolute deadline for all enclosed workflow invocations. At the deadline time, the workflow **and all its children** are cancelled. Deadlines are propagated to child workflows by default.
+- **`withDeadline(Instant deadline)`** *(deprecated since 1.2)* - Use `withTimeout` instead. Set an absolute deadline for all enclosed workflow invocations. At the deadline time, the workflow **and all its children** are cancelled. Deadlines are propagated to child workflows by default.
 
 :::info
 An explicit timeout and deadline cannot both be set.

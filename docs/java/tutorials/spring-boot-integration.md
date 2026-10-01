@@ -17,7 +17,7 @@ that illustrates the features described in this documentation.
 <TabItem value="gradle" label="Gradle">
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact-spring-boot-starter:1.1.0")
+  implementation("dev.dbos:transact-spring-boot-starter:1.2.0")
 }
 ```
 </TabItem>
@@ -27,7 +27,7 @@ dependencies {
   <dependency>
     <groupId>dev.dbos</groupId>
     <artifactId>transact-spring-boot-starter</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
   </dependency>
 </dependencies>
 ```
@@ -148,7 +148,7 @@ public class QueueSetup implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        dbos.registerQueue("orders", QueueOptions.setWorkerConcurrency(5));
+        dbos.registerQueue("orders", new QueueOptions().withWorkerConcurrency(5));
     }
 }
 ```

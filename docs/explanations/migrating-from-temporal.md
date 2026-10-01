@@ -831,7 +831,7 @@ Learn more in the [queues tutorial](../golang/tutorials/queue-tutorial.md).
 
 ```java
 // Register a queue with concurrency limits (after dbos.launch())
-dbos.registerQueue("order-processing", QueueOptions.setConcurrency(10));
+dbos.registerQueue("order-processing", new QueueOptions().withConcurrency(10));
 
 // Enqueue a workflow
 WorkflowHandle<String, Exception> handle = dbos.startWorkflow(

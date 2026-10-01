@@ -13,7 +13,7 @@ Add DBOS to your application by including it in your build configuration.
 <TabItem value="gradle" label="Gradle">
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:1.1.0'
+    implementation 'dev.dbos:transact:1.2.0'
 }
 ```
 </TabItem>
@@ -23,7 +23,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </dependency>
 </dependencies>
 ```

@@ -174,7 +174,8 @@ You can set a timeout for a workflow using [`withTimeout`](../reference/workflow
 
 When the timeout expires, the workflow and all its children (by default) are cancelled. 
 Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. 
-You can detach a child workflow from its parent's timeout by starting it with a custom timeout using `withTimeout`.
+A child workflow started without a timeout of its own inherits its parent's **deadline**, the moment the parent's timeout expires, so it can't outlive its parent, even if it is enqueued and waits in the queue.
+You can detach a child workflow from its parent's deadline by starting it with its own timeout using `withTimeout`, or with no timeout using `Timeout.none()`.
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. 
 Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
