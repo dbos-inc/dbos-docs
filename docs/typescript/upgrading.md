@@ -25,6 +25,18 @@ If DBOS 5.0 starts or enqueues a workflow with the same [ID](./tutorials/workflo
 
 ## Breaking Changes
 
+### DBOS Conductor
+
+The [DBOS Conductor](../conductor/overview.md) client has moved out of `@dbos-inc/dbos-sdk` into a separate package, `@dbos-inc/dbos-enterprise`.
+Applications that connect to Conductor by passing `conductorKey` to `DBOS.launch` must install it, as must all applications deployed to [DBOS Cloud](../conductor/reference/dbos-cloud/deploying-to-cloud.md), which always connect to Conductor.
+Without it, `DBOS.launch` throws a `DBOSInitializationError`.
+
+```shell
+npm install @dbos-inc/dbos-enterprise
+```
+
+`@dbos-inc/dbos-enterprise` must be at the same minor version as `@dbos-inc/dbos-sdk`, so upgrade the two together.
+
 ### In-Memory Queues
 
 The `new WorkflowQueue(...)` constructor, which declared a queue in process memory, has been removed.

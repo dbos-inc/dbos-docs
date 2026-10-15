@@ -1848,7 +1848,7 @@ sqlite:///[application_name].sqlite
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
 - **sys_db_idle_transaction_timeout_sec**: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections DBOS creates. Defaults to 60 seconds.
-- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console.
+- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console. Connecting to Conductor requires the `dbos-enterprise` package (`pip install "dbos[enterprise]"`).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.

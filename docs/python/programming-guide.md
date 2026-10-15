@@ -274,7 +274,13 @@ dbosctl app register dbos-starter
 dbosctl api-key create dbos-starter-key
 ```
 
-Next, supply your API key to your app through the `conductor_key` configuration option.
+Next, install the `dbos-enterprise` package, which DBOS requires to connect to Conductor:
+
+```shell
+pip install "dbos[enterprise]"
+```
+
+Then, supply your API key to your app through the `conductor_key` configuration option.
 Update the configuration in `main.py` to read the key from an environment variable:
 
 ```python showLineNumbers title="main.py"
