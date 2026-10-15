@@ -44,6 +44,12 @@ workflows = DBOS.list_workflows(attributes={"customer": "acme"})
 ```
 
 To change a workflow's attributes after it is created, use [`DBOS.update_workflow_attributes`](../reference/contexts.md#update_workflow_attributes), which replaces the workflow's entire attributes dictionary (pass `None` to clear them).
+To add or update individual keys while keeping the rest, pass `merge=True`, which merges the keys you provide into the existing attributes in a single atomic update:
+
+```python
+# Set the "phase" key, keeping the workflow's other attributes
+DBOS.update_workflow_attributes(workflow_id, {"phase": "processing"}, merge=True)
+```
 
 :::note
 Filtering workflows by attribute is only supported when using a Postgres system database.

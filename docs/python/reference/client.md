@@ -888,6 +888,7 @@ client.list_workflows(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     was_forked_from: Optional[bool] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
@@ -922,6 +923,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
+- **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
@@ -955,6 +957,7 @@ client.list_workflows_async(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     was_forked_from: Optional[bool] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
@@ -990,6 +993,7 @@ client.list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
@@ -1021,6 +1025,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
+- **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
@@ -1051,6 +1056,7 @@ client.list_queued_workflows_async(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
@@ -1146,17 +1152,20 @@ Asynchronous version of [`DBOSClient.cancel_workflows`](#cancel_workflows).
 client.update_workflow_attributes(
     workflow_id: str,
     attributes: Optional[Dict[str, Any]],
+    *,
+    merge: bool = False,
 ) -> None
 ```
 
 Replace the custom [attributes](./contexts.md#setworkflowattributes) attached to a workflow, identified by `workflow_id`.
-This overwrites the workflow's attributes dictionary; it is not a merge. Pass `None` to clear all attributes.
+By default, this overwrites the workflow's attributes dictionary. Pass `None` to clear all attributes.
 Attributes must be a dictionary of JSON-serializable values.
 Similar to [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_attributes).
 
 **Parameters:**
 - `workflow_id`: The ID of the workflow whose attributes to replace.
 - `attributes`: The new attributes dictionary, or `None` to clear all attributes.
+- `merge`: If `True`, atomically merge the top-level keys of `attributes` into the workflow's existing attributes instead of replacing them, as in [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_attributes).
 
 ### update_workflow_attributes_async
 
