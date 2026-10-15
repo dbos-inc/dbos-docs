@@ -86,6 +86,20 @@ The unique ID for the enqueued workflow.
 If left undefined, DBOS will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for more information.
 
+#### WithEnqueueWorkflowIDReusePolicy
+
+```go
+func WithEnqueueWorkflowIDReusePolicy(policy WorkflowIDReusePolicy) EnqueueOption
+```
+
+What to do if a workflow with ID `WithEnqueueWorkflowID` already exists, whatever its status.
+Defaults to `WorkflowIDReusePolicyReturnExisting`.
+
+- `dbos.WorkflowIDReusePolicyReturnExisting`: return a handle to the existing workflow without enqueueing a new one.
+- `dbos.WorkflowIDReusePolicyReject`: return an error matching `dbos.ErrWorkflowIDInUse` without enqueueing a new workflow or modifying the existing one. The error's `WorkflowID` and `RecordedName` fields describe the existing workflow.
+
+See [`WithWorkflowIDReusePolicy`](./workflows-steps.md#withworkflowidreusepolicy).
+
 #### WithEnqueueApplicationVersion
 
 ```go
@@ -307,7 +321,20 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **opts**: Optional `SendOption` functions ([`WithIdempotencyKey`](#withidempotencykey), [`WithSendTransaction`](#withsendtransaction), [`WithPortableSend`](#withportablesend)).
+- **opts**: Optional `SendOption` functions ([`WithIdempotencyKey`](#withidempotencykey), [`WithSendToForks`](#withsendtoforks), [`WithSendTransaction`](#withsendtransaction), [`WithPortableSend`](#withportablesend)).
+
+#### WithSendToForks
+
+```go
+func WithSendToForks() SendOption
+```
+
+Also deliver the message to every workflow recursively [forked](#forkworkflow) from `destinationID` (forks, forks of forks, and so on) that exists at send time.
+Applies to [`SendBulk`](#sendbulk) too, where it delivers each message to the forks of its destination; with this option, a batch may insert more than `dbos.MaxSendBulkMessages` messages.
+
+```go
+err := dbos.Send(ctx, destinationID, payload, "payments", dbos.WithSendToForks())
+```
 
 #### WithIdempotencyKey
 
@@ -376,7 +403,7 @@ Inside a workflow, the whole batch is checkpointed as one step, so it is deliver
 **Parameters:**
 - **ctx**: The DBOS client or context.
 - **messages**: The messages to send, as [`SendMessage`](#sendmessage) values. Two messages in the same call may not share an idempotency key.
-- **opts**: Optional `SendOption` functions applied to the whole batch ([`WithSendTransaction`](#withsendtransaction), [`WithPortableSend`](#withportablesend)). [`WithIdempotencyKey`](#withidempotencykey) is per-message and is rejected here: set `SendMessage.IdempotencyKey` instead.
+- **opts**: Optional `SendOption` functions applied to the whole batch ([`WithSendToForks`](#withsendtoforks), [`WithSendTransaction`](#withsendtransaction), [`WithPortableSend`](#withportablesend)). [`WithIdempotencyKey`](#withidempotencykey) is per-message and is rejected here: set `SendMessage.IdempotencyKey` instead.
 
 ```go
 err := dbos.SendBulk(ctx, []dbos.SendMessage{
@@ -781,6 +808,14 @@ func WithFilterWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
 
 Filter workflows by whether they have been forked from (true) or not (false).
 
+#### WithFilterIsFork
+
+```go
+func WithFilterIsFork(isFork bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they are themselves a [fork](#forkworkflow) of another workflow (true) or not (false).
+
 #### WithFilterHasParent
 
 ```go
@@ -1100,6 +1135,90 @@ Accepts the same options as [`ResumeWorkflow`](#resumeworkflow) (e.g., [`WithRes
 - **ctx**: The DBOS client or context.
 - **workflowIDs**: The IDs of the workflows to resume.
 - **opts**: Optional configuration.
+
+### RewindWorkflow
+
+```go
+func RewindWorkflow[R any](ctx Client, workflowID string, opts ...RewindWorkflowOption) (WorkflowHandle[R], error)
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps with IDs greater than or equal to the start step, then re-enqueues the workflow so it re-executes from that step.
+Steps with a lower ID are not re-executed; their recorded outputs are replayed.
+The start step must match the `StepID` of a step returned by [`GetWorkflowSteps`](#getworkflowsteps).
+If no start step is provided, the workflow's entire history is discarded and it re-executes from the beginning with its original input.
+
+Unlike [`ForkWorkflow`](#forkworkflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID, and its child workflows keep the same IDs.
+A child workflow that already succeeded is adopted by the replaying parent rather than re-run, so repairing one failed child and rewinding its parent recovers the whole tree without touching the children that worked.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#cancelworkflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after the start step, restoring each such event to the last value it set before the start step (or removing it if there is none).
+- Deletes messages it consumed at or after the start step, as well as any unconsumed messages, including ones sent before the rewind. Send a message only once the rewind has returned for the replay to receive it.
+- Drops the checkpoints held in [datasources](./datasources.md) along with the steps that wrote them, so the replay re-runs those transactions. A `Context` created with `NewContext` knows every datasource registered on it with `NewDataSource`; a [standalone client](./dbos-context.md#newclient) must list them with [`WithRewindDataSources`](#withrewinddatasources).
+- Does not modify streamed values. Streams are append-only; new values are appended after the existing ones. However, it does "un-close" any stream closed at or after the start step.
+- Does not modify child workflows, even those started after the start step. To re-run a child, delete it or rewind it separately before rewinding the parent.
+
+**Parameters:**
+- **ctx**: The DBOS client or context.
+- **workflowID**: The ID of the workflow to rewind.
+- **opts**: Optional configuration, documented below.
+
+```go
+// Repair a failed child, then rewind the parent onto it.
+_, err := dbos.RewindWorkflow[string](ctx, childID)
+...
+handle, err := dbos.RewindWorkflow[int](ctx, parentID, dbos.WithRewindStartStep(3))
+result, err := handle.GetResult()
+```
+
+#### WithRewindStartStep
+
+```go
+func WithRewindStartStep(startStep uint) RewindWorkflowOption
+```
+
+The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to `0`, the first step.
+
+#### WithRewindApplicationVersion
+
+```go
+func WithRewindApplicationVersion(applicationVersion string) RewindWorkflowOption
+```
+
+The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs.
+Useful for "patching" a workflow that failed due to a bug in a previous application version, or for bringing back a workflow stranded on a retired version.
+Defaults to the workflow's current version.
+
+#### WithRewindQueue
+
+```go
+func WithRewindQueue(queueName string) RewindWorkflowOption
+```
+
+The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
+
+#### WithRewindQueuePartitionKey
+
+```go
+func WithRewindQueuePartitionKey(partitionKey string) RewindWorkflowOption
+```
+
+The partition key to enqueue the rewound workflow under, if `WithRewindQueue` names a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
+
+#### WithRewindDataSources
+
+```go
+func WithRewindDataSources(dataSources ...*DataSource) RewindWorkflowOption
+```
+
+The [datasources](./datasources.md) whose transaction checkpoints the rewind drops along with the steps that wrote them.
+A `Context` created with `NewContext` already knows every datasource registered on it and drops their checkpoints without this option.
+A [standalone client](./dbos-context.md#newclient) has no such registry: a rewind issued from a client leaves datasource checkpoints in place, so rewound transactions are not re-executed, unless the datasources are listed here.
 
 ### ForkWorkflow
 
@@ -1735,6 +1854,19 @@ func GetStepID(ctx Context) (int, error)
 ```
 
 Return the current value of the step counter within a workflow (the ID of the most recently started step). Returns an error if not called from within a workflow context.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+
+### GetAuthenticatedUser
+
+```go
+func GetAuthenticatedUser(ctx Context) (string, error)
+```
+
+Return the authenticated user of the current workflow, as set with [`WithAuthenticatedUser`](./workflows-steps.md#withauthenticateduser) (or [`WithEnqueueAuthenticatedUser`](#withenqueueauthenticateduser)) or inherited from the parent workflow.
+It can be called from a workflow or from one of its steps.
+Returns an empty string if the workflow has no authenticated user, and an error if not called from within a workflow context.
 
 **Parameters:**
 - **ctx**: The DBOS context.

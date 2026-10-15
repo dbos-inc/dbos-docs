@@ -191,10 +191,14 @@ await DBOS.launch({conductorKey, conductorURL});
 </TabItem>
 <TabItem value="golang" label="Go">
 
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`).
+
 ```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 conductorURL := os.Getenv("DBOS_CONDUCTOR_URL")
-dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     AppName:            "dbos-starter",
     ApplicationVersion: "0.1.0",
     DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),

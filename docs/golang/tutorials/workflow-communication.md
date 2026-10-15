@@ -26,6 +26,7 @@ func Send[P any](ctx Client, destinationID string, message P, topic string, opts
 You can call `Send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 Pass [`WithIdempotencyKey`](../reference/methods.md#withidempotencykey) to make a retried `Send` deliver at most once: retrying with the same key (for example, after a crash or network failure) inserts the message only once.
+Pass [`WithSendToForks`](../reference/methods.md#withsendtoforks) to also deliver the message to every workflow [forked](./workflow-management.md#forking-workflows) from the destination (forks, forks of forks, and so on) that exists at send time.
 
 To send many messages at once, possibly to different workflows, use [`SendBulk`](../reference/methods.md#sendbulk).
 The batch is sent in a single transaction: either every message is delivered or none is.
