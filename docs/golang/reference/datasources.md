@@ -10,7 +10,7 @@ See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.
 ### NewDataSource
 
 ```go
-func NewDataSource[E Engine](ctx Context, engine E, opts ...DataSourceOption) (*DataSource, error)
+func NewDataSource[E Engine](ctx Client, engine E, opts ...DataSourceOption) (*DataSource, error)
 
 type Engine interface {
     *pgxpool.Pool | *sql.DB
@@ -20,14 +20,16 @@ type Engine interface {
 Build a durable data source over a user-provided database engine.
 The engine type is constrained at compile time to `*pgxpool.Pool` (Postgres/CockroachDB) or `*sql.DB` (SQLite).
 
-The returned handle is ready to use immediately: `NewDataSource` detects whether the engine is the DBOS system database, resolves the dialect (CockroachDB is auto-detected), and creates the `transaction_completion` durability table in your database if it does not already exist.
-It may be called at any time, before or after `Launch()`, and there is no registry: create as many data sources as you need.
+The returned handle is ready to use immediately: `NewDataSource` detects whether the engine is the DBOS system database, resolves the dialect (CockroachDB is auto-detected), and creates or migrates the [datasource schema](#installing-the-datasource-schema) in your database (or only verifies it, with [`WithDataSourceSkipMigrations`](#withdatasourceskipmigrations)).
+
+On a `Context` created with `NewContext`, `NewDataSource` must be called before `Launch()`; calling it after launch returns an error.
+On a [standalone client](./dbos-context.md#newclient), `NewDataSource` may be called at any time.
 
 If the engine is the **same handle** as the DBOS system database (the pool you passed as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./configuration.md)), DBOS does not create or manage a `transaction_completion` table at all: transactions on this data source commit your application writes and the DBOS checkpoint together in a single transaction against the system database.
 See [Sharing the System Database Engine](#sharing-the-system-database-engine).
 
 **Parameters:**
-- **ctx**: The Context.
+- **ctx**: The DBOS context or client.
 - **engine**: A `*pgxpool.Pool` or `*sql.DB` connecting to your database.
 - **opts**: Functional options, documented below.
 
@@ -60,15 +62,50 @@ func WithDataSourceSchema(schema string) DataSourceOption
 
 Override the schema that holds the `transaction_completion` table (default `"dbos"`). Ignored by SQLite, which has no schemas.
 
-#### Provisioning and Permissions
+#### WithDataSourceSkipMigrations
 
-`NewDataSource` checks for the `transaction_completion` table first and skips all DDL if it already exists:
+```go
+func WithDataSourceSkipMigrations() DataSourceOption
+```
 
-- **First-time creation** needs a role with `CREATE` on the database (for the schema) and `CREATE` on the schema (for the table).
-- **Steady state** needs only `SELECT, INSERT` on `transaction_completion`, plus whatever your application tables require.
+Verify that the [datasource schema](#installing-the-datasource-schema) is migrated instead of creating and migrating it.
+`NewDataSource` then fails with an initialization error if the schema is missing or behind the version this build of DBOS requires.
+Use it for a process whose database role cannot run DDL, after migrating the schema out of band with [`MigrateDataSource`](#migratedatasource).
 
-Because the engine is user-provided, you choose the role: give the data source a role that can run the DDL, or pre-create the table in your own migrations and connect with a DML-only role.
-If the table is missing and the role cannot create it, `NewDataSource` fails fast with an actionable error.
+### Installing the Datasource Schema
+
+A datasource keeps a `transaction_completion` table in your database (in the `dbos` schema by default), recording which transactions committed so that each runs exactly once, along with a `dbos_transaction_completion_migrations` table recording the schema version.
+
+By default, `NewDataSource` creates or migrates these tables, which requires privileges to run DDL in your database.
+If your application's role should not have those privileges, install the schema with [`MigrateDataSource`](#migratedatasource), for example from your deployment's migration step, run with a privileged role.
+Then create your datasource with [`WithDataSourceSkipMigrations`](#withdatasourceskipmigrations), so it only verifies that its schema is migrated.
+
+Once a workflow completes, DBOS deletes its records from `transaction_completion`.
+At runtime, the application's role needs usage on the schema, `SELECT`, `INSERT`, and `DELETE` on `transaction_completion`, and `SELECT` on `dbos_transaction_completion_migrations`, plus whatever your application tables require.
+
+#### MigrateDataSource
+
+```go
+func MigrateDataSource[E Engine](ctx context.Context, engine E, opts ...MigrateOption) error
+```
+
+Create or migrate the datasource schema in the database `engine` connects to, without a DBOS context.
+It accepts the same engine types as [`NewDataSource`](#newdatasource) and the same options as [`Migrate`](./configuration.md#migrate):
+
+- **`WithMigrateSchema(schema string)`**: The schema holding the datasource tables (default `"dbos"`).
+- **`WithMigrateApplicationRole(role string)`**: A Postgres role to grant the permissions listed above, so an application running under it can create the datasource with `WithDataSourceSkipMigrations`. Postgres only.
+- **`WithMigrateLogger(logger *slog.Logger)`**: The logger to report progress to (default `slog.Default()`).
+
+```go
+// In your migration script, run with a privileged role:
+adminPool, _ := pgxpool.New(ctx, os.Getenv("ADMIN_DATABASE_URL"))
+err := dbos.MigrateDataSource(ctx, adminPool, dbos.WithMigrateApplicationRole("app_user"))
+
+// In your application, run as app_user:
+ds, err := dbos.NewDataSource(dbosContext, pool, dbos.WithDataSourceSkipMigrations())
+```
+
+To run the grants yourself, for example from your own migration tooling, `DataSourcePermissionStatements(schemaName, roleName string) []string` returns the statements granting `roleName` the permissions a datasource needs at runtime on `schemaName`.
 
 ### DataSource.Name
 
@@ -93,7 +130,8 @@ Durably execute `fn` as a transaction against the data source `ds`.
 It cannot be nested: calling it inside another `RunAsTransaction` or inside a [`RunAsStep`](./workflows-steps.md#runasstep) is rejected with an error.
 It shares the per-workflow step counter with `RunAsStep`, so transactions and steps can be freely interleaved.
 Standard [step options](./workflows-steps.md#withstepname) apply (`WithStepName`, `WithStepMaxRetries`, retry intervals, retry predicate).
-Serialization and deadlock conflicts are retried internally with a fresh transaction; application errors follow your step retry policy.
+Transient database errors (connection failures, serialization and deadlock conflicts) are retried internally with a fresh transaction, whether they come from DBOS's own queries or are returned by `fn`: they do not consume the step's retry budget and are never checkpointed as the step's error.
+Application errors returned by `fn` follow your step retry policy.
 
 Additionally, `WithTxIsolation` sets the transaction's isolation level (default `ReadCommitted`):
 
@@ -119,6 +157,7 @@ n, err := dbos.RunAsTransaction(ctx, ds, func(ctx context.Context, tx dbos.Tx) (
 
 A top-level `RunAsTransaction` first commits your application writes together with a row in the `transaction_completion` table (one atomic transaction in your database), then checkpoints the result in the DBOS system database.
 Recovery checks the system database first, then `transaction_completion`, and replays the stored output without re-running `fn` if the transaction already committed—covering the crash window between the two commits.
+[Rewinding](./methods.md#rewindworkflow) a workflow deletes the `transaction_completion` rows of the rewound steps, so the replay re-runs those transactions.
 
 #### Sharing the System Database Engine
 

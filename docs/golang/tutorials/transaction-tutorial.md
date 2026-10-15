@@ -26,12 +26,30 @@ if err != nil {
 }
 ```
 
-`NewDataSource` may be called at any time, before or after `Launch()`.
-It provisions a `transaction_completion` durability table in your database (in the `dbos` schema by default, configurable with [`WithDataSourceSchema`](../reference/datasources.md#withdatasourceschema)) unless the table already exists.
-If you prefer to manage DDL yourself, pre-create the table in your own migrations and connect with a role that only needs `SELECT, INSERT` on it.
+Create all your datasources before calling [`Launch()`](../reference/dbos-context.md#launch): creating a datasource after launch returns an error.
+DBOS tracks every datasource created on the context so that [rewinding a workflow](./workflow-management.md#rewinding-workflows) also deletes the transaction checkpoints it holds.
+
+`NewDataSource` creates or migrates a `transaction_completion` durability table in your database (in the `dbos` schema by default, configurable with [`WithDataSourceSchema`](../reference/datasources.md#withdatasourceschema)).
 
 If you pass the same engine handle you gave DBOS as its system database (via [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](../reference/configuration.md)), no `transaction_completion` table is created or managed at all: your application writes and the DBOS checkpoint commit together in a single transaction.
 See [Sharing the System Database Engine](../reference/datasources.md#sharing-the-system-database-engine).
+
+### Running Datasource Migrations Separately
+
+By default, creating a datasource creates its `transaction_completion` table (and the schema containing it) if they do not exist, which requires DDL privileges.
+If your application's database role should not have those privileges, run the datasource migrations separately with a privileged role, using [`MigrateDataSource`](../reference/datasources.md#migratedatasource).
+Pass [`WithMigrateApplicationRole`](../reference/datasources.md#migratedatasource) to grant your application's role the minimal permissions it needs to use the datasource.
+Then, create your datasources with [`WithDataSourceSkipMigrations`](../reference/datasources.md#withdatasourceskipmigrations), so they only verify their tables are migrated:
+
+```go
+// In your migration script, run with a privileged role:
+err := dbos.MigrateDataSource(ctx, adminPool, dbos.WithMigrateApplicationRole("my_app_role"))
+
+// In your application, run as my_app_role:
+ds, err := dbos.NewDataSource(dbosContext, pool, dbos.WithDataSourceSkipMigrations())
+```
+
+You can similarly migrate the DBOS system database separately with [`Migrate`](../reference/configuration.md#migrate) or the `dbos migrate` [CLI command](../reference/cli.md), and start your application with [`Config.SkipMigrations`](../reference/configuration.md#system-database-startup).
 
 ## Running Transactions
 
@@ -60,7 +78,8 @@ func checkoutWorkflow(ctx dbos.Context, item string) (int64, error) {
 
 `RunAsTransaction` must be called from within a workflow.
 It accepts the same options as [`RunAsStep`](../reference/workflows-steps.md#runasstep) (`WithStepName`, `WithStepMaxRetries`, and so on).
-Serialization and deadlock conflicts are retried automatically with a fresh transaction; errors returned by your function follow your step retry policy.
+Transient database errors, such as connection failures and serialization or deadlock conflicts, are retried automatically with a fresh transaction, even when your function returns them: they do not count against the step's retries and are never recorded as the step's error.
+Other errors returned by your function follow your step retry policy.
 
 :::tip
 If your application tables live in the same database that hosts the DBOS system schema (for example, the [shared-engine setup](../reference/datasources.md#sharing-the-system-database-engine)), you can atomically write application data and enqueue a workflow in one transaction by calling the [`dbos.enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) PL/pgSQL function from within it.

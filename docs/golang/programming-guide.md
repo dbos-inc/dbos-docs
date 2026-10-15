@@ -389,10 +389,18 @@ dbosctl app register dbos-starter
 dbosctl api-key create dbos-starter-key
 ```
 
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`, so add it to your application and import it once, anywhere in your program:
+
+```shell
+go get go.dbos.dev/dbos-enterprise-go
+```
+
 Next, supply your API key to your app through the `ConductorAPIKey` configuration option.
 Update the call to `dbos.NewContext` in `main` to read the key from an environment variable:
 
 ```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
     dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "dbos-starter",
         ApplicationVersion: "0.1.0",

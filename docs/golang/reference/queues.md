@@ -37,7 +37,6 @@ queue, err := dbos.RegisterQueue(ctx, "email-queue",
         Limit:  100,
         Period: 60 * time.Second, // 100 workflows per minute
     }),
-    dbos.WithPriorityEnabled(),
 )
 
 // Enqueue workflows to this queue by passing its handle to WithQueue:
@@ -60,14 +59,6 @@ func WithGlobalConcurrency(concurrency int) QueueOption
 
 Set the maximum number of workflows from this queue that may run concurrently. Unset by default (no limit).
 This concurrency limit is global across all DBOS processes using this queue.
-
-####  WithPriorityEnabled
-
-```go
-func WithPriorityEnabled() QueueOption
-```
-
-Enable setting priority for workflows on this queue.
 
 ####  WithRateLimiter
 
@@ -220,7 +211,7 @@ queue, err := dbos.RetrieveQueue(ctx, "email-queue")
 if err != nil {
     return err
 }
-fmt.Println("Priority enabled:", queue.GetPriorityEnabled())
+fmt.Println("Worker concurrency:", queue.GetWorkerConcurrency())
 ```
 
 ### ListQueues

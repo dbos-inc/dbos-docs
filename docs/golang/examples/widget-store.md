@@ -314,9 +314,12 @@ func crashApplication(c *gin.Context, logger *slog.Logger) {
 
 ## Launching and Serving the App
 
-Finally, here's the complete main function that initializes DBOS, sets up the database connection, registers workflows, and starts the Gin HTTP server:
+Finally, here's the complete main function that initializes DBOS, sets up the database connection, registers workflows, and starts the Gin HTTP server.
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`:
 
 ```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
 func main() {
     logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
         Level: slog.LevelDebug,
