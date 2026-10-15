@@ -57,7 +57,8 @@ For example, if a schedule was routed to a named queue and you re-apply it witho
 The schedule's status and last-fired time are preserved.
 
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
+DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules and compute when they fire, so schedules follow croniter's syntax and semantics.
+DBOS enables croniter's [`second_at_beginning`](https://pypi.org/project/croniter/#about-second-repeats) option, so seconds are an optional first field.
 Valid cron schedules contain 5 or 6 items, separated by spaces:
 
 ```
