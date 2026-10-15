@@ -33,6 +33,14 @@ The name also identifies the application's data in its system database; see [sha
 
 **Python**
 
+Connecting to Conductor requires the `dbos-enterprise` package, which you can install as an extra of `dbos`:
+
+```shell
+pip install "dbos[enterprise]"
+```
+
+Then, set `conductor_key` in your DBOS configuration:
+
 ```python
 config: DBOSConfig = {
     "name": "my-app-name",
@@ -44,6 +52,14 @@ DBOS(config=config)
 ```
 
 **TypeScript**
+
+Connecting to Conductor requires the `@dbos-inc/dbos-enterprise` package, at the same minor version as `@dbos-inc/dbos-sdk`:
+
+```shell
+npm install @dbos-inc/dbos-enterprise
+```
+
+Then, pass `conductorKey` to `DBOS.launch`:
 
 ```typescript
 DBOS.setConfig({

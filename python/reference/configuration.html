@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.8ad446d1.js" defer="defer"></script>
-<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.883e7534.js" defer="defer"></script>
+<script src="/assets/js/main.57157f33.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -72,7 +72,7 @@ A system database ahead of the required version is accepted, so a process with m
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="conductor-settings">Conductor Settings<a href="#conductor-settings" class="hash-link" aria-label="Direct link to Conductor Settings" title="Direct link to Conductor Settings" translate="no">​</a></h3>
 <ul>
-<li class=""><strong>conductor_key</strong>: An API key for <a class="" href="/conductor/overview">DBOS Conductor</a>. If provided, application connects to Conductor. API keys can be created from the <a href="https://console.dbos.dev" target="_blank" rel="noopener noreferrer" class="">DBOS Console</a>.</li>
+<li class=""><strong>conductor_key</strong>: An API key for <a class="" href="/conductor/overview">DBOS Conductor</a>. If provided, application connects to Conductor. API keys can be created from the <a href="https://console.dbos.dev" target="_blank" rel="noopener noreferrer" class="">DBOS Console</a>. Connecting to Conductor requires the <code>dbos-enterprise</code> package (<code>pip install &quot;dbos[enterprise]&quot;</code>).</li>
 <li class=""><strong>conductor_url</strong>: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.</li>
 <li class=""><strong>conductor_executor_metadata</strong>: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).</li>
 <li class=""><strong>conductor_metadata_only_mode</strong>: If <code>True</code>, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the <a class="" href="/conductor/overview#metadata-only-mode">metadata-only mode</a> setting in the Conductor console. Defaults to <code>False</code>.</li>

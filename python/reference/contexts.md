@@ -991,6 +991,7 @@ def list_workflows(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     was_forked_from: Optional[bool] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
@@ -1024,6 +1025,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
+- **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
@@ -1060,6 +1062,7 @@ def list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
@@ -1090,6 +1093,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
+- **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows (or, if `workflow_ids` is set, workflows owned by any application).
@@ -1169,11 +1173,13 @@ Coroutine version of [`set_workflow_delay`](#set_workflow_delay).
 DBOS.update_workflow_attributes(
     workflow_id: str,
     attributes: Optional[Dict[str, Any]],
+    *,
+    merge: bool = False,
 ) -> None
 ```
 
 Replace the custom [attributes](#setworkflowattributes) attached to a workflow, identified by `workflow_id`.
-This overwrites the workflow's attributes dictionary; it is not a merge. Pass `None` to clear all attributes.
+By default, this overwrites the workflow's attributes dictionary. Pass `None` to clear all attributes.
 Attributes must be a dictionary of JSON-serializable values.
 
 You can use this to attach attributes to a workflow that started without them, or to update attributes as a workflow progresses.
@@ -1182,6 +1188,7 @@ This method is safe to call from within a workflow (including to update the call
 **Parameters:**
 - `workflow_id`: The ID of the workflow whose attributes to replace.
 - `attributes`: The new attributes dictionary, or `None` to clear all attributes.
+- `merge`: If `True`, atomically merge the top-level keys of `attributes` into the workflow's existing attributes instead of replacing them. Existing keys not in `attributes` are kept; keys in `attributes` overwrite existing values (nested dictionaries are replaced, not merged). Concurrent merges do not lose each other's keys. Raises `DBOSException` if `attributes` is `None`.
 
 ### update_workflow_attributes_async
 
@@ -1418,7 +1425,8 @@ Create a cron schedule that periodically invokes a workflow function.
 Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
 Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name already exists (including one owned by a different application) raises an error.
 
-DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
+DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules and compute when they fire, so schedules follow croniter's syntax and semantics.
+DBOS enables croniter's [`second_at_beginning`](https://pypi.org/project/croniter/#about-second-repeats) option, so seconds are an optional first field.
 Valid cron schedules contain 5 or 6 items, separated by spaces:
 
 ```

@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.8ad446d1.js" defer="defer"></script>
-<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.883e7534.js" defer="defer"></script>
+<script src="/assets/js/main.57157f33.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -35,7 +35,8 @@ If you&#x27;re defining a set of static schedules to be created on program start
 For example, if a schedule was routed to a named queue and you re-apply it without setting <code>queue_name</code>, it reverts to the internal queue.
 The schedule&#x27;s status and last-fired time are preserved.</p>
 <p>To learn more about crontab syntax, see <a href="https://docs.gitlab.com/ee/topics/cron/" target="_blank" rel="noopener noreferrer" class="">this guide</a> or <a href="https://crontab.guru/" target="_blank" rel="noopener noreferrer" class="">this crontab editor</a>.
-DBOS uses <a href="https://pypi.org/project/croniter/" target="_blank" rel="noopener noreferrer" class="">croniter</a> to parse cron schedules, using seconds as an optional first field (<a href="https://pypi.org/project/croniter/#about-second-repeats" target="_blank" rel="noopener noreferrer" class=""><code>second_at_beginning=True</code></a>).
+DBOS uses <a href="https://pypi.org/project/croniter/" target="_blank" rel="noopener noreferrer" class="">croniter</a> to parse cron schedules and compute when they fire, so schedules follow croniter&#x27;s syntax and semantics.
+DBOS enables croniter&#x27;s <a href="https://pypi.org/project/croniter/#about-second-repeats" target="_blank" rel="noopener noreferrer" class=""><code>second_at_beginning</code></a> option, so seconds are an optional first field.
 Valid cron schedules contain 5 or 6 items, separated by spaces:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain"> ┌────────────── second (optional)</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ ┌──────────── minute</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ ┌────────── hour</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ ┌──────── day of month</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ ┌────── month</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ │ ┌──── day of week</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ │ │</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> │ │ │ │ │ │</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"> * * * * * *</span><br></div></code></pre></div></div>
 <p>Cron expressions are evaluated in UTC by default. You can set the <code>cron_timezone</code> parameter to an <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener noreferrer" class="">IANA timezone name</a> (e.g. <code>&quot;America/New_York&quot;</code>) to evaluate the expression in a different timezone.</p>

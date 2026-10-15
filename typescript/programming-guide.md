@@ -281,7 +281,13 @@ dbosctl app register dbos-node-starter
 dbosctl api-key create dbos-node-starter-key
 ```
 
-Next, supply your API key to your app through the `conductorKey` launch option.
+Next, install the `@dbos-inc/dbos-enterprise` package, which DBOS requires to connect to Conductor:
+
+```shell
+npm install @dbos-inc/dbos-enterprise
+```
+
+Then, supply your API key to your app through the `conductorKey` launch option.
 Update the call to `DBOS.launch` in `main` to read the key from an environment variable:
 
 ```javascript

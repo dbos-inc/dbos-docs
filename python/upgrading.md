@@ -19,6 +19,18 @@ If DBOS 3.0 starts or enqueues a workflow with the same [ID](./tutorials/workflo
 
 ## Breaking Changes
 
+### DBOS Conductor
+
+The [DBOS Conductor](../conductor/overview.md) client has moved out of `dbos` into a separate package, `dbos-enterprise`.
+Applications that connect to Conductor by setting `conductor_key` must install it, as must all applications deployed to [DBOS Cloud](../conductor/reference/dbos-cloud/deploying-to-cloud.md), which always connect to Conductor.
+Without it, DBOS raises a `DBOSInitializationError` when it initializes.
+
+Install it as an extra of `dbos`, which pins `dbos-enterprise` to the same version as `dbos`:
+
+```shell
+pip install "dbos[enterprise]"
+```
+
 ### `@DBOS.transaction` and the Application Database
 
 The `@DBOS.transaction` decorator, `DBOS.sql_session`, and the `application_database_url` and `database_url` configuration fields have been removed.

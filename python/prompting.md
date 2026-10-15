@@ -431,9 +431,14 @@ workflows = DBOS.list_workflows(attributes={"customer": "acme"})
 To change a workflow's attributes after it is created, use `DBOS.update_workflow_attributes`, which replaces the workflow's entire attributes dictionary (pass `None` to clear them).
 This is safe to call from within a workflow, including on the workflow itself, because the update is recorded as a step.
 
+To add or update individual keys while keeping the rest, pass `merge=True`, which atomically merges the given top-level keys into the existing attributes.
+
 ```python
 # Replace the attributes of a workflow by ID
 DBOS.update_workflow_attributes(workflow_id, {"customer": "acme", "phase": "processing"})
+
+# Set only the "phase" key, keeping the workflow's other attributes
+DBOS.update_workflow_attributes(workflow_id, {"phase": "shipped"}, merge=True)
 ```
 
 ## Durable Sleep
@@ -1487,6 +1492,7 @@ def list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
@@ -1513,6 +1519,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null).
+- **is_fork**: If `True`, only retrieve workflows that were forked from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose custom attributes contain all the given key-value pairs. Only supported when using a Postgres system database.
 - **schedule_name**: Retrieve workflows that were enqueued by this schedule (or one of these schedules).
@@ -1537,6 +1544,7 @@ def list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    is_fork: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
@@ -1561,6 +1569,7 @@ Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `DELAYED
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
+- **is_fork**: If `True`, only retrieve workflows that were forked from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose custom attributes contain all the given key-value pairs. Only supported when using a Postgres system database.
 
@@ -1833,7 +1842,7 @@ sqlite:///[application_name].sqlite
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
 - **sys_db_idle_transaction_timeout_sec**: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections DBOS creates. Defaults to 60 seconds.
-- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console.
+- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS Console. Connecting to Conductor requires the `dbos-enterprise` package (`pip install "dbos[enterprise]"`).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.

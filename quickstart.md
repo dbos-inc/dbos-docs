@@ -151,6 +151,16 @@ dbosctl api-key create dbos-app-starter-key
 </article>
 
 <article className="col col--6">
+Next, install the `dbos-enterprise` package, which DBOS requires to connect to Conductor.
+</article>
+
+<article className="col col--6">
+```bash
+pip install "dbos[enterprise]"
+```
+</article>
+
+<article className="col col--6">
 Finally, provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
 </article>
 
@@ -313,6 +323,16 @@ The key's secret is printed once and cannot be retrieved afterwards, so copy it 
 ```bash
 dbosctl app register dbos-node-starter
 dbosctl api-key create dbos-node-starter-key
+```
+</article>
+
+<article className="col col--6">
+Next, install the `@dbos-inc/dbos-enterprise` package, which DBOS requires to connect to Conductor.
+</article>
+
+<article className="col col--6">
+```bash
+npm install @dbos-inc/dbos-enterprise
 ```
 </article>
 

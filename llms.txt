@@ -87,7 +87,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/java/examples/widget-store.md): :::info
 - [Add DBOS To Your App](https://docs.dbos.dev/java/integrating-dbos.md): This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-java) library to your existing applicatio...
 - [Learn DBOS Java](https://docs.dbos.dev/java/programming-guide.md): This guide shows you how to use DBOS to build Java apps that are **resilient to any failure**.
-- [AI Model Prompting](https://docs.dbos.dev/java/prompting.md): You may want assistance from an AI model in building a DBOS application.
+- [AI-Assisted Development](https://docs.dbos.dev/java/prompting.md): If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
 - [DBOS Client](https://docs.dbos.dev/java/reference/client.md): `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
 - [Kotlin Extensions](https://docs.dbos.dev/java/reference/kotlin.md): DBOS ships Kotlin extension functions on the `DBOS` class in the `dev.dbos.transact` package.
 - [DBOS Lifecycle](https://docs.dbos.dev/java/reference/lifecycle.md): You create a `DBOS` instance exactly once in a program's lifetime, register your workflows, then launch it.

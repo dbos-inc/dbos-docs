@@ -1656,6 +1656,7 @@ interface GetWorkflowsInput {
   queueName?: string; // If this workflow is enqueued, on which queue
   queuesOnly?: boolean; // Return only workflows that are actively enqueued
   forkedFrom?: string; // Get workflows forked from this workflow ID.
+  isFork?: boolean; // If true, only return workflows that were forked from another workflow. If false, only return workflows that are not forks.
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string; // Retrieve workflows enqueued by this named schedule.

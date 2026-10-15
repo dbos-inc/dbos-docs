@@ -456,6 +456,7 @@ interface GetWorkflowsInput {
   forkedFrom?: string | string[]; // Get workflows forked from this workflow ID (or any of these workflow IDs).
   wasForkedFrom?: boolean; // Filter workflows that have (or have not) been forked from.
   parentWorkflowID?: string | string[]; // Get workflows started by this parent workflow ID (or any of these parent workflow IDs).
+  isFork?: boolean; // If true, only return workflows that were forked from another workflow. If false, only return workflows that are not forks.
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).

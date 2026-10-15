@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.8ad446d1.js" defer="defer"></script>
-<script src="/assets/js/main.6d991d34.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.883e7534.js" defer="defer"></script>
+<script src="/assets/js/main.57157f33.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -81,7 +81,9 @@ On Windows, <a href="https://github.com/dbos-inc/dbos-ctl/releases" target="_bla
 The name you register must match the <code>name</code> in your DBOS configuration.
 The key&#x27;s secret is printed once and cannot be retrieved afterwards, so copy it now.</p>
 <div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain">dbosctl app register dbos-node-starter</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain">dbosctl api-key create dbos-node-starter-key</span><br></div></code></pre></div></div>
-<p>Next, supply your API key to your app through the <code>conductorKey</code> launch option.
+<p>Next, install the <code>@dbos-inc/dbos-enterprise</code> package, which DBOS requires to connect to Conductor:</p>
+<div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token function" style="color:#e6db74">npm</span><span class="token plain"> </span><span class="token function" style="color:#e6db74">install</span><span class="token plain"> @dbos-inc/dbos-enterprise</span><br></div></code></pre></div></div>
+<p>Then, supply your API key to your app through the <code>conductorKey</code> launch option.
 Update the call to <code>DBOS.launch</code> in <code>main</code> to read the key from an environment variable:</p>
 <div class="language-javascript codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-javascript codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain">  </span><span class="token keyword control-flow" style="color:#66d9ef">await</span><span class="token plain"> </span><span class="token constant" style="color:#e6db74">DBOS</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token method function property-access" style="color:#e6db74">launch</span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token punctuation" style="color:#f8f8f2">{</span><span class="token plain"> </span><span class="token literal-property property" style="color:#f92672">conductorKey</span><span class="token operator" style="color:#66d9ef">:</span><span class="token plain"> process</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token property-access">env</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token constant" style="color:#e6db74">DBOS_CONDUCTOR_KEY</span><span class="token plain"> </span><span class="token punctuation" style="color:#f8f8f2">}</span><span class="token punctuation" style="color:#f8f8f2">)</span><span class="token punctuation" style="color:#f8f8f2">;</span><br></div></code></pre></div></div>
 <p>Finally, set the <code>DBOS_CONDUCTOR_KEY</code> environment variable to the key you created, then rebuild and restart your app:</p>
