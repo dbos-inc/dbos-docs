@@ -31,6 +31,7 @@ type Client interface {
     SetWorkflowDelay(_ Client, workflowID string, opts ...SetWorkflowDelayOption) error
     ResumeWorkflow(_ Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
     ResumeWorkflows(_ Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
+    RewindWorkflow(_ Client, workflowID string, opts ...RewindWorkflowOption) (WorkflowHandle[any], error)
     ForkWorkflow(_ Client, input ForkWorkflowInput) (WorkflowHandle[any], error)
     ForkWorkflows(_ Client, input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
     ListWorkflows(_ Client, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
@@ -88,8 +89,9 @@ type Context interface {
     Sleep(_ Context, duration time.Duration) (time.Duration, error)
     Patch(_ Context, patchName string) (bool, error)
     DeprecatePatch(_ Context, patchName string) error
-    GetWorkflowID() (string, error) // Only available within workflows
-    GetStepID() (int, error)        // Only available within workflows
+    GetWorkflowID() (string, error)        // Only available within workflows
+    GetStepID() (int, error)               // Only available within workflows
+    GetAuthenticatedUser() (string, error) // Only available within workflows
 
     // Registration
     ListRegisteredWorkflows(_ Context) []WorkflowRegistryEntry
@@ -105,6 +107,7 @@ type Context interface {
     From(_ Context, ctx context.Context) Context
     WithoutCancel(_ Context) Context
     WithTimeout(_ Context, timeout time.Duration) (Context, context.CancelFunc)
+    WithDeadlineCause(_ Context, deadline time.Time, cause error) (Context, context.CancelFunc)
     WithValue(key, val any) Context
     WithCancel() (Context, context.CancelFunc)
     WithCancelCause() (Context, context.CancelCauseFunc)
@@ -119,7 +122,7 @@ type Context interface {
 - **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database. One exception: on the `Context` a step body receives, mutating operations return an error — see [Calling DBOS operations from steps](./workflows-steps.md#calling-dbos-operations-from-steps). When called from workflow code, these operations are checkpointed as steps (`DBOS.*` step names in the workflow's step list).
 - **`Launch()`, workflow registration ([`RegisterWorkflow`](./workflows-steps.md#registerworkflow)), and `SetAlertHandler`** require a `Context`; registration and `SetAlertHandler` must happen before `Launch()`.
 - **Starting workflows (with [`RunWorkflow`](./workflows-steps.md#runworkflow))** requires a launched `Context`.
-- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), [`Patch`](./workflows-steps.md#patch)) can only be called on the `Context` a workflow function receives.
+- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), [`GetAuthenticatedUser`](./methods.md#getauthenticateduser), [`Patch`](./workflows-steps.md#patch)) can only be called on the `Context` a workflow function receives.
 
 In practice, never call the interface methods directly — call their mirror package-level functions instead. These are strongly typed (generic) and the interface methods are not.
 
@@ -160,9 +163,11 @@ Launch the following resources managed by a `Context`:
 - A [system database connection pool](../../explanations/system-tables.md)
 - A [workflow scheduler](../tutorials/scheduled-workflows.md)
 - A [workflow queue runner](../tutorials/queue-tutorial.md)
-- (Optionally) a Conductor connection
+- A workflow timeouts monitor, which durably cancels this application's workflows past their deadline
+- (Optionally) a [Conductor connection](./configuration.md#connecting-to-conductor)
 
-In addition, `Launch()` may perform [workflow recovery](../../architecture.md#how-workflow-recovery-works).
+In addition, `Launch()` may perform [workflow recovery](../../architecture.md#how-workflow-recovery-works): it returns this executor's `PENDING` workflows to their queues so they resume from their last completed step.
+Recovery is skipped when Conductor is configured (a `ConductorAPIKey` is set, or the application runs in DBOS Cloud), where [Conductor manages recovery](../../conductor/distributed-recovery.md).
 `Launch()` should be called by your program during startup before running any workflows.
 
 `Launch()` must be called on the `Context` returned by `NewContext`.
@@ -190,6 +195,7 @@ type ClientConfig struct {
     Logger                 *slog.Logger    // Optional custom logger
     Serializer             Serializer[any] // Optional custom serializer (defaults to JSON). See the serialization reference.
     SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and schema verification (default: 2 minutes)
+    SystemDBIdleTransactionTimeout time.Duration // Postgres idle_in_transaction_session_timeout for the connections the client creates (default: 1 minute; negative leaves the server setting)
 }
 ```
 
@@ -242,6 +248,15 @@ func WithTimeout(ctx Context, timeout time.Duration) (Context, context.CancelFun
 ```
 
 `WithTimeout` returns a copy of the DBOS context with a timeout. The returned context will be canceled after the specified duration. See [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts) for usage.
+
+### WithDeadlineCause
+
+```go
+func WithDeadlineCause(ctx Context, deadline time.Time, cause error) (Context, context.CancelFunc)
+```
+
+`WithDeadlineCause` behaves like [`WithTimeout`](#withtimeout) but takes an absolute deadline and an error to report as the cause, like [`context.WithDeadlineCause`](https://pkg.go.dev/context#WithDeadlineCause).
+A workflow started under the returned context carries the deadline as its durable timeout.
 
 ### WithoutCancel
 

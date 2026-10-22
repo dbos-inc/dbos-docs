@@ -1,8 +1,62 @@
 # Upgrading
 
-> This guide covers migrating an application from the last v0.x release to v1.0.0:
+> ```shell
+> go get github.com/dbos-inc/dbos-transact-golang@v1.7.0
+> ```
+
+## Upgrading to v1.7.0
+
+```shell
+go get github.com/dbos-inc/dbos-transact-golang@v1.7.0
+```
+
+- **Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`.** The Conductor client is no longer part of `github.com/dbos-inc/dbos-transact-golang`. An application that sets `Config.ConductorAPIKey`, or that runs in DBOS Cloud, must add the import once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`:
+
+  ```go
+  import (
+      "github.com/dbos-inc/dbos-transact-golang/dbos"
+      _ "go.dbos.dev/dbos-enterprise-go"
+  )
+  ```
+
+  Conductor configuration is unchanged. Without the import, `NewContext` fails with an initialization error saying what to add. Applications that do not connect to Conductor need no change. See [Connecting to Conductor](./reference/configuration.md#connecting-to-conductor).
+- **Transient database errors in transactions are no longer checkpointed.** A transient database error (a connection failure, or a serialization or deadlock conflict) returned by a [`RunAsTransaction`](./reference/datasources.md#runastransaction) function is now retried with a fresh transaction instead of being treated as an application error: it does not consume the step's retry budget and is never durably recorded as the step's error, so a transient failure can no longer fail a workflow for good. Application errors still follow the step retry policy.
+
+## Upgrading to v1.6.0
+
+```shell
+go get github.com/dbos-inc/dbos-transact-golang@v1.6.0
+```
+
+v1.6.0 is additive: existing code keeps compiling. Behavioral changes and new APIs:
+
+- **Workflow ownership (fencing tokens).** Every execution of a workflow now holds a fencing token, so an execution that lost ownership (because the workflow was recovered, resumed, rewound, or cancelled elsewhere) can no longer checkpoint over the current owner. Its next DBOS operation returns an error matching `dbos.ErrConflictingWorkflowID`; return it from the workflow and the execution adopts the owner's outcome. A step run with `Go` that completes after its workflow has completed is discarded. See [Concurrent Executions](../explanations/concurrent-executions.md).
+- **New error code `ErrorCodeStepNondeterminism` / `ErrStepNondeterminism`**, returned when an execution records a step ID it had already recorded with a different result (a non-deterministic workflow function).
+- **Workflow ID reuse policies.** Starting a workflow with an ID that already exists still returns a handle to the existing workflow by default (`WorkflowIDReusePolicyReturnExisting`). Pass [`WithWorkflowIDReusePolicy(dbos.WorkflowIDReusePolicyReject)`](./reference/workflows-steps.md#withworkflowidreusepolicy) (or `WithEnqueueWorkflowIDReusePolicy` on `Enqueue`) to get an error matching the new `dbos.ErrWorkflowIDInUse` instead. The reject policy cannot be used with a debouncer.
+- **Workflow timeouts are enforced by a monitor.** Every launched process runs a monitor that durably cancels this application's workflows past their deadline, including ones no process is executing, and cancels the `Context` of those running locally. The monitor polls once per second, so a workflow's `Context` may be cancelled up to a second after its deadline. An execution parked on a conflicting ID now waits on the root context (cancelled only by `Shutdown`), so a caller may wait longer than the context's nominal timeout for the durable workflow's outcome.
+- **Child workflows inherit their parent's deadline.** A child started under its parent's context now carries the parent's deadline from the start, even when enqueued (it used to start its own timeout at dequeue). Pass a context from `WithoutCancel` or a shorter `WithTimeout` to detach it, as before.
+- **New `WithDeadlineCause(ctx, deadline, cause)`**, the absolute-deadline counterpart of `WithTimeout`; see the [context reference](./reference/dbos-context.md#withdeadlinecause).
+- **Self-recovery is skipped when Conductor is configured.** When `ConductorAPIKey` is set or the application runs in DBOS Cloud, `Launch` no longer recovers this executor's `PENDING` workflows itself; [Conductor drives recovery](../conductor/distributed-recovery.md). Applications without Conductor are unchanged.
+- **Idle-in-transaction timeout.** DBOS now sets Postgres's `idle_in_transaction_session_timeout` on the connections it creates, to `Config.SystemDBIdleTransactionTimeout` (also on `ClientConfig`; default 1 minute). Set it to a negative duration to keep the server's setting.
+- **Datasource migrations.** A datasource's `transaction_completion` table is now versioned by a `dbos_transaction_completion_migrations` table, created or migrated by `NewDataSource`. New: [`MigrateDataSource`](./reference/datasources.md#migratedatasource) migrates the schema out of band with a privileged role (`WithMigrateApplicationRole` grants a role the runtime permissions: `SELECT`, `INSERT`, `DELETE` on `transaction_completion` and `SELECT` on the version table); [`WithDataSourceSkipMigrations`](./reference/datasources.md#withdatasourceskipmigrations) makes `NewDataSource` verify the schema instead of migrating it; `DataSourcePermissionStatements` returns the grants. A table pre-created by hand under the old scheme is adopted by the first migration, which needs DDL privileges once to create the version table. Likewise, [`Migrate`](./reference/configuration.md#migrate) and `MigrationStatements` now migrate the system database from code, which is what `dbos migrate` runs.
+- **New `Config.ConductorMetadataOnlyMode`**: send only workflow metadata to Conductor, never workflow data, regardless of the console setting. See [Connecting to Conductor](./reference/configuration.md#connecting-to-conductor).
+- **New `dbos.GetAuthenticatedUser(ctx)`**, returning the current workflow's authenticated user from a workflow or one of its steps. See the [reference](./reference/methods.md#getauthenticateduser).
+- **New `WithSendToForks()`** option on `Send` and `SendBulk`, delivering a message to every workflow recursively forked from the destination. See the [reference](./reference/methods.md#withsendtoforks).
+- **New `WithFilterIsFork(bool)`** filter on `ListWorkflows`, selecting workflows that are (or are not) forks of another workflow.
+
+## Upgrading to v1.5.0
+
+```shell
+go get github.com/dbos-inc/dbos-transact-golang@v1.5.0
+```
+
+- **`NewDataSource` must be called before `Launch`.** On a `Context` created with `NewContext`, creating a datasource after launch now returns an error (it used to be allowed at any time). The context tracks every datasource created on it so that rewinding a workflow also deletes the transaction checkpoints it holds. `NewDataSource` now takes a `Client`, so a standalone client can create datasources too, at any time.
+- **New `RewindWorkflow`.** Re-execute a workflow from a given step while keeping its workflow ID, on a `Context` or a `Client`, with options `WithRewindStartStep`, `WithRewindApplicationVersion`, `WithRewindQueue`, `WithRewindQueuePartitionKey`, and `WithRewindDataSources`. See [Rewinding Workflows](./tutorials/workflow-management.md#rewinding-workflows) and the [reference](./reference/methods.md#rewindworkflow). This release adds system-database migrations (index changes and a `consumed_by_function_id` column on `notifications`), applied by the first `NewContext`.
+- **Panics in workflows are recovered.** A panic in a workflow function, or in a step run with `Go`, no longer crashes the process: DBOS recovers it, logs it with its stack, and records it as the workflow's error under the new `ErrorCodeWorkflowPanic` code (`dbos.ErrWorkflowPanic`). When the panic value is an `error`, it is wrapped, so `errors.Is`/`errors.As` still reach it. Code that relied on a workflow panic terminating the process must now check the workflow's error.
 
 ## Upgrading to v1.0.0
+
+This guide covers migrating an application from the last v0.x release to v1.0.0:
 
 ```shell
 go get github.com/dbos-inc/dbos-transact-golang@latest

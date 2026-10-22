@@ -100,6 +100,10 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 Resuming restarts the workflow function from the beginning, but every checkpointed step replays its recorded result instead of re-executing, so only unfinished work runs again (including a step that was interrupted by cancellation, which is never checkpointed).
 Resuming also resets the workflow's recovery-attempt counter and clears any durable timeout the workflow carried before it was resumed.
 
+Resuming, like cancelling, rewinding, or recovering a workflow, takes ownership of it away from any execution still running it: each execution holds a fencing token, and a stale one can no longer checkpoint over the current owner.
+Its next DBOS operation returns an error matching [`dbos.ErrConflictingWorkflowID`](../reference/workflows-steps.md#error-codes), and returning that error from the workflow makes the execution adopt the owning execution's outcome.
+See [Concurrent Executions](../../explanations/concurrent-executions.md).
+
 ## Forking Workflows
 
 You can start a new execution of a workflow by **forking** it from a specific step.
@@ -110,3 +114,30 @@ Forking a workflow is useful for recovering from outages in downstream services 
 You can fork a workflow programmatically using [`ForkWorkflow`](../reference/methods#forkworkflow).
 The forked workflow can be given its own timeout, and a parent whose children were also forked can be pointed at the new children with `ReplacementChildren`.
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
+
+## Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
+Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
+
+You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
+
+You can rewind a workflow programmatically using [`RewindWorkflow`](../reference/methods#rewindworkflow):
+
+```go
+// Re-execute the workflow from step 3, keeping its workflow ID
+handle, err := dbos.RewindWorkflow[string](ctx, workflowID, dbos.WithRewindStartStep(3))
+if err != nil {
+    return err
+}
+result, err := handle.GetResult()
+```
+
+Rewinding also deletes the [transaction](./transaction-tutorial.md) checkpoints of the rewound steps, so the replay re-runs those transactions.
+A [standalone client](../reference/dbos-context.md#newclient) does not know your datasources: when rewinding from a client, list them with [`WithRewindDataSources`](../reference/methods#withrewinddatasources).

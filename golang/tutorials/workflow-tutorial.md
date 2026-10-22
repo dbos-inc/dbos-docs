@@ -104,6 +104,18 @@ func example(dbosContext dbos.Context, input string) error {
 }
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead return an error when a workflow ID is already in use, pass [`WithWorkflowIDReusePolicy`](../reference/workflows-steps.md#withworkflowidreusepolicy) with `dbos.WorkflowIDReusePolicyReject` (or [`WithEnqueueWorkflowIDReusePolicy`](../reference/methods.md#withenqueueworkflowidreusepolicy) when enqueueing from a client):
+
+```go
+handle, err := dbos.RunWorkflow(dbosContext, exampleWorkflow, input,
+    dbos.WithWorkflowID("very-unique-id"),
+    dbos.WithWorkflowIDReusePolicy(dbos.WorkflowIDReusePolicyReject))
+if errors.Is(err, dbos.ErrWorkflowIDInUse) {
+    // A workflow with this ID already exists
+}
+```
+
 ## Determinism
 
 Workflows are in most respects normal Go functions.
@@ -168,6 +180,7 @@ You can set a timeout for a workflow using its input [`Context`](../reference/db
 When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step; the workflow's `Context` is also cancelled, so an executing step can react to `ctx.Done()`. DBOS calls then return an error matching `dbos.ErrWorkflowCancelled` whose cause matches `context.DeadlineExceeded` — see [cancellation behavior](./workflow-management.md#cancelling-workflows) for details. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](../reference/dbos-context#withoutcancel).
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+A child workflow started under its parent's context inherits the parent's deadline, even when it is enqueued.
 
 ```go
 func exampleWorkflow(ctx dbos.Context, input string) (string, error) {}
@@ -175,6 +188,11 @@ func exampleWorkflow(ctx dbos.Context, input string) (string, error) {}
 timeoutCtx, cancelFunc := dbos.WithTimeout(dbosCtx, 12*time.Hour)
 handle, err := dbos.RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 ```
+
+To set an absolute deadline instead of a duration, and choose the error reported as the cancellation cause, use [`WithDeadlineCause`](../reference/dbos-context#withdeadlinecause).
+
+Timed-out workflows are cancelled by a monitor that every DBOS process runs after launch: it durably cancels this application's workflows past their deadline, including ones no process is currently executing, and cancels the `Context` of those running locally.
+The monitor polls once per second, so a workflow's `Context` may be cancelled shortly after its deadline rather than at the exact instant.
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling [CancelWorkflow](./workflow-management.md#cancelling-workflows)).
 
@@ -423,10 +441,13 @@ These guarantees assume that the application and database may crash and go offli
 1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
 
-If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
-This is because uncaught exceptions are assumed to be nonrecoverable.
+If an error is returned from a workflow, the workflow **terminates**&mdash;DBOS records the error, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+This is because uncaught errors are assumed to be nonrecoverable.
 If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught errors.
+
+A panic in a workflow function (or in a step run with [`Go`](../reference/workflows-steps.md#go)) does not crash your process: DBOS recovers it, logs it with its stack, and records it as the workflow's error, so the workflow terminates with status `ERROR` like any other failed workflow.
+Awaiting the workflow's handle returns an error matching [`dbos.ErrWorkflowPanic`](../reference/workflows-steps.md#error-codes); when the panic value is an `error`, it is wrapped, so `errors.Is` and `errors.As` still reach it.
 
 ## Workflow Versioning and Recovery
 

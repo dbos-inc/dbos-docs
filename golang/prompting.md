@@ -479,6 +479,9 @@ func example(dbosContext dbos.Context, input string) error {
 }
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead return an error when a workflow ID is already in use, pass `WithWorkflowIDReusePolicy(dbos.WorkflowIDReusePolicyReject)` (or `WithEnqueueWorkflowIDReusePolicy` when enqueueing from a client); the error matches `dbos.ErrWorkflowIDInUse`.
+
 ### Determinism
 
 Workflows are in most respects normal Go functions.
@@ -533,6 +536,7 @@ You can set a timeout for a workflow using its input `Context`. Use `WithTimeout
 When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow by passing it an uncancellable context, which you can obtain with `WithoutCancel`.
 
 Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+A child workflow started under its parent's context inherits the parent's deadline, even when it is enqueued.
 
 ```go
 func exampleWorkflow(ctx dbos.Context, input string) (string, error) {}
@@ -540,6 +544,9 @@ func exampleWorkflow(ctx dbos.Context, input string) (string, error) {}
 timeoutCtx, cancelFunc := dbos.WithTimeout(dbosCtx, 12*time.Hour)
 handle, err := dbos.RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 ```
+
+To set an absolute deadline and the error reported as the cancellation cause, use `WithDeadlineCause(ctx, deadline, cause)`.
+Timed-out workflows are cancelled by a monitor every DBOS process runs after launch, polling once per second, so a workflow's `Context` may be cancelled shortly after its deadline.
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling CancelWorkflow).
 
@@ -697,6 +704,11 @@ You can use `ResumeWorkflow` to manually resume a workflow that has exceeded its
 dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRecoveryAttempts(3))
 ```
 
+### Panics
+
+A panic in a workflow function (or in a step run with `Go`) does not crash the process: DBOS recovers it, logs it with its stack, and records it as the workflow's error, so the workflow terminates with status `ERROR`.
+Awaiting the workflow's handle returns an error matching `dbos.ErrWorkflowPanic`; when the panic value is an `error`, it is wrapped, so `errors.Is` and `errors.As` still reach it.
+
 ## Steps
 
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
@@ -819,14 +831,18 @@ A datasource is a handle to a database you own, over which DBOS can run durable 
 A transaction run through a datasource inside a workflow commits your application writes and the DBOS durability record atomically, so it executes exactly once even across crashes and recovery (stronger than a step, which is at-least-once).
 
 Create a datasource with `NewDataSource`, passing a `*pgxpool.Pool` (Postgres/CockroachDB) or `*sql.DB` (SQLite).
-It may be called at any time, before or after `Launch()`, and provisions a `transaction_completion` durability table in your database unless it already exists.
+On a `Context`, it must be called before `Launch()` (a `Client` may call it at any time); the context tracks every datasource so that `RewindWorkflow` also deletes the transaction checkpoints it holds.
+It creates or migrates a `transaction_completion` durability table (and a `dbos_transaction_completion_migrations` version table) in your database.
 If the engine is the same handle as the DBOS system database (passed via `Config.SystemDBPool` or `Config.SQLiteSystemDB`), no `transaction_completion` table is created or managed: application writes and the DBOS checkpoint commit together in a single transaction (detection is by pointer identity, not connection string).
 
 ```go
-func NewDataSource[E Engine](ctx Context, engine E, opts ...DataSourceOption) (*DataSource, error)
+func NewDataSource[E Engine](ctx Client, engine E, opts ...DataSourceOption) (*DataSource, error)
 ```
 
-Options: `WithDataSourceName(name string)` (logs only, default "datasource"), `WithDataSourceSchema(schema string)` (schema for the durability table, default "dbos").
+Options: `WithDataSourceName(name string)` (logs only, default "datasource"), `WithDataSourceSchema(schema string)` (schema for the durability table, default "dbos"), `WithDataSourceSkipMigrations()` (verify the schema instead of creating and migrating it, for a role without DDL privileges).
+
+To migrate the datasource schema out of band with a privileged role, call `MigrateDataSource(ctx context.Context, engine E, opts ...MigrateOption) error` (options `WithMigrateSchema`, `WithMigrateApplicationRole(role)` to grant the application role its runtime permissions, `WithMigrateLogger`), then create the datasource with `WithDataSourceSkipMigrations()`.
+The system database can likewise be migrated with `Migrate(ctx, databaseURL, opts...)` and the application started with `Config.SkipMigrations`.
 
 Run a transaction inside a workflow with `RunAsTransaction`.
 The function receives a driver-agnostic `Tx` with `Exec`, `Query`, and `QueryRow` methods; DBOS commits if the function returns successfully and rolls back on error (do not call `Commit`/`Rollback` yourself).
@@ -849,7 +865,7 @@ n, err := dbos.RunAsTransaction(ctx, ds, func(txCtx context.Context, tx dbos.Tx)
 
 Rules:
 - `RunAsTransaction` must be called from within a workflow; it shares the workflow's step counter with `RunAsStep` and accepts the same step options.
-- Serialization/deadlock conflicts are retried automatically with a fresh transaction; application errors follow the step retry policy.
+- Transient database errors (connection failures, serialization/deadlock conflicts) are retried automatically with a fresh transaction, even when returned by your function: they do not consume the step's retries and are never checkpointed as its error. Application errors follow the step retry policy.
 - Nesting a `RunAsTransaction` inside another `RunAsTransaction` or inside a `RunAsStep` is rejected with an error — run transactions from workflow code.
 
 ## Workflow Communication
@@ -874,6 +890,7 @@ func Send[P any](ctx Client, destinationID string, message P, topic string, opts
 You can call `Send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 Pass `WithIdempotencyKey(key string)` to make a retried `Send` deliver at most once.
+Pass `WithSendToForks()` to also deliver the message to every workflow recursively forked from the destination.
 
 To send many messages at once, possibly to different workflows, call `SendBulk(ctx, []dbos.SendMessage{...})`.
 The batch is sent in a single transaction: either every message is delivered or none is.
@@ -1446,17 +1463,10 @@ func example(dbosContext dbos.Context, queue dbos.Queue) error {
 
 You can set a priority for an enqueued workflow using `WithPriority` when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `WithPriorityEnabled` on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 :::
-
-To use priorities in a queue, you must enable it when creating the queue:
-
-```go
-queue, err := dbos.RegisterQueue(dbosContext, "example_queue", dbos.WithPriorityEnabled())
-```
 
 **Example syntax:**
 
@@ -1647,17 +1657,31 @@ type Config struct {
     SQLiteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) to use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
     DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres only)
     Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
-    ConductorURL              string         // DBOS conductor service URL (optional)
-    ConductorAPIKey           string         // DBOS conductor API key (optional)
+    ConductorURL              string         // DBOS Conductor service URL (optional; only set if you self-host Conductor)
+    ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
+    ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
     Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer)
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
     SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and migrations (default: 2 minutes)
+    SystemDBIdleTransactionTimeout time.Duration // Postgres idle_in_transaction_session_timeout for the connections DBOS creates (default: 1 minute; negative leaves the server setting)
+    SkipMigrations            bool           // Verify the system database schema on startup instead of creating and migrating it (default: false)
 }
 ```
+
+Connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) requires importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`:
+
+```go
+import (
+    "github.com/dbos-inc/dbos-transact-golang/dbos"
+    _ "go.dbos.dev/dbos-enterprise-go"
+)
+```
+
+Without it, `NewContext` fails with an initialization error saying what to add. Conductor configuration is otherwise unchanged.
 
 For example:
 ```go
@@ -1685,9 +1709,11 @@ Launch the following resources managed by a `Context`:
 - A system database connection pool
 - A workflow scheduler
 - A workflow queue runner
+- A workflow timeouts monitor, which durably cancels this application's workflows past their deadline
 - (Optionally) a Conductor connection
 
-In addition, `Launch()` may perform workflow recovery.
+In addition, `Launch()` may perform workflow recovery: it returns this executor's `PENDING` workflows to their queues so they resume from their last completed step.
+Recovery is skipped when Conductor is configured, where Conductor manages recovery.
 `Launch()` should be called by your program during startup before running any workflows.
 
 ### Shutdown
@@ -1709,6 +1735,14 @@ func WithTimeout(ctx Context, timeout time.Duration) (Context, context.CancelFun
 ```
 
 `WithTimeout` returns a copy of the DBOS context with a timeout. The returned context will be canceled after the specified duration. See workflow timeouts for usage.
+
+### WithDeadlineCause
+
+```go
+func WithDeadlineCause(ctx Context, deadline time.Time, cause error) (Context, context.CancelFunc)
+```
+
+`WithDeadlineCause` behaves like `WithTimeout` but takes an absolute deadline and an error to report as the cause, like `context.WithDeadlineCause`. A workflow started under the returned context carries the deadline as its durable timeout.
 
 ### WithoutCancel
 
@@ -1790,9 +1824,10 @@ Use `WithPortableSend()` for cross-language messaging.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **opts**: Optional `SendOption` functions (e.g., `WithPortableSend()`, `WithIdempotencyKey(key string)`).
+- **opts**: Optional `SendOption` functions (e.g., `WithPortableSend()`, `WithIdempotencyKey(key string)`, `WithSendToForks()`).
 
 Pass `WithIdempotencyKey(key string)` to make a `Send` deliver at most once: the key is combined with the destination workflow ID to form the message's primary key, so retrying a `Send` with the same key inserts the message only once.
+Pass `WithSendToForks()` to also deliver the message to every workflow recursively forked from `destinationID` (forks, forks of forks, and so on) that exists at send time; it applies to `SendBulk` too.
 
 ### SendBulk
 
@@ -2081,6 +2116,14 @@ func WithFilterWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
 
 Filter workflows by whether they have been forked from (true) or not (false).
 
+#### WithFilterIsFork
+
+```go
+func WithFilterIsFork(isFork bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they are themselves a fork of another workflow (true) or not (false).
+
 #### WithFilterHasParent
 
 ```go
@@ -2193,6 +2236,25 @@ Resume multiple workflows in a single database round-trip.
 Each workflow that exists and is not in a terminal state is re-enqueued; completed or missing workflows are skipped.
 Unlike `ResumeWorkflow`, this function does not return an error when some IDs are missing.
 Accepts the same options as `ResumeWorkflow` (e.g., `WithResumeQueue`).
+
+### RewindWorkflow
+
+```go
+func RewindWorkflow[R any](ctx Client, workflowID string, opts ...RewindWorkflowOption) (WorkflowHandle[R], error)
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps with IDs greater than or equal to the start step (default 0, the whole history), clears its output, then re-enqueues the workflow so it re-executes from that step, replaying the recorded outputs of earlier steps.
+Unlike `ForkWorkflow`, which creates a new workflow with a new ID, rewind replays the workflow in place, so other workflows and clients can keep sending messages to it and reading its events and streams.
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
+Rewinding restores events set at or after the start step to their earlier values, deletes consumed and unconsumed messages, drops the datasource transaction checkpoints of the rewound steps, un-closes streams closed at or after the start step, and does not modify child workflows.
+
+Options: `WithRewindStartStep(startStep uint)`, `WithRewindApplicationVersion(version string)`, `WithRewindQueue(queueName string)`, `WithRewindQueuePartitionKey(partitionKey string)`, `WithRewindDataSources(dataSources ...*DataSource)` (required from a standalone client, which has no datasource registry, for the rewind to drop their checkpoints).
+
+```go
+handle, err := dbos.RewindWorkflow[int](ctx, workflowID, dbos.WithRewindStartStep(3))
+result, err := handle.GetResult()
+```
 
 ### ForkWorkflow
 
@@ -2310,6 +2372,19 @@ Return the unique ID of the current step within a workflow. Returns an error if 
 **Parameters:**
 - **ctx**: The DBOS context.
 
+### GetAuthenticatedUser
+
+```go
+func GetAuthenticatedUser(ctx Context) (string, error)
+```
+
+Return the authenticated user of the current workflow, as set with `WithAuthenticatedUser` (or `WithEnqueueAuthenticatedUser`) or inherited from the parent workflow.
+It can be called from a workflow or from one of its steps.
+Returns an empty string if the workflow has no authenticated user, and an error if not called from within a workflow context.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+
 Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
 
@@ -2341,7 +2416,6 @@ queue, err := dbos.RegisterQueue(ctx, "email-queue",
         Limit:  100,
         Period: 60 * time.Second, // 100 workflows per minute
     }),
-    dbos.WithPriorityEnabled(),
 )
 
 // Enqueue workflows to this queue by passing its handle to WithQueue:
@@ -2434,14 +2508,6 @@ func WithGlobalConcurrency(concurrency int) QueueOption
 
 Set the maximum number of workflows from this queue that may run concurrently. Defaults to 0 (no limit).
 This concurrency limit is global across all DBOS processes using this queue.
-
-####  WithPriorityEnabled
-
-```go
-func WithPriorityEnabled() QueueOption
-```
-
-Enable setting priority for workflows on this queue.
 
 ####  WithRateLimiter
 
@@ -2607,6 +2673,16 @@ func WithWorkflowID(id string) WorkflowOption
 Run the workflow with a custom workflow ID.
 If not specified, a UUID workflow ID is generated.
 
+#### WithWorkflowIDReusePolicy
+
+```go
+func WithWorkflowIDReusePolicy(policy WorkflowIDReusePolicy) WorkflowOption
+```
+
+What to do if a workflow with the ID given by `WithWorkflowID` already exists, whatever its status.
+`dbos.WorkflowIDReusePolicyReturnExisting` (default) returns a handle to the existing workflow without starting a new one; `dbos.WorkflowIDReusePolicyReject` returns an error matching `dbos.ErrWorkflowIDInUse` without starting or modifying anything.
+The reject policy cannot be used with a debouncer.
+
 #### WithRunInstance
 
 ```go
@@ -2699,6 +2775,7 @@ func WithAuthenticatedUser(user string) WorkflowOption
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
 Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
+Read it back from the workflow or its steps with `GetAuthenticatedUser`.
 
 #### WithWorkflowAttributes
 
@@ -2984,6 +3061,7 @@ Optional configuration via `EnqueueOption`:
 * `WithEnqueueWorkflowID(id string)`: The unique ID for the enqueued workflow.
 If left undefined, DBOS Client will generate a UUID.
 Please see Workflow IDs and Idempotency for more information.
+* `WithEnqueueWorkflowIDReusePolicy(policy WorkflowIDReusePolicy)`: What to do if a workflow with that ID already exists: `WorkflowIDReusePolicyReturnExisting` (default) returns a handle to the existing workflow; `WorkflowIDReusePolicyReject` returns an error matching `dbos.ErrWorkflowIDInUse`.
 * `WithEnqueueApplicationVersion(version string)`: The version of your application that should process this workflow.
 If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using `WithoutCancel`). The timeout does not begin until the workflow is dequeued and starts execution.
@@ -3026,7 +3104,7 @@ if err != nil {
 }
 ```
 
-All other workflow interaction, management, streaming, queue, and schedule functions are the same package-level functions documented above (`Send`, `GetEvent`, `RetrieveWorkflow`, `ListWorkflows`, `GetWorkflowSteps`, `CancelWorkflow`/`CancelWorkflows`, `ResumeWorkflow`/`ResumeWorkflows`, `ForkWorkflow`/`ForkWorkflows`, `SetWorkflowAttributes`, `SetWorkflowDelay`, `DeleteWorkflows`, `ReadStream`, `ReadStreamAsync`, `RegisterQueue`, `RetrieveQueue`, `ListQueues`, `DeleteQueue`, `CreateSchedule`, `ApplySchedules`, and the rest): they take `ctx Client` as their first parameter, so pass your client where a DBOS application would pass its context.
+All other workflow interaction, management, streaming, queue, and schedule functions are the same package-level functions documented above (`Send`, `GetEvent`, `RetrieveWorkflow`, `ListWorkflows`, `GetWorkflowSteps`, `CancelWorkflow`/`CancelWorkflows`, `ResumeWorkflow`/`ResumeWorkflows`, `RewindWorkflow`, `ForkWorkflow`/`ForkWorkflows`, `SetWorkflowAttributes`, `SetWorkflowDelay`, `DeleteWorkflows`, `ReadStream`, `ReadStreamAsync`, `RegisterQueue`, `RetrieveQueue`, `ListQueues`, `DeleteQueue`, `CreateSchedule`, `ApplySchedules`, and the rest): they take `ctx Client` as their first parameter, so pass your client where a DBOS application would pass its context.
 
 Note that with `ListWorkflows` and `GetWorkflowSteps` from a standalone client, workflow inputs, outputs, and step outputs are not loaded or decoded by default; pass `WithFilterLoadInput(true)` / `WithFilterLoadOutput(true)` / `WithStepsLoadOutput(true)` to opt in.
 

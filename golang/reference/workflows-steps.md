@@ -148,6 +148,35 @@ func WithWorkflowID(id string) WorkflowOption
 
 Run the workflow with a custom workflow ID.
 If not specified, a UUID workflow ID is generated.
+Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for more information.
+
+#### WithWorkflowIDReusePolicy
+
+```go
+func WithWorkflowIDReusePolicy(policy WorkflowIDReusePolicy) WorkflowOption
+
+type WorkflowIDReusePolicy int
+
+const (
+    WorkflowIDReusePolicyReturnExisting WorkflowIDReusePolicy = iota // (default) Return a handle to the existing workflow
+    WorkflowIDReusePolicyReject                                       // Reject the start with an error matching ErrWorkflowIDInUse
+)
+```
+
+What to do if a workflow with the ID given by [`WithWorkflowID`](#withworkflowid) already exists, whatever its status.
+Defaults to `WorkflowIDReusePolicyReturnExisting`.
+
+- `WorkflowIDReusePolicyReturnExisting`: return a handle to the existing workflow without starting a new one. The new input is ignored; `GetResult` returns the recorded result.
+- `WorkflowIDReusePolicyReject`: return an error matching `dbos.ErrWorkflowIDInUse` without starting a new workflow or modifying the existing one. The error's `WorkflowID` and `RecordedName` fields describe the existing workflow. When a workflow starts a child with this policy, the rejection is checkpointed as the child-start step's outcome, so a replay returns it even if the ID has been freed since. Cannot be used with a [debouncer](./queues.md#debouncer).
+
+```go
+handle, err := dbos.RunWorkflow(ctx, processOrder, order,
+    dbos.WithWorkflowID(fmt.Sprintf("order-%s", order.ID)),
+    dbos.WithWorkflowIDReusePolicy(dbos.WorkflowIDReusePolicyReject))
+if errors.Is(err, dbos.ErrWorkflowIDInUse) {
+    // A workflow with this ID already exists
+}
+```
 
 #### WithRunInstance
 
@@ -313,6 +342,7 @@ func WithAuthenticatedUser(user string) WorkflowOption
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
 Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
+Read it back from the workflow or its steps with [`GetAuthenticatedUser`](./methods.md#getauthenticateduser).
 
 #### WithAssumedRole
 
@@ -453,6 +483,7 @@ func Go[R any](ctx Context, fn Step[R], opts ...StepOption) (<-chan StepOutcome[
 Launch a step asynchronously and return a channel that will receive the result when the step completes.
 This is a durable alternative to Go's native goroutines that checkpoints results to the database for deterministic replay.
 Can only be called from within a workflow (not from inside a step).
+A panic in the step is recovered on the goroutine DBOS owns and delivered as the outcome's `Err`, matching [`dbos.ErrWorkflowPanic`](#error-codes), instead of crashing the process.
 
 **Parameters:**
 - **ctx**: The Context.
@@ -733,7 +764,7 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 
 | Code | Sentinel | In a workflow | Meaning |
 |---|---|---|---|
-| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. DBOS handles this error at the workflow level: returning it parks your execution until the winning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Executions](../../explanations/concurrent-executions.md). |
+| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | This execution no longer owns the workflow: it was recovered, resumed, or completed by another execution, and its writes are refused. Every execution holds a fencing token, so a stale one cannot checkpoint over the current owner. DBOS handles this error at the workflow level: returning it parks your execution until the owning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Executions](../../explanations/concurrent-executions.md). |
 | `ErrorCodeInitialization` | — | — | The DBOS context could not be initialized (invalid configuration, system database unreachable, or migrations failed). |
 | `ErrorCodeNonExistentWorkflow` | `ErrNonExistentWorkflow` | Handle | The referenced workflow does not exist (e.g., `RetrieveWorkflow` or a management method with an unknown ID). |
 | `ErrorCodeUnexpectedWorkflow` | `ErrUnexpectedWorkflow` | Return | A workflow ID was reused by a different workflow function or on a different queue, indicating non-determinism or conflicting ID reuse. Continuing would write your checkpoints into another workflow's history. |
@@ -753,3 +784,6 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 | `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | Handle | The referenced queue does not exist (e.g., `RetrieveQueue`). |
 | `ErrorCodeScheduleNotFound` | `ErrScheduleNotFound` | Handle | The referenced schedule does not exist (e.g., `GetSchedule`). |
 | `ErrorCodeInvalidOption` | `ErrInvalidOption` | — | Invalid or inconsistent options were passed to a DBOS API. |
+| `ErrorCodeWorkflowPanic` | `ErrWorkflowPanic` | Handle | The workflow function (or a step run with [`Go`](#go)) panicked. DBOS recovers the panic on the goroutine it owns, logs it with its stack, and records it as the workflow's error instead of crashing the process. When the panic value is an `error`, it is wrapped, so `errors.Is`/`errors.As` still reach it. Awaiting the workflow returns this error. |
+| `ErrorCodeStepNondeterminism` | `ErrStepNondeterminism` | Return | This execution recorded a step ID it had already recorded with a different result, so the workflow function is non-deterministic (for example, it ran steps concurrently without [`Go`](#go)). |
+| `ErrorCodeWorkflowIDInUse` | `ErrWorkflowIDInUse` | Handle | A workflow was started with [`WorkflowIDReusePolicyReject`](#withworkflowidreusepolicy) under an ID that already exists. Nothing was started or modified; a rejected child start is checkpointed as the parent's step outcome. |

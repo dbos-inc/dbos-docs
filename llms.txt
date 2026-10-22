@@ -64,7 +64,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Communicating with Workflows](https://docs.dbos.dev/golang/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/golang/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the [DBOS Console](../../conductor/workflow-management.md) or programmatically.
 - [Workflows](https://docs.dbos.dev/golang/tutorials/workflow-tutorial.md): Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-- [Upgrading](https://docs.dbos.dev/golang/upgrading.md): This guide covers migrating an application from the last v0.x release to v1.0.0:
+- [Upgrading](https://docs.dbos.dev/golang/upgrading.md): ```shell
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
 - [CockroachDB](https://docs.dbos.dev/integrations/cockroachdb.md): Here's how to connect your DBOS application running on your computer or cloud environment to your CockroachDB database.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.

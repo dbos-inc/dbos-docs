@@ -73,9 +73,13 @@ await DBOS.launch({conductorKey})
 
 **Go**
 
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`).
+
 ```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
-dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     AppName:            "dbos-starter",
     ApplicationVersion: "0.1.0",
     DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -137,8 +141,10 @@ await DBOS.launch({conductorKey})
 **Go**
 
 ```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
-dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     AppName:            os.Getenv("DBOS_APPLICATION_NAME"),
     ApplicationVersion: "0.1.0",
     DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -172,4 +178,4 @@ In this mode, only workflow and step metadata (but not data, like workflow or st
 As a result, workflow data will not be visible from the console.
 Note that Conductor does not store application data in any mode.
 
-You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings) or `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch).
+You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings), `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch), or `ConductorMetadataOnlyMode` in your [Go configuration](../golang/reference/configuration.md#connecting-to-conductor).

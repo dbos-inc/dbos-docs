@@ -355,17 +355,10 @@ func example(dbosContext dbos.Context, queue dbos.Queue) error {
 
 You can set a priority for an enqueued workflow using [`WithPriority`](../reference/workflows-steps#withpriority) when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set [`WithPriorityEnabled`](../reference/queues#withpriorityenabled) on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 :::
-
-To use priorities in a queue, you must enable it when creating the queue:
-
-```go
-queue, err := dbos.RegisterQueue(dbosContext, "example_queue", dbos.WithPriorityEnabled())
-```
 
 **Example syntax:**
 
