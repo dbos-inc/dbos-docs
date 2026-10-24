@@ -71,3 +71,5 @@ def workflow():
     step_one()
     step_two()
 ```
+
+To evaluate removing the dependency later, see [Remove DBOS From Your App](./removing-dbos.md).
