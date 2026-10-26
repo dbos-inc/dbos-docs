@@ -1360,7 +1360,7 @@ When using patching, you use `DBOS.patch()` to make a breaking change in a condi
 `DBOS.patch()` returns `True` for new workflows (those started after the breaking change) and `False` for old workflows (those started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
-When using patching, set a fixed application version in configuration, so processes running new code can recover workflows started on old code:
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed application version in configuration so every deployment shares it:
 
 ```python
 config: DBOSConfig = {
@@ -1370,6 +1370,22 @@ config: DBOSConfig = {
 }
 DBOS(config=config)
 ```
+
+Or enable auto-upgrade (a DBOS Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "auto_upgrade": True,
+    "auto_upgrade_grace_sec": 300,  # Optional: wait before moving PENDING workflows
+}
+DBOS(config=config)
+```
+
+Individual workflows can opt in or out with `@DBOS.workflow(auto_upgrade=True)` or `@DBOS.workflow(auto_upgrade=False)`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 For example, let's say our workflow is:
 

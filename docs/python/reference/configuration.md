@@ -45,6 +45,9 @@ class DBOSConfig(TypedDict):
     conductor_metadata_only_mode: Optional[bool]
 
     transact_enterprise_key: Optional[str]
+    auto_upgrade: Optional[bool]
+    auto_upgrade_interval_sec: Optional[float]
+    auto_upgrade_grace_sec: Optional[float]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -129,6 +132,9 @@ A system database ahead of the required version is accepted, so a process with m
 ### DBOS Enterprise Settings
 
 - **transact_enterprise_key**: A key that entitles this application to [DBOS Enterprise](../../explanations/dbos-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Enterprise should connect to Conductor by setting `conductor_key`. DBOS Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **auto_upgrade**: If `True`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `auto_upgrade=False` in [`@DBOS.workflow`](./decorators.md#workflow). Requires DBOS Enterprise. Defaults to `False`.
+- **auto_upgrade_interval_sec**: How often, in seconds, to check for workflows to auto-upgrade. Defaults to 30 seconds.
+- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
 
 ### Logging and Tracing Settings
 
