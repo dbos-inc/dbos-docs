@@ -129,4 +129,4 @@ The following features are not supported on a sharded system database:
 - The `'reject'` [workflow ID reuse policy](../reference/methods.md#dbosstartworkflow), for workflows started from inside another workflow.
 - [Renaming an application](../reference/cli.md#npx-dbos-rename-application) and [resetting the system database](../reference/cli.md#npx-dbos-reset).
 
-Of the [DBOS CLI](../reference/cli.md) commands, only `npx dbos schema` and `npx dbos migrate` support a sharded system database.
+Of the [DBOS CLI](../reference/cli.md) commands, only [`npx dbos schema`](../reference/cli.md#npx-dbos-schema) supports a sharded system database.
