@@ -465,8 +465,14 @@ Each step is recorded at its reserved position in the workflow's history, no mat
 // Reserve step IDs in a deterministic order before starting any concurrent work
 const [r1, r2, r3, r4] = [DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep()];
 const results = await Promise.allSettled([
-  (async () => { await r1.run(() => step1("arg1")); await r2.run(() => step2("arg2")); })(),
-  (async () => { await r3.run(() => step3("arg3")); await r4.run(() => step4("arg4")); })(),
+  (async () => {
+    await r1.run(() => step1("arg1"), { name: "step1" });
+    await r2.run(() => step2("arg2"), { name: "step2" });
+  })(),
+  (async () => {
+    await r3.run(() => step3("arg3"), { name: "step3" });
+    await r4.run(() => step4("arg4"), { name: "step4" });
+  })(),
 ]);
 ```
 
