@@ -195,7 +195,19 @@ const results = await Promise.allSettled([
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows with [`startWorkflow`](#starting-workflows-in-the-background) and await the results from their `WorkflowHandle`s.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with [`DBOS.reserveStep`](../reference/workflows-steps.md#dbosreservestep), then run each step from its reservation.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```typescript
+// Reserve step IDs in a deterministic order before starting any concurrent work
+const [r1, r2, r3, r4] = [DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep()];
+const results = await Promise.allSettled([
+  (async () => { await r1.run(() => step1("arg1")); await r2.run(() => step2("arg2")); })(),
+  (async () => { await r3.run(() => step3("arg3")); await r4.run(() => step4("arg4")); })(),
+]);
+```
+
+Alternatively, start child workflows with [`startWorkflow`](#starting-workflows-in-the-background) and await the results from their `WorkflowHandle`s.
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 

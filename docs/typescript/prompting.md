@@ -60,7 +60,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
-- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only.  For any complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
+- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only, unless every step's ID is reserved in advance with DBOS.reserveStep().  For any other complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
@@ -458,7 +458,20 @@ const results = await Promise.allSettled([
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with `DBOS.reserveStep()`, then run each step from its reservation with `run`, which takes the same arguments as `DBOS.runStep`.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```typescript
+// Reserve step IDs in a deterministic order before starting any concurrent work
+const [r1, r2, r3, r4] = [DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep()];
+const results = await Promise.allSettled([
+  (async () => { await r1.run(() => step1("arg1")); await r2.run(() => step2("arg2")); })(),
+  (async () => { await r3.run(() => step3("arg3")); await r4.run(() => step4("arg4")); })(),
+]);
+```
+
+`DBOS.reserveStep()` must be called from workflow code, outside any step, and each reservation must be run exactly once, from the workflow that reserved it.
+Alternatively, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 

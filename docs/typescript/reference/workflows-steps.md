@@ -302,6 +302,44 @@ async function exampleWorkflow() {
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
 
+### DBOS.reserveStep
+
+```typescript
+DBOS.reserveStep(): StepReservation
+```
+
+```typescript
+class StepReservation {
+  readonly stepID: number;
+
+  run<Return>(
+    func: () => Promise<Return>,
+    config: StepConfig & { name?: string } = {}
+  ): Promise<Return>
+}
+```
+
+Reserve the next step ID in the current workflow, so a step can run at that position in the workflow's history later.
+Use this when steps in a workflow would otherwise start in a nondeterministic order.
+Must be called from a workflow, outside of any step.
+
+Run the reserved step with `run`, which takes the same arguments as [`runStep`](#dbosrunstep).
+Each reservation can be used only once.
+If a reservation is never used, its step ID is left unused, which is safe and does not affect recovery.
+
+**Example:**
+
+```typescript
+async function exampleWorkflow() {
+  const first = DBOS.reserveStep();
+  const second = DBOS.reserveStep();
+  // second's step may start before first's, but is always recorded after it
+  const secondResult = second.run(() => stepTwo(), { name: "stepTwo" });
+  const firstResult = await first.run(() => stepOne(), { name: "stepOne" });
+  return [firstResult, await secondResult];
+}
+```
+
 ## Class Names
 
 Workflows are uniquely identified by a class name + function name pair.
