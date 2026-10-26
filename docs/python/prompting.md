@@ -1485,6 +1485,11 @@ When deploying a new version of your code, launch new processes running your new
 Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
 Then, once all workflows of the old version are complete (you can use `DBOS.list_workflows` to check), you can retire the old code version.
 
+## Sharding
+
+To scale beyond a single Postgres system database, DBOS Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
+On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
+
 ## Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.
