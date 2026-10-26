@@ -2000,6 +2000,11 @@ When DBOS tries to recover workflows, it only recovers workflows whose version m
 This prevents recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
 
+## Sharding
+
+To scale beyond a single Postgres system database, DBOS Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
+On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
+
 ## Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.

@@ -32,7 +32,7 @@ When DBOS launches, it creates the sharded system database schema through your s
 In production, we recommend you create the schema ahead of time with [`dbos migrate --sharding`](../reference/cli.md#dbos-migrate).
 
 Every DBOS table has a `shard_key` column.
-You may need to configure some sharding solutions to shard on that column, for example in PgDog's `pgdog.toml`:
+You may need to configure your sharding engine to shard on that column, for example in PgDog's `pgdog.toml`:
 
 ```toml title="pgdog.toml"
 [[sharded_tables]]

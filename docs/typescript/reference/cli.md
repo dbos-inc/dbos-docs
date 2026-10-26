@@ -127,6 +127,7 @@ This command does not migrate the tables used by [datasources](./datasource.md);
 - `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
 - `-r, --app-role <string>`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
 - `-s, --schema <string>`: The schema name for the DBOS system tables. Defaults to `dbos`.
+- `--sharding`: Create or migrate a [sharded system database](../tutorials/sharding.md).
 - `--print-migrations <all|NUMBER>`: Instead of running the migrations, print their SQL to standard output, either all of them (for a fresh database) or starting from a migration number (to upgrade an existing database). Postgres only.
 - `--print-user-role`: Instead of executing them, print the SQL statements granting `--app-role` access to the DBOS system tables.
 
