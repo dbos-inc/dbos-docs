@@ -1856,14 +1856,31 @@ In patching, the result of a call to `DBOS.patch()` is used to conditionally exe
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-When using patching, set a fixed application version in the configuration, so processes running new code can recover workflows started on old code:
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed application version in the configuration so every deployment shares it:
 
 ```typescript
-const config: DBOSConfig = {
-  // ...
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   applicationVersion: '1.0.0',
-}
+});
+await DBOS.launch();
 ```
+
+Or enable auto-upgrade (a DBOS Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```typescript
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  autoUpgrade: true,
+  autoUpgradeGraceMs: 300_000, // Optional: wait before moving PENDING workflows
+});
+await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+Individual workflows can opt in or out with `@DBOS.workflow({ autoUpgrade: true })` or `@DBOS.workflow({ autoUpgrade: false })`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 ```typescript
 DBOS.patch(

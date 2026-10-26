@@ -19,6 +19,7 @@ export interface WorkflowConfig {
   maxRecoveryAttempts?: number;
   serialization?: "portable" | "native";
   inputSchema?: InputSchema;
+  autoUpgrade?: boolean;
 }
 
 export interface InputSchema {
@@ -50,6 +51,7 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
   - **inputSchema**: A schema for validating and optionally transforming workflow input arguments. Must have a `.parse()` method, making it compatible with [Zod](https://zod.dev/) schemas, AJV wrappers, or any custom validator. The schema receives the arguments as an array (tuple) and should return the validated/transformed array. Runs before the workflow function on every invocation (direct call, queue dispatch, and recovery). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
+  - **autoUpgrade**: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow, automatically moving instances of it left on older application versions to the latest version. If `true`, the workflow is auto-upgraded even if [`autoUpgrade`](./configuration.md#dbos-enterprise-settings) isn't set in your configuration; if `false`, it is never auto-upgraded. If not set, follows `autoUpgrade` in your configuration. Requires [DBOS Enterprise](../../explanations/dbos-enterprise.md).
 
 ### DBOS.registerWorkflow
 
@@ -98,6 +100,7 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
   - **inputSchema**: A schema for validating/transforming input arguments. See [`WorkflowConfig`](#dbosworkflow) above.
+  - **autoUpgrade**: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow. See [`WorkflowConfig`](#dbosworkflow) above.
 
 ## Input Validation and Coercion
 

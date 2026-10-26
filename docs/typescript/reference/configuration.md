@@ -27,6 +27,9 @@ export interface DBOSConfig {
   executorID?: string;
 
   transactEnterpriseKey?: string;
+  autoUpgrade?: boolean;
+  autoUpgradeIntervalMs?: number;
+  autoUpgradeGraceMs?: number;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -71,6 +74,9 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 ### DBOS Enterprise Settings
 
 - **transactEnterpriseKey**: A key that entitles this application to [DBOS Enterprise](../../explanations/dbos-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **autoUpgrade**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `autoUpgrade: false` in their [`WorkflowConfig`](./workflows-steps.md#dbosworkflow). Requires DBOS Enterprise. Defaults to `false`.
+- **autoUpgradeIntervalMs**: How often, in milliseconds, to check for workflows to auto-upgrade. Defaults to 30000 (30 seconds).
+- **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
 
 ### Database Connection Settings
 
