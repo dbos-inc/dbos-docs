@@ -701,7 +701,6 @@ DBOS.patch(
 
 Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted (or this patch marker is already present) and `False` if a different checkpoint is already present at this point in history.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
 The `patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`patch_async`](#patch_async) should be used instead.
 
 **Parameters:**
@@ -728,7 +727,6 @@ DBOS.deprecate_patch(
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `True`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
 The `deprecate_patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`deprecate_patch_async`](#deprecate_patch_async) should be used instead.
 
 **Parameters:**

@@ -1856,12 +1856,12 @@ In patching, the result of a call to `DBOS.patch()` is used to conditionally exe
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you MUST enable it in the configuration; otherwise `DBOS.patch()` and `DBOS.deprecatePatch()` throw an error:
+When using patching, set a fixed application version in the configuration, so processes running new code can recover workflows started on old code:
 
 ```typescript
 const config: DBOSConfig = {
   // ...
-  enablePatching: true,
+  applicationVersion: '1.0.0',
 }
 ```
 
@@ -1950,7 +1950,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
 All workflows are tagged with the application version on which they started.
-By default, application version is automatically computed from a hash of workflow source code (or is fixed to `PATCHING_ENABLED` if patching is enabled).
+By default, application version is automatically computed from a hash of workflow source code.
 However, you can set your own version through configuration.
 
 ```typescript
@@ -2004,7 +2004,6 @@ export interface DBOSConfig {
   listenQueues?: string[];
   maxConcurrentQueueDispatches?: number;
 
-  enablePatching?: boolean;
   serializer?: DBOSSerializer;
 }
 ```
@@ -2036,7 +2035,6 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
 - **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time. This prevents dequeuing from a large queue (especially a partitioned queue with many active partitions) from delaying work on smaller queues. A single queue is never dequeued from twice concurrently in the same process. Does not affect workflow concurrency, rate limits, or `systemDatabasePollingConcurrency`.
-- **enablePatching**: Enable workflow patching with `DBOS.patch()` and `DBOS.deprecatePatch()`. Defaults to false.
 - **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `name`, `stringify`, and `parse` methods.
 
 ````

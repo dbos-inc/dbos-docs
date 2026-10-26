@@ -398,7 +398,7 @@ DBOS.patch(
 
 Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted (or this patch marker is already present) and `false` if a different checkpoint is already present at this point in history, indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
+Must be called from a workflow.
 
 **Parameters:**
 - `patchName`: The name to give the patch marker that will be inserted into workflow history.
@@ -413,8 +413,8 @@ DBOS.deprecatePatch(
 
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `true`.
-Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
-Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Must be called from a workflow.
 
 **Parameters:**
 - `patchName`: The name of the patch marker to be bypassed.

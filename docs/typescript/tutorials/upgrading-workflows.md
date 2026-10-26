@@ -16,16 +16,14 @@ In patching, the result of a call to [`DBOS.patch()`](../reference/workflows-ste
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you must enable it in the configuration:
+When using patching, set a fixed application version in your configuration, so processes running new code can recover workflows started on old code:
 
 ```typescript
 const config: DBOSConfig = {
   // ...
-  enablePatching: true,
+  applicationVersion: '1.0.0',
 };
 ```
-
-If you enable patching and don't set `applicationVersion`, DBOS uses the fixed application version `PATCHING_ENABLED` instead of computing one from your code, so workflows started while patching is enabled can be recovered by processes running newer code.
 
 For example, let's say our original workflow is:
 

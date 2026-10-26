@@ -1360,14 +1360,13 @@ When using patching, you use `DBOS.patch()` to make a breaking change in a condi
 `DBOS.patch()` returns `True` for new workflows (those started after the breaking change) and `False` for old workflows (those started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
-To use patching, you must enable it in configuration:
+When using patching, set a fixed application version in configuration, so processes running new code can recover workflows started on old code:
 
 ```python
 config: DBOSConfig = {
     "name": "dbos-app",
     "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "enable_patching": True,
 }
 DBOS(config=config)
 ```
@@ -1796,7 +1795,6 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    enable_patching: Optional[bool]
     application_version: Optional[str]
     executor_id: Optional[str]
 
@@ -1822,7 +1820,6 @@ class DBOSConfig(TypedDict):
 ```
 
 - **name**: Your application's name. It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
-- **enable_patching** Enable the patching strategy for safely upgrading workflow code.
 - **application_version**: If using the versioning strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **system_database_url**: A connection string to your system database.

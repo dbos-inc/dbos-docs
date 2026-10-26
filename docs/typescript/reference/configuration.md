@@ -25,7 +25,6 @@ export interface DBOSConfig {
   name: string;
   applicationVersion?: string;
   executorID?: string;
-  enablePatching?: boolean;
 
   transactEnterpriseKey?: string;
 
@@ -59,7 +58,7 @@ export interface DBOSConfig {
 ```
 
 In [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
-The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there, as is `enablePatching`'s effect on the application version (it still enables [`DBOS.patch`](./workflows-steps.md#patch)).
+The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there.
 
 ### Application Settings
 
@@ -68,7 +67,6 @@ Multiple applications (potentially in different languages) may [share a system d
 If you rename an application, transfer ownership of its data with [`npx dbos rename-application`](./cli.md#npx-dbos-rename-application).
 - **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
-- **enablePatching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code. Required to use [`DBOS.patch`](./workflows-steps.md#patch) and [`DBOS.deprecatePatch`](./workflows-steps.md#deprecatepatch).
 
 ### DBOS Enterprise Settings
 
