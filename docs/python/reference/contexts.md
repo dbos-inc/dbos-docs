@@ -428,6 +428,57 @@ class StepOptions(TypedDict, total=False):
 
 Version of [`run_step`](#run_step) to be called from `async` contexts.
 
+### reserve_step
+
+```python
+DBOS.reserve_step() -> StepReservation
+```
+
+```python
+class StepReservation:
+    step_id: int
+
+    def run(
+        self,
+        dbos_step_options: Optional[StepOptions],
+        func: Callable[P, R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> R
+
+    async def run_async(
+        self,
+        dbos_step_options: Optional[StepOptions],
+        func: Callable[P, R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> R
+```
+
+Reserve the next step ID in the current workflow, so a step can run at that position in the workflow's history later.
+Use this when steps in an `async` workflow would otherwise start in a nondeterministic order.
+Must be called from a workflow, outside of any step.
+
+Run the reserved step with `run` or `run_async`, which take the same arguments as [`run_step`](#run_step) and [`run_step_async`](#run_step_async).
+Each reservation can be used only once.
+If a reservation is never used, its step ID is left unused, which is safe and does not affect recovery.
+
+**Example:**
+
+```python
+@DBOS.workflow()
+async def example_workflow():
+    first = DBOS.reserve_step()
+    second = DBOS.reserve_step()
+    # second's step may start before first's, but is always recorded after it
+    async def run_second():
+        return await second.run_async(None, step_two)
+    task = asyncio.create_task(run_second())
+    result_one = await first.run_async(None, step_one)
+    result_two = await task
+    return result_one, result_two
+```
+
 ### get_result
 
 ```python

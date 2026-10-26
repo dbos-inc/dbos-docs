@@ -13,7 +13,7 @@ DBOS Enterprise provides:
 - **Conductor access**: DBOS Enterprise comes with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
 - **Sharding**: Horizontally scale DBOS to handle millions of workflows per second with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
-- **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version ([Python](../python/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [TypeScript](../typescript/tutorials/upgrading-workflows.md#auto-upgrading-workflows)).
+- **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
 
 ## Installing DBOS Enterprise
 
