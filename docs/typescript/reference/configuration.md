@@ -27,6 +27,8 @@ export interface DBOSConfig {
   executorID?: string;
   enablePatching?: boolean;
 
+  transactEnterpriseKey?: string;
+
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
   systemDatabasePollingConcurrency?: number;
@@ -67,6 +69,10 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 - **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **enablePatching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code. Required to use [`DBOS.patch`](./workflows-steps.md#patch) and [`DBOS.deprecatePatch`](./workflows-steps.md#deprecatepatch).
+
+### DBOS Enterprise Settings
+
+- **transactEnterpriseKey**: A key that entitles this application to [DBOS Enterprise](../../explanations/dbos-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 
 ### Database Connection Settings
 

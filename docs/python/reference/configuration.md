@@ -45,6 +45,8 @@ class DBOSConfig(TypedDict):
     conductor_executor_metadata: Optional[Dict[str, Any]]
     conductor_metadata_only_mode: Optional[bool]
 
+    transact_enterprise_key: Optional[str]
+
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
     otlp_logs_endpoints: Optional[List[str]]
@@ -126,6 +128,10 @@ A system database ahead of the required version is accepted, so a process with m
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
 - **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../conductor/overview.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.
 
+
+### DBOS Enterprise Settings
+
+- **transact_enterprise_key**: A key that entitles this application to [DBOS Enterprise](../../explanations/dbos-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Enterprise should connect to Conductor by setting `conductor_key`. DBOS Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 
 ### Logging and Tracing Settings
 
