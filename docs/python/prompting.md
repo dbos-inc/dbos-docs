@@ -1390,7 +1390,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
-Or enable auto-upgrade (a DBOS Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```python
 config: DBOSConfig = {
@@ -1487,7 +1487,7 @@ Then, once all workflows of the old version are complete (you can use `DBOS.list
 
 ## Sharding
 
-To scale beyond a single Postgres system database, DBOS Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
 ## Workflow Handle

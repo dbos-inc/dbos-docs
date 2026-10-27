@@ -41,7 +41,7 @@ There are two ways to do this:
    await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
    ```
 
-   Auto-upgrade is a [DBOS Enterprise](../../explanations/dbos-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
+   Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our original workflow is:
 
@@ -119,7 +119,7 @@ Once all workflows with patch markers are complete, the patch may be safely remo
 ### Auto-Upgrading Workflows
 
 :::info
-Auto-upgrade is a [DBOS Enterprise](../../explanations/dbos-enterprise.md) feature.
+Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
 With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.

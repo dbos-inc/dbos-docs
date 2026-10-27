@@ -72,10 +72,10 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 - **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
-### DBOS Enterprise Settings
+### DBOS Transact Enterprise Settings
 
-- **transactEnterpriseKey**: A key that entitles this application to [DBOS Enterprise](../../explanations/dbos-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
-- **autoUpgrade**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `autoUpgrade: false` in their [`WorkflowConfig`](./workflows-steps.md#dbosworkflow). Requires DBOS Enterprise. Defaults to `false`.
+- **transactEnterpriseKey**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **autoUpgrade**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `autoUpgrade: false` in their [`WorkflowConfig`](./workflows-steps.md#dbosworkflow). Requires DBOS Transact Enterprise. Defaults to `false`.
 - **autoUpgradeIntervalMs**: How often, in milliseconds, to check for workflows to auto-upgrade. Defaults to 30000 (30 seconds).
 - **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.

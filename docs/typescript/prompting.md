@@ -1886,7 +1886,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Or enable auto-upgrade (a DBOS Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```typescript
 DBOS.setConfig({
@@ -2002,7 +2002,7 @@ You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow`
 
 ## Sharding
 
-To scale beyond a single Postgres system database, DBOS Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
 ## Configuring DBOS

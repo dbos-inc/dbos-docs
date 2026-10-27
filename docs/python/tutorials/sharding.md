@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 :::info
-Sharding is a [DBOS Enterprise](../../explanations/dbos-enterprise.md) feature.
+Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
 A DBOS application using a single Postgres system database can run tens of thousands of workflows per second.
