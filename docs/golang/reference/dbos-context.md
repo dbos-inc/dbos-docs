@@ -31,7 +31,7 @@ type Client interface {
     RetrieveWorkflow(_ Client, workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(_ Client, workflowID string, opts ...CancelWorkflowOption) error
     CancelWorkflows(_ Client, workflowIDs []string, opts ...CancelWorkflowOption) error
-    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any) error
+    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any, opts ...SetWorkflowAttributesOption) error
     SetWorkflowDelay(_ Client, workflowID string, opts ...SetWorkflowDelayOption) error
     ResumeWorkflow(_ Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
     ResumeWorkflows(_ Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)

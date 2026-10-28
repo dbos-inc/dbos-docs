@@ -41,7 +41,11 @@ npm install @dbos-inc/dbos-enterprise
 </TabItem>
 <TabItem value="golang" label="Go">
 
-Import `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`):
+Add the `go.dbos.dev/dbos-enterprise-go` module, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, and import it once, anywhere in your program:
+
+```shell
+go get go.dbos.dev/dbos-enterprise-go
+```
 
 ```go
 import _ "go.dbos.dev/dbos-enterprise-go"
@@ -80,6 +84,17 @@ DBOS.setConfig({
   transactEnterpriseKey: process.env.DBOS_TRANSACT_ENTERPRISE_KEY,
 });
 await DBOS.launch();
+```
+
+</TabItem>
+<TabItem value="golang" label="Go">
+
+```go
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
+    AppName:               "my-app-name",
+    DatabaseURL:           os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    TransactEnterpriseKey: os.Getenv("DBOS_TRANSACT_ENTERPRISE_KEY"),
+})
 ```
 
 </TabItem>

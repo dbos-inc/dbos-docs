@@ -102,6 +102,21 @@ dbos.RegisterWorkflow(ctx, slack.Send, dbos.WithInstance(slack))
 dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
 ```
 
+#### WithAutoUpgrade
+
+```go
+func WithAutoUpgrade(enabled bool) WorkflowRegistrationOption
+```
+
+Enroll the workflow in, or withdraw it from, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows): the [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature that moves workflows left on older application versions to the latest one.
+A workflow registered with `WithAutoUpgrade(true)` is auto-upgraded even if [`Config.AutoUpgrade`](./configuration.md#dbos-transact-enterprise-settings) is not set, and a workflow registered with `WithAutoUpgrade(false)` is never auto-upgraded.
+Without this option, the workflow follows `Config.AutoUpgrade`.
+Enrolling a workflow requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Transact Enterprise](./configuration.md#dbos-transact-enterprise).
+
+```go
+dbos.RegisterWorkflow(ctx, processOrder, dbos.WithAutoUpgrade(true))
+```
+
 ### RunWorkflow
 
 ```go
@@ -368,7 +383,7 @@ func WithWorkflowAttributes(attributes map[string]any) WorkflowOption
 Attach custom key-value attributes to the workflow.
 Attributes are recorded in the [workflow status](./methods.md#workflow-status) at creation, must be JSON-serializable, and are not inherited by child workflows.
 On Postgres they are stored as GIN-indexed JSONB and can be searched with [`WithFilterAttributes`](./methods.md#withfilterattributes).
-Attributes can later be replaced with [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
+Attributes can later be replaced, or merged into, with [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
 
 ```go
 handle, err := dbos.RunWorkflow(ctx, processOrder, order,
@@ -638,9 +653,7 @@ Used to safely upgrade workflow code; see the [patching tutorial](../tutorials/u
 - **ctx**: The Context.
 - **patchName**: The name to give the patch marker that will be inserted into workflow history.
 
-:::info
-Patching must be enabled in your configuration by setting `EnablePatching: true`.
-:::
+Processes running patched code must be able to recover workflows started on the old code: pin `Config.ApplicationVersion` so every deployment shares one version, or enable [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows).
 
 #### DeprecatePatch
 
@@ -655,9 +668,6 @@ Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgra
 - **ctx**: The Context.
 - **patchName**: The name of the patch marker to be bypassed.
 
-:::info
-Patching must be enabled in your configuration by setting `EnablePatching: true`.
-:::
 ### Serialization
 
 Workflow and step inputs, outputs, and errors are checkpointed in the system database.
@@ -777,7 +787,7 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 | `ErrorCodeDeadLetterQueue` | `ErrDeadLetterQueue` | Handle | The workflow exceeded its maximum recovery attempts (`WithMaxRecoveryAttempts`) and was dead-lettered. Awaiting a dead-lettered workflow checkpoints the error as the await's outcome and is safe to handle; *starting* one does not checkpoint, so treat that case like a rejected enqueue. |
 | `ErrorCodeMaxStepRetriesExceeded` | `ErrMaxStepRetriesExceeded` | Handle | A step exhausted its configured retries. The error is checkpointed as the step's outcome and wraps the joined errors of all attempts, so `errors.Is`/`errors.As` can reach the underlying failures. |
 | `ErrorCodeQueueDeduplicated` | `ErrQueueDeduplicated` | Handle | An enqueue was rejected because another workflow with the same deduplication ID is already pending on the queue. The rejected enqueue is rolled back, so no checkpoint records it. |
-| `ErrorCodePatchingNotEnabled` | — | — | `Patch` or `DeprecatePatch` was called but `Config.EnablePatching` is false. |
+| `ErrorCodePatchingNotEnabled` | — | — | No longer returned: `Patch` and `DeprecatePatch` no longer require `Config.EnablePatching`, which is deprecated. |
 | `ErrorCodeTimeout` | `ErrTimeout` | Handle | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Inside a workflow, `Recv` and `GetEvent` timeouts are checkpointed as the operation's outcome. Deadline-driven timeouts also match `context.DeadlineExceeded`; for handle waits, prefer matching `context.DeadlineExceeded`, which covers all handle flavors. |
 | `ErrorCodeNoApplicationVersions` | `ErrNoApplicationVersions` | — | An operation required a registered application version, but none exists in the system database. |
 | `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | Handle | The referenced queue does not exist (e.g., `RetrieveQueue`). |
