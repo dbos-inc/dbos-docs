@@ -630,8 +630,27 @@ By contrast, the following is not allowed:
 Here, `step2` and `step4` may be started in either order since their execution depends on
 the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows and await
-their results, rather than interleaving step execution inside a single workflow.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with `DBOS.reserve_step()`, then run each step from its reservation with `run_async` (or `run` in a synchronous workflow), which takes the same arguments as `DBOS.run_step_async`.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```python
+    # Reserve step IDs in a deterministic order before starting any concurrent work
+    r1, r2, r3, r4 = [DBOS.reserve_step() for _ in range(4)]
+
+    async def seq_a():
+        await r1.run_async(None, step1, "arg1")
+        await r2.run_async(None, step2, "arg2")
+
+    async def seq_b():
+        await r3.run_async(None, step3, "arg3")
+        await r4.run_async(None, step4, "arg4")
+
+    results = await asyncio.gather(seq_a(), seq_b(), return_exceptions=True)
+    return results
+```
+
+`DBOS.reserve_step()` must be called from workflow code, outside any step, and each reservation must be run exactly once, from the workflow that reserved it.
+Alternatively, run each sequence of operations in a child workflow and await their results.
 
 For proper error handling, when using `asyncio.gather()`, specify `return_exceptions=True`.
 Without `return_exceptions=True`, `gather` will raise any exception immediately
@@ -1360,17 +1379,32 @@ When using patching, you use `DBOS.patch()` to make a breaking change in a condi
 `DBOS.patch()` returns `True` for new workflows (those started after the breaking change) and `False` for old workflows (those started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
-To use patching, you must enable it in configuration:
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed application version in configuration so every deployment shares it:
 
 ```python
 config: DBOSConfig = {
     "name": "dbos-app",
     "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "enable_patching": True,
 }
 DBOS(config=config)
 ```
+
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "auto_upgrade": True,
+    "auto_upgrade_grace_sec": 300,  # Optional: wait before moving PENDING workflows
+}
+DBOS(config=config)
+```
+
+Individual workflows can opt in or out with `@DBOS.workflow(auto_upgrade=True)` or `@DBOS.workflow(auto_upgrade=False)`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 For example, let's say our workflow is:
 
@@ -1450,6 +1484,11 @@ When using versioning, we recommend **blue-green** code upgrades.
 When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
 Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
 Then, once all workflows of the old version are complete (you can use `DBOS.list_workflows` to check), you can retire the old code version.
+
+## Sharding
+
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
+On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
 ## Workflow Handle
 
@@ -1796,7 +1835,6 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    enable_patching: Optional[bool]
     application_version: Optional[str]
     executor_id: Optional[str]
 
@@ -1822,7 +1860,6 @@ class DBOSConfig(TypedDict):
 ```
 
 - **name**: Your application's name. It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
-- **enable_patching** Enable the patching strategy for safely upgrading workflow code.
 - **application_version**: If using the versioning strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **system_database_url**: A connection string to your system database.

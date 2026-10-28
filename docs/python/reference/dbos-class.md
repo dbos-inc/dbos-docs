@@ -104,6 +104,7 @@ DBOS.migrate(
     *,
     schema: str = "dbos",
     application_role: Optional[str] = None,
+    sharding: bool = False,
 )
 ```
 
@@ -116,6 +117,7 @@ It can be called before or without constructing a DBOS instance.
 - `system_database_url`: The system database to create or migrate. The database is created if it does not exist.
 - `schema`: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
 - `application_role`: A Postgres role to grant access to the DBOS system schema once it is migrated. Not supported for SQLite.
+- `sharding`: Whether to create or migrate a [sharded system database](../tutorials/sharding.md).
 
 **Example:**
 ```python

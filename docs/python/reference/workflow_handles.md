@@ -10,6 +10,16 @@ If you know a workflow's identity, you can also retrieve its handle using `DBOS.
 
 ## WorkflowHandle
 
+### Attributes
+
+#### shard_key
+
+```python
+handle.shard_key: Optional[str]
+```
+
+The workflow's [shard key](../tutorials/sharding.md).
+
 ### Methods
 
 #### get_workflow_id
@@ -44,6 +54,16 @@ Retrieve the [`WorkflowStatus`](./contexts.md#workflow-status) of a workflow.
 
 
 ## WorkflowHandleAsync
+
+### Attributes
+
+#### shard_key
+
+```python
+handle.shard_key: Optional[str]
+```
+
+The workflow's [shard key](../tutorials/sharding.md).
 
 ### Methods
 

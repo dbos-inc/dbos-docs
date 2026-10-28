@@ -8,7 +8,7 @@ If you are using [Conductor](./overview.md), you can retrieve an **audit log** o
 The audit log is append-only and records who did what, when, from where, and whether the operation succeeded.
 
 :::info
-Audit logs require a [DBOS Enterprise](https://www.dbos.dev/dbos-pricing) plan.
+Audit logs require a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 :::
 
 ## The Audit Logs Endpoint

@@ -16,16 +16,32 @@ In patching, the result of a call to [`DBOS.patch()`](../reference/workflows-ste
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you must enable it in the configuration:
+When using patching, processes running your new code must be able to recover workflows started on your old code.
+There are two ways to do this:
 
-```typescript
-const config: DBOSConfig = {
-  // ...
-  enablePatching: true,
-};
-```
+1. **Pin the application version.** Set a fixed application version in your configuration, so every deployment of your code shares the same version:
 
-If you enable patching and don't set `applicationVersion`, DBOS uses the fixed application version `PATCHING_ENABLED` instead of computing one from your code, so workflows started while patching is enabled can be recovered by processes running newer code.
+   ```typescript
+   DBOS.setConfig({
+     name: 'dbos-app',
+     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+     applicationVersion: '1.0.0',
+   });
+   await DBOS.launch();
+   ```
+
+2. **Enable auto-upgrade.** Give each deployment its own application version, and let DBOS automatically move workflows from older versions to the latest version:
+
+   ```typescript
+   DBOS.setConfig({
+     name: 'dbos-app',
+     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+     autoUpgrade: true,
+   });
+   await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+   ```
+
+   Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our original workflow is:
 
@@ -99,6 +115,46 @@ If there is already a record present in this point in your workflow history and 
 When you deprecate a patch with `DBOS.deprecatePatch()`, new workflows no longer insert patch markers into their workflow history.
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, the patch may be safely removed.
+
+### Auto-Upgrading Workflows
+
+:::info
+Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.
+This way, processes running old code never pick up workflows started on new code, which their code can't handle.
+Meanwhile, workflows started on old code are upgraded to new code, so you don't have to keep old processes running until those workflows complete.
+**Only enable auto-upgrade for a workflow if every breaking change you make to it is [patched](#patching).**
+
+To enable auto-upgrade for all workflows in your application, set `autoUpgrade` in your configuration:
+
+```typescript
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  autoUpgrade: true,
+});
+await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+You can also enable or disable auto-upgrade for individual workflows with the `autoUpgrade` field of [`WorkflowConfig`](../reference/workflows-steps.md#dbosworkflow).
+A workflow that sets `autoUpgrade: true` is auto-upgraded even if `autoUpgrade` isn't set in your configuration, and a workflow that sets `autoUpgrade: false` is never auto-upgraded:
+
+```typescript
+@DBOS.workflow({ autoUpgrade: false })
+static async workflowWithoutPatches() {
+  // ...
+}
+```
+
+Auto-upgrade runs in the background on processes running the latest application version.
+When auto-upgrade runs:
+
+- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
+If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
+To give processes running old code time to complete their `PENDING` workflows first, set `autoUpgradeGraceMs`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that many milliseconds.
 
 ## Versioning
 

@@ -147,6 +147,10 @@ const config = {
             to: '/quickstart',
           },
           {
+            from: '/python/tutorials/database-connection',
+            to: '/python/reference/configuration',
+          },
+          {
             from: '/golang/reference/client',
             to: '/golang/reference/dbos-context',
           },
