@@ -3,6 +3,25 @@ sidebar_position: 200
 title: Upgrading
 ---
 
+## Upgrading to v1.8.0
+
+```shell
+go get github.com/dbos-inc/dbos-transact-golang@v1.8.0
+```
+
+If your application imports `go.dbos.dev/dbos-enterprise-go`, upgrade it to the same minor version:
+
+```shell
+go get go.dbos.dev/dbos-enterprise-go@v1.8.0
+```
+
+v1.8.0 is additive: existing code keeps compiling. This release adds system-database migrations (indexes on `application_versions`), applied by the first `NewContext`. New APIs and behavioral changes:
+
+- **Auto-upgrade.** A [DBOS Transact Enterprise](../explanations/transact-enterprise.md) feature that moves workflows left on older application versions to the latest one, so each deployment can run under its own version without keeping old processes around to drain. Enable it for every workflow with `Config.AutoUpgrade`, or per workflow with the [`WithAutoUpgrade(bool)`](./reference/workflows-steps.md#withautoupgrade) registration option, and tune it with `Config.AutoUpgradeInterval` and `Config.AutoUpgradeGracePeriod`. It requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key, `Config.TransactEnterpriseKey` or `ConductorAPIKey` standing in for it; `NewContext` (or `Launch`) fails with an error saying what is missing otherwise. See [Auto-Upgrading Workflows](./tutorials/upgrading-workflows.md#auto-upgrading-workflows) and [DBOS Transact Enterprise](./reference/configuration.md#dbos-transact-enterprise).
+- **`Config.EnablePatching` is deprecated.** `Patch` and `DeprecatePatch` no longer require it, and `ErrorCodePatchingNotEnabled` is no longer returned. The flag now only pins the application version to `PATCHING_ENABLED`, so every deployment shares one version, and `NewContext` logs a warning when it is set. To keep that behavior, set `Config.ApplicationVersion` explicitly; to give each deployment its own version instead, enable auto-upgrade.
+- **New [`WithMergeAttributes()`](./reference/methods.md#withmergeattributes)** option on `SetWorkflowAttributes`, shallow-merging the given top-level keys into a workflow's attributes in one update instead of replacing them. `SetWorkflowAttributes` is variadic now, so existing calls are unchanged.
+- **Portable workflow inputs.** New [`WithEnqueuePortableWorkflow()`](./reference/methods.md#withenqueueportableworkflow) option on `Enqueue`, storing the enqueued workflow's input in the portable JSON envelope so it runs as a portable workflow when dequeued; passing a `PortableWorkflowArgs` input still implies it. A child workflow started from a portable workflow, or a workflow enqueued or debounced from one, is now stored in its own format (portable only when it is itself started with `WithPortableWorkflow`, enqueued with `WithEnqueuePortableWorkflow`, or given a `PortableWorkflowArgs` input), where it used to be tagged as portable while its input was stored without the envelope, so that a struct input could decode to its zero value on dequeue or recovery.
+
 ## Upgrading to v1.7.0
 
 ```shell
