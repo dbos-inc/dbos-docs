@@ -22,6 +22,7 @@ export interface WorkflowConfig {
   maxRecoveryAttempts?: number;
   serialization?: "portable" | "native";
   inputSchema?: InputSchema;
+  autoUpgrade?: boolean;
 }
 
 export interface InputSchema {
@@ -53,6 +54,7 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
   - **inputSchema**: A schema for validating and optionally transforming workflow input arguments. Must have a `.parse()` method, making it compatible with [Zod](https://zod.dev/) schemas, AJV wrappers, or any custom validator. The schema receives the arguments as an array (tuple) and should return the validated/transformed array. Runs before the workflow function on every invocation (direct call, queue dispatch, and recovery). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
+  - **autoUpgrade**: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow, automatically moving instances of it left on older application versions to the latest version. If `true`, the workflow is auto-upgraded even if [`autoUpgrade`](./configuration.md#dbos-transact-enterprise-settings) isn't set in your configuration; if `false`, it is never auto-upgraded. If not set, follows `autoUpgrade` in your configuration. Requires [DBOS Transact Enterprise](../../explanations/transact-enterprise.md).
 
 ### DBOS.registerWorkflow
 
@@ -101,6 +103,7 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
   - **inputSchema**: A schema for validating/transforming input arguments. See [`WorkflowConfig`](#dbosworkflow) above.
+  - **autoUpgrade**: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow. See [`WorkflowConfig`](#dbosworkflow) above.
 
 ## Input Validation and Coercion
 
@@ -302,6 +305,44 @@ async function exampleWorkflow() {
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
 
+### DBOS.reserveStep
+
+```typescript
+DBOS.reserveStep(): StepReservation
+```
+
+```typescript
+class StepReservation {
+  readonly stepID: number;
+
+  run<Return>(
+    func: () => Promise<Return>,
+    config: StepConfig & { name?: string } = {}
+  ): Promise<Return>
+}
+```
+
+Reserve the next step ID in the current workflow, so a step can run at that position in the workflow's history later.
+Use this when steps in a workflow would otherwise start in a nondeterministic order.
+Must be called from a workflow, outside of any step.
+
+Run the reserved step with `run`, which takes the same arguments as [`runStep`](#dbosrunstep).
+Each reservation can be used only once.
+If a reservation is never used, its step ID is left unused, which is safe and does not affect recovery.
+
+**Example:**
+
+```typescript
+async function exampleWorkflow() {
+  const first = DBOS.reserveStep();
+  const second = DBOS.reserveStep();
+  // second's step may start before first's, but is always recorded after it
+  const secondResult = second.run(() => stepTwo(), { name: "stepTwo" });
+  const firstResult = await first.run(() => stepOne(), { name: "stepOne" });
+  return [firstResult, await secondResult];
+}
+```
+
 ## Class Names
 
 Workflows are uniquely identified by a class name + function name pair.
@@ -401,7 +442,7 @@ DBOS.patch(
 
 Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted (or this patch marker is already present) and `false` if a different checkpoint is already present at this point in history, indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
+Must be called from a workflow.
 
 **Parameters:**
 - `patchName`: The name to give the patch marker that will be inserted into workflow history.
@@ -416,8 +457,8 @@ DBOS.deprecatePatch(
 
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `true`.
-Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
-Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Must be called from a workflow.
 
 **Parameters:**
 - `patchName`: The name of the patch marker to be bypassed.

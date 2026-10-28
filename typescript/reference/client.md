@@ -31,10 +31,11 @@ interface ClientEnqueueOptions {
     authenticatedUser?: string;
     authenticatedRoles?: string[];
     applicationName?: string;
+    shardKey?: string;
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -52,34 +53,34 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     sendInTransaction<T>(client: ClientBase, destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
-    retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
+    retrieveWorkflow<T = unknown>(workflowID: string, options?: { shardKey?: string }): WorkflowHandle<Awaited<T>>;
     waitFirst(handles: WorkflowHandle<unknown>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<unknown>>;
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
 
-    getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
+    getWorkflow(workflowID: string, options?: { shardKey?: string }): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined>;
 
-    setWorkflowPriority(workflowID: string, priority: number): Promise<void>;
+    setWorkflowPriority(workflowID: string, priority: number, options?: { shardKey?: string }): Promise<void>;
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
-    cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
-    cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
-    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>>;
-    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
-    deleteWorkflow(workflowID: string, deleteChildren?: boolean): Promise<void>;
-    deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean): Promise<void>;
+    cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
+    cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
+    deleteWorkflow(workflowID: string, deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
+    deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string> }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string>; shardKey?: string }): Promise<string>;
 
     registerQueue(name: string, options?: RegisterQueueOptions & { applicationName?: string }): Promise<WorkflowQueue>;
     retrieveQueue(name: string): Promise<WorkflowQueue | null>;
     listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>;
     deleteQueue(name: string): Promise<void>;
 
-    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }; applicationName?: string }): Promise<void>;
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string; shardKey?: string }; applicationName?: string }): Promise<void>;
     updateSchedule(name: string, updates: { schedule?: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string | null; queueName?: string | null }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[]; applicationName?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
@@ -113,6 +114,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
+- **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 
 Example:
 
@@ -165,6 +167,7 @@ Additional but optional metadata includes:
 * **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`.
 * **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`.
 * **applicationName**: The application that owns and runs the enqueued workflow. Defaults to the client's own [`applicationName`](#create). Always set `applicationName` either here or in the client constructor if multiple applications share a system database.
+* **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 In addition to the `ClientEnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `ClientEnqueueOptions` parameter.
@@ -284,7 +287,7 @@ send<T>(
 ```
 
 Sends a message to a specified workflow. Similar to [`DBOS.send`](./methods.md#dbossend).
-The optional `ClientSendOptions` parameter allows specifying a [serialization strategy](./methods.md#serialization-strategy) via `serializationType`.
+The optional `ClientSendOptions` parameter allows specifying a [serialization strategy](./methods.md#serialization-strategy) via `serializationType` and the destination workflow's [shard key](../tutorials/sharding.md) via `shardKey`.
 
 :::warning
 Since DBOS Client is running outside of a DBOS application,
@@ -396,6 +399,7 @@ interface ReadStreamOptions {
   offset?: number;
   pollingIntervalMs?: number;
   timeoutSeconds?: number;
+  shardKey?: string;
 }
 ```
 
@@ -410,6 +414,7 @@ Similar to [`DBOS.readStream`](./methods.md#dbosreadstream), except that client 
 - **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream, so a reader that was disconnected after consuming _N_ values can resume with `offset: N` instead of replaying the whole stream. Must be a non-negative integer.
 - **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
 - **options.timeoutSeconds**: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.

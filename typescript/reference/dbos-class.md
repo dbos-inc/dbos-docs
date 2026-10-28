@@ -93,6 +93,7 @@ DBOS.migrate(
   options?: {
     schemaName?: string;
     applicationRole?: string;
+    sharding?: boolean;
   }
 ): Promise<void>
 ```
@@ -105,6 +106,7 @@ Run it with a privileged database role (for example, as part of your deployment'
 - **systemDatabaseUrl**: The system database to create or migrate. The database is created if it does not exist.
 - **schemaName**: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
 - **applicationRole**: A Postgres role to grant access to the DBOS system schema once it is migrated.
+- **sharding**: Whether to create or migrate a [sharded system database](../tutorials/sharding.md).
 
 **Example:**
 ```typescript

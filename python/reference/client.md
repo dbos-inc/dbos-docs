@@ -27,6 +27,7 @@ DBOSClient(
     retry_connection_errors: bool = True,
     observability_query_timeout_sec: Optional[float] = None,
     sys_db_idle_transaction_timeout_sec: Optional[float] = None,
+    sharding: bool = False,
 )
 ```
 **Parameters:**
@@ -42,6 +43,7 @@ DBOSClient(
 - `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
+- `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 
 **Example syntax:**
 
@@ -104,6 +106,7 @@ class EnqueueOptions(TypedDict):
     attributes: NotRequired[Dict[str, Any]]
     otel_context: NotRequired[opentelemetry.context.Context]
     application_name: NotRequired[Optional[str]]
+    shard_key: NotRequired[str]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -149,6 +152,7 @@ If left undefined, the workflow is only dequeued by an executor running the late
 - `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
 - `otel_context`: An OpenTelemetry context to propagate to the enqueued workflow, so that when the workflow runs, its span joins that context's trace. The client-side equivalent of [`PropagateOtelContext`](./contexts.md#propagateotelcontext). Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage. See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for details.
 - `application_name`: The application that owns and runs the enqueued workflow. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 To enqueue a workflow that is a method on a [Python class](../tutorials/classes.md), also set `class_name` (for a class method) or both `class_name` and `instance_name` (for a method on a configured instance).
 The class and instance must be registered in the application that dequeues the workflow; otherwise, the workflow cannot run.
@@ -269,6 +273,8 @@ async with async_engine.connect() as conn:
 ```python
 client.retrieve_workflow(
     workflow_id: str, 
+    *,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -277,6 +283,7 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose handle to retrieve.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The [WorkflowHandle](./workflow_handles.md#workflowhandle) of the workflow whose ID is `workflow_id`.
@@ -344,6 +351,7 @@ client.send(
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
     send_to_forks: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -356,6 +364,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
+- `shard_key`: The destination workflow's [shard key](../tutorials/sharding.md).
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -399,6 +408,7 @@ client.send_in_transaction(
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
     send_to_forks: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -470,6 +480,8 @@ class SendMessage:
     topic: Optional[str] = None
     # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
     idempotency_key: Optional[str] = None
+    # The destination workflow's shard key
+    shard_key: Optional[str] = None
 ```
 
 The send is atomic: if any message cannot be delivered, the entire batch is rolled back and no messages are sent.
@@ -544,7 +556,9 @@ From an async context, bridge to it using [`AsyncConnection.run_sync`](https://d
 client.get_event(
     workflow_id: str, 
     key: str, 
-    timeout_seconds: float = 60
+    timeout_seconds: float = 60,
+    *,
+    shard_key: Optional[str] = None,
 ) -> Any
 ```
 
@@ -556,6 +570,7 @@ Similar to [`DBOS.get_event`](contexts.md#get_event).
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
 - `key`: The key of the event to retrieve.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
@@ -592,6 +607,7 @@ client.read_stream(
     offset: int = 0,
     polling_interval_sec: Optional[float] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -606,6 +622,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client rea
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 - `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to `1.0`.
 - `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -651,6 +668,7 @@ client.read_stream_offset(
     *,
     polling_interval_sec: Optional[float] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> Any
 ```
 
@@ -663,6 +681,7 @@ Similar to [`DBOS.read_stream_offset`](contexts.md#read_stream_offset).
 - `offset`: The offset to read
 - `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to `1.0`.
 - `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value at the offset
@@ -699,6 +718,7 @@ client.set_workflow_delay(
     *,
     delay_seconds: Optional[float] = None,
     delay_until_epoch_ms: Optional[int] = None,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -711,6 +731,7 @@ Similar to [`DBOS.set_workflow_delay`](./contexts.md#set_workflow_delay).
 - `workflow_id`: The ID of the workflow whose delay to set.
 - `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
 - `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### set_workflow_delay_async
 
@@ -889,6 +910,8 @@ client.list_workflows(
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
+    shard_key: Optional[Union[str, List[str]]] = None,
+    parent_shard_key: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -924,6 +947,8 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
+- **shard_key**: Retrieve workflows under this [shard key](../tutorials/sharding.md) (or one of these shard keys).
+- **parent_shard_key**: Retrieve workflows whose parent workflow is under this shard key (or one of these shard keys).
 
 ### list_workflows_async
 
@@ -993,6 +1018,8 @@ client.list_queued_workflows(
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
+    shard_key: Optional[Union[str, List[str]]] = None,
+    parent_shard_key: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -1025,6 +1052,8 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
+- **shard_key**: Retrieve workflows under this [shard key](../tutorials/sharding.md) (or one of these shard keys).
+- **parent_shard_key**: Retrieve workflows whose parent workflow is under this shard key (or one of these shard keys).
 
 ### list_queued_workflows_async
 
@@ -1070,6 +1099,7 @@ client.list_workflow_steps(
     load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    shard_key: Optional[str] = None,
 ) -> List[StepInfo]
 ```
 
@@ -1080,6 +1110,7 @@ Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
 - **load_output**: Whether to load and deserialize step outputs and errors. Set to `False` to improve performance when they are not needed.
 - **limit**: The maximum number of steps to return.
 - **offset**: The number of steps to skip, for pagination.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### list_workflow_steps_async
 
@@ -1102,6 +1133,7 @@ client.cancel_workflow(
     workflow_id: str,
     *,
     cancel_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -1112,6 +1144,7 @@ Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
 - **cancel_children**: If `True`, also recursively cancels all child workflows started by this workflow.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### cancel_workflow_async
 
@@ -1132,11 +1165,15 @@ client.cancel_workflows(
     workflow_ids: List[str],
     *,
     cancel_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
 Cancel multiple workflows. Behaves like [`cancel_workflow`](#cancel_workflow) but operates on a list of workflow IDs.
 Similar to [`DBOS.cancel_workflows`](./contexts.md#cancel_workflows).
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 ### cancel_workflows_async
 
@@ -1150,6 +1187,7 @@ client.update_workflow_attributes(
     attributes: Optional[Dict[str, Any]],
     *,
     merge: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -1162,6 +1200,7 @@ Similar to [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_att
 - `workflow_id`: The ID of the workflow whose attributes to replace.
 - `attributes`: The new attributes dictionary, or `None` to clear all attributes.
 - `merge`: If `True`, atomically merge the top-level keys of `attributes` into the workflow's existing attributes instead of replacing them, as in [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_attributes).
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### update_workflow_attributes_async
 
@@ -1174,6 +1213,7 @@ client.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -1184,6 +1224,9 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### resume_workflow_async
 
@@ -1204,12 +1247,16 @@ client.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
 If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` and resumes none of them.
 Similar to [`DBOS.resume_workflows`](./contexts.md#resume_workflows).
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 ### resume_workflows_async
 
@@ -1227,11 +1274,15 @@ client.fork_workflow(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
 Similar to [`DBOS.fork_workflow`](./contexts.md#fork_workflow).
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### fork_workflow_async
 
@@ -1260,6 +1311,7 @@ client.rewind_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -1270,6 +1322,9 @@ Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exist
 :::warning
 Client rewind does not delete [datasource](./datasources.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use datasources, use [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
 :::
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### rewind_workflow_async
 
@@ -1293,6 +1348,7 @@ client.delete_workflow(
     workflow_id: str,
     *,
     delete_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -1302,6 +1358,7 @@ Similar to [`DBOS.delete_workflow`](./contexts.md#delete_workflow).
 **Parameters:**
 - **workflow_id**: The ID of the workflow to delete.
 - **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 :::warning
 This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
@@ -1318,11 +1375,15 @@ client.delete_workflows(
     workflow_ids: List[str],
     *,
     delete_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
 Delete multiple workflows and all their associated data. Behaves like [`delete_workflow`](#delete_workflow) but operates on a list of workflow IDs.
 Similar to [`DBOS.delete_workflows`](./contexts.md#delete_workflows).
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 ### delete_workflows_async
 
@@ -1414,6 +1475,7 @@ client.create_schedule(
     cron_timezone: Optional[str] = None,
     queue_name: Optional[str] = None,
     application_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -1430,6 +1492,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. Defaults to `None`.
 - **application_name**: The application that owns this schedule and runs its workflows. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
+- **shard_key**: The [shard key](../tutorials/sharding.md) of the schedule's workflows.
 
 ### create_schedule_async
 

@@ -22,7 +22,12 @@ export interface DBOSConfig {
   name: string;
   applicationVersion?: string;
   executorID?: string;
-  enablePatching?: boolean;
+
+  transactEnterpriseKey?: string;
+  autoUpgrade?: boolean;
+  autoUpgradeIntervalMs?: number;
+  autoUpgradeGraceMs?: number;
+  sharding?: boolean;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -54,7 +59,7 @@ export interface DBOSConfig {
 ```
 
 In [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
-The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there, as is `enablePatching`'s effect on the application version (it still enables [`DBOS.patch`](./workflows-steps.md#patch)).
+The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there.
 
 ### Application Settings
 
@@ -63,7 +68,14 @@ Multiple applications (potentially in different languages) may [share a system d
 If you rename an application, transfer ownership of its data with [`npx dbos rename-application`](./cli.md#npx-dbos-rename-application).
 - **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
-- **enablePatching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code. Required to use [`DBOS.patch`](./workflows-steps.md#patch) and [`DBOS.deprecatePatch`](./workflows-steps.md#deprecatepatch).
+
+### DBOS Transact Enterprise Settings
+
+- **transactEnterpriseKey**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **autoUpgrade**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `autoUpgrade: false` in their [`WorkflowConfig`](./workflows-steps.md#dbosworkflow). Requires DBOS Transact Enterprise. Defaults to `false`.
+- **autoUpgradeIntervalMs**: How often, in milliseconds, to check for workflows to auto-upgrade. Defaults to 30000 (30 seconds).
+- **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 
 ### Database Connection Settings
 

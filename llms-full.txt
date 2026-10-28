@@ -809,7 +809,7 @@ You can easily scale a DBOS application by adding more servers to it, so the sca
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step's outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).
 
 In [benchmarks](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres), a DBOS application using a single Postgres database can sustain a throughput of >40K workflows or steps per second.
-Scaling beyond that is possible by sharding workflows across multiple Postgres databases.
+Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) workflows across multiple Postgres databases.
 
 It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
@@ -1240,7 +1240,7 @@ If you are using [Conductor](./overview.md), you can retrieve an **audit log** o
 The audit log is append-only and records who did what, when, from where, and whether the operation succeeded.
 
 :::info
-Audit logs require a [DBOS Enterprise](https://www.dbos.dev/dbos-pricing) plan.
+Audit logs require a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 :::
 
 ### The Audit Logs Endpoint
@@ -7939,6 +7939,87 @@ This table tracks which DBOS system database schema migrations have been applied
 
 **Columns:**
 - **version**: The version number of the most recently applied system database schema migration.
+
+---
+
+## DBOS Transact Enterprise
+
+**DBOS Transact Enterprise** is the commercial extension to the open-source (MIT license) DBOS Transact library.
+DBOS Transact Enterprise is not open source; it is licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to DBOS Transact Enterprise.
+
+### Features
+
+DBOS Transact Enterprise provides:
+
+- **Conductor access**: DBOS Transact Enterprise comes with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
+- **Sharding**: Horizontally scale DBOS to handle millions of workflows per second with a sharded Postgres system database.
+- **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
+- **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
+
+### Installing DBOS Transact Enterprise
+
+DBOS Transact Enterprise is distributed as a package alongside DBOS Transact:
+
+**Python**
+
+Install the `dbos-enterprise` package as an extra of `dbos`:
+
+```shell
+pip install "dbos[enterprise]"
+```
+
+**TypeScript**
+
+Install the `@dbos-inc/dbos-enterprise` package, at the same minor version as `@dbos-inc/dbos-sdk`:
+
+```shell
+npm install @dbos-inc/dbos-enterprise
+```
+
+**Go**
+
+Import `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`):
+
+```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+```
+
+### DBOS Transact Enterprise Keys
+
+In production, applications using DBOS Transact Enterprise should [connect to Conductor](../conductor/overview.md#connecting-to-conductor).
+Their Conductor key also serves as their DBOS Transact Enterprise key, so you don't need to configure anything else.
+
+During development, you can use DBOS Transact Enterprise features without connecting to Conductor by setting a DBOS Transact Enterprise key in your DBOS configuration:
+
+**Python**
+
+```python
+config: DBOSConfig = {
+    "name": "my-app-name",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "transact_enterprise_key": os.environ.get("DBOS_TRANSACT_ENTERPRISE_KEY"),
+}
+DBOS(config=config)
+```
+
+**TypeScript**
+
+```typescript
+DBOS.setConfig({
+  name: "my-app-name",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  transactEnterpriseKey: process.env.DBOS_TRANSACT_ENTERPRISE_KEY,
+});
+await DBOS.launch();
+```
+
+:::warning
+Use a DBOS Transact Enterprise key without Conductor only for development.
+In production, connect applications using DBOS Transact Enterprise to Conductor.
+:::
+
+If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md), DBOS checks entitlements with the Conductor at your configured Conductor URL instead.
 
 ---
 
@@ -34764,8 +34845,27 @@ By contrast, the following is not allowed:
 Here, `step2` and `step4` may be started in either order since their execution depends on
 the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows and await
-their results, rather than interleaving step execution inside a single workflow.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with `DBOS.reserve_step()`, then run each step from its reservation with `run_async` (or `run` in a synchronous workflow), which takes the same arguments as `DBOS.run_step_async`.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```python
+    # Reserve step IDs in a deterministic order before starting any concurrent work
+    r1, r2, r3, r4 = [DBOS.reserve_step() for _ in range(4)]
+
+    async def seq_a():
+        await r1.run_async(None, step1, "arg1")
+        await r2.run_async(None, step2, "arg2")
+
+    async def seq_b():
+        await r3.run_async(None, step3, "arg3")
+        await r4.run_async(None, step4, "arg4")
+
+    results = await asyncio.gather(seq_a(), seq_b(), return_exceptions=True)
+    return results
+```
+
+`DBOS.reserve_step()` must be called from workflow code, outside any step, and each reservation must be run exactly once, from the workflow that reserved it.
+Alternatively, run each sequence of operations in a child workflow and await their results.
 
 For proper error handling, when using `asyncio.gather()`, specify `return_exceptions=True`.
 Without `return_exceptions=True`, `gather` will raise any exception immediately
@@ -35487,17 +35587,32 @@ When using patching, you use `DBOS.patch()` to make a breaking change in a condi
 `DBOS.patch()` returns `True` for new workflows (those started after the breaking change) and `False` for old workflows (those started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
-To use patching, you must enable it in configuration:
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed application version in configuration so every deployment shares it:
 
 ```python
 config: DBOSConfig = {
     "name": "dbos-app",
     "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "enable_patching": True,
 }
 DBOS(config=config)
 ```
+
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "auto_upgrade": True,
+    "auto_upgrade_grace_sec": 300,  # Optional: wait before moving PENDING workflows
+}
+DBOS(config=config)
+```
+
+Individual workflows can opt in or out with `@DBOS.workflow(auto_upgrade=True)` or `@DBOS.workflow(auto_upgrade=False)`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 For example, let's say our workflow is:
 
@@ -35577,6 +35692,11 @@ When using versioning, we recommend **blue-green** code upgrades.
 When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
 Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
 Then, once all workflows of the old version are complete (you can use `DBOS.list_workflows` to check), you can retire the old code version.
+
+### Sharding
+
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
+On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
 ### Workflow Handle
 
@@ -35922,7 +36042,6 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    enable_patching: Optional[bool]
     application_version: Optional[str]
     executor_id: Optional[str]
 
@@ -35948,7 +36067,6 @@ class DBOSConfig(TypedDict):
 ```
 
 - **name**: Your application's name. It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
-- **enable_patching** Enable the patching strategy for safely upgrading workflow code.
 - **application_version**: If using the versioning strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **system_database_url**: A connection string to your system database.
@@ -36264,6 +36382,7 @@ This command does not migrate the tables used by [datasources](./datasources.md)
 - `-s, --sys-db-url URL`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
 - `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
 - `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
+- `--sharding`: Create or migrate a [sharded system database](../tutorials/sharding.md).
 - `--print-migrations [all|NUMBER]`: Instead of running the migrations, print their SQL to standard output, either all of them (for a fresh database) or starting from a migration number (to upgrade an existing database). Postgres only.
 - `--print-user-role`: Instead of executing them, print the SQL statements granting `--app-role` access to the DBOS system tables.
 
@@ -36353,6 +36472,7 @@ DBOSClient(
     retry_connection_errors: bool = True,
     observability_query_timeout_sec: Optional[float] = None,
     sys_db_idle_transaction_timeout_sec: Optional[float] = None,
+    sharding: bool = False,
 )
 ```
 **Parameters:**
@@ -36368,6 +36488,7 @@ DBOSClient(
 - `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
+- `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 
 **Example syntax:**
 
@@ -36430,6 +36551,7 @@ class EnqueueOptions(TypedDict):
     attributes: NotRequired[Dict[str, Any]]
     otel_context: NotRequired[opentelemetry.context.Context]
     application_name: NotRequired[Optional[str]]
+    shard_key: NotRequired[str]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -36475,6 +36597,7 @@ If left undefined, the workflow is only dequeued by an executor running the late
 - `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
 - `otel_context`: An OpenTelemetry context to propagate to the enqueued workflow, so that when the workflow runs, its span joins that context's trace. The client-side equivalent of [`PropagateOtelContext`](./contexts.md#propagateotelcontext). Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage. See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for details.
 - `application_name`: The application that owns and runs the enqueued workflow. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 To enqueue a workflow that is a method on a [Python class](../tutorials/classes.md), also set `class_name` (for a class method) or both `class_name` and `instance_name` (for a method on a configured instance).
 The class and instance must be registered in the application that dequeues the workflow; otherwise, the workflow cannot run.
@@ -36595,6 +36718,8 @@ async with async_engine.connect() as conn:
 ```python
 client.retrieve_workflow(
     workflow_id: str, 
+    *,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -36603,6 +36728,7 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose handle to retrieve.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The [WorkflowHandle](./workflow_handles.md#workflowhandle) of the workflow whose ID is `workflow_id`.
@@ -36670,6 +36796,7 @@ client.send(
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
     send_to_forks: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -36682,6 +36809,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
+- `shard_key`: The destination workflow's [shard key](../tutorials/sharding.md).
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -36725,6 +36853,7 @@ client.send_in_transaction(
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
     send_to_forks: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -36796,6 +36925,8 @@ class SendMessage:
     topic: Optional[str] = None
     # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
     idempotency_key: Optional[str] = None
+    # The destination workflow's shard key
+    shard_key: Optional[str] = None
 ```
 
 The send is atomic: if any message cannot be delivered, the entire batch is rolled back and no messages are sent.
@@ -36870,7 +37001,9 @@ From an async context, bridge to it using [`AsyncConnection.run_sync`](https://d
 client.get_event(
     workflow_id: str, 
     key: str, 
-    timeout_seconds: float = 60
+    timeout_seconds: float = 60,
+    *,
+    shard_key: Optional[str] = None,
 ) -> Any
 ```
 
@@ -36882,6 +37015,7 @@ Similar to [`DBOS.get_event`](contexts.md#get_event).
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
 - `key`: The key of the event to retrieve.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
@@ -36918,6 +37052,7 @@ client.read_stream(
     offset: int = 0,
     polling_interval_sec: Optional[float] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -36932,6 +37067,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client rea
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 - `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to `1.0`.
 - `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -36977,6 +37113,7 @@ client.read_stream_offset(
     *,
     polling_interval_sec: Optional[float] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> Any
 ```
 
@@ -36989,6 +37126,7 @@ Similar to [`DBOS.read_stream_offset`](contexts.md#read_stream_offset).
 - `offset`: The offset to read
 - `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to `1.0`.
 - `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value at the offset
@@ -37025,6 +37163,7 @@ client.set_workflow_delay(
     *,
     delay_seconds: Optional[float] = None,
     delay_until_epoch_ms: Optional[int] = None,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -37037,6 +37176,7 @@ Similar to [`DBOS.set_workflow_delay`](./contexts.md#set_workflow_delay).
 - `workflow_id`: The ID of the workflow whose delay to set.
 - `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
 - `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### set_workflow_delay_async
 
@@ -37215,6 +37355,8 @@ client.list_workflows(
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
+    shard_key: Optional[Union[str, List[str]]] = None,
+    parent_shard_key: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -37250,6 +37392,8 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
+- **shard_key**: Retrieve workflows under this [shard key](../tutorials/sharding.md) (or one of these shard keys).
+- **parent_shard_key**: Retrieve workflows whose parent workflow is under this shard key (or one of these shard keys).
 
 #### list_workflows_async
 
@@ -37319,6 +37463,8 @@ client.list_queued_workflows(
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
+    shard_key: Optional[Union[str, List[str]]] = None,
+    parent_shard_key: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -37351,6 +37497,8 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor) unless `workflow_ids` is set; a client with no application name retrieves every application's workflows.
+- **shard_key**: Retrieve workflows under this [shard key](../tutorials/sharding.md) (or one of these shard keys).
+- **parent_shard_key**: Retrieve workflows whose parent workflow is under this shard key (or one of these shard keys).
 
 #### list_queued_workflows_async
 
@@ -37396,6 +37544,7 @@ client.list_workflow_steps(
     load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    shard_key: Optional[str] = None,
 ) -> List[StepInfo]
 ```
 
@@ -37406,6 +37555,7 @@ Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
 - **load_output**: Whether to load and deserialize step outputs and errors. Set to `False` to improve performance when they are not needed.
 - **limit**: The maximum number of steps to return.
 - **offset**: The number of steps to skip, for pagination.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### list_workflow_steps_async
 
@@ -37428,6 +37578,7 @@ client.cancel_workflow(
     workflow_id: str,
     *,
     cancel_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -37438,6 +37589,7 @@ Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
 - **cancel_children**: If `True`, also recursively cancels all child workflows started by this workflow.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### cancel_workflow_async
 
@@ -37458,11 +37610,15 @@ client.cancel_workflows(
     workflow_ids: List[str],
     *,
     cancel_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
 Cancel multiple workflows. Behaves like [`cancel_workflow`](#cancel_workflow) but operates on a list of workflow IDs.
 Similar to [`DBOS.cancel_workflows`](./contexts.md#cancel_workflows).
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 #### cancel_workflows_async
 
@@ -37476,6 +37632,7 @@ client.update_workflow_attributes(
     attributes: Optional[Dict[str, Any]],
     *,
     merge: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -37488,6 +37645,7 @@ Similar to [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_att
 - `workflow_id`: The ID of the workflow whose attributes to replace.
 - `attributes`: The new attributes dictionary, or `None` to clear all attributes.
 - `merge`: If `True`, atomically merge the top-level keys of `attributes` into the workflow's existing attributes instead of replacing them, as in [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_attributes).
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### update_workflow_attributes_async
 
@@ -37500,6 +37658,7 @@ client.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -37510,6 +37669,9 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### resume_workflow_async
 
@@ -37530,12 +37692,16 @@ client.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
 If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` and resumes none of them.
 Similar to [`DBOS.resume_workflows`](./contexts.md#resume_workflows).
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 #### resume_workflows_async
 
@@ -37553,11 +37719,15 @@ client.fork_workflow(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
 Similar to [`DBOS.fork_workflow`](./contexts.md#fork_workflow).
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### fork_workflow_async
 
@@ -37586,6 +37756,7 @@ client.rewind_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -37596,6 +37767,9 @@ Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exist
 :::warning
 Client rewind does not delete [datasource](./datasources.md) transaction checkpoints, so rewound transactions are not re-executed. To rewind workflows that use datasources, use [`DBOS.rewind_workflow`](./contexts.md#rewind_workflow).
 :::
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### rewind_workflow_async
 
@@ -37619,6 +37793,7 @@ client.delete_workflow(
     workflow_id: str,
     *,
     delete_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -37628,6 +37803,7 @@ Similar to [`DBOS.delete_workflow`](./contexts.md#delete_workflow).
 **Parameters:**
 - **workflow_id**: The ID of the workflow to delete.
 - **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 :::warning
 This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
@@ -37644,11 +37820,15 @@ client.delete_workflows(
     workflow_ids: List[str],
     *,
     delete_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
 Delete multiple workflows and all their associated data. Behaves like [`delete_workflow`](#delete_workflow) but operates on a list of workflow IDs.
 Similar to [`DBOS.delete_workflows`](./contexts.md#delete_workflows).
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 #### delete_workflows_async
 
@@ -37740,6 +37920,7 @@ client.create_schedule(
     cron_timezone: Optional[str] = None,
     queue_name: Optional[str] = None,
     application_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -37756,6 +37937,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. Defaults to `None`.
 - **application_name**: The application that owns this schedule and runs its workflows. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
+- **shard_key**: The [shard key](../tutorials/sharding.md) of the schedule's workflows.
 
 #### create_schedule_async
 
@@ -38015,7 +38197,6 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    enable_patching: Optional[bool]
     application_version: Optional[str]
     executor_id: Optional[str]
 
@@ -38036,6 +38217,12 @@ class DBOSConfig(TypedDict):
     conductor_url: Optional[str]
     conductor_executor_metadata: Optional[Dict[str, Any]]
     conductor_metadata_only_mode: Optional[bool]
+
+    transact_enterprise_key: Optional[str]
+    auto_upgrade: Optional[bool]
+    auto_upgrade_interval_sec: Optional[float]
+    auto_upgrade_grace_sec: Optional[float]
+    sharding: Optional[bool]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -38061,8 +38248,6 @@ class DBOSConfig(TypedDict):
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`dbos rename-application`](./cli.md#dbos-rename-application).
-- **enable_patching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
-Required to use [`DBOS.patch`](./contexts.md#patch) and [`DBOS.deprecate_patch`](./contexts.md#deprecate_patch), which otherwise raise a `DBOSException`.
 - **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
@@ -38116,6 +38301,14 @@ A system database ahead of the required version is accepted, so a process with m
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
 - **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../conductor/overview.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.
+
+#### DBOS Transact Enterprise Settings
+
+- **transact_enterprise_key**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `conductor_key`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **auto_upgrade**: If `True`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `auto_upgrade=False` in [`@DBOS.workflow`](./decorators.md#workflow). Requires DBOS Transact Enterprise. Defaults to `False`.
+- **auto_upgrade_interval_sec**: How often, in seconds, to check for workflows to auto-upgrade. Defaults to 30 seconds.
+- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 
 #### Logging and Tracing Settings
 
@@ -38284,6 +38477,7 @@ DBOS.send(
     idempotency_key: Optional[str] = None,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
     send_to_forks: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -38298,6 +38492,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `idempotency_key`: If an idempotency key is set, the message will only be sent once to each destination no matter how many times `DBOS.send` is called with this key. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization format](#serialization-strategy) to use for this message. Defaults to `WorkflowSerializationFormat.DEFAULT`.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively [forked](#fork_workflow) from `destination_id` (forks, forks of forks, and so on) that exists at send time. Defaults to `False`.
+- `shard_key`: The destination workflow's [shard key](../tutorials/sharding.md).
 
 #### send_async
 
@@ -38340,6 +38535,8 @@ class SendMessage:
     topic: Optional[str] = None
     # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
     idempotency_key: Optional[str] = None
+    # The destination workflow's shard key
+    shard_key: Optional[str] = None
 ```
 
 The send is atomic: if any message cannot be delivered (for example, its destination workflow does not exist), the entire batch is rolled back and no messages are sent.
@@ -38438,6 +38635,8 @@ DBOS.get_event(
     workflow_id: str,
     key: str,
     timeout_seconds: float = 60,
+    *,
+    shard_key: Optional[str] = None,
 ) -> Any
 ```
 
@@ -38449,6 +38648,7 @@ The `get_event` function should not be used in [coroutine workflows](../tutorial
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
 - `key`: The key of the event to retrieve.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
@@ -38469,12 +38669,17 @@ Coroutine version of [`get_event`](#get_event)
 
 ```python
 DBOS.get_all_events(
-    workflow_id: str
+    workflow_id: str,
+    *,
+    shard_key: Optional[str] = None,
 ) -> Dict[str, Any]
 ```
 
 Retrieve the latest values of all events published by `workflow_id`.
+
+**Parameters:**
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### get_all_events_async
 
@@ -38611,11 +38816,64 @@ class StepOptions(TypedDict, total=False):
 
 Version of [`run_step`](#run_step) to be called from `async` contexts.
 
+#### reserve_step
+
+```python
+DBOS.reserve_step() -> StepReservation
+```
+
+```python
+class StepReservation:
+    step_id: int
+
+    def run(
+        self,
+        dbos_step_options: Optional[StepOptions],
+        func: Callable[P, R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> R
+
+    async def run_async(
+        self,
+        dbos_step_options: Optional[StepOptions],
+        func: Callable[P, R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> R
+```
+
+Reserve the next step ID in the current workflow, so a step can run at that position in the workflow's history later.
+Use this when steps in an `async` workflow would otherwise start in a nondeterministic order.
+Must be called from a workflow, outside of any step.
+
+Run the reserved step with `run` or `run_async`, which take the same arguments as [`run_step`](#run_step) and [`run_step_async`](#run_step_async).
+Each reservation can be used only once.
+If a reservation is never used, its step ID is left unused, which is safe and does not affect recovery.
+
+**Example:**
+
+```python
+@DBOS.workflow()
+async def example_workflow():
+    first = DBOS.reserve_step()
+    second = DBOS.reserve_step()
+    # second's step may start before first's, but is always recorded after it
+    async def run_second():
+        return await second.run_async(None, step_two)
+    task = asyncio.create_task(run_second())
+    result_one = await first.run_async(None, step_one)
+    result_two = await task
+    return result_one, result_two
+```
+
 #### get_result
 
 ```python
 DBOS.get_result(
     workflow_id: str,
+    *,
+    shard_key: Optional[str] = None,
 ) -> Optional[Any]
 ```
 
@@ -38623,6 +38881,7 @@ Wait for the workflow identified by `workflow_id` to complete, and return its re
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose result to return.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The result of the workflow, or throws an exception if the workflow threw an exception.
@@ -38642,6 +38901,8 @@ Coroutine version of [`get_result`](#get_result).
 ```python
 DBOS.get_workflow_status(
     workflow_id: str,
+    *,
+    shard_key: Optional[str] = None,
 ) -> Optional[WorkflowStatus]
 ```
 
@@ -38650,6 +38911,7 @@ Returns `None` if no workflow with the given ID exists.
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose status to retrieve.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The [`WorkflowStatus`](#workflow-status) of the workflow, or `None` if not found.
@@ -38670,6 +38932,8 @@ Coroutine version of [`get_workflow_status`](#get_workflow_status).
 DBOS.retrieve_workflow(
     workflow_id: str,
     existing_workflow: bool = True,
+    *,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -38678,6 +38942,7 @@ Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workfl
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose handle to retrieve.
 - `existing_workflow`: Whether to throw an exception (`DBOSNonExistentWorkflowError`) if the workflow does not yet exist. If set to `False`, return a handle immediately without checking whether the workflow exists; calling `get_result` on the handle waits for the workflow to be created and complete.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The [handle](./workflow_handles.md) of the workflow whose ID is `workflow_id`.
@@ -38762,6 +39027,7 @@ DBOS.read_stream(
     offset: int = 0,
     polling_interval_sec: Optional[float] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -38776,6 +39042,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 - `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured [`notification_listener_polling_interval_sec`](./configuration.md#database-connection-settings) (`1.0` if not configured).
 - `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -38825,6 +39092,7 @@ DBOS.read_stream_offset(
     *,
     polling_interval_sec: Optional[float] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> Any
 ```
 
@@ -38837,6 +39105,7 @@ Use this when you want one specific value instead of iterating the whole stream&
 - `offset`: The offset to read
 - `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured [`notification_listener_polling_interval_sec`](./configuration.md#database-connection-settings) (`1.0` if not configured).
 - `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value at the offset
@@ -38883,7 +39152,6 @@ DBOS.patch(
 
 Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted (or this patch marker is already present) and `False` if a different checkpoint is already present at this point in history.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
 The `patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`patch_async`](#patch_async) should be used instead.
 
 **Parameters:**
@@ -38910,7 +39178,6 @@ DBOS.deprecate_patch(
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `True`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Requires [`enable_patching`](./configuration.md#application-settings) to be set in your DBOS configuration.
 The `deprecate_patch` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`deprecate_patch_async`](#deprecate_patch_async) should be used instead.
 
 **Parameters:**
@@ -39183,6 +39450,8 @@ def list_workflows(
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
+    shard_key: Optional[Union[str, List[str]]] = None,
+    parent_shard_key: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -39217,6 +39486,8 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows (or, if `workflow_ids` is set, workflows owned by any application).
+- **shard_key**: Retrieve workflows under this [shard key](../tutorials/sharding.md) (or one of these shard keys).
+- **parent_shard_key**: Retrieve workflows whose parent workflow is under this shard key (or one of these shard keys).
 
 On a Postgres system database, this query is subject to the [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) statement timeout (unless `workflow_ids` is set) and raises `DBOSQueryTimeoutError` if it exceeds it.
 
@@ -39253,6 +39524,8 @@ def list_queued_workflows(
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     application_name: Optional[Union[str, List[str]]] = None,
+    shard_key: Optional[Union[str, List[str]]] = None,
+    parent_shard_key: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -39284,6 +39557,8 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows (or, if `workflow_ids` is set, workflows owned by any application).
+- **shard_key**: Retrieve workflows under this [shard key](../tutorials/sharding.md) (or one of these shard keys).
+- **parent_shard_key**: Retrieve workflows whose parent workflow is under this shard key (or one of these shard keys).
 
 On a Postgres system database, this query is subject to the [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) statement timeout (unless `workflow_ids` is set) and raises `DBOSQueryTimeoutError` if it exceeds it.
 
@@ -39299,6 +39574,7 @@ def list_workflow_steps(
     load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    shard_key: Optional[str] = None,
 ) -> List[StepInfo]
 ```
 
@@ -39326,6 +39602,9 @@ class StepInfo(TypedDict):
     completed_at_epoch_ms: Optional[int]
 ```
 
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
+
 #### list_workflow_steps_async
 
 Coroutine version of [`list_workflow_steps`](#list_workflow_steps).
@@ -39338,6 +39617,7 @@ DBOS.set_workflow_delay(
     *,
     delay_seconds: Optional[float] = None,
     delay_until_epoch_ms: Optional[int] = None,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -39349,6 +39629,7 @@ Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (abs
 - `workflow_id`: The ID of the workflow whose delay to set.
 - `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
 - `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### set_workflow_delay_async
 
@@ -39362,6 +39643,7 @@ DBOS.update_workflow_attributes(
     attributes: Optional[Dict[str, Any]],
     *,
     merge: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -39376,6 +39658,7 @@ This method is safe to call from within a workflow (including to update the call
 - `workflow_id`: The ID of the workflow whose attributes to replace.
 - `attributes`: The new attributes dictionary, or `None` to clear all attributes.
 - `merge`: If `True`, atomically merge the top-level keys of `attributes` into the workflow's existing attributes instead of replacing them. Existing keys not in `attributes` are kept; keys in `attributes` overwrite existing values (nested dictionaries are replaced, not merged). Concurrent merges do not lose each other's keys. Raises `DBOSException` if `attributes` is `None`.
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### update_workflow_attributes_async
 
@@ -39388,6 +39671,7 @@ DBOS.cancel_workflow(
     workflow_id: str,
     *,
     cancel_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -39397,6 +39681,7 @@ This sets its status to `CANCELLED`, removes it from its queue (if it is enqueue
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
 - **cancel_children**: If `True`, also recursively cancels all child workflows started by this workflow.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### cancel_workflow_async
 
@@ -39409,10 +39694,14 @@ DBOS.cancel_workflows(
     workflow_ids: List[str],
     *,
     cancel_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
 Cancel multiple workflows. Behaves like [`cancel_workflow`](#cancel_workflow) but operates on a list of workflow IDs.
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 #### cancel_workflows_async
 
@@ -39425,6 +39714,7 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -39435,6 +39725,9 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 
 If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if the workflow does not exist.
+
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### resume_workflow_async
 
@@ -39447,11 +39740,15 @@ DBOS.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
 
 Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
 If any of the workflows does not exist, raises `DBOSNonExistentWorkflowError` without resuming any of them.
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 #### resume_workflows_async
 
@@ -39469,6 +39766,7 @@ DBOS.fork_workflow(
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
     timeout_seconds: Optional[float] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -39486,6 +39784,9 @@ If `replacement_children` is provided, it maps original child workflow IDs to re
 
 If `timeout_seconds` is provided, it sets a [timeout](#setworkflowtimeout) for the forked workflow, in seconds.
 
+**Parameters:**
+- `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
+
 #### fork_workflow_async
 
 Coroutine version of [`fork_workflow`](#fork_workflow).
@@ -39500,6 +39801,7 @@ DBOS.rewind_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -39528,6 +39830,7 @@ Rewinding a workflow:
 - **application_version**: The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
 - **queue_name**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
 - **queue_partition_key**: The partition key to enqueue the rewound workflow under, if `queue_name` is a partitioned queue.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### rewind_workflow_async
 
@@ -39540,6 +39843,7 @@ DBOS.delete_workflow(
     workflow_id: str,
     *,
     delete_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -39548,6 +39852,7 @@ Delete a workflow and all its associated data (inputs, outputs, step results, et
 **Parameters:**
 - **workflow_id**: The ID of the workflow to delete.
 - **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+- **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 :::warning
 This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
@@ -39572,10 +39877,14 @@ DBOS.delete_workflows(
     workflow_ids: List[str],
     *,
     delete_children: bool = False,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
 Delete multiple workflows and all their associated data. Behaves like [`delete_workflow`](#delete_workflow) but operates on a list of workflow IDs.
+
+**Parameters:**
+- `shard_key`: The workflows' [shard key](../tutorials/sharding.md).
 
 #### delete_workflows_async
 
@@ -39595,6 +39904,7 @@ DBOS.create_schedule(
     automatic_backfill: bool = False,
     cron_timezone: Optional[str] = None,
     queue_name: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -39608,6 +39918,7 @@ Create a cron schedule that periodically invokes a workflow function.
 - **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. This is useful for managing the concurrency of scheduled workflows. Defaults to `None`.
+- **shard_key**: The [shard key](../tutorials/sharding.md) of the schedule's workflows.
 
 Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
 Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name already exists (including one owned by a different application) raises an error.
@@ -39805,6 +40116,8 @@ class WorkflowSchedule(TypedDict):
     queue_name: Optional[str]
     # The application that owns this schedule, or None if it is owned by no application
     application_name: Optional[str]
+    # The shard key of the schedule's workflows
+    shard_key: Optional[str]
 ```
 
 #### Workflow Status
@@ -39862,6 +40175,10 @@ class WorkflowStatus:
     was_forked_from: bool
     # If this workflow was started as a child of another workflow, that workflow's ID.
     parent_workflow_id: Optional[str]
+    # The workflow's shard key
+    shard_key: Optional[str]
+    # The parent workflow's shard key
+    parent_shard_key: Optional[str]
     # The Unix epoch timestamp in ms at which the workflow was last dequeued, if it had been enqueued
     dequeued_at: Optional[int]
     # The Unix epoch timestamp in ms before which the workflow should not be dequeued, if it was delayed
@@ -39894,6 +40211,14 @@ DBOS.workflow_id: Optional[str]
 ```
 
 Return the ID of the currently executing workflow. If a workflow is not executing, return None.
+
+#### shard_key
+
+```python
+DBOS.shard_key: Optional[str]
+```
+
+Return the [shard key](../tutorials/sharding.md) of the currently executing workflow, or None.
 
 #### step_id
 
@@ -40200,6 +40525,24 @@ def submit_order(order_id: str, order: Order) -> str:
         return handle.get_result()
     except dboserror.DBOSWorkflowIDInUseError:
         return "already started"
+```
+
+#### SetShardKey
+
+```python
+SetShardKey(
+    shard_key: str,
+)
+```
+
+Set the [shard key](../tutorials/sharding.md) of every workflow started, enqueued, or called in the block.
+Should be used in a `with` statement.
+
+Example syntax:
+
+```python
+with SetShardKey("orders"):
+    handle = queue.enqueue(process_order, order)
 ```
 
 #### SetWorkflowTimeout
@@ -40804,6 +41147,7 @@ DBOS.migrate(
     *,
     schema: str = "dbos",
     application_role: Optional[str] = None,
+    sharding: bool = False,
 )
 ```
 
@@ -40816,6 +41160,7 @@ It can be called before or without constructing a DBOS instance.
 - `system_database_url`: The system database to create or migrate. The database is created if it does not exist.
 - `schema`: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
 - `application_role`: A Postgres role to grant access to the DBOS system schema once it is migrated. Not supported for SQLite.
+- `sharding`: Whether to create or migrate a [sharded system database](../tutorials/sharding.md).
 
 **Example:**
 ```python
@@ -40865,6 +41210,7 @@ DBOS.workflow(
   max_recovery_attempts: Optional[int] = 100,
   serialization_type: Optional[WorkflowSerializationFormat] = None,
   validate_args: Optional[ValidateArgsCallable] = None,
+  auto_upgrade: Optional[bool] = None,
 )
 ```
 
@@ -40887,6 +41233,7 @@ A workflow in this state may be [resumed](../tutorials/workflow-management.md#re
 If this behavior is not desired, it may be disabled by setting `max_recovery_attempts=None`.
 - `serialization_type`: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `WorkflowSerializationFormat.PORTABLE` to test [cross-language interoperability](../../explanations/portable-workflows.md).
 - `validate_args`: An optional callable that validates and optionally coerces workflow arguments before execution. Pass the built-in `pydantic_args_validator` to automatically validate arguments against the function's type hints using [Pydantic](https://docs.pydantic.dev/). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
+- `auto_upgrade`: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow, automatically moving instances of it left on older application versions to the latest version. If `True`, the workflow is auto-upgraded even if [`auto_upgrade`](./configuration.md#dbos-transact-enterprise-settings) isn't set in your configuration; if `False`, it is never auto-upgraded. If not set, follows `auto_upgrade` in your configuration. Requires [DBOS Transact Enterprise](../../explanations/transact-enterprise.md).
 
 #### step
 
@@ -41459,6 +41806,16 @@ If you know a workflow's identity, you can also retrieve its handle using `DBOS.
 
 ### WorkflowHandle
 
+#### Attributes
+
+##### shard_key
+
+```python
+handle.shard_key: Optional[str]
+```
+
+The workflow's [shard key](../tutorials/sharding.md).
+
 #### Methods
 
 ##### get_workflow_id
@@ -41492,6 +41849,16 @@ handle.get_status() -> WorkflowStatus
 Retrieve the [`WorkflowStatus`](./contexts.md#workflow-status) of a workflow.
 
 ### WorkflowHandleAsync
+
+#### Attributes
+
+##### shard_key
+
+```python
+handle.shard_key: Optional[str]
+```
+
+The workflow's [shard key](../tutorials/sharding.md).
 
 #### Methods
 
@@ -41691,84 +42058,6 @@ class ExampleClass():
         def classmethod_workflow(cls):
             return
 ```
-
----
-
-## DBOS Database Connections
-
-DBOS uses a database to durably store workflow and step state.
-This database is called the **system database**.
-Its schema is documented [here](../../explanations/system-tables.md).
-
-You can use either a SQLite or Postgres database.
-A SQLite database is just a file on disk, while a Postgres database is a server that your application connects to.
-By default, DBOS uses SQLite.
-SQLite is excellent for prototyping and testing because it requires no configuration or server.
-However, because a SQLite database is just a file on disk, it can't be used in a distributed setting where an application runs on multiple servers.
-Therefore, **for production, we recommend using Postgres**.
-
-### Configuring the System Database Connection
-
-You can configure the database DBOS connects to through the `system_database_url` field of `DBOSConfig`.
-For example:
-
-```python
-config: DBOSConfig = {
-    "name": "dbos-example",
-    "application_version": "0.1.0",
-    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
-}
-DBOS(config=config)
-```
-
-A valid Postgres connection string looks like:
-
-```
-postgresql://[username]:[password]@[hostname]:[port]/[database name]
-```
-
-For example:
-
-```
-postgresql://postgres:dbos@localhost:5432/dbos_example
-```
-
-A valid SQLite connection string looks like:
-
-```
-sqlite:///[path to database file]
-```
-
-For example:
-
-```
-sqlite:///dbos_example.sqlite
-```
-
-For more information on DBOS configuration, see [the reference](../reference/configuration.md).
-
-### Connecting to an Application Database
-
-To run durable database operations in workflows, use [datasources](./transaction-tutorial.md#datasources).
-You create a datasource with its own database URL, independent of the DBOS system database:
-
-```python
-import asyncio
-import os
-from dbos import SQLAlchemyDatasource, AsyncSQLAlchemyDatasource
-
-# Sync
-ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
-
-# Async. The datasource is not tied to the event loop that created it,
-# so it can be used from the event loop that runs your application
-ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
-```
-
-The datasource manages its own connection pool and can point to any PostgreSQL or SQLite database.
-To use an async datasource with SQLite, use an async driver URL such as `sqlite+aiosqlite:///app.sqlite`.
-Your application database does not need to be the same database (or even on the same server) as your system database, and no additional DBOS configuration is needed.
-See the [datasources tutorial](./transaction-tutorial.md#datasources) for full usage details.
 
 ---
 
@@ -42796,6 +43085,140 @@ For the full API reference, see [Workflow Schedules](../reference/contexts.md#wo
 
 ---
 
+## Sharding
+
+:::info
+Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+A DBOS application using a single Postgres system database can run tens of thousands of workflows per second.
+To scale beyond that, you can **shard** your system database across multiple Postgres servers using a Postgres-compatible sharding layer such as [Citus](https://www.citusdata.com/) or [PgDog](https://pgdog.dev/).
+
+When you shard your system database, every workflow lives under a **shard key** that you assign it.
+All of a workflow's data (its status, inputs, outputs, steps, events, messages, and streams) is stored on the shard that owns its key, so every operation on a workflow touches a single shard.
+
+### Setting Up a Sharded System Database
+
+To use a sharded system database, set `sharding` in your DBOS configuration and point `system_database_url` at your sharding router (for example, a Citus coordinator or PgDog router):
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "sharding": True,
+}
+DBOS(config=config)
+```
+
+When DBOS launches, it creates the sharded system database schema through your sharding layer.
+In production, we recommend you create the schema ahead of time with [`dbos migrate --sharding`](../reference/cli.md#dbos-migrate).
+
+Every DBOS table has a `shard_key` column.
+You may need to configure your sharding engine to shard on that column, for example in PgDog's `pgdog.toml`:
+
+```toml title="pgdog.toml"
+[[sharded_tables]]
+database = "dbos"
+column = "shard_key"
+data_type = "varchar"
+```
+
+To connect a [`DBOSClient`](../reference/client.md) to a sharded system database, construct it with `sharding=True`.
+
+### Assigning Shard Keys
+
+On a sharded system database, you must assign a shard key to every workflow you start or enqueue.
+Use [`SetShardKey`](../reference/contexts.md#setshardkey) to set the shard key of every workflow started, enqueued, or called in a block:
+
+```python
+from dbos import DBOS, SetShardKey
+
+queue = DBOS.register_queue("orders")
+
+with SetShardKey("orders"):
+    handle = queue.enqueue(process_order, order)
+```
+
+From a [`DBOSClient`](../reference/client.md#enqueue), set `shard_key` in the enqueue options:
+
+```python
+options: EnqueueOptions = {
+    "workflow_name": "process_order",
+    "queue_name": "orders",
+    "shard_key": "orders",
+}
+handle = client.enqueue(options, order)
+```
+
+Workflow IDs are unique only within a shard key: two workflows with the same ID under different shard keys are different workflows.
+Thus, to identify a workflow on a sharded system database, you need both its ID and its shard key.
+Within a workflow, [`DBOS.shard_key`](../reference/contexts.md#shard_key) returns the shard key of the current workflow.
+
+#### Choosing Shard Keys
+
+Queue [flow control](./queue-tutorial.md#managing-concurrency) limits (its global concurrency limit, rate limit, and partition limits) are enforced separately within each shard key: for example, a queue with a global concurrency of 10 can run 10 workflows under each shard key.
+Worker concurrency limits still apply across all shard keys.
+
+Therefore, we recommend choosing shard keys based on how you enqueue workflows:
+
+- For workflows enqueued on a [partitioned queue](./queue-tutorial.md#partitioning-queues), use their partition key as their shard key. Each partition then lives on one shard, and its partition limits work as they would on an unsharded database.
+- For workflows enqueued on a queue that isn't partitioned, if you need queue-wide flow control, use the queue's name as their shard key, so the queue's limits apply to all its workflows.
+
+### Child Workflows
+
+A workflow doesn't inherit its caller's shard key, so you must set the shard key of each child workflow.
+A child workflow that you start or call directly must have the same shard key as its parent:
+
+```python
+@DBOS.workflow()
+def parent_workflow():
+    with SetShardKey(DBOS.shard_key):
+        child_workflow()
+```
+
+A child workflow that you enqueue can have any shard key:
+
+```python
+@DBOS.workflow()
+def parent_workflow():
+    with SetShardKey("reports"):
+        handle = report_queue.enqueue(generate_report)
+    return handle.get_result()
+```
+
+### Interacting With Workflows
+
+Every method that operates on a workflow by its ID, such as [`DBOS.send`](../reference/contexts.md#send), [`DBOS.get_event`](../reference/contexts.md#get_event), [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow), and the [workflow management methods](../reference/contexts.md#workflow-management-methods), takes a `shard_key` parameter.
+On a sharded system database, you must pass the shard key of the workflow:
+
+```python
+DBOS.send(workflow_id, message, "topic", shard_key="orders")
+DBOS.cancel_workflow(workflow_id, shard_key="orders")
+```
+
+Methods that operate on several workflows at once, such as [`DBOS.cancel_workflows`](../reference/contexts.md#cancel_workflows) and [`DBOS.send_bulk`](../reference/contexts.md#send_bulk), only accept workflows under a single shard key per call.
+
+[`DBOS.list_workflows`](../reference/contexts.md#list_workflows) and [`DBOS.list_queued_workflows`](../reference/contexts.md#list_queued_workflows) list workflows across all shards.
+Each returned [`WorkflowStatus`](../reference/contexts.md#workflow-status) includes the workflow's `shard_key`, and you can filter by `shard_key` or `parent_shard_key`.
+
+[Scheduled workflows](./scheduled-workflows.md) run under the shard key of their schedule, which you set with the `shard_key` parameter of [`DBOS.create_schedule`](../reference/contexts.md#create_schedule).
+
+### Limitations
+
+The following features are not supported on a sharded system database:
+
+- [Queue deduplication](./queue-tutorial.md#deduplication) and [debouncing](../reference/contexts.md#debouncing).
+- [Kafka consumers](./kafka-integration.md).
+- [Auto-upgrade](./upgrading-workflows.md#auto-upgrading-workflows).
+- The `"reject"` [workflow ID reuse policy](../reference/contexts.md#setworkflowid), for workflows started from inside another workflow.
+- [Renaming an application](../reference/cli.md#dbos-rename-application) and [resetting the system database](../reference/cli.md#dbos-reset).
+- SQLite: a sharded system database must be Postgres-compatible.
+
+Of the [DBOS CLI](../reference/cli.md) commands, only `dbos migrate` supports a sharded system database.
+
+---
+
 ## Steps(3)
 
 When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a _step_.
@@ -43354,16 +43777,33 @@ When using patching, you use [`DBOS.patch()`](../reference/contexts.md#patch) to
 `DBOS.patch()` returns `True` for new workflows (those started after the breaking change) and `False` for old workflows (those started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
-To use patching, you must enable it in configuration:
+When using patching, processes running your new code must be able to recover workflows started on your old code.
+There are two ways to do this:
 
-```python
-config: DBOSConfig = {
-    "name": "dbos-app",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "enable_patching": True,
-}
-DBOS(config=config)
-```
+1. **Pin the application version.** Set a fixed application version in your configuration, so every deployment of your code shares the same version:
+
+   ```python
+   config: DBOSConfig = {
+       "name": "dbos-app",
+       "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+       "application_version": "1.0.0",
+   }
+   DBOS(config=config)
+   ```
+
+2. **Enable auto-upgrade.** Give each deployment its own application version, and let DBOS automatically move workflows from older versions to the latest version:
+
+   ```python
+   config: DBOSConfig = {
+       "name": "dbos-app",
+       "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+       "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+       "auto_upgrade": True,
+   }
+   DBOS(config=config)
+   ```
+
+   Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our workflow is:
 
@@ -43429,6 +43869,46 @@ If there is already a record present in this point in your workflow history, the
 When you deprecate a patch with `DBOS.deprecate_patch()`, new workflows no longer insert patch markers into their workflow history.
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, you can safely remove the patch entirely.
+
+#### Auto-Upgrading Workflows
+
+:::info
+Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.
+This way, processes running old code never pick up workflows started on new code, which their code can't handle.
+Meanwhile, workflows started on old code are upgraded to new code, so you don't have to keep old processes running until those workflows complete.
+**Only enable auto-upgrade for a workflow if every breaking change you make to it is [patched](#patching).**
+
+To enable auto-upgrade for all workflows in your application, set `auto_upgrade` in your configuration:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "auto_upgrade": True,
+}
+DBOS(config=config)
+```
+
+You can also enable or disable auto-upgrade for individual workflows with the `auto_upgrade` parameter of [`@DBOS.workflow`](../reference/decorators.md#workflow).
+A workflow that sets `auto_upgrade=True` is auto-upgraded even if `auto_upgrade` isn't set in your configuration, and a workflow that sets `auto_upgrade=False` is never auto-upgraded:
+
+```python
+@DBOS.workflow(auto_upgrade=False)
+def workflow_without_patches():
+  ...
+```
+
+Auto-upgrade runs in the background on processes running the latest application version.
+When auto-upgrade runs:
+
+- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
+If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
+To give processes running old code time to complete their `PENDING` workflows first, set `auto_upgrade_grace_sec`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that many seconds.
 
 ### Versioning
 
@@ -44087,8 +44567,26 @@ By contrast, the following is not allowed:
 Here, `step2` and `step4` may be started in either order since their execution depends on
 the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows and await
-their results, rather than interleaving step execution inside a single workflow.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with [`DBOS.reserve_step`](../reference/contexts.md#reserve_step), then run each step from its reservation.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```python
+    # Reserve step IDs in a deterministic order before starting any concurrent work
+    r1, r2, r3, r4 = [DBOS.reserve_step() for _ in range(4)]
+
+    async def seq_a():
+        await r1.run_async(None, step1, "arg1")
+        await r2.run_async(None, step2, "arg2")
+
+    async def seq_b():
+        await r3.run_async(None, step3, "arg3")
+        await r4.run_async(None, step4, "arg4")
+
+    results = await asyncio.gather(seq_a(), seq_b(), return_exceptions=True)
+    return results
+```
+
+Alternatively, run each sequence of operations in a child workflow and await their results.
 
 For proper error handling, when using `asyncio.gather()`, specify `return_exceptions=True`.
 Without `return_exceptions=True`, `gather` will raise any exception immediately
@@ -46780,7 +47278,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
-- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only.  For any complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
+- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only, unless every step's ID is reserved in advance with DBOS.reserveStep().  For any other complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
@@ -47177,7 +47675,26 @@ const results = await Promise.allSettled([
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with `DBOS.reserveStep()`, then run each step from its reservation with `run`, which takes the same arguments as `DBOS.runStep`.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```typescript
+// Reserve step IDs in a deterministic order before starting any concurrent work
+const [r1, r2, r3, r4] = [DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep()];
+const results = await Promise.allSettled([
+  (async () => {
+    await r1.run(() => step1("arg1"), { name: "step1" });
+    await r2.run(() => step2("arg2"), { name: "step2" });
+  })(),
+  (async () => {
+    await r3.run(() => step3("arg3"), { name: "step3" });
+    await r4.run(() => step4("arg4"), { name: "step4" });
+  })(),
+]);
+```
+
+`DBOS.reserveStep()` must be called from workflow code, outside any step, and each reservation must be run exactly once, from the workflow that reserved it.
+Alternatively, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
@@ -48563,14 +49080,31 @@ In patching, the result of a call to `DBOS.patch()` is used to conditionally exe
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you MUST enable it in the configuration; otherwise `DBOS.patch()` and `DBOS.deprecatePatch()` throw an error:
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed application version in the configuration so every deployment shares it:
 
 ```typescript
-const config: DBOSConfig = {
-  // ...
-  enablePatching: true,
-}
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  applicationVersion: '1.0.0',
+});
+await DBOS.launch();
 ```
+
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```typescript
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  autoUpgrade: true,
+  autoUpgradeGraceMs: 300_000, // Optional: wait before moving PENDING workflows
+});
+await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+Individual workflows can opt in or out with `@DBOS.workflow({ autoUpgrade: true })` or `@DBOS.workflow({ autoUpgrade: false })`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 ```typescript
 DBOS.patch(
@@ -48657,7 +49191,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
 All workflows are tagged with the application version on which they started.
-By default, application version is automatically computed from a hash of workflow source code (or is fixed to `PATCHING_ENABLED` if patching is enabled).
+By default, application version is automatically computed from a hash of workflow source code.
 However, you can set your own version through configuration.
 
 ```typescript
@@ -48670,6 +49204,11 @@ const config: DBOSConfig = {
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
+
+### Sharding
+
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
+On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
 ### Configuring DBOS
 
@@ -48711,7 +49250,6 @@ export interface DBOSConfig {
   listenQueues?: string[];
   maxConcurrentQueueDispatches?: number;
 
-  enablePatching?: boolean;
   serializer?: DBOSSerializer;
 }
 ```
@@ -48743,7 +49281,6 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
 - **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time. This prevents dequeuing from a large queue (especially a partitioned queue with many active partitions) from delaying work on smaller queues. A single queue is never dequeued from twice concurrently in the same process. Does not affect workflow concurrency, rate limits, or `systemDatabasePollingConcurrency`.
-- **enablePatching**: Enable workflow patching with `DBOS.patch()` and `DBOS.deprecatePatch()`. Defaults to false.
 - **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `name`, `stringify`, and `parse` methods.
 
 ````
@@ -48877,6 +49414,7 @@ This command does not migrate the tables used by [datasources](./datasource.md);
 - `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
 - `-r, --app-role <string>`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
 - `-s, --schema <string>`: The schema name for the DBOS system tables. Defaults to `dbos`.
+- `--sharding`: Create or migrate a [sharded system database](../tutorials/sharding.md).
 - `--print-migrations <all|NUMBER>`: Instead of running the migrations, print their SQL to standard output, either all of them (for a fresh database) or starting from a migration number (to upgrade an existing database). Postgres only.
 - `--print-user-role`: Instead of executing them, print the SQL statements granting `--app-role` access to the DBOS system tables.
 
@@ -48972,10 +49510,11 @@ interface ClientEnqueueOptions {
     authenticatedUser?: string;
     authenticatedRoles?: string[];
     applicationName?: string;
+    shardKey?: string;
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -48993,34 +49532,34 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     sendInTransaction<T>(client: ClientBase, destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
-    retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
+    retrieveWorkflow<T = unknown>(workflowID: string, options?: { shardKey?: string }): WorkflowHandle<Awaited<T>>;
     waitFirst(handles: WorkflowHandle<unknown>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<unknown>>;
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
 
-    getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
+    getWorkflow(workflowID: string, options?: { shardKey?: string }): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined>;
 
-    setWorkflowPriority(workflowID: string, priority: number): Promise<void>;
+    setWorkflowPriority(workflowID: string, priority: number, options?: { shardKey?: string }): Promise<void>;
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
-    cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
-    cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
-    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>>;
-    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
-    deleteWorkflow(workflowID: string, deleteChildren?: boolean): Promise<void>;
-    deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean): Promise<void>;
+    cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
+    cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
+    deleteWorkflow(workflowID: string, deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
+    deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string> }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string>; shardKey?: string }): Promise<string>;
 
     registerQueue(name: string, options?: RegisterQueueOptions & { applicationName?: string }): Promise<WorkflowQueue>;
     retrieveQueue(name: string): Promise<WorkflowQueue | null>;
     listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>;
     deleteQueue(name: string): Promise<void>;
 
-    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }; applicationName?: string }): Promise<void>;
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string; shardKey?: string }; applicationName?: string }): Promise<void>;
     updateSchedule(name: string, updates: { schedule?: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string | null; queueName?: string | null }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[]; applicationName?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
@@ -49054,6 +49593,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
+- **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 
 Example:
 
@@ -49106,6 +49646,7 @@ Additional but optional metadata includes:
 * **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`.
 * **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`.
 * **applicationName**: The application that owns and runs the enqueued workflow. Defaults to the client's own [`applicationName`](#create). Always set `applicationName` either here or in the client constructor if multiple applications share a system database.
+* **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 In addition to the `ClientEnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `ClientEnqueueOptions` parameter.
@@ -49225,7 +49766,7 @@ send<T>(
 ```
 
 Sends a message to a specified workflow. Similar to [`DBOS.send`](./methods.md#dbossend).
-The optional `ClientSendOptions` parameter allows specifying a [serialization strategy](./methods.md#serialization-strategy) via `serializationType`.
+The optional `ClientSendOptions` parameter allows specifying a [serialization strategy](./methods.md#serialization-strategy) via `serializationType` and the destination workflow's [shard key](../tutorials/sharding.md) via `shardKey`.
 
 :::warning
 Since DBOS Client is running outside of a DBOS application,
@@ -49337,6 +49878,7 @@ interface ReadStreamOptions {
   offset?: number;
   pollingIntervalMs?: number;
   timeoutSeconds?: number;
+  shardKey?: string;
 }
 ```
 
@@ -49351,6 +49893,7 @@ Similar to [`DBOS.readStream`](./methods.md#dbosreadstream), except that client 
 - **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream, so a reader that was disconnected after consuming _N_ values can resume with `offset: N` instead of replaying the whole stream. Must be a non-negative integer.
 - **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
 - **options.timeoutSeconds**: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
@@ -49906,7 +50449,12 @@ export interface DBOSConfig {
   name: string;
   applicationVersion?: string;
   executorID?: string;
-  enablePatching?: boolean;
+
+  transactEnterpriseKey?: string;
+  autoUpgrade?: boolean;
+  autoUpgradeIntervalMs?: number;
+  autoUpgradeGraceMs?: number;
+  sharding?: boolean;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -49938,7 +50486,7 @@ export interface DBOSConfig {
 ```
 
 In [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
-The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there, as is `enablePatching`'s effect on the application version (it still enables [`DBOS.patch`](./workflows-steps.md#patch)).
+The application version and executor ID also come from DBOS Cloud (`DBOS__APPVERSION` and `DBOS__VMID`), so `applicationVersion` and `executorID` are ignored there.
 
 #### Application Settings
 
@@ -49947,7 +50495,14 @@ Multiple applications (potentially in different languages) may [share a system d
 If you rename an application, transfer ownership of its data with [`npx dbos rename-application`](./cli.md#npx-dbos-rename-application).
 - **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
-- **enablePatching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code. Required to use [`DBOS.patch`](./workflows-steps.md#patch) and [`DBOS.deprecatePatch`](./workflows-steps.md#deprecatepatch).
+
+#### DBOS Transact Enterprise Settings
+
+- **transactEnterpriseKey**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **autoUpgrade**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `autoUpgrade: false` in their [`WorkflowConfig`](./workflows-steps.md#dbosworkflow). Requires DBOS Transact Enterprise. Defaults to `false`.
+- **autoUpgradeIntervalMs**: How often, in milliseconds, to check for workflows to auto-upgrade. Defaults to 30000 (30 seconds).
+- **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 
 #### Database Connection Settings
 
@@ -50414,6 +50969,7 @@ DBOS.migrate(
   options?: {
     schemaName?: string;
     applicationRole?: string;
+    sharding?: boolean;
   }
 ): Promise<void>
 ```
@@ -50426,6 +50982,7 @@ Run it with a privileged database role (for example, as part of your deployment'
 - **systemDatabaseUrl**: The system database to create or migrate. The database is created if it does not exist.
 - **schemaName**: The Postgres schema containing the DBOS system tables. Defaults to `dbos`.
 - **applicationRole**: A Postgres role to grant access to the DBOS system schema once it is migrated.
+- **sharding**: Whether to create or migrate a [sharded system database](../tutorials/sharding.md).
 
 **Example:**
 ```typescript
@@ -50534,6 +51091,25 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 - **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with `DBOS.withAuthedContext`).
 - **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`. Defaults to the caller's authenticated roles, if any.
 
+#### DBOS.withShardKey
+
+```typescript
+DBOS.withShardKey<R>(
+  shardKey: string,
+  callback: () => Promise<R>
+): Promise<R>
+```
+
+Set the [shard key](../tutorials/sharding.md) of every workflow started, enqueued, or called within `callback`.
+
+**Example:**
+
+```typescript
+await DBOS.withShardKey("orders", async () => {
+  await DBOS.startWorkflow(processOrder, { queueName: "orders" })(order);
+});
+```
+
 #### DBOS.waitFirst
 
 ```typescript
@@ -50606,6 +51182,7 @@ Messages can optionally be associated with a topic.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - **idempotencyKey**: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 - **options.serializationType**: The [serialization format](#serialization-strategy) to use for this message.
+- **options.shardKey**: The destination workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.recv
 
@@ -50674,6 +51251,7 @@ interface GetEventOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
   pollingIntervalMs?: number;
+  shardKey?: string;
 }
 ```
 
@@ -50687,6 +51265,7 @@ If the event does not yet exist, wait for it to be published, returning `null` i
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.sleep
 
@@ -50765,6 +51344,7 @@ interface ReadStreamOptions {
   offset?: number;
   pollingIntervalMs?: number;
   timeoutSeconds?: number;
+  shardKey?: string;
 }
 ```
 
@@ -50778,6 +51358,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 - **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream. Must be a non-negative integer.
 - **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
 - **options.timeoutSeconds**: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
@@ -50818,6 +51399,7 @@ Use this when you want one specific value instead of iterating the whole stream&
 - **offset**: The offset to read. Must be a non-negative integer.
 - **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for the value. Must be at least `1`.
 - **options.timeoutSeconds**: How long to wait for the value before throwing `DBOSStreamTimeoutError`. Defaults to waiting indefinitely.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value at the offset.
@@ -50844,6 +51426,7 @@ Use the `isStreamTimeoutError` helper, exported in the SDK's `Error` namespace (
 ```typescript
 DBOS.retrieveWorkflow<T>(
   workflowID: string,
+  options?: { shardKey?: string }
 ): WorkflowHandle<Awaited<T>> 
 ```
 
@@ -50851,12 +51434,14 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 
 **Parameters**:
 - **workflowID**: The ID of the workflow whose handle to retrieve.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.getWorkflowStatus
 
 ```typescript
 DBOS.getWorkflowStatus(
-  workflowID: string
+  workflowID: string,
+  options?: { shardKey?: string }
 ): Promise<WorkflowStatus | null>
 ```
 
@@ -50865,6 +51450,7 @@ Returns `null` if no workflow with the given ID exists.
 
 **Parameters**:
 - **workflowID**: The ID of the workflow whose status to retrieve.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### Workflow Management Methods
 
@@ -50901,6 +51487,8 @@ interface GetWorkflowsInput {
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).
   applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve only this application's workflows, unless workflowIDs is set.
+  shardKey?: string | string[]; // Retrieve workflows under this shard key (or any of these shard keys).
+  parentShardKey?: string | string[]; // Retrieve workflows whose parent is under this shard key (or any of these shard keys).
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -50936,11 +51524,19 @@ DBOS.listWorkflowSteps(
 interface ListWorkflowStepsOptions {
   limit?: number;
   offset?: number;
+  shardKey?: string;
 }
 ```
 
 Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 Steps are ordered by `functionID`. Use `limit` and `offset` to paginate results.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose steps to retrieve.
+- **options.limit**: The maximum number of steps to return.
+- **options.offset**: The number of steps to skip.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
+
 This query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 This is a list of `StepInfo` objects, with the following structure:
 
@@ -50968,7 +51564,8 @@ interface StepInfo {
 ```typescript
 DBOS.setWorkflowPriority(
   workflowID: string,
-  priority: number
+  priority: number,
+  options?: { shardKey?: string }
 ): Promise<void>
 ```
 
@@ -50978,6 +51575,7 @@ Only affects workflows with `ENQUEUED` or `DELAYED` status.
 **Parameters:**
 - **workflowID**: The ID of the workflow whose priority to update.
 - **priority**: Priority value (`0` to `2,147,483,647`). Lower values are dequeued first.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
 
@@ -50994,6 +51592,7 @@ DBOS.setWorkflowDelay(
 interface SetWorkflowDelayOptions {
   delaySeconds?: number;
   delayUntilEpochMS?: number;
+  shardKey?: string;
 }
 ```
 
@@ -51006,13 +51605,14 @@ Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
 - **options**:
   - **delaySeconds**: Delay the workflow by this many seconds from now. Must be greater than 0.
   - **delayUntilEpochMS**: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be greater than 0.
+  - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.cancelWorkflow
 
 ```typescript
 cancelWorkflow(
   workflowID: string,
-  options?: { cancelChildren?: boolean }
+  options?: { cancelChildren?: boolean; shardKey?: string }
 ): Promise<void>
 ```
 
@@ -51023,13 +51623,14 @@ A currently executing step is not interrupted, but it can observe the cancellati
 **Parameters:**
 - **workflowID**: The ID of the workflow to cancel.
 - **cancelChildren**: If true, also cancel all child workflows recursively. Defaults to false.
+- **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.cancelWorkflows
 
 ```typescript
 DBOS.cancelWorkflows(
   workflowIDs: string[],
-  options?: { cancelChildren?: boolean }
+  options?: { cancelChildren?: boolean; shardKey?: string }
 ): Promise<void>
 ```
 
@@ -51040,7 +51641,7 @@ Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) 
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string,
-  options?: { queueName?: string }
+  options?: { queueName?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
@@ -51058,7 +51659,7 @@ Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 ```typescript
 DBOS.resumeWorkflows<T>(
   workflowIDs: string[],
-  options?: { queueName?: string }
+  options?: { queueName?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>[]>
 ```
 
@@ -51070,7 +51671,8 @@ If any workflow does not exist, throws `DBOSNonExistentWorkflowError` and resume
 ```typescript
 DBOS.deleteWorkflow(
   workflowID: string,
-  deleteChildren?: boolean
+  deleteChildren?: boolean,
+  options?: { shardKey?: string }
 ): Promise<void>
 ```
 
@@ -51082,13 +51684,15 @@ This permanently removes the workflow from the system database.
 **Parameters:**
 - **workflowID**: The ID of the workflow to delete.
 - **deleteChildren**: If true, also delete all child workflows recursively. Defaults to false.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.deleteWorkflows
 
 ```typescript
 DBOS.deleteWorkflows(
   workflowIDs: string[],
-  deleteChildren?: boolean
+  deleteChildren?: boolean,
+  options?: { shardKey?: string }
 ): Promise<void>
 ```
 
@@ -51107,6 +51711,7 @@ static async forkWorkflow<T>(
     queueName?: string;
     queuePartitionKey?: string;
     replacementChildren?: Record<string, string>;
+    shardKey?: string;
   },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
@@ -51124,6 +51729,7 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 - **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
+- **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.rewindWorkflow
 
@@ -51135,6 +51741,7 @@ static async rewindWorkflow<T>(
     applicationVersion?: string;
     queueName?: string;
     queuePartitionKey?: string;
+    shardKey?: string;
   },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
@@ -51164,6 +51771,7 @@ Rewinding a workflow:
 - **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
 - **queueName**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
 - **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if `queueName` is a partitioned queue.
+- **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### Workflow Status
 
@@ -51239,6 +51847,12 @@ export interface WorkflowStatus {
 
   // The application that owns this workflow, or undefined if it is owned by no application.
   readonly applicationName?: string;
+
+  // The workflow's shard key
+  readonly shardKey?: string;
+
+  // The parent workflow's shard key
+  readonly parentShardKey?: string;
 }
 ```
 
@@ -51265,6 +51879,7 @@ interface ScheduleOptions {
   automaticBackfill?: boolean;
   cronTimezone?: string;
   queueName?: string;
+  shardKey?: string;
 }
 ```
 
@@ -51279,6 +51894,7 @@ If called from within a workflow, the operation is recorded as a step.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 - **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue. This is useful for managing the concurrency of scheduled workflows.
+- **options.shardKey**: The [shard key](../tutorials/sharding.md) of the schedule's workflows.
 
 Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
 Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name already exists (including one owned by a different application) throws an error.
@@ -51471,6 +52087,8 @@ interface WorkflowSchedule {
     queueName: string | null;
     // The application that owns this schedule, or undefined if it is owned by no application
     applicationName?: string;
+    // The shard key of the schedule's workflows
+    shardKey?: string;
 }
 ```
 
@@ -51566,6 +52184,14 @@ DBOS.workflowID: string | undefined;
 ```
 
 Return the ID of the current workflow, if in a workflow.
+
+#### DBOS.shardKey
+
+```typescript
+DBOS.shardKey: string | undefined;
+```
+
+Return the [shard key](../tutorials/sharding.md) of the current workflow, if in a workflow.
 
 #### DBOS.isInStep()
 ```typescript
@@ -51709,6 +52335,14 @@ handle.workflowID: string;
 ```
 
 Retrieve the ID of the workflow.
+
+#### handle.shardKey
+
+```typescript
+handle.shardKey: string | undefined;
+```
+
+The workflow's [shard key](../tutorials/sharding.md).
 
 #### handle.getResult
 
@@ -52093,6 +52727,7 @@ export interface WorkflowConfig {
   maxRecoveryAttempts?: number;
   serialization?: "portable" | "native";
   inputSchema?: InputSchema;
+  autoUpgrade?: boolean;
 }
 
 export interface InputSchema {
@@ -52124,6 +52759,7 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
   - **inputSchema**: A schema for validating and optionally transforming workflow input arguments. Must have a `.parse()` method, making it compatible with [Zod](https://zod.dev/) schemas, AJV wrappers, or any custom validator. The schema receives the arguments as an array (tuple) and should return the validated/transformed array. Runs before the workflow function on every invocation (direct call, queue dispatch, and recovery). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
+  - **autoUpgrade**: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow, automatically moving instances of it left on older application versions to the latest version. If `true`, the workflow is auto-upgraded even if [`autoUpgrade`](./configuration.md#dbos-transact-enterprise-settings) isn't set in your configuration; if `false`, it is never auto-upgraded. If not set, follows `autoUpgrade` in your configuration. Requires [DBOS Transact Enterprise](../../explanations/transact-enterprise.md).
 
 #### DBOS.registerWorkflow
 
@@ -52172,6 +52808,7 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
   - **inputSchema**: A schema for validating/transforming input arguments. See [`WorkflowConfig`](#dbosworkflow) above.
+  - **autoUpgrade**: Whether to [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) this workflow. See [`WorkflowConfig`](#dbosworkflow) above.
 
 ### Input Validation and Coercion
 
@@ -52373,6 +53010,44 @@ async function exampleWorkflow() {
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
 
+#### DBOS.reserveStep
+
+```typescript
+DBOS.reserveStep(): StepReservation
+```
+
+```typescript
+class StepReservation {
+  readonly stepID: number;
+
+  run<Return>(
+    func: () => Promise<Return>,
+    config: StepConfig & { name?: string } = {}
+  ): Promise<Return>
+}
+```
+
+Reserve the next step ID in the current workflow, so a step can run at that position in the workflow's history later.
+Use this when steps in a workflow would otherwise start in a nondeterministic order.
+Must be called from a workflow, outside of any step.
+
+Run the reserved step with `run`, which takes the same arguments as [`runStep`](#dbosrunstep).
+Each reservation can be used only once.
+If a reservation is never used, its step ID is left unused, which is safe and does not affect recovery.
+
+**Example:**
+
+```typescript
+async function exampleWorkflow() {
+  const first = DBOS.reserveStep();
+  const second = DBOS.reserveStep();
+  // second's step may start before first's, but is always recorded after it
+  const secondResult = second.run(() => stepTwo(), { name: "stepTwo" });
+  const firstResult = await first.run(() => stepOne(), { name: "stepOne" });
+  return [firstResult, await secondResult];
+}
+```
+
 ### Class Names
 
 Workflows are uniquely identified by a class name + function name pair.
@@ -52472,7 +53147,7 @@ DBOS.patch(
 
 Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted (or this patch marker is already present) and `false` if a different checkpoint is already present at this point in history, indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
-Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
+Must be called from a workflow.
 
 **Parameters:**
 - `patchName`: The name to give the patch marker that will be inserted into workflow history.
@@ -52487,8 +53162,8 @@ DBOS.deprecatePatch(
 
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `true`.
-Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
-Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Must be called from a workflow.
 
 **Parameters:**
 - `patchName`: The name of the patch marker to be bypassed.
@@ -53786,6 +54461,137 @@ For the full API reference, see [Workflow Schedules](../reference/methods.md#wor
 
 ---
 
+## Sharding(Tutorials)
+
+:::info
+Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+A DBOS application using a single Postgres system database can run tens of thousands of workflows per second.
+To scale beyond that, you can **shard** your system database across multiple Postgres servers using a Postgres-compatible sharding layer such as [Citus](https://www.citusdata.com/) or [PgDog](https://pgdog.dev/).
+
+When you shard your system database, every workflow lives under a **shard key** that you assign it.
+All of a workflow's data (its status, inputs, outputs, steps, events, messages, and streams) is stored on the shard that owns its key, so every operation on a workflow touches a single shard.
+
+### Setting Up a Sharded System Database
+
+To use a sharded system database, set `sharding` in your DBOS configuration and point `systemDatabaseUrl` at your sharding router (for example, a Citus coordinator or PgDog router):
+
+```typescript
+DBOS.setConfig({
+  name: "dbos-app",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  sharding: true,
+});
+await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+When DBOS launches, it creates the sharded system database schema through your sharding layer.
+In production, we recommend you create the schema ahead of time with [`npx dbos schema --sharding`](../reference/cli.md#npx-dbos-schema).
+
+Every DBOS table has a `shard_key` column.
+You may need to configure your sharding engine to shard on that column, for example in PgDog's `pgdog.toml`:
+
+```toml title="pgdog.toml"
+[[sharded_tables]]
+database = "dbos"
+column = "shard_key"
+data_type = "varchar"
+```
+
+To connect a [`DBOSClient`](../reference/client.md) to a sharded system database, create it with `sharding: true`.
+
+### Assigning Shard Keys
+
+On a sharded system database, you must assign a shard key to every workflow you start or enqueue.
+Use [`DBOS.withShardKey`](../reference/methods.md#dboswithshardkey) to set the shard key of every workflow started, enqueued, or called within a callback:
+
+```typescript
+await DBOS.withShardKey("orders", async () => {
+  await DBOS.startWorkflow(processOrder, { queueName: "orders" })(order);
+});
+```
+
+From a [`DBOSClient`](../reference/client.md#enqueue), set `shardKey` in the enqueue options:
+
+```typescript
+const handle = await client.enqueue(
+  {
+    workflowName: "processOrder",
+    queueName: "orders",
+    shardKey: "orders",
+  },
+  order,
+);
+```
+
+Workflow IDs are unique only within a shard key: two workflows with the same ID under different shard keys are different workflows.
+Thus, to identify a workflow on a sharded system database, you need both its ID and its shard key.
+Within a workflow, [`DBOS.shardKey`](../reference/methods.md#dbosshardkey) returns the shard key of the current workflow.
+
+#### Choosing Shard Keys
+
+Queue [flow control](./queue-tutorial.md#managing-concurrency) limits (its global concurrency limit, rate limit, and partition limits) are enforced separately within each shard key: for example, a queue with a global concurrency of 10 can run 10 workflows under each shard key.
+Worker concurrency limits still apply across all shard keys.
+
+Therefore, we recommend choosing shard keys based on how you enqueue workflows:
+
+- For workflows enqueued on a [partitioned queue](./queue-tutorial.md#partitioning-queues), use their partition key as their shard key. Each partition then lives on one shard, and its partition limits work as they would on an unsharded database.
+- For workflows enqueued on a queue that isn't partitioned, if you need queue-wide flow control, use the queue's name as their shard key, so the queue's limits apply to all its workflows.
+
+### Child Workflows
+
+A workflow doesn't inherit its caller's shard key, so you must set the shard key of each child workflow.
+A child workflow that you start or call directly must have the same shard key as its parent:
+
+```typescript
+async function parentWorkflow() {
+  await DBOS.withShardKey(DBOS.shardKey!, () => childWorkflow());
+}
+```
+
+A child workflow that you enqueue can have any shard key:
+
+```typescript
+async function parentWorkflow() {
+  const handle = await DBOS.withShardKey("reports", () =>
+    DBOS.startWorkflow(generateReport, { queueName: "reports" })(),
+  );
+  return await handle.getResult();
+}
+```
+
+### Interacting With Workflows
+
+Every method that operates on a workflow by its ID, such as [`DBOS.send`](../reference/methods.md#dbossend), [`DBOS.getEvent`](../reference/methods.md#dbosgetevent), [`DBOS.retrieveWorkflow`](../reference/methods.md#dbosretrieveworkflow), and the [workflow management methods](../reference/methods.md#workflow-management-methods), takes a `shardKey` option.
+On a sharded system database, you must pass the shard key of the workflow:
+
+```typescript
+await DBOS.send(workflowID, message, "topic", undefined, { shardKey: "orders" });
+await DBOS.cancelWorkflow(workflowID, { shardKey: "orders" });
+```
+
+Methods that operate on several workflows at once, such as [`DBOS.cancelWorkflows`](../reference/methods.md#dboscancelworkflows), only accept workflows under a single shard key per call.
+
+[`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) and [`DBOS.listQueuedWorkflows`](../reference/methods.md#dboslistqueuedworkflows) list workflows across all shards.
+Each returned [`WorkflowStatus`](../reference/methods.md#workflow-status) includes the workflow's `shardKey`, and you can filter by `shardKey` or `parentShardKey`.
+
+[Scheduled workflows](./scheduled-workflows.md) run under the shard key of their schedule, which you set with the `shardKey` option of [`DBOS.createSchedule`](../reference/methods.md#dboscreateschedule).
+
+### Limitations
+
+The following features are not supported on a sharded system database:
+
+- [Queue deduplication](./queue-tutorial.md#deduplication) and [debouncing](../reference/methods.md#debouncing).
+- [Kafka consumers](./externalmessages.md).
+- [Auto-upgrade](./upgrading-workflows.md#auto-upgrading-workflows).
+- The `'reject'` [workflow ID reuse policy](../reference/methods.md#dbosstartworkflow), for workflows started from inside another workflow.
+- [Renaming an application](../reference/cli.md#npx-dbos-rename-application) and [resetting the system database](../reference/cli.md#npx-dbos-reset).
+
+Of the [DBOS CLI](../reference/cli.md) commands, only [`npx dbos schema`](../reference/cli.md#npx-dbos-schema) supports a sharded system database.
+
+---
+
 ## Steps(4)
 
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
@@ -54556,16 +55362,32 @@ In patching, the result of a call to [`DBOS.patch()`](../reference/workflows-ste
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you must enable it in the configuration:
+When using patching, processes running your new code must be able to recover workflows started on your old code.
+There are two ways to do this:
 
-```typescript
-const config: DBOSConfig = {
-  // ...
-  enablePatching: true,
-};
-```
+1. **Pin the application version.** Set a fixed application version in your configuration, so every deployment of your code shares the same version:
 
-If you enable patching and don't set `applicationVersion`, DBOS uses the fixed application version `PATCHING_ENABLED` instead of computing one from your code, so workflows started while patching is enabled can be recovered by processes running newer code.
+   ```typescript
+   DBOS.setConfig({
+     name: 'dbos-app',
+     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+     applicationVersion: '1.0.0',
+   });
+   await DBOS.launch();
+   ```
+
+2. **Enable auto-upgrade.** Give each deployment its own application version, and let DBOS automatically move workflows from older versions to the latest version:
+
+   ```typescript
+   DBOS.setConfig({
+     name: 'dbos-app',
+     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+     autoUpgrade: true,
+   });
+   await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+   ```
+
+   Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our original workflow is:
 
@@ -54639,6 +55461,46 @@ If there is already a record present in this point in your workflow history and 
 When you deprecate a patch with `DBOS.deprecatePatch()`, new workflows no longer insert patch markers into their workflow history.
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, the patch may be safely removed.
+
+#### Auto-Upgrading Workflows
+
+:::info
+Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.
+This way, processes running old code never pick up workflows started on new code, which their code can't handle.
+Meanwhile, workflows started on old code are upgraded to new code, so you don't have to keep old processes running until those workflows complete.
+**Only enable auto-upgrade for a workflow if every breaking change you make to it is [patched](#patching).**
+
+To enable auto-upgrade for all workflows in your application, set `autoUpgrade` in your configuration:
+
+```typescript
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  autoUpgrade: true,
+});
+await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+You can also enable or disable auto-upgrade for individual workflows with the `autoUpgrade` field of [`WorkflowConfig`](../reference/workflows-steps.md#dbosworkflow).
+A workflow that sets `autoUpgrade: true` is auto-upgraded even if `autoUpgrade` isn't set in your configuration, and a workflow that sets `autoUpgrade: false` is never auto-upgraded:
+
+```typescript
+@DBOS.workflow({ autoUpgrade: false })
+static async workflowWithoutPatches() {
+  // ...
+}
+```
+
+Auto-upgrade runs in the background on processes running the latest application version.
+When auto-upgrade runs:
+
+- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
+If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
+To give processes running old code time to complete their `PENDING` workflows first, set `autoUpgradeGraceMs`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that many milliseconds.
 
 ### Versioning
 
@@ -55222,7 +56084,25 @@ const results = await Promise.allSettled([
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows with [`startWorkflow`](#starting-workflows-in-the-background) and await the results from their `WorkflowHandle`s.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with [`DBOS.reserveStep`](../reference/workflows-steps.md#dbosreservestep), then run each step from its reservation.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```typescript
+// Reserve step IDs in a deterministic order before starting any concurrent work
+const [r1, r2, r3, r4] = [DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep()];
+const results = await Promise.allSettled([
+  (async () => {
+    await r1.run(() => step1("arg1"), { name: "step1" });
+    await r2.run(() => step2("arg2"), { name: "step2" });
+  })(),
+  (async () => {
+    await r3.run(() => step3("arg3"), { name: "step3" });
+    await r4.run(() => step4("arg4"), { name: "step4" });
+  })(),
+]);
+```
+
+Alternatively, start child workflows with [`startWorkflow`](#starting-workflows-in-the-background) and await the results from their `WorkflowHandle`s.
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 

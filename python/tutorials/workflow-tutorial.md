@@ -244,8 +244,26 @@ By contrast, the following is not allowed:
 Here, `step2` and `step4` may be started in either order since their execution depends on
 the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows and await
-their results, rather than interleaving step execution inside a single workflow.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with [`DBOS.reserve_step`](../reference/contexts.md#reserve_step), then run each step from its reservation.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```python
+    # Reserve step IDs in a deterministic order before starting any concurrent work
+    r1, r2, r3, r4 = [DBOS.reserve_step() for _ in range(4)]
+
+    async def seq_a():
+        await r1.run_async(None, step1, "arg1")
+        await r2.run_async(None, step2, "arg2")
+
+    async def seq_b():
+        await r3.run_async(None, step3, "arg3")
+        await r4.run_async(None, step4, "arg4")
+
+    results = await asyncio.gather(seq_a(), seq_b(), return_exceptions=True)
+    return results
+```
+
+Alternatively, run each sequence of operations in a child workflow and await their results.
 
 For proper error handling, when using `asyncio.gather()`, specify `return_exceptions=True`.
 Without `return_exceptions=True`, `gather` will raise any exception immediately

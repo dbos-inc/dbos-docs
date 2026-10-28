@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.ad7bb872.js" defer="defer"></script>
-<script src="/assets/js/main.57157f33.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.37f9a4ff.js" defer="defer"></script>
+<script src="/assets/js/main.606059ae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -146,6 +146,7 @@ This command does not migrate the tables used by <a class="" href="/python/refer
 <li class=""><code>-s, --sys-db-url URL</code>: A connection string for your DBOS <a class="" href="/explanations/system-tables">system database</a>, in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.</li>
 <li class=""><code>-r, --app-role</code>: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.</li>
 <li class=""><code>--schema TEXT</code>: The schema name for the DBOS system tables. Defaults to <code>dbos</code>.</li>
+<li class=""><code>--sharding</code>: Create or migrate a <a class="" href="/python/tutorials/sharding">sharded system database</a>.</li>
 <li class=""><code>--print-migrations [all|NUMBER]</code>: Instead of running the migrations, print their SQL to standard output, either all of them (for a fresh database) or starting from a migration number (to upgrade an existing database). Postgres only.</li>
 <li class=""><code>--print-user-role</code>: Instead of executing them, print the SQL statements granting <code>--app-role</code> access to the DBOS system tables.</li>
 </ul>

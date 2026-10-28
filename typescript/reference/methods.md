@@ -94,6 +94,25 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 - **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with `DBOS.withAuthedContext`).
 - **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`. Defaults to the caller's authenticated roles, if any.
 
+### DBOS.withShardKey
+
+```typescript
+DBOS.withShardKey<R>(
+  shardKey: string,
+  callback: () => Promise<R>
+): Promise<R>
+```
+
+Set the [shard key](../tutorials/sharding.md) of every workflow started, enqueued, or called within `callback`.
+
+**Example:**
+
+```typescript
+await DBOS.withShardKey("orders", async () => {
+  await DBOS.startWorkflow(processOrder, { queueName: "orders" })(order);
+});
+```
+
 ### DBOS.waitFirst
 
 ```typescript
@@ -166,6 +185,7 @@ Messages can optionally be associated with a topic.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - **idempotencyKey**: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 - **options.serializationType**: The [serialization format](#serialization-strategy) to use for this message.
+- **options.shardKey**: The destination workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.recv
 
@@ -234,6 +254,7 @@ interface GetEventOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
   pollingIntervalMs?: number;
+  shardKey?: string;
 }
 ```
 
@@ -247,6 +268,7 @@ If the event does not yet exist, wait for it to be published, returning `null` i
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.sleep
 
@@ -325,6 +347,7 @@ interface ReadStreamOptions {
   offset?: number;
   pollingIntervalMs?: number;
   timeoutSeconds?: number;
+  shardKey?: string;
 }
 ```
 
@@ -338,6 +361,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 - **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream. Must be a non-negative integer.
 - **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
 - **options.timeoutSeconds**: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
@@ -378,6 +402,7 @@ Use this when you want one specific value instead of iterating the whole stream&
 - **offset**: The offset to read. Must be a non-negative integer.
 - **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for the value. Must be at least `1`.
 - **options.timeoutSeconds**: How long to wait for the value before throwing `DBOSStreamTimeoutError`. Defaults to waiting indefinitely.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 **Returns:**
 - The value at the offset.
@@ -404,6 +429,7 @@ Use the `isStreamTimeoutError` helper, exported in the SDK's `Error` namespace (
 ```typescript
 DBOS.retrieveWorkflow<T>(
   workflowID: string,
+  options?: { shardKey?: string }
 ): WorkflowHandle<Awaited<T>> 
 ```
 
@@ -411,12 +437,14 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 
 **Parameters**:
 - **workflowID**: The ID of the workflow whose handle to retrieve.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.getWorkflowStatus
 
 ```typescript
 DBOS.getWorkflowStatus(
-  workflowID: string
+  workflowID: string,
+  options?: { shardKey?: string }
 ): Promise<WorkflowStatus | null>
 ```
 
@@ -425,6 +453,7 @@ Returns `null` if no workflow with the given ID exists.
 
 **Parameters**:
 - **workflowID**: The ID of the workflow whose status to retrieve.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ## Workflow Management Methods
 
@@ -461,6 +490,8 @@ interface GetWorkflowsInput {
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).
   applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve only this application's workflows, unless workflowIDs is set.
+  shardKey?: string | string[]; // Retrieve workflows under this shard key (or any of these shard keys).
+  parentShardKey?: string | string[]; // Retrieve workflows whose parent is under this shard key (or any of these shard keys).
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -496,11 +527,19 @@ DBOS.listWorkflowSteps(
 interface ListWorkflowStepsOptions {
   limit?: number;
   offset?: number;
+  shardKey?: string;
 }
 ```
 
 Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 Steps are ordered by `functionID`. Use `limit` and `offset` to paginate results.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose steps to retrieve.
+- **options.limit**: The maximum number of steps to return.
+- **options.offset**: The number of steps to skip.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
+
 This query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 This is a list of `StepInfo` objects, with the following structure:
 
@@ -528,7 +567,8 @@ interface StepInfo {
 ```typescript
 DBOS.setWorkflowPriority(
   workflowID: string,
-  priority: number
+  priority: number,
+  options?: { shardKey?: string }
 ): Promise<void>
 ```
 
@@ -538,6 +578,7 @@ Only affects workflows with `ENQUEUED` or `DELAYED` status.
 **Parameters:**
 - **workflowID**: The ID of the workflow whose priority to update.
 - **priority**: Priority value (`0` to `2,147,483,647`). Lower values are dequeued first.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
 
@@ -554,6 +595,7 @@ DBOS.setWorkflowDelay(
 interface SetWorkflowDelayOptions {
   delaySeconds?: number;
   delayUntilEpochMS?: number;
+  shardKey?: string;
 }
 ```
 
@@ -566,13 +608,14 @@ Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
 - **options**:
   - **delaySeconds**: Delay the workflow by this many seconds from now. Must be greater than 0.
   - **delayUntilEpochMS**: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be greater than 0.
+  - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.cancelWorkflow
 
 ```typescript
 cancelWorkflow(
   workflowID: string,
-  options?: { cancelChildren?: boolean }
+  options?: { cancelChildren?: boolean; shardKey?: string }
 ): Promise<void>
 ```
 
@@ -583,13 +626,14 @@ A currently executing step is not interrupted, but it can observe the cancellati
 **Parameters:**
 - **workflowID**: The ID of the workflow to cancel.
 - **cancelChildren**: If true, also cancel all child workflows recursively. Defaults to false.
+- **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.cancelWorkflows
 
 ```typescript
 DBOS.cancelWorkflows(
   workflowIDs: string[],
-  options?: { cancelChildren?: boolean }
+  options?: { cancelChildren?: boolean; shardKey?: string }
 ): Promise<void>
 ```
 
@@ -600,7 +644,7 @@ Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) 
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string,
-  options?: { queueName?: string }
+  options?: { queueName?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
@@ -618,7 +662,7 @@ Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 ```typescript
 DBOS.resumeWorkflows<T>(
   workflowIDs: string[],
-  options?: { queueName?: string }
+  options?: { queueName?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>[]>
 ```
 
@@ -630,7 +674,8 @@ If any workflow does not exist, throws `DBOSNonExistentWorkflowError` and resume
 ```typescript
 DBOS.deleteWorkflow(
   workflowID: string,
-  deleteChildren?: boolean
+  deleteChildren?: boolean,
+  options?: { shardKey?: string }
 ): Promise<void>
 ```
 
@@ -642,13 +687,15 @@ This permanently removes the workflow from the system database.
 **Parameters:**
 - **workflowID**: The ID of the workflow to delete.
 - **deleteChildren**: If true, also delete all child workflows recursively. Defaults to false.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.deleteWorkflows
 
 ```typescript
 DBOS.deleteWorkflows(
   workflowIDs: string[],
-  deleteChildren?: boolean
+  deleteChildren?: boolean,
+  options?: { shardKey?: string }
 ): Promise<void>
 ```
 
@@ -667,6 +714,7 @@ static async forkWorkflow<T>(
     queueName?: string;
     queuePartitionKey?: string;
     replacementChildren?: Record<string, string>;
+    shardKey?: string;
   },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
@@ -684,6 +732,7 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 - **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
+- **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.rewindWorkflow
 
@@ -695,6 +744,7 @@ static async rewindWorkflow<T>(
     applicationVersion?: string;
     queueName?: string;
     queuePartitionKey?: string;
+    shardKey?: string;
   },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
@@ -724,6 +774,7 @@ Rewinding a workflow:
 - **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
 - **queueName**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
 - **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if `queueName` is a partitioned queue.
+- **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### Workflow Status
 
@@ -799,6 +850,12 @@ export interface WorkflowStatus {
 
   // The application that owns this workflow, or undefined if it is owned by no application.
   readonly applicationName?: string;
+
+  // The workflow's shard key
+  readonly shardKey?: string;
+
+  // The parent workflow's shard key
+  readonly parentShardKey?: string;
 }
 ```
 
@@ -825,6 +882,7 @@ interface ScheduleOptions {
   automaticBackfill?: boolean;
   cronTimezone?: string;
   queueName?: string;
+  shardKey?: string;
 }
 ```
 
@@ -839,6 +897,7 @@ If called from within a workflow, the operation is recorded as a step.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 - **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue. This is useful for managing the concurrency of scheduled workflows.
+- **options.shardKey**: The [shard key](../tutorials/sharding.md) of the schedule's workflows.
 
 Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
 Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name already exists (including one owned by a different application) throws an error.
@@ -1031,6 +1090,8 @@ interface WorkflowSchedule {
     queueName: string | null;
     // The application that owns this schedule, or undefined if it is owned by no application
     applicationName?: string;
+    // The shard key of the schedule's workflows
+    shardKey?: string;
 }
 ```
 
@@ -1126,6 +1187,14 @@ DBOS.workflowID: string | undefined;
 ```
 
 Return the ID of the current workflow, if in a workflow.
+
+### DBOS.shardKey
+
+```typescript
+DBOS.shardKey: string | undefined;
+```
+
+Return the [shard key](../tutorials/sharding.md) of the current workflow, if in a workflow.
 
 ### DBOS.isInStep()
 ```typescript
@@ -1269,6 +1338,14 @@ handle.workflowID: string;
 ```
 
 Retrieve the ID of the workflow.
+
+### handle.shardKey
+
+```typescript
+handle.shardKey: string | undefined;
+```
+
+The workflow's [shard key](../tutorials/sharding.md).
 
 ### handle.getResult
 

@@ -57,7 +57,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, or getting the current time.
-- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only.  For any complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
+- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only, unless every step's ID is reserved in advance with DBOS.reserveStep().  For any other complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
@@ -454,7 +454,26 @@ const results = await Promise.allSettled([
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
 
-If you need to run sequences of operations concurrently, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
+To run sequences of steps concurrently in a single workflow, reserve their step IDs in a deterministic order with `DBOS.reserveStep()`, then run each step from its reservation with `run`, which takes the same arguments as `DBOS.runStep`.
+Each step is recorded at its reserved position in the workflow's history, no matter when it actually starts:
+
+```typescript
+// Reserve step IDs in a deterministic order before starting any concurrent work
+const [r1, r2, r3, r4] = [DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep(), DBOS.reserveStep()];
+const results = await Promise.allSettled([
+  (async () => {
+    await r1.run(() => step1("arg1"), { name: "step1" });
+    await r2.run(() => step2("arg2"), { name: "step2" });
+  })(),
+  (async () => {
+    await r3.run(() => step3("arg3"), { name: "step3" });
+    await r4.run(() => step4("arg4"), { name: "step4" });
+  })(),
+]);
+```
+
+`DBOS.reserveStep()` must be called from workflow code, outside any step, and each reservation must be run exactly once, from the workflow that reserved it.
+Alternatively, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
 
 Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
@@ -1840,14 +1859,31 @@ In patching, the result of a call to `DBOS.patch()` is used to conditionally exe
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you MUST enable it in the configuration; otherwise `DBOS.patch()` and `DBOS.deprecatePatch()` throw an error:
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed application version in the configuration so every deployment shares it:
 
 ```typescript
-const config: DBOSConfig = {
-  // ...
-  enablePatching: true,
-}
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  applicationVersion: '1.0.0',
+});
+await DBOS.launch();
 ```
+
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```typescript
+DBOS.setConfig({
+  name: 'dbos-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  autoUpgrade: true,
+  autoUpgradeGraceMs: 300_000, // Optional: wait before moving PENDING workflows
+});
+await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+Individual workflows can opt in or out with `@DBOS.workflow({ autoUpgrade: true })` or `@DBOS.workflow({ autoUpgrade: false })`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 ```typescript
 DBOS.patch(
@@ -1934,7 +1970,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
 All workflows are tagged with the application version on which they started.
-By default, application version is automatically computed from a hash of workflow source code (or is fixed to `PATCHING_ENABLED` if patching is enabled).
+By default, application version is automatically computed from a hash of workflow source code.
 However, you can set your own version through configuration.
 
 ```typescript
@@ -1947,6 +1983,11 @@ const config: DBOSConfig = {
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
+
+## Sharding
+
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
+On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
 ## Configuring DBOS
 
@@ -1988,7 +2029,6 @@ export interface DBOSConfig {
   listenQueues?: string[];
   maxConcurrentQueueDispatches?: number;
 
-  enablePatching?: boolean;
   serializer?: DBOSSerializer;
 }
 ```
@@ -2020,7 +2060,6 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
 - **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time. This prevents dequeuing from a large queue (especially a partitioned queue with many active partitions) from delaying work on smaller queues. A single queue is never dequeued from twice concurrently in the same process. Does not affect workflow concurrency, rate limits, or `systemDatabasePollingConcurrency`.
-- **enablePatching**: Enable workflow patching with `DBOS.patch()` and `DBOS.deprecatePatch()`. Defaults to false.
 - **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `name`, `stringify`, and `parse` methods.
 
 ````

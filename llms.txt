@@ -43,6 +43,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Cross-Language Interaction](https://docs.dbos.dev/explanations/portable-workflows.md): DBOS applications and clients in different languages can interoperate using portable JSON serialization
 - [Sharing a System Database](https://docs.dbos.dev/explanations/sharing-a-system-database.md): Multiple DBOS applications, potentially in different languages, can share a single system database.
 - [DBOS System Database](https://docs.dbos.dev/explanations/system-tables.md): DBOS system database reference
+- [DBOS Transact Enterprise](https://docs.dbos.dev/explanations/transact-enterprise.md): **DBOS Transact Enterprise** is the commercial extension to the open-source (MIT license) DBOS Transact library.
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): DBOS checkpoints information about your workflows in an isolated _system database_ in your Postgres database server.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): :::info
 - [Add DBOS To Your App](https://docs.dbos.dev/golang/integrating-dbos.md): This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-golang) library to your existing applicat...
@@ -137,11 +138,11 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Workflow Handles](https://docs.dbos.dev/python/reference/workflow_handles.md): API reference for DBOS workflow handles
 - [Authentication and Authorization](https://docs.dbos.dev/python/tutorials/authentication-authorization.md): Use declarative security and authentication middleware in DBOS
 - [Working With Python Classes](https://docs.dbos.dev/python/tutorials/classes.md): You can add DBOS decorators to your Python class instance methods.
-- [DBOS Database Connections](https://docs.dbos.dev/python/tutorials/database-connection.md): DBOS uses a database to durably store workflow and step state.
 - [Integrating with Kafka](https://docs.dbos.dev/python/tutorials/kafka-integration.md): Overview of using DBOS with Kafka
 - [Logging & Tracing](https://docs.dbos.dev/python/tutorials/logging-and-tracing.md): For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/contexts.md#logger).
 - [Queues & Concurrency](https://docs.dbos.dev/python/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Scheduling Workflows](https://docs.dbos.dev/python/tutorials/scheduled-workflows.md): You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
+- [Sharding](https://docs.dbos.dev/python/tutorials/sharding.md): :::info
 - [Steps](https://docs.dbos.dev/python/tutorials/step-tutorial.md): When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a _step_.
 - [Testing Your App](https://docs.dbos.dev/python/tutorials/testing.md): Because DBOS workflows, steps, and transactions are ordinary Python functions, you can unit test them using any Python testing framework, like [pyt...
 - [Transactions & Datasources](https://docs.dbos.dev/python/tutorials/transaction-tutorial.md): Learn how to perform database operations
@@ -170,6 +171,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Logging & Tracing](https://docs.dbos.dev/typescript/tutorials/logging.md): For convenience, DBOS provides a logging facility accessed via [`DBOS.logger`](../reference/methods.md#dboslogger).
 - [Queues & Concurrency](https://docs.dbos.dev/typescript/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Scheduling Workflows](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows.md): You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
+- [Sharding](https://docs.dbos.dev/typescript/tutorials/sharding.md): :::info
 - [Steps](https://docs.dbos.dev/typescript/tutorials/step-tutorial.md): Learn how to communicate with external APIs and services
 - [Testing & Mocking](https://docs.dbos.dev/typescript/tutorials/testing.md): You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like [Jest](https://jestjs.io/) or [Vitest](https://vit...
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial.md): Learn how to perform database operations

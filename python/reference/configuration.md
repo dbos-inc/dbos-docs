@@ -20,7 +20,6 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    enable_patching: Optional[bool]
     application_version: Optional[str]
     executor_id: Optional[str]
 
@@ -41,6 +40,12 @@ class DBOSConfig(TypedDict):
     conductor_url: Optional[str]
     conductor_executor_metadata: Optional[Dict[str, Any]]
     conductor_metadata_only_mode: Optional[bool]
+
+    transact_enterprise_key: Optional[str]
+    auto_upgrade: Optional[bool]
+    auto_upgrade_interval_sec: Optional[float]
+    auto_upgrade_grace_sec: Optional[float]
+    sharding: Optional[bool]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -66,8 +71,6 @@ class DBOSConfig(TypedDict):
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`dbos rename-application`](./cli.md#dbos-rename-application).
-- **enable_patching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
-Required to use [`DBOS.patch`](./contexts.md#patch) and [`DBOS.deprecate_patch`](./contexts.md#deprecate_patch), which otherwise raise a `DBOSException`.
 - **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
@@ -121,6 +124,14 @@ A system database ahead of the required version is accepted, so a process with m
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
 - **conductor_metadata_only_mode**: If `True`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context), regardless of the [metadata-only mode](../../conductor/overview.md#metadata-only-mode) setting in the Conductor console. Defaults to `False`.
+
+### DBOS Transact Enterprise Settings
+
+- **transact_enterprise_key**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `conductor_key`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **auto_upgrade**: If `True`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `auto_upgrade=False` in [`@DBOS.workflow`](./decorators.md#workflow). Requires DBOS Transact Enterprise. Defaults to `False`.
+- **auto_upgrade_interval_sec**: How often, in seconds, to check for workflows to auto-upgrade. Defaults to 30 seconds.
+- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 
 ### Logging and Tracing Settings
 

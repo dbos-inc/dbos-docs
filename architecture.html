@@ -13,8 +13,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.ad7bb872.js" defer="defer"></script>
-<script src="/assets/js/main.57157f33.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.37f9a4ff.js" defer="defer"></script>
+<script src="/assets/js/main.606059ae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -55,7 +55,7 @@ Cross-language operations are documented <a class="" href="/explanations/portabl
 <p>You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step&#x27;s outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).</p>
 <p>In <a href="https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a DBOS application using a single Postgres database can sustain a throughput of &gt;40K workflows or steps per second.
-Scaling beyond that is possible by sharding workflows across multiple Postgres databases.</p>
+Scaling beyond that is possible by <a class="" href="/python/tutorials/sharding">sharding</a> workflows across multiple Postgres databases.</p>
 <p>It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
 Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).</p>
