@@ -1850,7 +1850,7 @@ await DBOS.launch({conductorKey})
 
 **Go**
 
-Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`).
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`).
 
 ```go
 import _ "go.dbos.dev/dbos-enterprise-go"
@@ -5656,7 +5656,7 @@ await DBOS.launch({conductorKey, conductorURL});
 
 **Go**
 
-Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`).
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`).
 
 ```go
 import _ "go.dbos.dev/dbos-enterprise-go"
@@ -7979,7 +7979,11 @@ npm install @dbos-inc/dbos-enterprise
 
 **Go**
 
-Import `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`):
+Add the `go.dbos.dev/dbos-enterprise-go` module, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, and import it once, anywhere in your program:
+
+```shell
+go get go.dbos.dev/dbos-enterprise-go
+```
 
 ```go
 import _ "go.dbos.dev/dbos-enterprise-go"
@@ -8012,6 +8016,16 @@ DBOS.setConfig({
   transactEnterpriseKey: process.env.DBOS_TRANSACT_ENTERPRISE_KEY,
 });
 await DBOS.launch();
+```
+
+**Go**
+
+```go
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
+    AppName:               "my-app-name",
+    DatabaseURL:           os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    TransactEnterpriseKey: os.Getenv("DBOS_TRANSACT_ENTERPRISE_KEY"),
+})
 ```
 
 :::warning
@@ -9087,7 +9101,7 @@ dbosctl app register dbos-starter
 dbosctl api-key create dbos-starter-key
 ```
 
-Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`, so add it to your application and import it once, anywhere in your program:
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, so add it to your application and import it once, anywhere in your program:
 
 ```shell
 go get go.dbos.dev/dbos-enterprise-go
@@ -9812,6 +9826,37 @@ This prevents unsafe recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `ForkWorkflow` to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out the guide.
+
+#### Upgrading Workflow Code
+
+A breaking change to a workflow is any change in what steps run or the order in which they run.
+To make one safely, use `dbos.Patch(ctx, name)` to run the new code in a conditional: it returns `true` for workflows that reach the patch point for the first time (new workflows, and recovered workflows that had not reached it) and `false` for workflows whose history already has a different checkpoint there (old workflows), which must follow the old code path.
+Once no workflow started before the patch remains, replace the conditional with `dbos.DeprecatePatch(ctx, name)` for a transition period, then remove it.
+
+When using patching, processes running new code must be able to recover workflows started on old code. Either pin the application version, setting a fixed `ApplicationVersion` in configuration so every deployment shares it:
+
+```go
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
+    AppName:            "dbos-app",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ApplicationVersion: "0.1.0",
+})
+```
+
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `import _ "go.dbos.dev/dbos-enterprise-go"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+
+```go
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
+    AppName:                "dbos-app",
+    DatabaseURL:            os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey:        os.Getenv("DBOS_CONDUCTOR_KEY"),
+    AutoUpgrade:            true,
+    AutoUpgradeGracePeriod: 5 * time.Minute, // Optional: wait before moving PENDING workflows
+})
+```
+
+Individual workflows can opt in or out at registration with `dbos.WithAutoUpgrade(true)` or `dbos.WithAutoUpgrade(false)`.
+Only auto-upgrade a workflow if every breaking change to it is patched.
 
 #### Workflow Attempts and Recovery
 
@@ -10788,9 +10833,13 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
+    TransactEnterpriseKey     string         // A key entitling this application to DBOS Transact Enterprise features (optional; ConductorAPIKey stands in for it)
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false)
+    AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
+    AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
-    EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
+    EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
     Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer)
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
     SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and migrations (default: 2 minutes)
@@ -10799,7 +10848,7 @@ type Config struct {
 }
 ```
 
-Connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) requires importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`:
+DBOS Transact Enterprise features, connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) and auto-upgrade (setting `AutoUpgrade`, or registering a workflow with `WithAutoUpgrade(true)`), require importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`. The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`:
 
 ```go
 import (
@@ -10808,7 +10857,8 @@ import (
 )
 ```
 
-Without it, `NewContext` fails with an initialization error saying what to add. Conductor configuration is otherwise unchanged.
+Without it, `NewContext` fails with an initialization error saying what to add. Conductor and auto-upgrade are otherwise configured through `Config` alone.
+Auto-upgrade also needs an entitled DBOS key: `TransactEnterpriseKey` (development only) or, in production, `ConductorAPIKey`, which stands in for it.
 
 For example:
 ```go
@@ -11326,10 +11376,11 @@ To cancel many workflows in a single database round-trip, use `CancelWorkflows(c
 #### SetWorkflowAttributes
 
 ```go
-func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any) error
+func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any, opts ...SetWorkflowAttributesOption) error
 ```
 
-Replace the custom attributes attached to an existing workflow. Pass a `nil` attributes map to clear all attributes.
+Replace the custom attributes attached to an existing workflow. Pass a `nil` or empty attributes map to clear all attributes.
+Pass `WithMergeAttributes()` to shallow-merge the given top-level keys into the existing attributes instead: other keys are kept, matching keys are overwritten, and a `nil` value is stored as JSON `null` (merging a `nil` map is an error).
 Attach attributes at creation with the `WithWorkflowAttributes(map[string]any)` workflow option, and search workflows by attributes with the `WithFilterAttributes(map[string]any)` ListWorkflows option (Postgres only).
 
 #### ResumeWorkflow
@@ -11754,6 +11805,16 @@ dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
 
 Run a workflow registered with `WithInstance` using the matching `WithRunInstance` option.
 
+##### WithAutoUpgrade
+
+```go
+func WithAutoUpgrade(enabled bool) WorkflowRegistrationOption
+```
+
+Enroll the workflow in, or withdraw it from, auto-upgrade (a DBOS Transact Enterprise feature that moves workflows left on older application versions to the latest one).
+`WithAutoUpgrade(true)` enrolls the workflow even if `Config.AutoUpgrade` is not set; `WithAutoUpgrade(false)` keeps it out even if it is.
+Without this option, the workflow follows `Config.AutoUpgrade`.
+
 #### RunWorkflow
 
 ```go
@@ -11912,7 +11973,7 @@ func WithWorkflowAttributes(attributes map[string]any) WorkflowOption
 
 Attach custom key-value attributes to the workflow.
 Attributes are recorded in the workflow status at creation, must be JSON-serializable, and are not inherited by child workflows.
-On Postgres they can be searched with the `WithFilterAttributes(map[string]any)` ListWorkflows option, and replaced later with `SetWorkflowAttributes`.
+On Postgres they can be searched with the `WithFilterAttributes(map[string]any)` ListWorkflows option, and replaced (or merged into, with `WithMergeAttributes()`) later with `SetWorkflowAttributes`.
 
 #### RunAsStep
 
@@ -12073,7 +12134,7 @@ type Client interface {
     RetrieveWorkflow(_ Client, workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(_ Client, workflowID string, opts ...CancelWorkflowOption) error
     CancelWorkflows(_ Client, workflowIDs []string, opts ...CancelWorkflowOption) error
-    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any) error
+    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any, opts ...SetWorkflowAttributesOption) error
     SetWorkflowDelay(_ Client, workflowID string, opts ...SetWorkflowDelayOption) error
     ResumeWorkflow(_ Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
     ResumeWorkflows(_ Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
@@ -12197,6 +12258,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
 * `WithEnqueueQueuePartitionKey(partitionKey string)`: Set the queue partition key. Required if and only if the target queue is partitioned (registered with at least one partition limit, such as `WithPartitionConcurrency`).
+* `WithEnqueuePortableWorkflow()`: Store the enqueued workflow in the cross-language portable JSON format: its input is wrapped in the `PortableWorkflowArgs` envelope as the single positional argument, and the workflow runs as a portable workflow when dequeued. Passing a `PortableWorkflowArgs` input implies this option.
 
 **Example syntax:**
 
@@ -12276,7 +12338,7 @@ type PortableWorkflowArgs struct {
 }
 ```
 
-Cross-language envelope for workflow inputs. When passed as the input to `Enqueue`, portable JSON serialization is used automatically.
+Cross-language envelope for workflow inputs. When passed as the input to `Enqueue`, portable JSON serialization is used automatically; to enqueue a Go input in this format instead, pass `WithEnqueuePortableWorkflow()`.
 
 #### PortableWorkflowError
 
@@ -12347,9 +12409,13 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go; see Connecting to Conductor.
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
+    TransactEnterpriseKey     string         // A key entitling this application to DBOS Transact Enterprise features (optional; ConductorAPIKey stands in for it). See DBOS Transact Enterprise.
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false). See Auto-Upgrading Workflows.
+    AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
+    AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
-    EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
+    EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
     Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer). See the serialization reference.
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
     SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and schema migration or verification (default: 2 minutes)
@@ -12360,6 +12426,10 @@ type Config struct {
 ```
 
 `ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
+
+`EnablePatching` is deprecated: [`Patch`](./workflows-steps.md#patch) and [`DeprecatePatch`](./workflows-steps.md#deprecatepatch) no longer require it.
+All it does is pin the application version to `PATCHING_ENABLED`, so every deployment shares one version, and `NewContext` logs a warning when it is set.
+To keep every deployment on one version, set `ApplicationVersion` explicitly; to give each deployment its own version instead, enable [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows).
 
 `AppName` identifies your application.
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
@@ -12393,11 +12463,10 @@ import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
 Without it, `NewContext` (or `NewClient`) fails at startup with an error naming this import.
 The import registers [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite), a pure-Go driver requiring no cgo.
 
-### Connecting to Conductor
+### DBOS Transact Enterprise
 
-Connecting an application to [DBOS Conductor](../../conductor/overview.md) requires importing `go.dbos.dev/dbos-enterprise-go`, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license) and requiring a Conductor API key.
-
-Add it to your application and import it once, with a blank import:
+[DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features, [connecting to Conductor](#connecting-to-conductor) and [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), are provided by the `go.dbos.dev/dbos-enterprise-go` module, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+Add it to your application and import it once, anywhere in your program, with a blank import:
 
 ```shell
 go get go.dbos.dev/dbos-enterprise-go
@@ -12410,16 +12479,33 @@ import (
 )
 ```
 
-The import registers the Conductor client with DBOS Transact. The client will start on [`Launch`](./dbos-context.md#launch) whenever `ConductorAPIKey` is set, or automatically when the application runs in [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md).
+The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, so upgrade both together.
+
+The import registers with DBOS Transact the Conductor client, started on [`Launch`](./dbos-context.md#launch) whenever `ConductorAPIKey` is set or the application runs in [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), and the auto-upgrade pass, run when `AutoUpgrade` is set or a workflow is registered with [`WithAutoUpgrade(true)`](./workflows-steps.md#withautoupgrade).
+Nothing else changes: configure Conductor and auto-upgrade through `Config`, as documented below.
+Without the import, `NewContext` returns an initialization error saying what to add whenever Conductor or auto-upgrade is configured.
+
+#### Connecting to Conductor
+
+Connecting an application to [DBOS Conductor](../../conductor/overview.md) requires a Conductor API key.
 
 - **`ConductorAPIKey`**: An API key for Conductor. If provided, the application connects to Conductor. API keys can be created from the [DBOS Console](https://console.dbos.dev).
 - **`ConductorURL`**: The URL of the Conductor service to connect to. Set it when you are [self-hosting Conductor](../../conductor/self-hosting/hosting-conductor.md).
 - **`ConductorExecutorMetadata`**: A JSON-serializable map of metadata to associate with this executor. It is sent to Conductor and displayed on the dashboard, making it easier to identify executors (for example by region, instance type, or deployment environment).
 - **`ConductorMetadataOnlyMode`**: If `true`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context). Defaults to `false`.
 
-Without the import, `NewContext` returns an initialization error whenever `ConductorAPIKey` is set or the application runs in DBOS Cloud.
-
 When Conductor is configured, `Launch` does not recover this executor's pending workflows itself; [Conductor drives recovery](../../conductor/distributed-recovery.md).
+
+#### DBOS Transact Enterprise Settings
+
+- **`TransactEnterpriseKey`**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `ConductorAPIKey`, which stands in for it. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **`AutoUpgrade`**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those registered with [`WithAutoUpgrade(false)`](./workflows-steps.md#withautoupgrade). Requires DBOS Transact Enterprise. Defaults to `false`.
+- **`AutoUpgradeInterval`**: How often to check for workflows to auto-upgrade. Defaults to 30 seconds.
+- **`AutoUpgradeGracePeriod`**: How long the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+
+Before auto-upgrade starts, DBOS checks with Conductor that your organization is entitled to it, using `TransactEnterpriseKey` or, when it is unset, `ConductorAPIKey`.
+The check runs in `NewContext` when `AutoUpgrade` is set, or in `Launch` when workflows are enrolled with `WithAutoUpgrade(true)` alone, and fails with an initialization error naming the problem: no key, an invalid key, or an organization whose plan does not include auto-upgrade.
+If you [self-host Conductor](../../conductor/self-hosting/hosting-conductor.md), the check goes to the Conductor at `ConductorURL`; applications running in DBOS Cloud skip it.
 
 ### System database startup
 
@@ -12705,7 +12791,7 @@ type Client interface {
     RetrieveWorkflow(_ Client, workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(_ Client, workflowID string, opts ...CancelWorkflowOption) error
     CancelWorkflows(_ Client, workflowIDs []string, opts ...CancelWorkflowOption) error
-    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any) error
+    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any, opts ...SetWorkflowAttributesOption) error
     SetWorkflowDelay(_ Client, workflowID string, opts ...SetWorkflowDelayOption) error
     ResumeWorkflow(_ Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
     ResumeWorkflows(_ Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
@@ -13221,6 +13307,15 @@ func WithEnqueueQueuePartitionKey(partitionKey string) EnqueueOption
 The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
 Required if and only if the queue is partitioned.
 The queue's partition limits apply to each partition separately.
+
+##### WithEnqueuePortableWorkflow
+
+```go
+func WithEnqueuePortableWorkflow() EnqueueOption
+```
+
+Store the enqueued workflow in the [portable JSON format](../../explanations/portable-workflows.md): its input is wrapped in the [`PortableWorkflowArgs`](#portableworkflowargs) envelope as the single positional argument, and the workflow runs as a portable workflow when dequeued, as if started with [`WithPortableWorkflow`](./workflows-steps.md#withportableworkflow).
+Passing a `PortableWorkflowArgs` as the input implies this option.
 
 ##### WithEnqueueAttributes
 
@@ -14377,18 +14472,33 @@ Set an absolute time until which the workflow should remain delayed.
 #### SetWorkflowAttributes
 
 ```go
-func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any) error
+func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any, opts ...SetWorkflowAttributesOption) error
 ```
 
 Replace the custom [attributes](./workflows-steps.md#withworkflowattributes) attached to an existing workflow.
-Pass a `nil` attributes map to clear all attributes.
+Pass a `nil` or empty attributes map to clear all attributes.
 Attributes must be JSON-serializable.
 Returns an error if the workflow does not exist.
+Inside a workflow, the update is recorded as a step, so recovery runs it once.
 
 **Example:**
 
 ```go
 err := dbos.SetWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"customer": "acme"})
+```
+
+##### WithMergeAttributes
+
+```go
+func WithMergeAttributes() SetWorkflowAttributesOption
+```
+
+Shallow-merge the given top-level keys into the workflow's existing attributes instead of replacing them.
+Keys absent from the map are kept; a matching key is overwritten, including when its value is a nested object; a `nil` value is stored as JSON `null`.
+Merging a `nil` map is an error, and merging an empty map leaves the existing attributes unchanged.
+
+```go
+err := dbos.SetWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"tier": 2}, dbos.WithMergeAttributes())
 ```
 
 #### DeleteWorkflows
@@ -14966,7 +15076,7 @@ type PortableWorkflowArgs struct {
 ```
 
 The cross-language envelope for workflow inputs.
-When passed as the input to [`Enqueue`](#enqueue), portable JSON serialization is used automatically.
+When passed as the input to [`Enqueue`](#enqueue), portable JSON serialization is used automatically; to enqueue a Go input in this format instead, pass [`WithEnqueuePortableWorkflow`](#withenqueueportableworkflow).
 Further, a portable workflow ran with [`RunWorkflow`](workflows-steps.md#runworkflow) will serialize its input in this format automatically.
 
 ```go
@@ -15589,6 +15699,21 @@ dbos.RegisterWorkflow(ctx, slack.Send, dbos.WithInstance(slack))
 dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
 ```
 
+##### WithAutoUpgrade
+
+```go
+func WithAutoUpgrade(enabled bool) WorkflowRegistrationOption
+```
+
+Enroll the workflow in, or withdraw it from, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows): the [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature that moves workflows left on older application versions to the latest one.
+A workflow registered with `WithAutoUpgrade(true)` is auto-upgraded even if [`Config.AutoUpgrade`](./configuration.md#dbos-transact-enterprise-settings) is not set, and a workflow registered with `WithAutoUpgrade(false)` is never auto-upgraded.
+Without this option, the workflow follows `Config.AutoUpgrade`.
+Enrolling a workflow requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Transact Enterprise](./configuration.md#dbos-transact-enterprise).
+
+```go
+dbos.RegisterWorkflow(ctx, processOrder, dbos.WithAutoUpgrade(true))
+```
+
 #### RunWorkflow
 
 ```go
@@ -15855,7 +15980,7 @@ func WithWorkflowAttributes(attributes map[string]any) WorkflowOption
 Attach custom key-value attributes to the workflow.
 Attributes are recorded in the [workflow status](./methods.md#workflow-status) at creation, must be JSON-serializable, and are not inherited by child workflows.
 On Postgres they are stored as GIN-indexed JSONB and can be searched with [`WithFilterAttributes`](./methods.md#withfilterattributes).
-Attributes can later be replaced with [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
+Attributes can later be replaced, or merged into, with [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
 
 ```go
 handle, err := dbos.RunWorkflow(ctx, processOrder, order,
@@ -16125,9 +16250,7 @@ Used to safely upgrade workflow code; see the [patching tutorial](../tutorials/u
 - **ctx**: The Context.
 - **patchName**: The name to give the patch marker that will be inserted into workflow history.
 
-:::info
-Patching must be enabled in your configuration by setting `EnablePatching: true`.
-:::
+Processes running patched code must be able to recover workflows started on the old code: pin `Config.ApplicationVersion` so every deployment shares one version, or enable [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows).
 
 ##### DeprecatePatch
 
@@ -16142,9 +16265,6 @@ Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgra
 - **ctx**: The Context.
 - **patchName**: The name of the patch marker to be bypassed.
 
-:::info
-Patching must be enabled in your configuration by setting `EnablePatching: true`.
-:::
 #### Serialization
 
 Workflow and step inputs, outputs, and errors are checkpointed in the system database.
@@ -16264,7 +16384,7 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 | `ErrorCodeDeadLetterQueue` | `ErrDeadLetterQueue` | Handle | The workflow exceeded its maximum recovery attempts (`WithMaxRecoveryAttempts`) and was dead-lettered. Awaiting a dead-lettered workflow checkpoints the error as the await's outcome and is safe to handle; *starting* one does not checkpoint, so treat that case like a rejected enqueue. |
 | `ErrorCodeMaxStepRetriesExceeded` | `ErrMaxStepRetriesExceeded` | Handle | A step exhausted its configured retries. The error is checkpointed as the step's outcome and wraps the joined errors of all attempts, so `errors.Is`/`errors.As` can reach the underlying failures. |
 | `ErrorCodeQueueDeduplicated` | `ErrQueueDeduplicated` | Handle | An enqueue was rejected because another workflow with the same deduplication ID is already pending on the queue. The rejected enqueue is rolled back, so no checkpoint records it. |
-| `ErrorCodePatchingNotEnabled` | — | — | `Patch` or `DeprecatePatch` was called but `Config.EnablePatching` is false. |
+| `ErrorCodePatchingNotEnabled` | — | — | No longer returned: `Patch` and `DeprecatePatch` no longer require `Config.EnablePatching`, which is deprecated. |
 | `ErrorCodeTimeout` | `ErrTimeout` | Handle | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Inside a workflow, `Recv` and `GetEvent` timeouts are checkpointed as the operation's outcome. Deadline-driven timeouts also match `context.DeadlineExceeded`; for handle waits, prefer matching `context.DeadlineExceeded`, which covers all handle flavors. |
 | `ErrorCodeNoApplicationVersions` | `ErrNoApplicationVersions` | — | An operation required a registered application version, but none exists in the system database. |
 | `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | Handle | The referenced queue does not exist (e.g., `RetrieveQueue`). |
@@ -17444,15 +17564,33 @@ In patching, the result of a call to [`dbos.Patch()`](../reference/workflows-ste
 `dbos.Patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `dbos.Patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you must enable it in the configuration:
+When using patching, processes running your new code must be able to recover workflows started on your old code.
+There are two ways to do this:
 
-```go
-dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
-    DatabaseURL:    os.Getenv("DBOS_DATABASE_URL"),
-    AppName:        "my-app",
-    EnablePatching: true,
-})
-```
+1. **Pin the application version.** Set a fixed application version in your configuration, so every deployment of your code shares the same version:
+
+   ```go
+   dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
+       AppName:            "my-app",
+       DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+       ApplicationVersion: "1.0.0",
+   })
+   ```
+
+2. **Enable auto-upgrade.** Give each deployment its own application version, and let DBOS automatically move workflows from older versions to the latest version:
+
+   ```go
+   import _ "go.dbos.dev/dbos-enterprise-go"
+
+   dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
+       AppName:         "my-app",
+       DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+       ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_KEY"),
+       AutoUpgrade:     true,
+   })
+   ```
+
+   Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our original workflow is:
 
@@ -17583,6 +17721,46 @@ When you deprecate a patch with `dbos.DeprecatePatch()`, new workflows no longer
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, the patch may be safely removed.
 
+#### Auto-Upgrading Workflows
+
+:::info
+Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+It requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Transact Enterprise](../reference/configuration.md#dbos-transact-enterprise).
+:::
+
+With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.
+This way, processes running old code never pick up workflows started on new code, which their code can't handle.
+Meanwhile, workflows started on old code are upgraded to new code, so you don't have to keep old processes running until those workflows complete.
+**Only enable auto-upgrade for a workflow if every breaking change you make to it is [patched](#patching).**
+
+To enable auto-upgrade for all workflows in your application, set `AutoUpgrade` in your configuration:
+
+```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
+dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
+    AppName:         "my-app",
+    DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_KEY"),
+    AutoUpgrade:     true,
+})
+```
+
+You can also enable or disable auto-upgrade for individual workflows with the [`WithAutoUpgrade`](../reference/workflows-steps.md#withautoupgrade) registration option.
+A workflow registered with `WithAutoUpgrade(true)` is auto-upgraded even if `AutoUpgrade` isn't set in your configuration, and a workflow registered with `WithAutoUpgrade(false)` is never auto-upgraded:
+
+```go
+dbos.RegisterWorkflow(dbosCtx, workflowWithoutPatches, dbos.WithAutoUpgrade(false))
+```
+
+Auto-upgrade runs in the background on processes running the latest application version, from [`Launch`](../reference/dbos-context.md#launch) until shutdown, and only moves the workflows enrolled in it.
+When auto-upgrade runs:
+
+- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
+If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
+To give processes running old code time to complete their `PENDING` workflows first, set `AutoUpgradeGracePeriod`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that long.
+
 ### Versioning
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
@@ -17592,8 +17770,8 @@ However, you can set your own version through configuration.
 
 ```go
 dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
-    DatabaseURL:        os.Getenv("DBOS_DATABASE_URL"),
     AppName:            "my-app",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     ApplicationVersion: "1.0.0",
 })
 ```
@@ -17930,7 +18108,7 @@ workflows, err := dbos.ListWorkflows(ctx,
 )
 ```
 
-You can replace a workflow's attributes at any time with [`SetWorkflowAttributes`](../reference/methods.md#setworkflowattributes).
+You can replace a workflow's attributes at any time with [`SetWorkflowAttributes`](../reference/methods.md#setworkflowattributes), or merge new keys into them by passing [`WithMergeAttributes`](../reference/methods.md#withmergeattributes).
 
 ### Cancelling Workflows
 
@@ -18520,6 +18698,25 @@ Then, once all workflows of the old version are complete (you can use [`ListWork
 ---
 
 ## Upgrading
+
+### Upgrading to v1.8.0
+
+```shell
+go get github.com/dbos-inc/dbos-transact-golang@v1.8.0
+```
+
+If your application imports `go.dbos.dev/dbos-enterprise-go`, upgrade it to the same minor version:
+
+```shell
+go get go.dbos.dev/dbos-enterprise-go@v1.8.0
+```
+
+v1.8.0 is additive: existing code keeps compiling. This release adds system-database migrations (indexes on `application_versions`), applied by the first `NewContext`. New APIs and behavioral changes:
+
+- **Auto-upgrade.** A [DBOS Transact Enterprise](../explanations/transact-enterprise.md) feature that moves workflows left on older application versions to the latest one, so each deployment can run under its own version without keeping old processes around to drain. Enable it for every workflow with `Config.AutoUpgrade`, or per workflow with the [`WithAutoUpgrade(bool)`](./reference/workflows-steps.md#withautoupgrade) registration option, and tune it with `Config.AutoUpgradeInterval` and `Config.AutoUpgradeGracePeriod`. It requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key, `Config.TransactEnterpriseKey` or `ConductorAPIKey` standing in for it; `NewContext` (or `Launch`) fails with an error saying what is missing otherwise. See [Auto-Upgrading Workflows](./tutorials/upgrading-workflows.md#auto-upgrading-workflows) and [DBOS Transact Enterprise](./reference/configuration.md#dbos-transact-enterprise).
+- **`Config.EnablePatching` is deprecated.** `Patch` and `DeprecatePatch` no longer require it, and `ErrorCodePatchingNotEnabled` is no longer returned. The flag now only pins the application version to `PATCHING_ENABLED`, so every deployment shares one version, and `NewContext` logs a warning when it is set. To keep that behavior, set `Config.ApplicationVersion` explicitly; to give each deployment its own version instead, enable auto-upgrade.
+- **New [`WithMergeAttributes()`](./reference/methods.md#withmergeattributes)** option on `SetWorkflowAttributes`, shallow-merging the given top-level keys into a workflow's attributes in one update instead of replacing them. `SetWorkflowAttributes` is variadic now, so existing calls are unchanged.
+- **Portable workflow inputs.** New [`WithEnqueuePortableWorkflow()`](./reference/methods.md#withenqueueportableworkflow) option on `Enqueue`, storing the enqueued workflow's input in the portable JSON envelope so it runs as a portable workflow when dequeued; passing a `PortableWorkflowArgs` input still implies it. A child workflow started from a portable workflow, or a workflow enqueued or debounced from one, is now stored in its own format (portable only when it is itself started with `WithPortableWorkflow`, enqueued with `WithEnqueuePortableWorkflow`, or given a `PortableWorkflowArgs` input), where it used to be tagged as portable while its input was stored without the envelope, so that a struct input could decode to its zero value on dequeue or recovery.
 
 ### Upgrading to v1.7.0
 

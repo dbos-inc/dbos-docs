@@ -13,7 +13,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.37f9a4ff.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.236bd0f1.js" defer="defer"></script>
 <script src="/assets/js/main.606059ae.js" defer="defer"></script>
 </head>
 <body>
@@ -84,7 +84,7 @@ On Windows, <a href="https://github.com/dbos-inc/dbos-ctl/releases" target="_bla
 The name you register must match the <code>AppName</code> in your DBOS configuration.
 The key&#x27;s secret is printed once and cannot be retrieved afterwards, so copy it now.</p>
 <div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain">dbosctl app register dbos-starter</span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain">dbosctl api-key create dbos-starter-key</span><br></div></code></pre></div></div>
-<p>Connecting to Conductor requires importing <code>go.dbos.dev/dbos-enterprise-go</code>, so add it to your application and import it once, anywhere in your program:</p>
+<p>Connecting to Conductor requires importing <code>go.dbos.dev/dbos-enterprise-go</code>, at the same minor version as <code>github.com/dbos-inc/dbos-transact-golang</code>, so add it to your application and import it once, anywhere in your program:</p>
 <div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain">go get go.dbos.dev/dbos-enterprise-go</span><br></div></code></pre></div></div>
 <p>Next, supply your API key to your app through the <code>ConductorAPIKey</code> configuration option.
 Update the call to <code>dbos.NewContext</code> in <code>main</code> to read the key from an environment variable:</p>

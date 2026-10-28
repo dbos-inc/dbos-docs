@@ -384,7 +384,7 @@ dbosctl app register dbos-starter
 dbosctl api-key create dbos-starter-key
 ```
 
-Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`, so add it to your application and import it once, anywhere in your program:
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go`, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, so add it to your application and import it once, anywhere in your program:
 
 ```shell
 go get go.dbos.dev/dbos-enterprise-go

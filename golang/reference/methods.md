@@ -196,6 +196,15 @@ The partition key to enqueue under when the target queue is a [partitioned queue
 Required if and only if the queue is partitioned.
 The queue's partition limits apply to each partition separately.
 
+#### WithEnqueuePortableWorkflow
+
+```go
+func WithEnqueuePortableWorkflow() EnqueueOption
+```
+
+Store the enqueued workflow in the [portable JSON format](../../explanations/portable-workflows.md): its input is wrapped in the [`PortableWorkflowArgs`](#portableworkflowargs) envelope as the single positional argument, and the workflow runs as a portable workflow when dequeued, as if started with [`WithPortableWorkflow`](./workflows-steps.md#withportableworkflow).
+Passing a `PortableWorkflowArgs` as the input implies this option.
+
 #### WithEnqueueAttributes
 
 ```go
@@ -1351,18 +1360,33 @@ Set an absolute time until which the workflow should remain delayed.
 ### SetWorkflowAttributes
 
 ```go
-func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any) error
+func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any, opts ...SetWorkflowAttributesOption) error
 ```
 
 Replace the custom [attributes](./workflows-steps.md#withworkflowattributes) attached to an existing workflow.
-Pass a `nil` attributes map to clear all attributes.
+Pass a `nil` or empty attributes map to clear all attributes.
 Attributes must be JSON-serializable.
 Returns an error if the workflow does not exist.
+Inside a workflow, the update is recorded as a step, so recovery runs it once.
 
 **Example:**
 
 ```go
 err := dbos.SetWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"customer": "acme"})
+```
+
+#### WithMergeAttributes
+
+```go
+func WithMergeAttributes() SetWorkflowAttributesOption
+```
+
+Shallow-merge the given top-level keys into the workflow's existing attributes instead of replacing them.
+Keys absent from the map are kept; a matching key is overwritten, including when its value is a nested object; a `nil` value is stored as JSON `null`.
+Merging a `nil` map is an error, and merging an empty map leaves the existing attributes unchanged.
+
+```go
+err := dbos.SetWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"tier": 2}, dbos.WithMergeAttributes())
 ```
 
 ### DeleteWorkflows
@@ -1940,7 +1964,7 @@ type PortableWorkflowArgs struct {
 ```
 
 The cross-language envelope for workflow inputs.
-When passed as the input to [`Enqueue`](#enqueue), portable JSON serialization is used automatically.
+When passed as the input to [`Enqueue`](#enqueue), portable JSON serialization is used automatically; to enqueue a Go input in this format instead, pass [`WithEnqueuePortableWorkflow`](#withenqueueportableworkflow).
 Further, a portable workflow ran with [`RunWorkflow`](workflows-steps.md#runworkflow) will serialize its input in this format automatically.
 
 ```go

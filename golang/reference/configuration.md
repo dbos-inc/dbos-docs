@@ -17,9 +17,13 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go; see Connecting to Conductor.
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
+    TransactEnterpriseKey     string         // A key entitling this application to DBOS Transact Enterprise features (optional; ConductorAPIKey stands in for it). See DBOS Transact Enterprise.
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false). See Auto-Upgrading Workflows.
+    AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
+    AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
-    EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
+    EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
     Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer). See the serialization reference.
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
     SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and schema migration or verification (default: 2 minutes)
@@ -30,6 +34,10 @@ type Config struct {
 ```
 
 `ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
+
+`EnablePatching` is deprecated: [`Patch`](./workflows-steps.md#patch) and [`DeprecatePatch`](./workflows-steps.md#deprecatepatch) no longer require it.
+All it does is pin the application version to `PATCHING_ENABLED`, so every deployment shares one version, and `NewContext` logs a warning when it is set.
+To keep every deployment on one version, set `ApplicationVersion` explicitly; to give each deployment its own version instead, enable [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows).
 
 `AppName` identifies your application.
 It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
@@ -63,11 +71,10 @@ import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
 Without it, `NewContext` (or `NewClient`) fails at startup with an error naming this import.
 The import registers [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite), a pure-Go driver requiring no cgo.
 
-## Connecting to Conductor
+## DBOS Transact Enterprise
 
-Connecting an application to [DBOS Conductor](../../conductor/overview.md) requires importing `go.dbos.dev/dbos-enterprise-go`, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license) and requiring a Conductor API key.
-
-Add it to your application and import it once, with a blank import:
+[DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features, [connecting to Conductor](#connecting-to-conductor) and [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), are provided by the `go.dbos.dev/dbos-enterprise-go` module, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+Add it to your application and import it once, anywhere in your program, with a blank import:
 
 ```shell
 go get go.dbos.dev/dbos-enterprise-go
@@ -80,16 +87,33 @@ import (
 )
 ```
 
-The import registers the Conductor client with DBOS Transact. The client will start on [`Launch`](./dbos-context.md#launch) whenever `ConductorAPIKey` is set, or automatically when the application runs in [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md).
+The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, so upgrade both together.
+
+The import registers with DBOS Transact the Conductor client, started on [`Launch`](./dbos-context.md#launch) whenever `ConductorAPIKey` is set or the application runs in [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), and the auto-upgrade pass, run when `AutoUpgrade` is set or a workflow is registered with [`WithAutoUpgrade(true)`](./workflows-steps.md#withautoupgrade).
+Nothing else changes: configure Conductor and auto-upgrade through `Config`, as documented below.
+Without the import, `NewContext` returns an initialization error saying what to add whenever Conductor or auto-upgrade is configured.
+
+### Connecting to Conductor
+
+Connecting an application to [DBOS Conductor](../../conductor/overview.md) requires a Conductor API key.
 
 - **`ConductorAPIKey`**: An API key for Conductor. If provided, the application connects to Conductor. API keys can be created from the [DBOS Console](https://console.dbos.dev).
 - **`ConductorURL`**: The URL of the Conductor service to connect to. Set it when you are [self-hosting Conductor](../../conductor/self-hosting/hosting-conductor.md).
 - **`ConductorExecutorMetadata`**: A JSON-serializable map of metadata to associate with this executor. It is sent to Conductor and displayed on the dashboard, making it easier to identify executors (for example by region, instance type, or deployment environment).
 - **`ConductorMetadataOnlyMode`**: If `true`, this process sends only workflow metadata to Conductor, never workflow data (inputs, outputs, errors, step outputs, events, messages, streams, or schedule context). Defaults to `false`.
 
-Without the import, `NewContext` returns an initialization error whenever `ConductorAPIKey` is set or the application runs in DBOS Cloud.
-
 When Conductor is configured, `Launch` does not recover this executor's pending workflows itself; [Conductor drives recovery](../../conductor/distributed-recovery.md).
+
+### DBOS Transact Enterprise Settings
+
+- **`TransactEnterpriseKey`**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `ConductorAPIKey`, which stands in for it. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **`AutoUpgrade`**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those registered with [`WithAutoUpgrade(false)`](./workflows-steps.md#withautoupgrade). Requires DBOS Transact Enterprise. Defaults to `false`.
+- **`AutoUpgradeInterval`**: How often to check for workflows to auto-upgrade. Defaults to 30 seconds.
+- **`AutoUpgradeGracePeriod`**: How long the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+
+Before auto-upgrade starts, DBOS checks with Conductor that your organization is entitled to it, using `TransactEnterpriseKey` or, when it is unset, `ConductorAPIKey`.
+The check runs in `NewContext` when `AutoUpgrade` is set, or in `Launch` when workflows are enrolled with `WithAutoUpgrade(true)` alone, and fails with an initialization error naming the problem: no key, an invalid key, or an organization whose plan does not include auto-upgrade.
+If you [self-host Conductor](../../conductor/self-hosting/hosting-conductor.md), the check goes to the Conductor at `ConductorURL`; applications running in DBOS Cloud skip it.
 
 ## System database startup
 

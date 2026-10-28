@@ -12,15 +12,33 @@ In patching, the result of a call to [`dbos.Patch()`](../reference/workflows-ste
 `dbos.Patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `dbos.Patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
-To use patching, you must enable it in the configuration:
+When using patching, processes running your new code must be able to recover workflows started on your old code.
+There are two ways to do this:
 
-```go
-dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
-    DatabaseURL:    os.Getenv("DBOS_DATABASE_URL"),
-    AppName:        "my-app",
-    EnablePatching: true,
-})
-```
+1. **Pin the application version.** Set a fixed application version in your configuration, so every deployment of your code shares the same version:
+
+   ```go
+   dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
+       AppName:            "my-app",
+       DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+       ApplicationVersion: "1.0.0",
+   })
+   ```
+
+2. **Enable auto-upgrade.** Give each deployment its own application version, and let DBOS automatically move workflows from older versions to the latest version:
+
+   ```go
+   import _ "go.dbos.dev/dbos-enterprise-go"
+
+   dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
+       AppName:         "my-app",
+       DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+       ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_KEY"),
+       AutoUpgrade:     true,
+   })
+   ```
+
+   Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our original workflow is:
 
@@ -151,6 +169,46 @@ When you deprecate a patch with `dbos.DeprecatePatch()`, new workflows no longer
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, the patch may be safely removed.
 
+### Auto-Upgrading Workflows
+
+:::info
+Auto-upgrade is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+It requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Transact Enterprise](../reference/configuration.md#dbos-transact-enterprise).
+:::
+
+With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.
+This way, processes running old code never pick up workflows started on new code, which their code can't handle.
+Meanwhile, workflows started on old code are upgraded to new code, so you don't have to keep old processes running until those workflows complete.
+**Only enable auto-upgrade for a workflow if every breaking change you make to it is [patched](#patching).**
+
+To enable auto-upgrade for all workflows in your application, set `AutoUpgrade` in your configuration:
+
+```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+
+dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
+    AppName:         "my-app",
+    DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_KEY"),
+    AutoUpgrade:     true,
+})
+```
+
+You can also enable or disable auto-upgrade for individual workflows with the [`WithAutoUpgrade`](../reference/workflows-steps.md#withautoupgrade) registration option.
+A workflow registered with `WithAutoUpgrade(true)` is auto-upgraded even if `AutoUpgrade` isn't set in your configuration, and a workflow registered with `WithAutoUpgrade(false)` is never auto-upgraded:
+
+```go
+dbos.RegisterWorkflow(dbosCtx, workflowWithoutPatches, dbos.WithAutoUpgrade(false))
+```
+
+Auto-upgrade runs in the background on processes running the latest application version, from [`Launch`](../reference/dbos-context.md#launch) until shutdown, and only moves the workflows enrolled in it.
+When auto-upgrade runs:
+
+- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
+If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
+To give processes running old code time to complete their `PENDING` workflows first, set `AutoUpgradeGracePeriod`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that long.
+
 ## Versioning
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
@@ -160,8 +218,8 @@ However, you can set your own version through configuration.
 
 ```go
 dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
-    DatabaseURL:        os.Getenv("DBOS_DATABASE_URL"),
     AppName:            "my-app",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     ApplicationVersion: "1.0.0",
 })
 ```

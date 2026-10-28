@@ -73,7 +73,7 @@ await DBOS.launch({conductorKey})
 
 **Go**
 
-Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`).
+Connecting to Conductor requires importing `go.dbos.dev/dbos-enterprise-go` (`go get go.dbos.dev/dbos-enterprise-go`, at the same minor version as `github.com/dbos-inc/dbos-transact-golang`).
 
 ```go
 import _ "go.dbos.dev/dbos-enterprise-go"
