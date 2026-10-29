@@ -30,8 +30,8 @@ If your database is managed by a DBA, `dbosctl sysdb migrate` can also print the
 You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 We recommend taking these steps in Postgres to guarantee the scalability of your application.
 
-**Database Sizing** - As a rule of thumb, each Postgres vCPU can process about 1,000 workflows per second with DBOS.
-For example, in [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a single 16-vCPU Postgres server sustained 20K workflows per second.
+**Database Sizing** - As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second with DBOS.
+For example, in [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a single 16-vCPU Postgres server sustained 20K workflows or steps per second.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.
 
 **Monitor Connection Usage** - You can check the maximum number of connections your Postgres database can accept by running `SHOW max_connections;`.
@@ -41,9 +41,9 @@ You can configure the maximum number of connections a DBOS application can make 
 We do not recommend setting this to less than 5.
 
 **Monitor Database Usage** - A DBOS workflow requires two-three database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome, and optionally one to dequeue it if it was enqueued) plus one additional write per step (to checkpoint the step's outcome).
-In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows per second.
-In practice, if your expected load exceeds 1K workflows per second, you should perform load tests to verify your Postgres database can handle the load or if you need a larger instance.
-If it approaches or exceeds 20K workflows per second, we recommend [sharding](../python/tutorials/sharding.md) workflows across multiple Postgres servers, which scales linearly to over 1M workflows per second.
+In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
+In practice, if your expected load exceeds 1K workflows or steps per second, you should perform load tests to verify your Postgres database can handle the load or if you need a larger instance.
+If it approaches or exceeds 20K workflows or steps per second, we recommend [sharding](../python/tutorials/sharding.md) workflows across multiple Postgres servers, which scales linearly to over 1M workflows or steps per second.
 
 ## Availability
 

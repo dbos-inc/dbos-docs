@@ -52,9 +52,9 @@ Cross-language operations are documented [here](./explanations/portable-workflow
 You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step's outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).
 
-As a rule of thumb, each Postgres vCPU can process about 1,000 workflows per second.
-In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows per second.
-Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) workflows across multiple Postgres databases, which scales linearly to over 1M workflows per second.
+As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second.
+In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
+Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) workflows across multiple Postgres databases, which scales linearly to over 1M workflows or steps per second.
 
 It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
