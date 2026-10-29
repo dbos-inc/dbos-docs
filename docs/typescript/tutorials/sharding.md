@@ -10,7 +10,7 @@ Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.
 
 A DBOS application using a single Postgres system database can run about 1,000 workflows per second per Postgres vCPU, or [20K workflows per second](https://www.dbos.dev/blog/one-million-workflows) on a 16-vCPU server.
 To scale beyond that, you can **shard** your system database across multiple Postgres servers using a Postgres-compatible sharding layer such as [Citus](https://www.citusdata.com/) or [PgDog](https://pgdog.dev/).
-Sharding scales linearly: in benchmarks, a sharded DBOS application sustained over 1M workflows per second across 50 Postgres servers.
+With sharded Postgres, DBOS scales linearly to [>1M workflows per second](https://www.dbos.dev/blog/one-million-workflows).
 
 When you shard your system database, every workflow lives under a **shard key** that you assign it.
 All of a workflow's data (its status, inputs, outputs, steps, events, messages, and streams) is stored on the shard that owns its key, so every operation on a workflow touches a single shard.
