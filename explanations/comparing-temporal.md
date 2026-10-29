@@ -25,7 +25,7 @@ By contrast, DBOS is an open-source Postgres-backed library.
 To add DBOS to an application, you install the open-source library and annotate workflows and steps.
 The library uses Postgres to checkpoint workflow progress and recover workflows from failure.
 Because DBOS uses Postgres for orchestration, you don't need to change how your application is architected or deployed&mdash;it can run on any infrastructure connected to any Postgres-compatible database.
-You scale DBOS by scaling Postgres, and Postgres [scales well](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres).
+You scale DBOS by scaling Postgres, and Postgres [scales well](https://www.dbos.dev/blog/one-million-workflows).
 
 ## Advantages of DBOS
 

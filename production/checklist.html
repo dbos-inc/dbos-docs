@@ -13,7 +13,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.236bd0f1.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.26dd2b47.js" defer="defer"></script>
 <script src="/assets/js/main.606059ae.js" defer="defer"></script>
 </head>
 <body>
@@ -36,8 +36,8 @@ If your database is managed by a DBA, <code>dbosctl sysdb migrate</code> can als
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="scalability">Scalability<a href="#scalability" class="hash-link" aria-label="Direct link to Scalability" title="Direct link to Scalability" translate="no">​</a></h2>
 <p>You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 We recommend taking these steps in Postgres to guarantee the scalability of your application.</p>
-<p><strong>Database Sizing</strong> - For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) with DBOS requires 4 Postgres vCPUs.
-This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
+<p><strong>Database Sizing</strong> - As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second with DBOS.
+For example, in <a href="https://www.dbos.dev/blog/one-million-workflows" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a single 16-vCPU Postgres server sustained 20K workflows or steps per second.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.</p>
 <p><strong>Monitor Connection Usage</strong> - You can check the maximum number of connections your Postgres database can accept by running <code>SHOW max_connections;</code>.
 Typically, a Postgres database can support 100 connections per gigabyte of memory.
@@ -45,9 +45,9 @@ You should make sure you have enough connections to support all your DBOS applic
 You can configure the maximum number of connections a DBOS application can make through the <code>sys_db_pool_size</code>/<code>systemDatabasePoolSize</code> configuration parameter.
 We do not recommend setting this to less than 5.</p>
 <p><strong>Monitor Database Usage</strong> - A DBOS workflow requires two-three database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome, and optionally one to dequeue it if it was enqueued) plus one additional write per step (to checkpoint the step&#x27;s outcome).
-In <a href="https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a DBOS application using a single Postgres database can sustain a throughput of &gt;40K workflows or steps per second.
+In <a href="https://www.dbos.dev/blog/one-million-workflows" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
 In practice, if your expected load exceeds 1K workflows or steps per second, you should perform load tests to verify your Postgres database can handle the load or if you need a larger instance.
-If it approaches or exceeds 40K workflows or steps per second, we recommend sharding workflows across multiple Postgres servers.</p>
+If it approaches or exceeds 20K workflows or steps per second, we recommend <a class="" href="/python/tutorials/sharding">sharding</a> workflows across multiple Postgres servers, which scales linearly to over 1M workflows or steps per second.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="availability">Availability<a href="#availability" class="hash-link" aria-label="Direct link to Availability" title="Direct link to Availability" translate="no">​</a></h2>
 <p>To maximize availability of your DBOS application, we recommend using a highly available Postgres database.
 Most cloud Postgres providers provide multi-AZ replication with automatic failover, so your database can seamlessly fail over to a backup if anything goes wrong.

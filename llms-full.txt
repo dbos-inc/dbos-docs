@@ -808,8 +808,9 @@ Cross-language operations are documented [here](./explanations/portable-workflow
 You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step's outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).
 
-In [benchmarks](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres), a DBOS application using a single Postgres database can sustain a throughput of >40K workflows or steps per second.
-Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) workflows across multiple Postgres databases.
+As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second.
+In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
+Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) workflows across multiple Postgres databases, which scales linearly to over 1M workflows or steps per second.
 
 It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
@@ -2437,10 +2438,6 @@ Treat them as secrets and keep them safe!
 
 #### Organization Management
 
-:::info
-This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
-:::
-
 Organizations allow multiple users to collaboratively manage applications.
 When a user creates an account, they are automatically added to an organization containing only them, where the organization name is the same as their username.
 
@@ -2863,10 +2860,6 @@ This command retrieves your cloud database connection URL.
 **Description:**
 This command links your own Postgres database instance to DBOS Cloud.
 Before running this command, please first follow our [tutorial](./byod-management) to set up your Postgres database.
-
-:::info
-This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
-:::
 
 **Arguments:**
 - `<database-instance-name>`: The name of the database instance to link. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
@@ -3661,10 +3654,6 @@ You can click on a trace or span to see detailed information about it.
 This tutorial shows how to configure your DBOS Cloud application to export OpenTelemetry logs and traces to a third party observability service. If your service accepts the OTEL format, you can skip steps 1 and 2. Simply pass environment variables like `OTEL_EXPORTER_OTLP_HEADERS` as [app secrets](./secrets.md) (see [step 3](#3-set-the-datadog-api-key-to-your-apps-environment)) and then configure logs and traces endpoints as shown in [step 4](#4-configure-your-app-to-export-logs-and-traces-to-otel-contrib).
 
 Other services may require additional software. Here we use Datadog as an example. We connect by installing the otel-contrib package in the App VM at deployment time and configuring it with the Datadog API key to export data.
-
-:::info
-These steps require a [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscription.
-:::
 
 ### 1. Create a Custom VM Setup Script
 
@@ -5944,7 +5933,7 @@ By contrast, DBOS is an open-source Postgres-backed library.
 To add DBOS to an application, you install the open-source library and annotate workflows and steps.
 The library uses Postgres to checkpoint workflow progress and recover workflows from failure.
 Because DBOS uses Postgres for orchestration, you don't need to change how your application is architected or deployed&mdash;it can run on any infrastructure connected to any Postgres-compatible database.
-You scale DBOS by scaling Postgres, and Postgres [scales well](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres).
+You scale DBOS by scaling Postgres, and Postgres [scales well](https://www.dbos.dev/blog/one-million-workflows).
 
 ### Advantages of DBOS
 
@@ -7953,7 +7942,7 @@ All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to
 DBOS Transact Enterprise provides:
 
 - **Conductor access**: DBOS Transact Enterprise comes with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
-- **Sharding**: Horizontally scale DBOS to handle millions of workflows per second with a sharded Postgres system database.
+- **Sharding**: Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
 
@@ -8054,8 +8043,8 @@ You can use `postgres` as your system database, or you can use a different syste
 
 #### What size of database should I use for DBOS?
 
-For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) with DBOS requires 4 Postgres vCPUs.
-This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
+As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second with DBOS.
+For example, in [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a single 16-vCPU Postgres server sustained 20K workflows or steps per second.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.
 
 #### Why is my queue stuck?
@@ -30363,8 +30352,8 @@ If your database is managed by a DBA, `dbosctl sysdb migrate` can also print the
 You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 We recommend taking these steps in Postgres to guarantee the scalability of your application.
 
-**Database Sizing** - For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) with DBOS requires 4 Postgres vCPUs.
-This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
+**Database Sizing** - As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second with DBOS.
+For example, in [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a single 16-vCPU Postgres server sustained 20K workflows or steps per second.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.
 
 **Monitor Connection Usage** - You can check the maximum number of connections your Postgres database can accept by running `SHOW max_connections;`.
@@ -30374,9 +30363,9 @@ You can configure the maximum number of connections a DBOS application can make 
 We do not recommend setting this to less than 5.
 
 **Monitor Database Usage** - A DBOS workflow requires two-three database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome, and optionally one to dequeue it if it was enqueued) plus one additional write per step (to checkpoint the step's outcome).
-In [benchmarks](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres), a DBOS application using a single Postgres database can sustain a throughput of >40K workflows or steps per second.
+In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
 In practice, if your expected load exceeds 1K workflows or steps per second, you should perform load tests to verify your Postgres database can handle the load or if you need a larger instance.
-If it approaches or exceeds 40K workflows or steps per second, we recommend sharding workflows across multiple Postgres servers.
+If it approaches or exceeds 20K workflows or steps per second, we recommend [sharding](../python/tutorials/sharding.md) workflows across multiple Postgres servers, which scales linearly to over 1M workflows or steps per second.
 
 ### Availability
 
@@ -43288,8 +43277,9 @@ For the full API reference, see [Workflow Schedules](../reference/contexts.md#wo
 Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
-A DBOS application using a single Postgres system database can run tens of thousands of workflows per second.
+A DBOS application using a single Postgres system database can run about 1,000 workflows or steps per second per Postgres vCPU, or [20K workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) on a 16-vCPU server.
 To scale beyond that, you can **shard** your system database across multiple Postgres servers using a Postgres-compatible sharding layer such as [Citus](https://www.citusdata.com/) or [PgDog](https://pgdog.dev/).
+With sharded Postgres, DBOS scales linearly to [>1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows).
 
 When you shard your system database, every workflow lives under a **shard key** that you assign it.
 All of a workflow's data (its status, inputs, outputs, steps, events, messages, and streams) is stored on the shard that owns its key, so every operation on a workflow touches a single shard.
@@ -54664,8 +54654,9 @@ For the full API reference, see [Workflow Schedules](../reference/methods.md#wor
 Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
-A DBOS application using a single Postgres system database can run tens of thousands of workflows per second.
+A DBOS application using a single Postgres system database can run about 1,000 workflows or steps per second per Postgres vCPU, or [20K workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) on a 16-vCPU server.
 To scale beyond that, you can **shard** your system database across multiple Postgres servers using a Postgres-compatible sharding layer such as [Citus](https://www.citusdata.com/) or [PgDog](https://pgdog.dev/).
+With sharded Postgres, DBOS scales linearly to [>1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows).
 
 When you shard your system database, every workflow lives under a **shard key** that you assign it.
 All of a workflow's data (its status, inputs, outputs, steps, events, messages, and streams) is stored on the shard that owns its key, so every operation on a workflow touches a single shard.

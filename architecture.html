@@ -13,7 +13,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.236bd0f1.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.26dd2b47.js" defer="defer"></script>
 <script src="/assets/js/main.606059ae.js" defer="defer"></script>
 </head>
 <body>
@@ -54,8 +54,9 @@ Cross-language operations are documented <a class="" href="/explanations/portabl
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-dbos-scales">How DBOS Scales<a href="#how-dbos-scales" class="hash-link" aria-label="Direct link to How DBOS Scales" title="Direct link to How DBOS Scales" translate="no">​</a></h2>
 <p>You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step&#x27;s outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).</p>
-<p>In <a href="https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a DBOS application using a single Postgres database can sustain a throughput of &gt;40K workflows or steps per second.
-Scaling beyond that is possible by <a class="" href="/python/tutorials/sharding">sharding</a> workflows across multiple Postgres databases.</p>
+<p>As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second.
+In <a href="https://www.dbos.dev/blog/one-million-workflows" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
+Scaling beyond that is possible by <a class="" href="/python/tutorials/sharding">sharding</a> workflows across multiple Postgres databases, which scales linearly to over 1M workflows or steps per second.</p>
 <p>It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
 Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).</p>

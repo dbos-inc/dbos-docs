@@ -13,7 +13,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.236bd0f1.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.26dd2b47.js" defer="defer"></script>
 <script src="/assets/js/main.606059ae.js" defer="defer"></script>
 </head>
 <body>
@@ -29,8 +29,8 @@ The system database schema is documented <a class="" href="/explanations/system-
 <div class="theme-admonition theme-admonition-tip admonition_xJq3 alert alert--success"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z"></path></svg></span>tip</div><div class="admonitionContent_BuS1"><p>If you&#x27;re using Supabase, only the <code>postgres</code> database is visible from the Supabase web console.
 You can use <code>postgres</code> as your system database, or you can use a different system database and connect to and explore your system database using a client like <a href="https://www.postgresql.org/docs/current/app-psql.html" target="_blank" rel="noopener noreferrer" class="">psql</a> or <a href="https://dbeaver.io/" target="_blank" rel="noopener noreferrer" class="">DBeaver</a>.</p></div></div>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-size-of-database-should-i-use-for-dbos">What size of database should I use for DBOS?<a href="#what-size-of-database-should-i-use-for-dbos" class="hash-link" aria-label="Direct link to What size of database should I use for DBOS?" title="Direct link to What size of database should I use for DBOS?" translate="no">​</a></h3>
-<p>For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) with DBOS requires 4 Postgres vCPUs.
-This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
+<p>As a rule of thumb, each Postgres vCPU can process about 1,000 workflows or steps per second with DBOS.
+For example, in <a href="https://www.dbos.dev/blog/one-million-workflows" target="_blank" rel="noopener noreferrer" class="">benchmarks</a>, a single 16-vCPU Postgres server sustained 20K workflows or steps per second.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-is-my-queue-stuck">Why is my queue stuck?<a href="#why-is-my-queue-stuck" class="hash-link" aria-label="Direct link to Why is my queue stuck?" title="Direct link to Why is my queue stuck?" translate="no">​</a></h3>
 <p>If a DBOS queue is stuck (workflows are not moving from <code>ENQUEUED</code> to <code>PENDING</code>), it is likely that either the number of <code>PENDING</code> workflows exceeds the queue&#x27;s global &quot;concurrency&quot; limit or the number of queued workflows in a <code>PENDING</code> state on each worker exceeds the queue&#x27;s &quot;worker concurrency&quot; limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the &quot;Queues&quot; tab of the <a class="" href="/conductor/workflow-management">DBOS Console</a>
