@@ -45,10 +45,6 @@ Treat them as secrets and keep them safe!
 
 ### Organization Management
 
-:::info
-This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
-:::
-
 Organizations allow multiple users to collaboratively manage applications.
 When a user creates an account, they are automatically added to an organization containing only them, where the organization name is the same as their username.
 
