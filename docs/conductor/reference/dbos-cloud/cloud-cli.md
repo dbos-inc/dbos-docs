@@ -140,10 +140,6 @@ This command retrieves your cloud database connection URL.
 This command links your own Postgres database instance to DBOS Cloud.
 Before running this command, please first follow our [tutorial](./byod-management) to set up your Postgres database.
 
-:::info
-This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
-:::
-
 **Arguments:**
 - `<database-instance-name>`: The name of the database instance to link. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
 - `-H, --hostname <string>`: The hostname for your Postgres database instance (required).

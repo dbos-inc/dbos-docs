@@ -7,11 +7,6 @@ This tutorial shows how to configure your DBOS Cloud application to export OpenT
 
 Other services may require additional software. Here we use Datadog as an example. We connect by installing the otel-contrib package in the App VM at deployment time and configuring it with the Datadog API key to export data.
 
-:::info
-These steps require a [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscription.
-:::
-
-
 ## 1. Create a Custom VM Setup Script
 
 In your app directory (next to `dbos-config.yaml`) create the following script called `build.sh`. Make sure to set its permissions to execute.
