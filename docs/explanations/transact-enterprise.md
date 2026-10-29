@@ -11,7 +11,7 @@ All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to
 DBOS Transact Enterprise provides:
 
 - **Conductor access**: DBOS Transact Enterprise comes with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
-- **Sharding**: Horizontally scale DBOS to handle millions of workflows per second with a sharded Postgres system database.
+- **Sharding**: Horizontally scale DBOS to handle [over 1M workflows per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
 
