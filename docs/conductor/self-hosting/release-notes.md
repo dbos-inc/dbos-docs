@@ -12,6 +12,12 @@ It is always safe to upgrade directly from any past version to any later version
 
 To be notified of new releases, subscribe to the [RSS feed](https://docs.dbos.dev/conductor/self-hosting/release-notes.xml).
 
+## v0.21.0
+
+*October 30, 2026*
+
+- Conductor's own database can now run on Postgres 13 or later. Previously, it required Postgres 15 or later.
+
 ## v0.20.0
 
 *October 29, 2026*
