@@ -6,7 +6,14 @@
     <description>Release notes for self-hosted DBOS Conductor.</description>
     <language>en</language>
     <atom:link href="https://docs.dbos.dev/conductor/self-hosting/release-notes.xml" rel="self" type="application/rss+xml"/>
-    <lastBuildDate>Thu, 29 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 30 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>DBOS Conductor v0.21.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0210</link>
+      <guid isPermaLink="false">dbos-conductor-v0210</guid>
+      <pubDate>Fri, 30 Oct 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;Conductor's own database can now run on Postgres 13 or later. Previously, it required Postgres 15 or later.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
     <item>
       <title>DBOS Conductor v0.20.0</title>
       <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0200</link>
