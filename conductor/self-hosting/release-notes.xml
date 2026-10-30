@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>DBOS Conductor Release Notes</title>
+    <link>https://docs.dbos.dev/conductor/self-hosting/release-notes</link>
+    <description>Release notes for self-hosted DBOS Conductor.</description>
+    <language>en</language>
+    <atom:link href="https://docs.dbos.dev/conductor/self-hosting/release-notes.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>Thu, 29 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>DBOS Conductor v0.20.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0200</link>
+      <guid isPermaLink="false">dbos-conductor-v0200</guid>
+      <pubDate>Thu, 29 Oct 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;Support for &lt;a href=&quot;https://docs.dbos.dev/python/tutorials/sharding&quot;&gt;sharded system databases&lt;/a&gt;. Workflows, steps, and schedules now report their shard key, and workflow operations accept a shard key.&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://docs.dbos.dev/conductor/autoscaling&quot;&gt;Autoscaling&lt;/a&gt; policies can now target partitioned queues.&lt;/li&gt;&lt;li&gt;The Conductor API now reports per-partition queue limits (&lt;code&gt;partitionConcurrency&lt;/code&gt;, &lt;code&gt;partitionWorkerConcurrency&lt;/code&gt;, and partition rate limits).&lt;/li&gt;&lt;li&gt;Conductor now collects workflow activity metrics to power the console's workflow charts. Collection can be turned off per application.&lt;/li&gt;&lt;li&gt;Improved performance of workflow recovery for applications with many dead executors.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.19.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0190</link>
+      <guid isPermaLink="false">dbos-conductor-v0190</guid>
+      <pubDate>Wed, 09 Sep 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;API keys can now be renamed.&lt;/li&gt;&lt;li&gt;Application names may now be up to 256 characters long.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.18.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0180</link>
+      <guid isPermaLink="false">dbos-conductor-v0180</guid>
+      <pubDate>Wed, 19 Aug 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://docs.dbos.dev/conductor/autoscaling&quot;&gt;Autoscaling&lt;/a&gt; policies can now report executor counts for old application versions, either for one version at a time or for all versions at once.&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://docs.dbos.dev/conductor/audit-logs&quot;&gt;Audit logs&lt;/a&gt; now record the full details of application updates.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.17.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0170</link>
+      <guid isPermaLink="false">dbos-conductor-v0170</guid>
+      <pubDate>Thu, 13 Aug 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;New &lt;a href=&quot;https://docs.dbos.dev/conductor/reference/conductor-api&quot;&gt;Conductor API&lt;/a&gt;: a REST API described by an OpenAPI specification, covering applications, workflows, queues, schedules, API keys, and roles.&lt;/li&gt;&lt;li&gt;New &lt;a href=&quot;https://docs.dbos.dev/conductor/autoscaling&quot;&gt;autoscaling&lt;/a&gt; policies: Conductor computes the number of executors an application needs from its queue load.&lt;/li&gt;&lt;li&gt;Organizations can claim an email domain, so new accounts with a verified email in that domain automatically join the organization.&lt;/li&gt;&lt;li&gt;Workflows, queues, and schedules now report which application owns them, and can be filtered by application when &lt;a href=&quot;https://docs.dbos.dev/explanations/sharing-a-system-database&quot;&gt;several applications share a system database&lt;/a&gt;.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.16.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0160</link>
+      <guid isPermaLink="false">dbos-conductor-v0160</guid>
+      <pubDate>Tue, 28 Jul 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;New &lt;a href=&quot;https://docs.dbos.dev/conductor/audit-logs&quot;&gt;audit logs&lt;/a&gt; recording every write action taken in Conductor.&lt;/li&gt;&lt;li&gt;More consistent error responses across the API.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.15.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0150</link>
+      <guid isPermaLink="false">dbos-conductor-v0150</guid>
+      <pubDate>Wed, 01 Jul 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;Conductor can now run as multiple instances in a &lt;a href=&quot;https://docs.dbos.dev/conductor/self-hosting/hosting-conductor#high-availability&quot;&gt;highly available&lt;/a&gt; configuration.&lt;/li&gt;&lt;li&gt;Support for &lt;a href=&quot;https://docs.dbos.dev/python/tutorials/workflow-management#workflow-attributes&quot;&gt;workflow attributes&lt;/a&gt;: Conductor displays workflows' custom attributes and can filter workflows by them.&lt;/li&gt;&lt;li&gt;Workflow aggregates support additional filters, including workflow IDs, parent workflow, forked-from workflow, user, schedule name, and attributes.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.14.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0140</link>
+      <guid isPermaLink="false">dbos-conductor-v0140</guid>
+      <pubDate>Mon, 08 Jun 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://docs.dbos.dev/conductor/permissions&quot;&gt;Role-based access control&lt;/a&gt; for users, plus API keys that can be scoped to specific applications.&lt;/li&gt;&lt;li&gt;Cancelling a workflow can now optionally cancel its child workflows as well.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>DBOS Conductor v0.13.0</title>
+      <link>https://docs.dbos.dev/conductor/self-hosting/release-notes#v0130</link>
+      <guid isPermaLink="false">dbos-conductor-v0130</guid>
+      <pubDate>Wed, 27 May 2026 12:00:00 GMT</pubDate>
+      <description>&lt;ul&gt;&lt;li&gt;New Prometheus-compatible &lt;a href=&quot;https://docs.dbos.dev/conductor/metrics&quot;&gt;metrics endpoint&lt;/a&gt; covering workflows, queues, steps, and executors.&lt;/li&gt;&lt;li&gt;Workflow aggregates can be grouped into time buckets.&lt;/li&gt;&lt;li&gt;Fixed handling of workflow IDs containing special characters.&lt;/li&gt;&lt;li&gt;The Conductor container now runs as a non-root user.&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>

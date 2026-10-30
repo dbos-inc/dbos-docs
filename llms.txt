@@ -34,6 +34,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Workflow Retention Policies](https://docs.dbos.dev/conductor/retention.md): If you are using [Conductor](./overview.md), you can configure workflow history retention policies for your application from the Retention Policy p...
 - [Deploying Conductor on Kubernetes](https://docs.dbos.dev/conductor/self-hosting/hosting-conductor-with-kubernetes.md): :::info
 - [Self-Hosting Guide](https://docs.dbos.dev/conductor/self-hosting/hosting-conductor.md): :::info
+- [Release Notes](https://docs.dbos.dev/conductor/self-hosting/release-notes.md): <head>
 - [Workflow Management](https://docs.dbos.dev/conductor/workflow-management.md): :::info
 - [DBOS Examples](https://docs.dbos.dev/examples.md): Example applications built with DBOS
 - [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
