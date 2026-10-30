@@ -6,6 +6,8 @@ title: Release Notes
 Release notes for the self-hosted Conductor image ([`dbosdev/conductor`](https://hub.docker.com/r/dbosdev/conductor)).
 It is always safe to upgrade directly from any past version to any later version; see [Upgrading](./hosting-conductor.md#upgrading) for details.
 
+To be notified of new releases, subscribe to the [RSS feed](https://docs.dbos.dev/conductor/self-hosting/release-notes.xml).
+
 ## v0.20.0
 
 *October 29, 2026*
