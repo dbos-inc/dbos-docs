@@ -3,6 +3,10 @@ sidebar_position: 3
 title: Release Notes
 ---
 
+<head>
+  <link rel="alternate" type="application/rss+xml" title="DBOS Conductor Release Notes" href="https://docs.dbos.dev/conductor/self-hosting/release-notes.xml" />
+</head>
+
 Release notes for the self-hosted Conductor image ([`dbosdev/conductor`](https://hub.docker.com/r/dbosdev/conductor)).
 It is always safe to upgrade directly from any past version to any later version; see [Upgrading](./hosting-conductor.md#upgrading) for details.
 
