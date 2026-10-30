@@ -24,7 +24,7 @@ To be notified of new releases, subscribe to the [RSS feed](https://docs.dbos.de
 
 ## v0.19.0
 
-*September 10, 2026*
+*September 9, 2026*
 
 - API keys can now be renamed.
 - Application names may now be up to 256 characters long.

@@ -45,28 +45,51 @@ function emphasisToHtml(s) {
     .replace(/(^|[^*\w])[*_]([^*_]+)[*_](?![*\w])/g, '$1<em>$2</em>');
 }
 
-// Convert the inline Markdown used in release notes (code spans, links, and
-// emphasis) to HTML. Code spans are handled first so their contents stay literal.
-function inlineToHtml(text, siteUrl) {
+// Convert code spans and emphasis to HTML. Code span contents stay literal.
+function textToHtml(text) {
   return text
     .split(/(`[^`]+`)/)
-    .map((part) => {
-      if (/^`[^`]+`$/.test(part)) {
-        return `<code>${escapeXml(part.slice(1, -1))}</code>`;
+    .map((part) =>
+      /^`[^`]+`$/.test(part)
+        ? `<code>${escapeXml(part.slice(1, -1))}</code>`
+        : emphasisToHtml(escapeXml(part)),
+    )
+    .join('');
+}
+
+// Convert the inline Markdown used in release notes (links, code spans, and
+// emphasis) to HTML. Code spans and links are matched in a single left-to-right
+// pass, so a link label may contain code and link syntax inside code stays literal.
+// Internal link URLs are collected in `links` for validation.
+function inlineToHtml(text, siteUrl, links) {
+  return text
+    .split(/(`[^`]+`|\[[^\]]+\]\([^)\s]+\))/)
+    .map((piece) => {
+      const link = piece.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
+      if (!link) {
+        return textToHtml(piece);
       }
-      return part
-        .split(/(\[[^\]]+\]\([^)\s]+\))/)
-        .map((piece) => {
-          const link = piece.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
-          if (link) {
-            const href = escapeXml(resolveLink(link[2], siteUrl));
-            return `<a href="${href}">${emphasisToHtml(escapeXml(link[1]))}</a>`;
-          }
-          return emphasisToHtml(escapeXml(piece));
-        })
-        .join('');
+      const href = resolveLink(link[2], siteUrl);
+      links.push(href);
+      return `<a href="${escapeXml(href)}">${textToHtml(link[1])}</a>`;
     })
     .join('');
+}
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+// Parse a "Month D, YYYY" date, rejecting typos and impossible days.
+function parseDate(text) {
+  const m = text.match(/^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/);
+  const month = m ? MONTHS.indexOf(m[1]) : -1;
+  if (month < 0) {
+    return null;
+  }
+  const date = new Date(Date.UTC(Number(m[3]), month, Number(m[2])));
+  return date.getUTCDate() === Number(m[2]) ? date : null;
 }
 
 function parseReleases(markdown) {
@@ -79,8 +102,8 @@ function parseReleases(markdown) {
     const lines = section.split('\n');
     const version = lines[0].trim();
     const dateLine = lines.find((l) => /^\*[^*]+\*$/.test(l.trim()));
-    const date = dateLine && new Date(`${dateLine.trim().slice(1, -1)} UTC`);
-    if (!date || Number.isNaN(date.getTime())) {
+    const date = dateLine && parseDate(dateLine.trim().slice(1, -1));
+    if (!date) {
       throw new Error(`Release ${version} in ${DOC_FILE} is missing a valid "*Month D, YYYY*" date line`);
     }
     // A bullet starts with "- " or "* "; indented lines that follow continue it.
@@ -103,14 +126,15 @@ module.exports = function conductorReleaseFeed(context) {
   return {
     name: 'conductor-release-feed',
 
-    async postBuild({ siteConfig, outDir }) {
+    async postBuild({ siteConfig, outDir, routesPaths }) {
       const siteUrl = siteConfig.url.replace(/\/$/, '');
       const pageUrl = `${siteUrl}${PAGE_PATH}`;
       const markdown = fs.readFileSync(path.join(context.siteDir, DOC_FILE), 'utf8');
       const releases = parseReleases(markdown);
+      const links = [pageUrl];
 
       const items = releases.map(({ version, date, items }) => {
-        const html = `<ul>${items.map((i) => `<li>${inlineToHtml(i, siteUrl)}</li>`).join('')}</ul>`;
+        const html = `<ul>${items.map((i) => `<li>${inlineToHtml(i, siteUrl, links)}</li>`).join('')}</ul>`;
         return [
           '    <item>',
           `      <title>DBOS Conductor ${escapeXml(version)}</title>`,
@@ -137,6 +161,14 @@ module.exports = function conductorReleaseFeed(context) {
         '</rss>',
         '',
       ].join('\n');
+
+      // Links are resolved from file paths, so make sure each one is a real page.
+      for (const link of links) {
+        const route = link.startsWith(`${siteUrl}/`) && link.slice(siteUrl.length).split('#')[0];
+        if (route && !routesPaths.includes(route)) {
+          throw new Error(`${DOC_FILE} links to ${link}, which is not a page on this site`);
+        }
+      }
 
       const feedFile = path.join(outDir, FEED_PATH);
       fs.mkdirSync(path.dirname(feedFile), { recursive: true });
