@@ -81,14 +81,15 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-// Parse a "Month D, YYYY" date, rejecting typos and impossible days.
+// Parse a "Month D, YYYY" date, rejecting typos and impossible days. The time
+// is noon UTC so readers show the same calendar date in nearly every timezone.
 function parseDate(text) {
   const m = text.match(/^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/);
   const month = m ? MONTHS.indexOf(m[1]) : -1;
   if (month < 0) {
     return null;
   }
-  const date = new Date(Date.UTC(Number(m[3]), month, Number(m[2])));
+  const date = new Date(Date.UTC(Number(m[3]), month, Number(m[2]), 12));
   return date.getUTCDate() === Number(m[2]) ? date : null;
 }
 
