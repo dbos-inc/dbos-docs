@@ -33,7 +33,7 @@ function resolveLink(href, siteUrl) {
   }
   const [file, anchor] = href.split('#');
   const resolved = file
-    ? path.posix.join(path.posix.dirname(PAGE_PATH), file).replace(/\.mdx?$/, '')
+    ? path.posix.resolve(path.posix.dirname(PAGE_PATH), file).replace(/\.mdx?$/, '')
     : PAGE_PATH;
   return `${siteUrl}${resolved}${anchor ? `#${anchor}` : ''}`;
 }
@@ -98,7 +98,7 @@ function parseReleases(markdown) {
   if (!sections.length) {
     throw new Error(`${DOC_FILE} has no "## <version>" release sections`);
   }
-  return sections.map((section) => {
+  const releases = sections.map((section) => {
     const lines = section.split('\n');
     const version = lines[0].trim();
     const dateLine = lines.find((l) => /^\*[^*]+\*$/.test(l.trim()));
@@ -120,6 +120,16 @@ function parseReleases(markdown) {
     }
     return { version, date, items };
   });
+  // Feed items are identified by version and the newest release dates the feed.
+  releases.forEach(({ version, date }, i) => {
+    if (releases.findIndex((r) => slugify(r.version) === slugify(version)) !== i) {
+      throw new Error(`Release ${version} appears more than once in ${DOC_FILE}`);
+    }
+    if (i > 0 && date > releases[i - 1].date) {
+      throw new Error(`Release ${version} in ${DOC_FILE} is newer than the release above it; list releases newest first`);
+    }
+  });
+  return releases;
 }
 
 module.exports = function conductorReleaseFeed(context) {
