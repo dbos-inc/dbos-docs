@@ -38,42 +38,34 @@ function resolveLink(href, siteUrl) {
   return `${siteUrl}${resolved}${anchor ? `#${anchor}` : ''}`;
 }
 
-// Convert emphasis in already-escaped text to HTML.
+// Convert emphasis in already-escaped text to HTML. As in Markdown, emphasis
+// can't open before or close after whitespace (so "* * *" stays literal), and
+// underscores only count at word boundaries (so snake_case stays literal).
 function emphasisToHtml(s) {
   return s
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[^*\w])[*_]([^*_]+)[*_](?![*\w])/g, '$1<em>$2</em>');
-}
-
-// Convert code spans and emphasis to HTML. Code span contents stay literal.
-function textToHtml(text) {
-  return text
-    .split(/(`[^`]+`)/)
-    .map((part) =>
-      /^`[^`]+`$/.test(part)
-        ? `<code>${escapeXml(part.slice(1, -1))}</code>`
-        : emphasisToHtml(escapeXml(part)),
-    )
-    .join('');
+    .replace(/\*\*(?=\S)([^*]*?\S)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|\W)__(?=\S)([^_]*?\S)__(?!\w)/g, '$1<strong>$2</strong>')
+    .replace(/(^|[^*\w])\*(?=\S)([^*]*?\S)\*(?![*\w])/g, '$1<em>$2</em>')
+    .replace(/(^|\W)_(?=\S)([^_]*?\S)_(?!\w)/g, '$1<em>$2</em>');
 }
 
 // Convert the inline Markdown used in release notes (links, code spans, and
 // emphasis) to HTML. Code spans and links are matched in a single left-to-right
 // pass, so a link label may contain code and link syntax inside code stays literal.
-// Internal link URLs are collected in `links` for validation.
+// They are swapped for placeholders while emphasis is applied, so emphasis can
+// wrap them (e.g. **`foo()`**). Internal link URLs are collected in `links`.
 function inlineToHtml(text, siteUrl, links) {
-  return text
-    .split(/(`[^`]+`|\[[^\]]+\]\([^)\s]+\))/)
-    .map((piece) => {
-      const link = piece.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
-      if (!link) {
-        return textToHtml(piece);
-      }
-      const href = resolveLink(link[2], siteUrl);
-      links.push(href);
-      return `<a href="${escapeXml(href)}">${textToHtml(link[1])}</a>`;
-    })
-    .join('');
+  const held = [];
+  const hold = (html) => `${held.push(html) - 1}`;
+  const marked = text.replace(/`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)/g, (_, code, label, href) => {
+    if (code !== undefined) {
+      return hold(`<code>${escapeXml(code)}</code>`);
+    }
+    const url = resolveLink(href, siteUrl);
+    links.push(url);
+    return hold(`<a href="${escapeXml(url)}">${inlineToHtml(label, siteUrl, links)}</a>`);
+  });
+  return emphasisToHtml(escapeXml(marked)).replace(/(\d+)/g, (_, i) => held[i]);
 }
 
 const MONTHS = [
@@ -138,9 +130,21 @@ function blocksToHtml(lines, version, siteUrl, links) {
       // Unindented items are top level; indented items nest under the previous
       // item; other indented lines continue the previous item.
       const tag = /^\d/.test(line) ? 'ol' : 'ul';
+      const start = tag === 'ol' && parseInt(line, 10) !== 1 ? ` start="${parseInt(line, 10)}"` : '';
+      // As in Markdown, switching between numbers, "-", and "*" starts a new list.
+      const sameList = (l) =>
+        (LIST_ITEM.test(l) && (tag === 'ol' ? /^\d/.test(l) : l[0] === line[0])) || /^\s+\S/.test(l);
       const items = [];
-      while (i < lines.length && (LIST_ITEM.test(lines[i]) || /^\s+\S/.test(lines[i]))) {
+      while (i < lines.length) {
         const l = lines[i];
+        if (!l.trim()) {
+          // Blank lines between items don't end the list.
+          const next = lines.findIndex((x, j) => j > i && x.trim());
+          if (next < 0 || !sameList(lines[next])) break;
+          i = next;
+          continue;
+        }
+        if (!sameList(l)) break;
         const last = items[items.length - 1];
         if (/^\s+(```|:::)/.test(l)) {
           fail(l, 'the RSS feed does not support code blocks or admonitions inside list items');
@@ -162,7 +166,7 @@ function blocksToHtml(lines, version, siteUrl, links) {
           : '';
         return `<li>${inline(text.trim())}${nested}</li>`;
       });
-      out.push(`<${tag}>${lis.join('')}</${tag}>`);
+      out.push(`<${tag}${start}>${lis.join('')}</${tag}>`);
     } else if (UNSUPPORTED.test(line)) {
       fail(line, 'the RSS feed does not support this Markdown');
     } else {
