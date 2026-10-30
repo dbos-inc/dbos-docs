@@ -1,6 +1,6 @@
 // Generates an RSS feed from the self-hosted Conductor release notes page.
-// Each "## vX.Y.Z" section becomes a feed item. A section must contain an
-// italic date line (e.g. "*October 29, 2026*") and at least one bullet point.
+// Each "## vX.Y.Z" section becomes a feed item. A section must start with an
+// italic date line (e.g. "*October 29, 2026*") followed by the release notes.
 
 const fs = require('fs');
 const path = require('path');
@@ -93,6 +93,90 @@ function parseDate(text) {
   return date.getUTCDate() === Number(m[2]) ? date : null;
 }
 
+const LIST_ITEM = /^([-*]|\d+\.) +/;
+const BLOCK_START = /^(```|:::|### |([-*]|\d+\.) )/;
+// Markdown the feed can't render. Failing on it keeps content from being silently dropped.
+const UNSUPPORTED = /^(#|\||<|!\[|>|\s)/;
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Convert a release's Markdown body to HTML. Supports paragraphs, "###" headings,
+// bullet and numbered lists (one level of nesting), fenced code blocks, and
+// admonitions. Any other block fails the build so nothing is left out of the feed.
+function blocksToHtml(lines, version, siteUrl, links) {
+  const inline = (text) => inlineToHtml(text, siteUrl, links);
+  const fail = (line, why) => {
+    throw new Error(`Release ${version} in ${DOC_FILE}: ${why}: "${line.trim()}"`);
+  };
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i += 1;
+    } else if (line.startsWith('```')) {
+      const end = lines.findIndex((l, j) => j > i && l.trim() === '```');
+      if (end < 0) fail(line, 'code block is not closed');
+      out.push(`<pre><code>${escapeXml(lines.slice(i + 1, end).join('\n'))}</code></pre>`);
+      i = end + 1;
+    } else if (line.startsWith(':::')) {
+      // Titles may be written ":::warning Title" or ":::warning[Title]".
+      const [, type, bracketTitle, spaceTitle] =
+        line.match(/^:::(\w+)(?:\[(.*)\]| +(.*))?$/) || fail(line, 'unrecognized admonition');
+      const title = bracketTitle || spaceTitle || '';
+      const end = lines.findIndex((l, j) => j > i && l.trim() === ':::');
+      if (end < 0) fail(line, 'admonition is not closed');
+      const inner = blocksToHtml(lines.slice(i + 1, end), version, siteUrl, links);
+      out.push(`<blockquote><p><strong>${inline(title.trim() || capitalize(type))}</strong></p>${inner}</blockquote>`);
+      i = end + 1;
+    } else if (line.startsWith('### ')) {
+      out.push(`<h3>${inline(line.slice(4).trim())}</h3>`);
+      i += 1;
+    } else if (LIST_ITEM.test(line)) {
+      // Unindented items are top level; indented items nest under the previous
+      // item; other indented lines continue the previous item.
+      const tag = /^\d/.test(line) ? 'ol' : 'ul';
+      const items = [];
+      while (i < lines.length && (LIST_ITEM.test(lines[i]) || /^\s+\S/.test(lines[i]))) {
+        const l = lines[i];
+        const last = items[items.length - 1];
+        if (/^\s+(```|:::)/.test(l)) {
+          fail(l, 'the RSS feed does not support code blocks or admonitions inside list items');
+        } else if (LIST_ITEM.test(l)) {
+          items.push({ text: l.replace(LIST_ITEM, ''), children: [], childTag: null });
+        } else if (LIST_ITEM.test(l.trim())) {
+          last.childTag = last.childTag || (/^\d/.test(l.trim()) ? 'ol' : 'ul');
+          last.children.push(l.trim().replace(LIST_ITEM, ''));
+        } else if (last.children.length) {
+          last.children[last.children.length - 1] += ` ${l.trim()}`;
+        } else {
+          last.text += ` ${l.trim()}`;
+        }
+        i += 1;
+      }
+      const lis = items.map(({ text, children, childTag }) => {
+        const nested = children.length
+          ? `<${childTag}>${children.map((c) => `<li>${inline(c)}</li>`).join('')}</${childTag}>`
+          : '';
+        return `<li>${inline(text.trim())}${nested}</li>`;
+      });
+      out.push(`<${tag}>${lis.join('')}</${tag}>`);
+    } else if (UNSUPPORTED.test(line)) {
+      fail(line, 'the RSS feed does not support this Markdown');
+    } else {
+      const para = [];
+      while (i < lines.length && lines[i].trim() && !BLOCK_START.test(lines[i]) && !UNSUPPORTED.test(lines[i])) {
+        para.push(lines[i].trim());
+        i += 1;
+      }
+      out.push(`<p>${inline(para.join(' '))}</p>`);
+    }
+  }
+  return out.join('');
+}
+
 function parseReleases(markdown) {
   const body = markdown.replace(/\r\n/g, '\n').replace(/^---\n[\s\S]*?\n---\n/, '');
   const sections = body.split(/^## /m).slice(1);
@@ -100,26 +184,20 @@ function parseReleases(markdown) {
     throw new Error(`${DOC_FILE} has no "## <version>" release sections`);
   }
   const releases = sections.map((section) => {
-    const lines = section.split('\n');
+    const lines = section.trimEnd().split('\n');
     const version = lines[0].trim();
-    const dateLine = lines.find((l) => /^\*[^*]+\*$/.test(l.trim()));
-    const date = dateLine && parseDate(dateLine.trim().slice(1, -1));
+    // The first non-blank line after the heading must be the date.
+    const dateIndex = lines.findIndex((l, i) => i > 0 && l.trim());
+    const dateLine = dateIndex > 0 && lines[dateIndex].trim().match(/^\*([^*]+)\*$/);
+    const date = dateLine && parseDate(dateLine[1]);
     if (!date) {
-      throw new Error(`Release ${version} in ${DOC_FILE} is missing a valid "*Month D, YYYY*" date line`);
+      throw new Error(`Release ${version} in ${DOC_FILE} must start with a valid "*Month D, YYYY*" date line`);
     }
-    // A bullet starts with "- " or "* "; indented lines that follow continue it.
-    const items = [];
-    for (const line of lines.slice(1)) {
-      if (/^[-*] /.test(line)) {
-        items.push(line.slice(2).trim());
-      } else if (items.length && /^\s+\S/.test(line)) {
-        items[items.length - 1] += ` ${line.trim()}`;
-      }
+    const body = lines.slice(dateIndex + 1);
+    if (!body.some((l) => l.trim())) {
+      throw new Error(`Release ${version} in ${DOC_FILE} has no content`);
     }
-    if (!items.length) {
-      throw new Error(`Release ${version} in ${DOC_FILE} has no bullet points`);
-    }
-    return { version, date, items };
+    return { version, date, body };
   });
   // Feed items are identified by version and the newest release dates the feed.
   releases.forEach(({ version, date }, i) => {
@@ -144,8 +222,8 @@ module.exports = function conductorReleaseFeed(context) {
       const releases = parseReleases(markdown);
       const links = [pageUrl];
 
-      const items = releases.map(({ version, date, items }) => {
-        const html = `<ul>${items.map((i) => `<li>${inlineToHtml(i, siteUrl, links)}</li>`).join('')}</ul>`;
+      const items = releases.map(({ version, date, body }) => {
+        const html = blocksToHtml(body, version, siteUrl, links);
         return [
           '    <item>',
           `      <title>DBOS Conductor ${escapeXml(version)}</title>`,
