@@ -1,0 +1,271 @@
+// Generates an RSS feed from the self-hosted Conductor release notes page.
+// Each "## vX.Y.Z" section becomes a feed item. A section must start with an
+// italic date line (e.g. "*October 29, 2026*") followed by the release notes.
+
+const fs = require('fs');
+const path = require('path');
+
+const DOC_FILE = 'docs/conductor/self-hosting/release-notes.md';
+const PAGE_PATH = '/conductor/self-hosting/release-notes';
+const FEED_PATH = 'conductor/self-hosting/release-notes.xml';
+
+function escapeXml(s) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Matches the heading IDs Docusaurus generates for ASCII headings.
+function slugify(heading) {
+  return heading
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9 _-]/g, '')
+    .replace(/ /g, '-');
+}
+
+// Resolve a link from the release notes page to an absolute URL.
+function resolveLink(href, siteUrl) {
+  if (/^[a-z]+:/i.test(href)) {
+    return href;
+  }
+  const [file, anchor] = href.split('#');
+  const resolved = file
+    ? path.posix.resolve(path.posix.dirname(PAGE_PATH), file).replace(/\.mdx?$/, '')
+    : PAGE_PATH;
+  return `${siteUrl}${resolved}${anchor ? `#${anchor}` : ''}`;
+}
+
+// Convert emphasis in already-escaped text to HTML. As in Markdown, emphasis
+// can't open before or close after whitespace (so "* * *" stays literal), and
+// underscores only count at word boundaries (so snake_case stays literal).
+function emphasisToHtml(s) {
+  return s
+    .replace(/\*\*(?=\S)([^*]*?\S)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|\W)__(?=\S)([^_]*?\S)__(?!\w)/g, '$1<strong>$2</strong>')
+    .replace(/(^|[^*\w])\*(?=\S)([^*]*?\S)\*(?![*\w])/g, '$1<em>$2</em>')
+    .replace(/(^|\W)_(?=\S)([^_]*?\S)_(?!\w)/g, '$1<em>$2</em>');
+}
+
+// Convert the inline Markdown used in release notes (links, code spans, and
+// emphasis) to HTML. Code spans and links are matched in a single left-to-right
+// pass, so a link label may contain code and link syntax inside code stays literal.
+// They are swapped for placeholders while emphasis is applied, so emphasis can
+// wrap them (e.g. **`foo()`**). Internal link URLs are collected in `links`.
+function inlineToHtml(text, siteUrl, links) {
+  const held = [];
+  const hold = (html) => `${held.push(html) - 1}`;
+  const marked = text.replace(/`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)/g, (_, code, label, href) => {
+    if (code !== undefined) {
+      return hold(`<code>${escapeXml(code)}</code>`);
+    }
+    const url = resolveLink(href, siteUrl);
+    links.push(url);
+    return hold(`<a href="${escapeXml(url)}">${inlineToHtml(label, siteUrl, links)}</a>`);
+  });
+  return emphasisToHtml(escapeXml(marked)).replace(/(\d+)/g, (_, i) => held[i]);
+}
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+// Parse a "Month D, YYYY" date, rejecting typos and impossible days. The time
+// is noon UTC so readers show the same calendar date in nearly every timezone.
+function parseDate(text) {
+  const m = text.match(/^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/);
+  const month = m ? MONTHS.indexOf(m[1]) : -1;
+  if (month < 0) {
+    return null;
+  }
+  const date = new Date(Date.UTC(Number(m[3]), month, Number(m[2]), 12));
+  return date.getUTCDate() === Number(m[2]) ? date : null;
+}
+
+const LIST_ITEM = /^([-*]|\d+\.) +/;
+const BLOCK_START = /^(```|:::|### |([-*]|\d+\.) )/;
+// Markdown the feed can't render. Failing on it keeps content from being silently dropped.
+const UNSUPPORTED = /^(#|\||<|!\[|>|\s)/;
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Convert a release's Markdown body to HTML. Supports paragraphs, "###" headings,
+// bullet and numbered lists (one level of nesting), fenced code blocks, and
+// admonitions. Any other block fails the build so nothing is left out of the feed.
+function blocksToHtml(lines, version, siteUrl, links) {
+  const inline = (text) => inlineToHtml(text, siteUrl, links);
+  const fail = (line, why) => {
+    throw new Error(`Release ${version} in ${DOC_FILE}: ${why}: "${line.trim()}"`);
+  };
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i += 1;
+    } else if (line.startsWith('```')) {
+      const end = lines.findIndex((l, j) => j > i && l.trim() === '```');
+      if (end < 0) fail(line, 'code block is not closed');
+      out.push(`<pre><code>${escapeXml(lines.slice(i + 1, end).join('\n'))}</code></pre>`);
+      i = end + 1;
+    } else if (line.startsWith(':::')) {
+      // Titles may be written ":::warning Title" or ":::warning[Title]".
+      const [, type, bracketTitle, spaceTitle] =
+        line.match(/^:::(\w+)(?:\[(.*)\]| +(.*))?$/) || fail(line, 'unrecognized admonition');
+      const title = bracketTitle || spaceTitle || '';
+      const end = lines.findIndex((l, j) => j > i && l.trim() === ':::');
+      if (end < 0) fail(line, 'admonition is not closed');
+      const inner = blocksToHtml(lines.slice(i + 1, end), version, siteUrl, links);
+      out.push(`<blockquote><p><strong>${inline(title.trim() || capitalize(type))}</strong></p>${inner}</blockquote>`);
+      i = end + 1;
+    } else if (line.startsWith('### ')) {
+      out.push(`<h3>${inline(line.slice(4).trim())}</h3>`);
+      i += 1;
+    } else if (LIST_ITEM.test(line)) {
+      // Unindented items are top level; indented items nest under the previous
+      // item; other indented lines continue the previous item.
+      const tag = /^\d/.test(line) ? 'ol' : 'ul';
+      const start = tag === 'ol' && parseInt(line, 10) !== 1 ? ` start="${parseInt(line, 10)}"` : '';
+      // As in Markdown, switching between numbers, "-", and "*" starts a new list.
+      const sameList = (l) =>
+        (LIST_ITEM.test(l) && (tag === 'ol' ? /^\d/.test(l) : l[0] === line[0])) || /^\s+\S/.test(l);
+      const items = [];
+      while (i < lines.length) {
+        const l = lines[i];
+        if (!l.trim()) {
+          // Blank lines between items don't end the list.
+          const next = lines.findIndex((x, j) => j > i && x.trim());
+          if (next < 0 || !sameList(lines[next])) break;
+          i = next;
+          continue;
+        }
+        if (!sameList(l)) break;
+        const last = items[items.length - 1];
+        if (/^\s+(```|:::)/.test(l)) {
+          fail(l, 'the RSS feed does not support code blocks or admonitions inside list items');
+        } else if (LIST_ITEM.test(l)) {
+          items.push({ text: l.replace(LIST_ITEM, ''), children: [], childTag: null });
+        } else if (LIST_ITEM.test(l.trim())) {
+          last.childTag = last.childTag || (/^\d/.test(l.trim()) ? 'ol' : 'ul');
+          last.children.push(l.trim().replace(LIST_ITEM, ''));
+        } else if (last.children.length) {
+          last.children[last.children.length - 1] += ` ${l.trim()}`;
+        } else {
+          last.text += ` ${l.trim()}`;
+        }
+        i += 1;
+      }
+      const lis = items.map(({ text, children, childTag }) => {
+        const nested = children.length
+          ? `<${childTag}>${children.map((c) => `<li>${inline(c)}</li>`).join('')}</${childTag}>`
+          : '';
+        return `<li>${inline(text.trim())}${nested}</li>`;
+      });
+      out.push(`<${tag}${start}>${lis.join('')}</${tag}>`);
+    } else if (UNSUPPORTED.test(line)) {
+      fail(line, 'the RSS feed does not support this Markdown');
+    } else {
+      const para = [];
+      while (i < lines.length && lines[i].trim() && !BLOCK_START.test(lines[i]) && !UNSUPPORTED.test(lines[i])) {
+        para.push(lines[i].trim());
+        i += 1;
+      }
+      out.push(`<p>${inline(para.join(' '))}</p>`);
+    }
+  }
+  return out.join('');
+}
+
+function parseReleases(markdown) {
+  const body = markdown.replace(/\r\n/g, '\n').replace(/^---\n[\s\S]*?\n---\n/, '');
+  const sections = body.split(/^## /m).slice(1);
+  if (!sections.length) {
+    throw new Error(`${DOC_FILE} has no "## <version>" release sections`);
+  }
+  const releases = sections.map((section) => {
+    const lines = section.trimEnd().split('\n');
+    const version = lines[0].trim();
+    // The first non-blank line after the heading must be the date.
+    const dateIndex = lines.findIndex((l, i) => i > 0 && l.trim());
+    const dateLine = dateIndex > 0 && lines[dateIndex].trim().match(/^\*([^*]+)\*$/);
+    const date = dateLine && parseDate(dateLine[1]);
+    if (!date) {
+      throw new Error(`Release ${version} in ${DOC_FILE} must start with a valid "*Month D, YYYY*" date line`);
+    }
+    const body = lines.slice(dateIndex + 1);
+    if (!body.some((l) => l.trim())) {
+      throw new Error(`Release ${version} in ${DOC_FILE} has no content`);
+    }
+    return { version, date, body };
+  });
+  // Feed items are identified by version and the newest release dates the feed.
+  releases.forEach(({ version, date }, i) => {
+    if (releases.findIndex((r) => slugify(r.version) === slugify(version)) !== i) {
+      throw new Error(`Release ${version} appears more than once in ${DOC_FILE}`);
+    }
+    if (i > 0 && date > releases[i - 1].date) {
+      throw new Error(`Release ${version} in ${DOC_FILE} is newer than the release above it; list releases newest first`);
+    }
+  });
+  return releases;
+}
+
+module.exports = function conductorReleaseFeed(context) {
+  return {
+    name: 'conductor-release-feed',
+
+    async postBuild({ siteConfig, outDir, routesPaths }) {
+      const siteUrl = siteConfig.url.replace(/\/$/, '');
+      const pageUrl = `${siteUrl}${PAGE_PATH}`;
+      const markdown = fs.readFileSync(path.join(context.siteDir, DOC_FILE), 'utf8');
+      const releases = parseReleases(markdown);
+      const links = [pageUrl];
+
+      const items = releases.map(({ version, date, body }) => {
+        const html = blocksToHtml(body, version, siteUrl, links);
+        return [
+          '    <item>',
+          `      <title>DBOS Conductor ${escapeXml(version)}</title>`,
+          `      <link>${escapeXml(`${pageUrl}#${slugify(version)}`)}</link>`,
+          `      <guid isPermaLink="false">dbos-conductor-${escapeXml(slugify(version))}</guid>`,
+          `      <pubDate>${date.toUTCString()}</pubDate>`,
+          `      <description>${escapeXml(html)}</description>`,
+          '    </item>',
+        ].join('\n');
+      });
+
+      const feed = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+        '  <channel>',
+        '    <title>DBOS Conductor Release Notes</title>',
+        `    <link>${escapeXml(pageUrl)}</link>`,
+        '    <description>Release notes for self-hosted DBOS Conductor.</description>',
+        '    <language>en</language>',
+        `    <atom:link href="${escapeXml(`${siteUrl}/${FEED_PATH}`)}" rel="self" type="application/rss+xml"/>`,
+        `    <lastBuildDate>${releases[0].date.toUTCString()}</lastBuildDate>`,
+        ...items,
+        '  </channel>',
+        '</rss>',
+        '',
+      ].join('\n');
+
+      // Links are resolved from file paths, so make sure each one is a real page.
+      for (const link of links) {
+        const route = link.startsWith(`${siteUrl}/`) && link.slice(siteUrl.length).split('#')[0];
+        if (route && !routesPaths.includes(route)) {
+          throw new Error(`${DOC_FILE} links to ${link}, which is not a page on this site`);
+        }
+      }
+
+      const feedFile = path.join(outDir, FEED_PATH);
+      fs.mkdirSync(path.dirname(feedFile), { recursive: true });
+      fs.writeFileSync(feedFile, feed);
+    },
+  };
+};

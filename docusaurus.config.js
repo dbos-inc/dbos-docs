@@ -138,6 +138,7 @@ const config = {
       },
     ],
     'docusaurus-plugin-matomo',
+    require.resolve('./src/plugins/conductor-release-feed'),
     [
       '@docusaurus/plugin-client-redirects',
       {
