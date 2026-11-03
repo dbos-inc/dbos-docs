@@ -27,12 +27,12 @@ If you don't already have Postgres, you can start one in a Docker container:
 docker run -d --name dbos-postgres -e POSTGRES_PASSWORD=dbos -p 5432:5432 postgres:16
 ```
 
-Then set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Then set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string.
 DBOS creates the database if it doesn't exist.
 For example:
 
 ```shell
-export DBOS_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_starter_rust
+export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_starter_rust
 ```
 
 ## 2. Workflows and Steps

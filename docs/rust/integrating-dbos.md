@@ -23,12 +23,12 @@ If you don't already have Postgres, you can start one in a Docker container:
 docker run -d --name dbos-postgres -e POSTGRES_PASSWORD=dbos -p 5432:5432 postgres:16
 ```
 
-Then set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Then set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string.
 DBOS creates the database if it doesn't exist.
 For example:
 
 ```shell
-export DBOS_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_starter_rust
+export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_starter_rust
 ```
 
 ### 2. Add the DBOS Initializer
@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-[`Config::from_env`](https://docs.rs/dbos/latest/dbos/struct.Config.html#method.from_env) reads the database URL from `DBOS_DATABASE_URL`.
+[`Config::from_env`](https://docs.rs/dbos/latest/dbos/struct.Config.html#method.from_env) reads the database URL from `DBOS_SYSTEM_DATABASE_URL`.
 DBOS requires an [application version](./tutorials/upgrading-workflows.md#versioning), from `app_version` or the `DBOS__APPVERSION` environment variable; your crate's version is a good choice.
 
 `DBOS` is cheap to clone (it's an `Arc` inside), so clone it into whatever holds your application's state, such as an Axum router's state.
