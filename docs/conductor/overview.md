@@ -111,6 +111,11 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
     .withConductorKey(conductorKey)
 ```
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+DBOS for Rust doesn't connect to Conductor yet.
+
+</TabItem>
 
 </Tabs>
 
@@ -184,6 +189,11 @@ DBOSConfig config = DBOSConfig.defaults(appName)
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
     .withConductorKey(conductorKey)
 ```
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+DBOS for Rust doesn't connect to Conductor yet.
+
 </TabItem>
 </Tabs>
 :::
