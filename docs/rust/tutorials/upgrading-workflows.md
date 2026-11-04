@@ -101,7 +101,7 @@ async fn workflow(_: ()) -> dbos::Result<String> {
 }
 ```
 
-If any mistakes happen during the process (a breaking change is not patched, or a patch is deprecated or removed prematurely), the workflow returns an error naming the step where the problem occurred.
+If any mistakes happen during the process (a breaking change is not patched, or a patch is deprecated or removed prematurely), recovery refuses to replay the workflow past the step where the problem occurred. The workflow isn't marked `ERROR`: it stays `PENDING`, recovery keeps retrying it, and after 100 attempts it is parked as `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, so fix the code and [resume](./workflow-management.md#resuming-workflows) it.
 
 ### How Patching Works
 

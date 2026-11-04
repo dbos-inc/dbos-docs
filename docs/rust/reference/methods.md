@@ -10,15 +10,16 @@ Most operations come in two forms:
 - a **method** of the same operation on [`DBOS`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html), for use outside a workflow (and on [`Client`](./client.md), from another application).
 
 Don't capture the `DBOS` instance in a workflow to call its methods: the free functions need no instance.
+Starting a child workflow needs the child's `WorkflowRef`, which holds the instance; that is a known limitation, harmless for a process that launches once.
 
 ## Workflow Context
 
-These read the workflow or step the caller is running in. Each returns `None` outside one.
+These read the workflow or step the caller is running in.
 
 | Function | Description |
 |---|---|
-| [`dbos::workflow_id()`](https://docs.rs/dbos/latest/dbos/fn.workflow_id.html) | The running workflow's ID. |
-| [`dbos::step_id()`](https://docs.rs/dbos/latest/dbos/fn.step_id.html) | The current step's ID. |
+| [`dbos::workflow_id()`](https://docs.rs/dbos/latest/dbos/fn.workflow_id.html) | The running workflow's ID, or `None` outside one. |
+| [`dbos::step_id()`](https://docs.rs/dbos/latest/dbos/fn.step_id.html) | The current step's ID, or `None` outside one. |
 | [`dbos::step_status()`](https://docs.rs/dbos/latest/dbos/fn.step_status.html) | Inside a step, its [`StepStatus`](https://docs.rs/dbos/latest/dbos/struct.StepStatus.html): step ID, current attempt and maximum attempts. |
 | [`dbos::cancellation_token()`](https://docs.rs/dbos/latest/dbos/fn.cancellation_token.html) | A [`CancellationToken`](https://docs.rs/dbos/latest/dbos/struct.CancellationToken.html) that fires when DBOS abandons the current step attempt. Never fires outside a step. |
 
@@ -78,7 +79,7 @@ See the [workflow management tutorial](../tutorials/workflow-management.md).
 
 ## Schedules
 
-These are methods of `DBOS` (and of `Client`). The single-schedule calls are recorded as steps when made from a workflow; `apply_schedules`, `backfill_schedule` and `trigger_schedule` can't be called from one.
+These are methods of `DBOS` (and of `Client`), for use outside a workflow; there are no free-function forms.
 
 | Method | Description |
 |---|---|

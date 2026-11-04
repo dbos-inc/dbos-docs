@@ -11,6 +11,7 @@ Each of these types implements `serde`'s `Serialize` and `Deserialize`, and DBOS
 - **A custom serializer** of your own, such as one that encrypts or compresses payloads.
 
 Every row records the encoding it was written in, so a reader always knows how to read it, and you can change encodings without making older rows unreadable.
+The exception is a schedule's context, which is read with whatever serializer is configured: after configuring a custom serializer, write existing schedules again with `apply_schedules` or `update_schedule`.
 
 ## Portable workflows
 

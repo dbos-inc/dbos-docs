@@ -24,7 +24,7 @@ DBOS requires a Postgres database.
 If you don't already have Postgres, you can start one in a Docker container:
 
 ```shell
-docker run -d --name dbos-postgres -e POSTGRES_PASSWORD=dbos -p 5432:5432 postgres:16
+docker run -d --name dbos-postgres -e POSTGRES_PASSWORD=dbos -p 5432:5432 postgres:17
 ```
 
 Then set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string.

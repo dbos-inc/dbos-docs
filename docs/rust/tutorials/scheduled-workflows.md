@@ -122,7 +122,6 @@ async fn manage(dbos: &DBOS) -> dbos::Result<()> {
 }
 ```
 
-Called from inside a workflow, these operations are recorded as steps.
 
 ### Backfilling and Triggering
 

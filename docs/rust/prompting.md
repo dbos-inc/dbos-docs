@@ -46,7 +46,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - Do NOT race, time out, spawn, or consume in completion order any DBOS call inside a workflow body. In particular, do NOT use `tokio::select!`, `futures::select!`, `futures::future::select`/`select_all`, `smol::future::race`/`or`, `tokio::time::timeout`, `FuturesUnordered`, `buffer_unordered`, `for_each_concurrent`, `tokio::spawn`, `smol::spawn` or `std::thread::spawn` around DBOS calls in a workflow body. Use `dbos::select_step!` to race DBOS calls, `dbos::sleep` for delays, and `tokio::join!` / `futures::future::join_all` to run them concurrently. Inside a step, any of these is fine.
 - Do NOT use `tokio::time::sleep` or another non-durable sleep in a workflow body; use `dbos::sleep`.
 - Do NOT start or enqueue workflows, or call `dbos::recv`, `dbos::set_event` or `dbos::patch`, from inside a step.
-- Do NOT capture the `DBOS` instance in a workflow closure. Inside a workflow, use the free functions in the `dbos` crate (`dbos::step`, `dbos::send`, `dbos::cancel_workflow`, ...), which need no instance.
+- Do NOT capture the `DBOS` instance in a workflow closure (capturing a child's `WorkflowRef` to start it is the one accepted exception). Inside a workflow, use the free functions in the `dbos` crate (`dbos::step`, `dbos::send`, `dbos::cancel_workflow`, ...), which need no instance.
 - Workflows and steps should NOT mutate shared state in memory outside their own scope.
 - Register every workflow with `register_workflow` BEFORE `launch`. Register queues and create schedules AFTER `launch`.
 
@@ -323,7 +323,7 @@ async fn pay_or_expire(_: ()) -> dbos::Result<String> {
 }
 ```
 
-`dbos::select_workflow(&ids)` waits for the first of several workflows and returns its ID; `dbos::join_workflows(&ids)` waits for all of them.
+`dbos::select_workflow(&ids)` waits for the first of several workflows and returns its ID, recorded; `dbos::join_workflows(&ids)` waits for all of them.
 
 ## Workflow IDs and Idempotency
 
@@ -393,7 +393,7 @@ async fn timeout_example(example_workflow: &WorkflowRef<String, String>) -> dbos
 }
 ```
 
-On expiry the workflow and its children are cancelled; the workflow's next DBOS call fails with `Error::WorkflowCancelled`, which it should return. A child inherits its parent's deadline (`Timeout::Inherit`) unless given `Timeout::Explicit(d)` or `Timeout::None`.
+On expiry the workflow is cancelled, with the children that inherited its deadline; the workflow's next DBOS call fails with `Error::WorkflowCancelled`, which it should return. A child inherits its parent's deadline (`Timeout::Inherit`) unless given `Timeout::Explicit(d)` or `Timeout::None`.
 
 ## Durable Sleep
 

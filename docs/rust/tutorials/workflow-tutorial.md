@@ -78,6 +78,8 @@ Called from inside another workflow, `start` and `run` start a **child workflow*
 Don't capture the `DBOS` instance in a workflow closure.
 The instance owns its registered workflows, so a workflow that holds the instance keeps it from ever being freed.
 A workflow body doesn't need it: steps, sleeps, events, messages and the [workflow management calls](./workflow-management.md) are all free functions in the `dbos` crate that find the running workflow on their own.
+Starting a child workflow is the exception: it needs the child's `WorkflowRef`, which holds the instance too, so a workflow that captures one (as the [queue example](../programming-guide.md#3-queues-and-parallelism) does) keeps the instance alive.
+That is a known limitation, harmless for a process that launches DBOS once and runs until it exits.
 :::
 
 ## Errors
@@ -214,6 +216,7 @@ async fn good_workflow(_: ()) -> dbos::Result<String> {
 ```
 
 When a recovery does reach a different step than the one recorded at that position, DBOS refuses it with `dbos::sysdb::Error::UnexpectedStep` (inside `Error::SystemDatabase`) rather than replaying the wrong result.
+The refusal isn't recorded as the workflow's outcome: the workflow stays `PENDING`, recovery tries it again, and after 100 attempts it is parked as `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
 DBOS compares step names, not inputs, so a recovery that reaches the same step with different inputs isn't detected. Don't rely on the error to catch every mistake.
 
 ### Step IDs are taken where a call is written
@@ -257,7 +260,10 @@ DBOS records step results, not which future won a race, so a recovery can take a
   DBOS has no durable replacement for these yet; run such a fan-out as [child workflows](#starting-workflows-in-parallel) on a queue, or sequentially.
   - `futures::stream::FuturesUnordered`, `StreamExt::buffer_unordered` and `StreamExt::for_each_concurrent`
   - any other combinator that yields results in completion order, including `futures-lite`'s
-- **Spawning a durable call.** DBOS finds the running workflow through a task-local, so a durable call in a spawned task has no workflow and fails with `Error::NotInWorkflow`, on every runtime.
+- **Spawning a durable call.** DBOS finds the running workflow through a task-local, which a spawned task doesn't inherit, on any runtime. What happens then depends on the call, and the commonest case is silent:
+  a step or `dbos::sleep` built inside the spawned task runs as a plain call and records nothing;
+  a step built in the workflow and awaited in the spawned task fails with `Error::StepBuiltElsewhere`;
+  and `send`, `recv`, `set_event`, `get_event` and the management calls fail with `Error::NotInWorkflow`.
   - Tokio: `tokio::spawn`, `tokio::task::spawn_blocking` and `JoinSet`
   - smol: `smol::spawn`, `smol::unblock` and `Executor::spawn`
   - async-global-executor: `async_global_executor::spawn`, `spawn_local` and `spawn_blocking`
@@ -326,7 +332,7 @@ A losing step is dropped and records nothing; a losing `result()` stops waiting,
 ### Waiting for child workflows
 
 [`select_workflow`](https://docs.rs/dbos/latest/dbos/fn.select_workflow.html) waits for the first of several workflows to finish and returns its ID, and [`join_workflows`](https://docs.rs/dbos/latest/dbos/fn.join_workflows.html) waits for all of them.
-Both are recorded, and both take one query per poll whatever the number of workflows, so prefer them to racing many handles' `result()` calls in `select_step!`:
+`select_workflow` records which workflow finished first, so a recovery gets the same answer. `join_workflows` records nothing and takes no step ID: a recovery simply waits for the set again. Both take one query per poll whatever the number of workflows, so prefer them to racing many handles' `result()` calls in `select_step!`:
 
 ```rust
 async fn first_child(children: Vec<String>) -> dbos::Result<String> {
@@ -361,8 +367,10 @@ async fn timeout_example(example_workflow: &WorkflowRef<String, String>) -> dbos
 }
 ```
 
-When the timeout expires, the workflow and all its children are cancelled.
-Cancelling a workflow sets its status to `CANCELLED` and stops it at its next durable call, which fails with `Error::WorkflowCancelled`. A step that is already running finishes first, unless it is [preemptible](./step-tutorial.md#step-timeouts).
+When the timeout expires, the workflow is cancelled, along with the children that inherited its deadline; a child with its own timeout, or `Timeout::None`, is left running.
+In the process running the workflow, the timeout stops it at once, including a step in progress (whose [cancellation token](./step-tutorial.md#step-timeouts) fires); the step records nothing and runs again if the workflow is resumed.
+A workflow no process is running is marked `CANCELLED` by a sweep.
+Either way, the workflow's next durable call fails with `Error::WorkflowCancelled`.
 See [cancelling workflows](./workflow-management.md#cancelling-workflows) for details.
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution.
@@ -468,6 +476,7 @@ These guarantees assume that the application and database may crash and go offli
 
 1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or an error to the calling workflow), it will never be re-executed.
+The exception is a step that was running when its workflow was [cancelled](./workflow-management.md#cancelling-workflows): its result isn't recorded, so it runs again if the workflow is resumed.
 
 If a workflow returns an error, the workflow **terminates**&mdash;DBOS records the error, sets the workflow status to `ERROR`, and **does not recover the workflow**.
 This is because errors returned from a workflow are assumed to be nonrecoverable.

@@ -50,7 +50,7 @@ Get one from `start`, or from [`retrieve_workflow`](./methods.md#workflow-manage
 |---|---|
 | [`workflow_id()`](https://docs.rs/dbos/latest/dbos/struct.WorkflowHandle.html#method.workflow_id) | The workflow's ID. |
 | [`result()`](https://docs.rs/dbos/latest/dbos/struct.WorkflowHandle.html#method.result) | Waits for the workflow to finish and returns its result. Inside a workflow, the wait is recorded. Consumes the handle. |
-| [`status()`](https://docs.rs/dbos/latest/dbos/struct.WorkflowHandle.html#method.status) | The workflow's current status: `Pending`, `Enqueued`, `Delayed`, `Success`, `Error` or `Cancelled`. |
+| [`status()`](https://docs.rs/dbos/latest/dbos/struct.WorkflowHandle.html#method.status) | The workflow's current status: `Pending`, `Enqueued`, `Delayed`, `Success`, `Error`, `Cancelled` or `MaxRecoveryAttemptsExceeded`. |
 
 ## Steps
 
@@ -88,8 +88,8 @@ Every durable call (`step`, `sleep`, `send`, `recv`, `set_event`, `get_event`, s
 | Item | Description |
 |---|---|
 | [`select_step!`](https://docs.rs/dbos/latest/dbos/macro.select_step.html) | Races durable calls and records the winner, so a recovery takes the same arm. Needs the `macros` feature. |
-| [`dbos::select_workflow(ids)`](https://docs.rs/dbos/latest/dbos/fn.select_workflow.html), [`select_workflow!`](https://docs.rs/dbos/latest/dbos/macro.select_workflow.html) | Waits for the first of several workflows to finish and returns its ID, recorded. |
-| [`dbos::join_workflows(ids)`](https://docs.rs/dbos/latest/dbos/fn.join_workflows.html), [`join_workflows!`](https://docs.rs/dbos/latest/dbos/macro.join_workflows.html) | Waits for all of several workflows to finish. |
+| [`dbos::select_workflow(ids)`](https://docs.rs/dbos/latest/dbos/fn.select_workflow.html), [`select_workflow!`](https://docs.rs/dbos/latest/dbos/macro.select_workflow.html) | Waits for the first of several workflows to finish and returns its ID, recorded so a recovery gets the same answer. |
+| [`dbos::join_workflows(ids)`](https://docs.rs/dbos/latest/dbos/fn.join_workflows.html), [`join_workflows!`](https://docs.rs/dbos/latest/dbos/macro.join_workflows.html) | Waits for all of several workflows to finish. Records nothing; a recovery waits again. |
 
 `tokio::join!`, `futures::join!` and `futures::future::join_all` over durable calls are supported; races, timeouts, completion-order streams and spawned tasks are not. See [determinism](../tutorials/workflow-tutorial.md#concurrency-in-workflows).
 
@@ -102,10 +102,10 @@ The variants you're most likely to match on:
 | Variant | When |
 |---|---|
 | `Application(E)` | The workflow or step returned its own error. |
-| `WorkflowCancelled` | This workflow was cancelled, or timed out. Return it. |
-| `AwaitedWorkflowCancelled` | A workflow this one waited on was cancelled. |
+| `WorkflowCancelled` | This workflow was cancelled, or timed out (return it); or, outside a workflow, the workflow a handle awaited was cancelled. |
+| `AwaitedWorkflowCancelled` | Inside a workflow, a workflow it awaited was cancelled. |
 | `StepTimeout` | A step attempt ran past its `timeout`. |
-| `MaxStepRetriesExceeded` | A step failed every attempt; carries each attempt's error. |
+| `MaxStepRetriesExceeded` | A step with `max_attempts` above 1 failed every attempt; carries each attempt's error. With the default of 1, the step's own error comes back unwrapped. |
 | `NotInWorkflow` | A call that needs a workflow, such as `set_event` or `recv`, was made outside one. |
 | `InsideStep` | A call that can't run in a step, such as starting a workflow, `recv` or `set_event`, was made inside one. |
 | `NotLaunched` | The instance hasn't been launched. |

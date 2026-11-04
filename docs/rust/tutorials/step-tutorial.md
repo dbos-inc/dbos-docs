@@ -133,7 +133,8 @@ async fn timeout_workflow(_: ()) -> dbos::Result<String> {
 
 Dropping a future can't stop work running outside it, such as a blocking thread.
 For that, read [`dbos::cancellation_token()`](https://docs.rs/dbos/latest/dbos/fn.cancellation_token.html) inside the step.
-The token fires whenever DBOS abandons the attempt: when it times out, when the step loses a [`select_step!`](./workflow-tutorial.md#selecting-the-first-result) race, or when the workflow is cancelled or shut down in this process.
+The token fires whenever DBOS abandons the attempt: when the step times out, when it loses a [`select_step!`](./workflow-tutorial.md#selecting-the-first-result) race, when its workflow's [timeout](./workflow-tutorial.md#workflow-timeouts) expires, when DBOS shuts down, or when a `preemptible` step's workflow is cancelled.
+An ordinary cancel doesn't fire it: a step that isn't preemptible runs to its end.
 It doesn't fire for an attempt that finishes.
 
 ```rust

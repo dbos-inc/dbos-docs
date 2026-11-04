@@ -107,7 +107,7 @@ async fn cancel_tree(dbos: &DBOS, workflow_ids: &[&str]) -> dbos::Result<()> {
 ```
 
 If the workflow is enqueued, cancelling removes it from the queue.
-If the workflow is currently executing, cancelling sets its status to `CANCELLED`; the execution is not interrupted mid-step and its output is checkpointed, but the execution stops at its **next durable call** (step, child workflow, sleep, `send`/`recv`, and so on).
+If the workflow is currently executing, cancelling sets its status to `CANCELLED` and takes the workflow away from the execution running it. That execution isn't interrupted: a step in progress runs to its end, but its result is no longer recorded, so the step runs again if the workflow is resumed. The execution stops at its **next durable call** (step, child workflow, sleep, `send`/`recv`, and so on).
 That call returns `Error::WorkflowCancelled`.
 Don't ignore that error to continue execution: return it, which is what `?` does.
 A step marked [`preemptible`](./step-tutorial.md#step-timeouts) stops as soon as DBOS sees the cancellation, instead of running to its end.
@@ -117,7 +117,8 @@ A workflow is also cancelled when its [durable timeout](./workflow-tutorial.md#w
 
 ### Awaiting a cancelled workflow
 
-Awaiting a cancelled workflow's handle returns `Error::AwaitedWorkflowCancelled`, a different error from `WorkflowCancelled`, so an awaiting workflow can tell "the workflow I awaited was cancelled" apart from "I was cancelled", and can handle it and continue.
+Awaiting a cancelled workflow's handle from inside a workflow returns `Error::AwaitedWorkflowCancelled`, a different error from `WorkflowCancelled`, so the awaiting workflow can tell "the workflow I awaited was cancelled" apart from "I was cancelled", and can handle it and continue.
+Awaited from outside a workflow, the handle returns `Error::WorkflowCancelled`.
 When the awaiter is itself a workflow, this outcome is checkpointed like any other child error, so a recovery of the awaiter sees the same outcome, even if the cancelled workflow is later resumed.
 
 ## Resuming Workflows
