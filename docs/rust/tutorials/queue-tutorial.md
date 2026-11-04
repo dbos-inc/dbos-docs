@@ -164,7 +164,7 @@ async fn global_concurrency(dbos: &DBOS) -> dbos::Result<()> {
 }
 ```
 
-Setting `concurrency` or `worker_concurrency` to `Some(0)` pauses the queue: nothing is dequeued from it until the limit is raised.
+Setting `worker_concurrency` to `Some(0)` pauses the queue: nothing is dequeued from it until the limit is raised. `concurrency` can't be set below `worker_concurrency` or a per-partition limit, so `concurrency: Some(0)` pauses the queue only when those are 0 or unset.
 
 ## Rate Limiting
 
@@ -214,7 +214,7 @@ async fn reconfigure(dbos: &DBOS) -> dbos::Result<()> {
 [`queue`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.queue) and [`list_queues`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.list_queues) read the stored configuration, and [`delete_queue`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.delete_queue) removes it.
 
 :::warning
-If your application calls `register_queue` with `AlwaysUpdate` on startup, the next process to start overwrites settings you applied at runtime.
+If your application calls `register_queue` with `UpdateIfLatestVersion` or `AlwaysUpdate` on startup, the next process to start on the latest version overwrites settings you applied at runtime.
 Either update the `register_queue` call to match the new configuration, or register with `NeverUpdate` to preserve the runtime changes.
 :::
 

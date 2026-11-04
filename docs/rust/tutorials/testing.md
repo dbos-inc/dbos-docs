@@ -68,7 +68,7 @@ async fn launch_for_test() -> dbos::Result<(DBOS, dbos::WorkflowRef<String, u32>
 async fn quote_runs_as_a_workflow() -> dbos::Result<()> {
     let (dbos, quote) = launch_for_test().await?;
 
-    let workflow_id = format!("quote-test-{}", std::process::id());
+    let workflow_id = format!("quote-test-{}", uuid::Uuid::new_v4());
     let options = StartOptions {
         workflow_id: Some(&workflow_id),
         ..StartOptions::default()
@@ -88,7 +88,7 @@ async fn quote_runs_as_a_workflow() -> dbos::Result<()> {
 
 Keep in mind when writing these tests:
 
-- **Workflow IDs are idempotency keys.** Starting a workflow with an ID that already exists returns the existing workflow instead of running it again. Use fresh IDs in each test run, or drop the test database between runs.
+- **Workflow IDs are idempotency keys.** Starting a workflow with an ID that already exists returns the existing workflow instead of running it again. Use fresh IDs in each test run, such as UUIDs as in the example, or drop the test database between runs.
 - **Register before launch.** Each test that builds its own `DBOS` registers its workflows before calling `launch`, as an application does.
 - **Shut down at the end.** [`shutdown`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.shutdown) stops the background tasks and closes the connection pool.
 - **Tests in one database share state.** Tests that run in parallel and use the same queue names or workflow IDs can see each other's work. Give each test its own names, its own database, or its own system schema with [`Config::schema`](https://docs.rs/dbos/latest/dbos/struct.Config.html#structfield.schema).

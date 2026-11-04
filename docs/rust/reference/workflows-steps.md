@@ -356,7 +356,7 @@ A `PendingStart` can't be a [`select_step!`](#select_step) branch: whether a wor
 
 ## Concurrency
 
-Building durable calls and joining them with `tokio::join!`, `futures::join!`, `futures::future::join_all` or `try_join_all` is deterministic.
+Building durable calls and joining them with `tokio::join!`, `futures::join!`, `futures::future::join_all` or `try_join_all` is deterministic, except for `patch`, `deprecate_patch` and `debounce`, which claim their positions when awaited and must be awaited on their own.
 Racing them, wrapping them in timeouts, consuming them in completion order, or spawning them is not: see [Determinism](../tutorials/workflow-tutorial.md#concurrency-in-workflows).
 
 ### select_step!

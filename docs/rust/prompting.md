@@ -45,6 +45,9 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - A workflow function must be deterministic: given the same step results, it must make the same DBOS calls in the same order.
 - Do NOT race, time out, spawn, or consume in completion order any DBOS call inside a workflow body. In particular, do NOT use `tokio::select!`, `futures::select!`, `futures::future::select`/`select_all`, `smol::future::race`/`or`, `tokio::time::timeout`, `FuturesUnordered`, `buffer_unordered`, `for_each_concurrent`, `tokio::spawn`, `smol::spawn` or `std::thread::spawn` around DBOS calls in a workflow body. Use `dbos::select_step!` to race DBOS calls, `dbos::sleep` for delays, and `tokio::join!` / `futures::future::join_all` to run them concurrently. Inside a step, any of these is fine.
 - Do NOT use `tokio::time::sleep` or another non-durable sleep in a workflow body; use `dbos::sleep`.
+- Await `dbos::patch`, `dbos::deprecate_patch` and a debouncer's `debounce` on their own, never inside a join: they claim their step position when awaited.
+- A workflow's future must be `Send + 'static`: don't hold an `Rc`, a `std::sync::MutexGuard` or a borrow across an `.await` in a workflow body.
+- To start a child workflow, capture the child's `WorkflowRef` in the parent's registered closure (a `WorkflowRef` can't be a workflow's input), as the queue example below does.
 - Do NOT start or enqueue workflows, or call `dbos::recv`, `dbos::set_event` or `dbos::patch`, from inside a step.
 - Do NOT capture the `DBOS` instance in a workflow closure (capturing a child's `WorkflowRef` to start it is the one accepted exception). Inside a workflow, use the free functions in the `dbos` crate (`dbos::step`, `dbos::send`, `dbos::cancel_workflow`, ...), which need no instance.
 - Workflows and steps should NOT mutate shared state in memory outside their own scope.

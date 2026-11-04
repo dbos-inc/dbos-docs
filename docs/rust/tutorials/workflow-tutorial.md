@@ -11,6 +11,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 A workflow is an `async` function (or closure) that takes **one input** and returns a [`dbos::Result`](https://docs.rs/dbos/latest/dbos/type.Result.html).
 To take several values, take a struct or a tuple; to take none, take `()`.
 The input and output must implement `serde`'s `Serialize` and `Deserialize`, because DBOS records them in the database.
+The workflow's future must be `Send + 'static`, because DBOS runs it as a background task: don't hold an `Rc`, a `std::sync::MutexGuard` or a borrowed reference across an `.await` in a workflow body.
 
 Register each workflow with [`register_workflow`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.register_workflow) **before** calling `launch`.
 Registration names the workflow and returns a typed [`WorkflowRef`](https://docs.rs/dbos/latest/dbos/struct.WorkflowRef.html), which is how you start it:
@@ -275,6 +276,7 @@ These are supported in a workflow body:
 
 - `tokio::join!`, `futures::join!`, `futures::future::join_all` and `try_join_all`, and `futures_lite::future::zip` and `try_zip`.
   Each returns results in input order, and each step took its ID when it was built.
+  The exceptions are `dbos::patch`, `dbos::deprecate_patch` and a debouncer's `debounce`, which claim their positions when awaited: await each of those on its own, not inside a join.
   They work on every runtime DBOS supports.
 - [`select_step!`](#selecting-the-first-result), and [`select_workflow`](#waiting-for-child-workflows) and [`join_workflows`](#waiting-for-child-workflows) (and their `select_workflow!` and `join_workflows!` macro forms).
 - [`dbos::sleep`](#durable-sleep), for durable delays.
