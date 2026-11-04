@@ -10,27 +10,25 @@ toc_max_heading_level: 3
 cargo add dbos@0.6
 ```
 
-0.6 is a large release with breaking changes to the API, to the system database, and to what DBOS records about workflows in progress.
-Read [Before you upgrade](#before-you-upgrade) first: **workflows started on 0.5 must finish before you start 0.6**.
+0.6 is a large release with breaking changes to the API and to the system database.
+Read [Before you upgrade](#before-you-upgrade) first: **stop every 0.5 executor before you start 0.6**.
 
 ### Before you upgrade
 
-#### Let 0.5 workflows finish first
+#### Stop 0.5, then start 0.6
 
-0.6 can't reliably finish a workflow that 0.5 started part-way, and 0.5 and 0.6 executors can't share a system database. Upgrade like this:
+0.6 recovers the workflows 0.5 left unfinished, but 0.5 and 0.6 executors can't run against one system database at the same time. Upgrade like this:
 
-1. Stop starting new work on 0.5, and let every in-flight workflow finish (or cancel it). The application has drained when it has no `PENDING`, `ENQUEUED` or `DELAYED` workflows.
-2. Stop every 0.5 executor.
-3. Rename the system database URL variable, if you use it: 0.6 reads `DBOS_SYSTEM_DATABASE_URL`, not `DBOS_DATABASE_URL`.
-4. Start the 0.6 executors. They migrate the system database at launch.
-5. Don't run a 0.5 executor against the database again.
+1. Stop every 0.5 executor. Workflows they were running stay `PENDING`.
+2. Rename the system database URL variable, if you use it: 0.6 reads `DBOS_SYSTEM_DATABASE_URL`, not `DBOS_DATABASE_URL`.
+3. Start the 0.6 executors **with the same application version** (`Config::app_version` or `DBOS__APPVERSION`) as the 0.5 executors they replace. They migrate the system database at launch, then recover the workflows 0.5 left unfinished; recovery only resumes workflows started on the running version.
+4. Don't run a 0.5 executor against the database again.
 
-Why:
+Why 0.5 and 0.6 can't run together: 0.6 stores workflow inputs and outputs in new tables, which 0.5 doesn't read, so a 0.5 executor would run a workflow 0.6 enqueued with no input and report no outcome. A rolling upgrade that mixes the two isn't safe.
 
-- **DBOS records its own steps under new names.** Steps DBOS records for its own operations went from camelCase to snake_case, such as `DBOS.setEvent` to `DBOS.set_event`, `DBOS.getResult` (awaiting a child) to `DBOS.get_result`, and `DBOS.cancelWorkflow` to `DBOS.cancel_workflow`. Recovery checks each recorded step's name, so a 0.5 workflow whose history holds one of the renamed steps is refused with `UnexpectedStep` when 0.6 replays it. It isn't marked failed: it stays `PENDING`, is retried, and is parked as `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. `DBOS.sleep`, `DBOS.send`, `DBOS.recv`, child starts and your own steps keep their names.
-- **0.6 stores workflow inputs and outputs in new tables.** 0.5 doesn't read them, so a 0.5 executor would run a workflow 0.6 enqueued with no input and report no outcome. A rolling upgrade that mixes the two isn't safe.
+What carries over: everything 0.5 recorded stays readable and replays under 0.6. Inputs, outputs and errors in the old columns are still read, rows with no serialization tag read as `rust_serde`, the names of the steps DBOS records for its own operations are unchanged, and 0.5's sleeps, errors and management-call records replay as before.
 
-What carries over: everything 0.5 wrote stays readable. Inputs, outputs and errors in the old columns are still read, rows with no serialization tag read as `rust_serde`, and 0.5's sleeps, errors and management-call records replay as before.
+If you change the application version as part of the upgrade, 0.6 won't recover 0.5's workflows. Let them finish on 0.5 first, or [fork](./tutorials/workflow-management.md#forking-workflows) them onto the new version afterwards.
 
 #### System database migrations
 
@@ -191,7 +189,6 @@ These change what an application does without a compile error.
 
 #### Recorded data
 
-- **Recorded step names are snake_case**, as above. Anything that matches step names from `list_workflow_steps` needs updating.
 - **Unknown serialization tags are refused.** 0.5 read every payload as `rust_serde`, whatever its tag. A row tagged with an encoding this process doesn't have, such as another SDK's, is now `Error::UnknownSerialization`, and such a queued workflow isn't run.
 - **Non-finite floats round-trip.** `NaN` and the infinities are stored as `"NaN"`, `"Infinity"` and `"-Infinity"` in the default encoding, where 0.5 stored them as `null`.
 
