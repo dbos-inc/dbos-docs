@@ -5,62 +5,185 @@ toc_max_heading_level: 3
 ---
 
 See the [queues tutorial](../tutorials/queue-tutorial.md) for how to use these.
+Full API documentation is on [docs.rs](https://docs.rs/dbos/latest/dbos/).
 
-## Registering and Managing Queues
+## Managing Queues
 
-A queue's configuration is stored in the system database, so these are methods of a launched [`DBOS`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html) (and of [`Client`](./client.md)).
+A queue's configuration is stored in the system database, so these are methods of a launched `DBOS`, and of [`Client`](./client.md).
+Every worker re-reads a queue's configuration as it polls, so a change takes effect across the fleet without a restart.
 
-| Method | Description |
-|---|---|
-| [`register_queue(name, options, on_conflict)`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.register_queue) | Creates a queue, or reports the existing one. [`QueueConflict`](https://docs.rs/dbos/latest/dbos/enum.QueueConflict.html) says what to do if it exists: `UpdateIfLatestVersion`, `AlwaysUpdate` or `NeverUpdate`. After `launch` only. |
-| [`queue(name)`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.queue) | The stored configuration of one queue, as a [`Queue`](https://docs.rs/dbos/latest/dbos/struct.Queue.html). |
-| [`list_queues()`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.list_queues) | Every queue this application owns. |
-| [`update_queue(name, change)`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.update_queue) | Changes some of a queue's limits with a [`QueueChange`](https://docs.rs/dbos/latest/dbos/struct.QueueChange.html), whose fields are each `Change::Leave` or `Change::Set(value)`. Workers pick the change up on their next poll. |
-| [`delete_queue(name)`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.delete_queue) | Removes a queue's configuration. |
+### register_queue
+
+```rust
+impl DBOS {
+    pub async fn register_queue(
+        &self,
+        name: &str,
+        options: QueueOptions,
+        on_conflict: QueueConflict,
+    ) -> dbos::Result<Queue>;
+}
+```
+
+Create a queue, or report the one already registered under `name`, and return its stored configuration.
+Call it after [`launch`](./lifecycle.md#launch); before, it returns `Error::NotLaunched`.
+Each queue belongs to the application that registers it, and only that application dequeues from it.
+
+**Parameters:**
+- **name**: The queue's name.
+- **options**: Its [`QueueOptions`](#queueoptions).
+- **on_conflict**: What to do if the queue exists. [`QueueConflict`](https://docs.rs/dbos/latest/dbos/enum.QueueConflict.html):
+  - `UpdateIfLatestVersion`: overwrite the stored options only if this process runs the application's latest version, so an old version still running during a rolling deploy doesn't revert the new one's settings. The usual choice at startup. A `Client` can't use it.
+  - `AlwaysUpdate`: always overwrite them.
+  - `NeverUpdate`: keep what is stored.
+
+```rust
+let queue = dbos.register_queue(
+    "task_queue",
+    QueueOptions { worker_concurrency: Some(5), ..QueueOptions::default() },
+    QueueConflict::UpdateIfLatestVersion,
+).await?;
+```
+
+### queue
+
+```rust
+pub async fn queue(&self, name: &str) -> dbos::Result<Option<Queue>>;
+pub async fn list_queues(&self) -> dbos::Result<Vec<Queue>>;
+```
+
+The stored configuration of one queue, or of every queue the application owns.
+A [`Queue`](https://docs.rs/dbos/latest/dbos/struct.Queue.html) has `name()`, `concurrency()`, `worker_concurrency()`, `rate_limit()`, `is_partitioned()`, `partition_concurrency()`, `partition_worker_concurrency()`, `partition_rate_limit()` and `polling_interval()`.
+
+### update_queue
+
+```rust
+pub async fn update_queue(&self, name: &str, change: QueueChange) -> dbos::Result<Queue>;
+```
+
+Change some of a queue's options and return the result.
+[`QueueChange`](https://docs.rs/dbos/latest/dbos/struct.QueueChange.html) has a field per option, each a [`Change`](https://docs.rs/dbos/latest/dbos/sysdb/types/enum.Change.html): `Change::Leave` (the default) keeps the stored value, `Change::Set(value)` replaces it.
+
+```rust
+dbos.update_queue("task_queue", QueueChange {
+    concurrency: Change::Set(Some(50)),
+    ..QueueChange::default()
+}).await?;
+```
+
+### delete_queue
+
+```rust
+pub async fn delete_queue(&self, name: &str) -> dbos::Result<()>;
+```
+
+Remove a queue's registration. Removing one that isn't registered is not an error.
+Workflows already enqueued on it are left in place and aren't dequeued until the queue is registered again, so pause a queue with a concurrency of 0 instead.
 
 ### QueueOptions
 
-| Field | Default | Description |
-|---|---|---|
-| [`worker_concurrency`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.worker_concurrency) | `None` | The most of the queue's workflows one process runs at once. `Some(0)` pauses the queue. |
-| [`concurrency`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.concurrency) | `None` | The most that run at once across every process. Every `PENDING` workflow on the queue counts, including those of older versions. `Some(0)` pauses the queue. |
-| [`rate_limit`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.rate_limit) | `None` | A [`RateLimit`](https://docs.rs/dbos/latest/dbos/sysdb/types/struct.RateLimit.html): at most `limit` starts per `period`, across every process. |
-| [`partition_concurrency`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.partition_concurrency) | `None` | Like `concurrency`, per partition key. Setting any partition limit partitions the queue. |
-| [`partition_worker_concurrency`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.partition_worker_concurrency) | `None` | Like `worker_concurrency`, per partition key. |
-| [`partition_rate_limit`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.partition_rate_limit) | `None` | Like `rate_limit`, per partition key. |
-| [`polling_interval`](https://docs.rs/dbos/latest/dbos/struct.QueueOptions.html#structfield.polling_interval) | 1 second | How often a quiet queue is polled. |
+```rust
+pub struct QueueOptions {
+    pub concurrency: Option<i32>,
+    pub worker_concurrency: Option<i32>,
+    pub polling_interval: Duration,
+    pub rate_limit: Option<RateLimit>,
+    pub partition_concurrency: Option<i32>,
+    pub partition_worker_concurrency: Option<i32>,
+    pub partition_rate_limit: Option<RateLimit>,
+}
+```
+
+Build with `..QueueOptions::default()`.
+
+- **worker_concurrency**: The most of the queue's workflows one process runs at once. Default: `None`. `Some(0)` pauses the queue on every executor.
+- **concurrency**: The most that run at once across all processes, counting every `PENDING` workflow on the queue, including older versions'. Default: `None`. `Some(0)` pauses the queue. It can't be below `worker_concurrency`.
+- **rate_limit**: At most [`RateLimit`](https://docs.rs/dbos/latest/dbos/sysdb/types/struct.RateLimit.html)`{ limit, period }` starts in any `period`, across all processes. Default: `None`.
+- **partition_concurrency**, **partition_worker_concurrency**, **partition_rate_limit**: The same limits per partition key. Setting any of them partitions the queue; queue-wide limits on a partitioned queue are enforced too.
+- **polling_interval**: How often a quiet queue is polled. Default: 1 second.
 
 ## Enqueueing
 
-A workflow this process registered is enqueued by starting it with a [`QueueRequest`](#queuerequest) in its [`StartOptions`](./workflows-steps.md#startoptions).
-A workflow it doesn't have is enqueued by name with [`DBOS::enqueue`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.enqueue) or [`enqueue_with`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.enqueue_with) and [`EnqueueOptions`](#enqueueoptions), or from another application with a [`Client`](./client.md).
-Enqueued from a workflow, either way, the enqueued workflow is a child, recorded in the parent.
+A workflow this process registered is enqueued by starting it with a [`QueueRequest`](#queuerequest) in [`StartOptions::queue`](./workflows-steps.md#startoptions).
+A workflow it doesn't have is enqueued by name with [`DBOS::enqueue`](#enqueue), or from another application with [`Client::enqueue`](./client.md#enqueue).
+Enqueued from inside a workflow, by either route, the enqueued workflow is a child of the caller, recorded at the caller's step.
+Queued workflows are dequeued in priority order, then first in, first out.
 
 ### QueueRequest
 
-[`QueueRequest::new(name)`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#method.new) names the queue; set the other fields with struct update syntax.
+```rust
+pub struct QueueRequest<'a> {
+    pub name: &'a str,
+    pub deduplication_id: Option<&'a str>,
+    pub priority: Option<u32>,
+    pub partition_key: Option<&'a str>,
+    pub delay: Option<Duration>,
+    pub duplication_policy: DuplicationPolicy,
+    pub serialization: SerializationFormat,
+}
 
-| Field | Default | Description |
-|---|---|---|
-| [`name`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.name) | *(required)* | The queue. |
-| [`deduplication_id`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.deduplication_id) | `None` | At most one workflow with this ID may be enqueued or running on the queue at once. |
-| [`duplication_policy`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.duplication_policy) | `Reject` | A [`DuplicationPolicy`](https://docs.rs/dbos/latest/dbos/enum.DuplicationPolicy.html): `Reject` fails with `QueueDeduplicated`; `ReturnExisting` hands back the workflow holding the ID. |
-| [`priority`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.priority) | `None` | From 1 to 2,147,483,647; lower runs first. Workflows with no priority run before any with one. |
-| [`partition_key`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.partition_key) | `None` | The partition, on a partitioned queue. A workflow enqueued on a partitioned queue without one is never dequeued; on any other queue the key is ignored. |
-| [`delay`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.delay) | `None` | How long the workflow waits, `DELAYED`, before it can be dequeued. |
-| [`serialization`](https://docs.rs/dbos/latest/dbos/struct.QueueRequest.html#structfield.serialization) | `Default` | A [`SerializationFormat`](https://docs.rs/dbos/latest/dbos/enum.SerializationFormat.html) for the workflow's input and output. |
+impl<'a> QueueRequest<'a> {
+    pub fn new(name: &'a str) -> Self;
+}
+```
+
+A queue to enqueue a workflow on, and what to ask of it. Build with `QueueRequest::new(name)` and struct update syntax.
+
+- **name**: The queue.
+- **deduplication_id**: While a workflow with this ID is enqueued or running on the queue, another enqueue with it is refused. Default: `None`.
+- **duplication_policy**: What a refused enqueue does. [`DuplicationPolicy`](https://docs.rs/dbos/latest/dbos/enum.DuplicationPolicy.html)`::Reject` (default) fails with `dbos::sysdb::Error::QueueDeduplicated`; `ReturnExisting` returns a handle to the workflow holding the ID, discarding this call's input. `ReturnExisting` needs a `deduplication_id`.
+- **priority**: From 1 to 2,147,483,647; lower is dequeued first. Default: `None`, which is dequeued before any priority. `Some(0)` is refused.
+- **partition_key**: The workflow's partition on a partitioned queue. A workflow enqueued on a partitioned queue without one is never dequeued; on other queues the key is ignored. A deduplication ID applies across the whole queue, not per partition.
+- **delay**: Hold the workflow `DELAYED` this long before it can be dequeued, on the database's clock. Default: `None`.
+- **serialization**: A [`SerializationFormat`](./workflows-steps.md#serializationformat) for the workflow's input and output.
+
+### enqueue
+
+```rust
+impl DBOS {
+    pub fn enqueue<'a, P: Serialize, R, E>(&self, workflow: impl Into<QualifiedWorkflowName>, queue: &'a str, input: P) -> PendingStart<'a, R, E>;
+    pub fn enqueue_with<'a, P: Serialize, R, E>(&self, workflow: impl Into<QualifiedWorkflowName>, input: P, options: EnqueueOptions<'a>) -> PendingStart<'a, R, E>;
+    pub fn enqueue_portable<'a, R, E>(&self, workflow: impl Into<QualifiedWorkflowName>, args: PortableWorkflowArgs, options: EnqueueOptions<'a>) -> PendingStart<'a, R, E>;
+}
+```
+
+Enqueue a workflow by name, for a workflow this process needn't have: one another service implements, possibly in another language.
+The name isn't looked up locally; whichever executor has the workflow dequeues it.
+The type parameters state the workflow's result and error types; nothing checks them until the result is decoded.
+`enqueue_portable` passes a [`PortableWorkflowArgs`](https://docs.rs/dbos/latest/dbos/struct.PortableWorkflowArgs.html) (`positional_args`, `named_args`) as given, for a workflow in another language that takes named arguments.
+
+```rust
+let handle: WorkflowHandle<String> = dbos.enqueue("send_email", "email-queue", "hello").await?;
+```
 
 ### EnqueueOptions
 
-[`EnqueueOptions::new(queue_name)`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#method.new) carries a `QueueRequest`'s fields, plus:
+```rust
+pub struct EnqueueOptions<'a> {
+    pub queue_name: &'a str,
+    pub deduplication_id: Option<&'a str>,
+    pub duplication_policy: DuplicationPolicy,
+    pub priority: Option<u32>,
+    pub partition_key: Option<&'a str>,
+    pub delay: Option<Duration>,
+    pub serialization: SerializationFormat,
+    pub workflow_id: Option<&'a str>,
+    pub workflow_id_reuse_policy: WorkflowIdReusePolicy,
+    pub app_name: Option<&'a str>,
+    pub app_version: Option<&'a str>,
+    pub timeout: Timeout,
+    pub attributes: Option<&'a serde_json::Map<String, serde_json::Value>>,
+}
 
-| Field | Default | Description |
-|---|---|---|
-| [`workflow_id`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#structfield.workflow_id) | a UUID | The workflow's ID. |
-| [`workflow_id_reuse_policy`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#structfield.workflow_id_reuse_policy) | `ReturnExisting` | As for a start. |
-| [`app_name`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#structfield.app_name) | this application (`DBOS`), the client's (`Client`) | The [application](../../explanations/sharing-a-system-database.md) that implements the workflow. |
-| [`app_version`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#structfield.app_version) | `None` | The version that runs it; `None` is that application's latest. |
-| [`timeout`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#structfield.timeout) | `Inherit` | The workflow's [`Timeout`](https://docs.rs/dbos/latest/dbos/enum.Timeout.html). |
-| [`attributes`](https://docs.rs/dbos/latest/dbos/struct.EnqueueOptions.html#structfield.attributes) | `None` | Attributes recorded with the workflow. |
+impl<'a> EnqueueOptions<'a> {
+    pub fn new(queue_name: &'a str) -> Self;
+}
+```
 
-[`enqueue_portable`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.enqueue_portable) enqueues a workflow in another language that takes named arguments, from a [`PortableWorkflowArgs`](https://docs.rs/dbos/latest/dbos/struct.PortableWorkflowArgs.html).
+Options for an enqueue by name. The queue fields mean what they mean on a [`QueueRequest`](#queuerequest). In addition:
+
+- **workflow_id**, **workflow_id_reuse_policy**: As for a [start](./workflows-steps.md#startoptions).
+- **app_name**: The [application](../../explanations/sharing-a-system-database.md) that implements the workflow. Default: this application for `DBOS::enqueue_with`, the client's `app_name` for `Client::enqueue_with`. A client with neither writes an unclaimed workflow, which any application may run.
+- **app_version**: The version that must run it. Default: `None`, which the application's latest version dequeues.
+- **timeout**: The workflow's [`Timeout`](./workflows-steps.md#timeout). From `DBOS::enqueue_with` inside a workflow, `Inherit` takes the caller's deadline.
+- **attributes**: Attributes recorded with the workflow.
