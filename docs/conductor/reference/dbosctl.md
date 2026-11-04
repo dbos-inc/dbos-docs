@@ -646,17 +646,6 @@ DBOSConfig config = DBOSConfig.defaults("my-app")
 ```
 
 </TabItem>
-<TabItem value="rust" label="Rust">
-
-```rust
-fn no_migrate() -> Config {
-    let mut config = Config::from_env("my-app");
-    config.migrate = false;
-    config
-}
-```
-
-</TabItem>
 </Tabs>
 
 :::

@@ -221,11 +221,6 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
     .withConductorDomain(conductorDomain);
 ```
 </TabItem>
-<TabItem value="rust" label="Rust">
-
-DBOS for Rust doesn't connect to Conductor yet.
-
-</TabItem>
 </Tabs>
 
 ## Licensing

@@ -317,11 +317,6 @@ dbos.registerAlertHandler((ruleType, message, metadata) -> {
 ```
 
 </TabItem>
-<TabItem value="rust" label="Rust">
-
-DBOS for Rust doesn't connect to Conductor yet. Alerts are delivered through Conductor, so a Rust application can't register an alert handler.
-
-</TabItem>
 </Tabs>
 
 ### Metrics-Based Alerts
