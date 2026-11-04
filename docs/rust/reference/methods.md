@@ -6,13 +6,13 @@ toc_max_heading_level: 3
 
 Most operations come in two forms:
 
-- a **free function** in the `dbos` crate, for use inside a workflow. It finds the running workflow on its own and records the call as a step, so a recovery doesn't repeat it. Outside a workflow, it returns `Error::NotInWorkflow`.
+- a **free function** in the `dbos` crate, for use inside a workflow. It finds the running workflow on its own and records the call as a step, so a recovery doesn't repeat it. Outside a workflow, most return `Error::NotInWorkflow`; `step` and `sleep` run plainly instead.
 - a **method** of the same operation on [`DBOS`](./lifecycle.md), for use outside a workflow, and on [`Client`](./client.md), from another application.
 
 Don't capture the `DBOS` instance in a workflow to call its methods: the instance owns the workflow, so the two would keep each other alive.
 Starting a child workflow needs the child's `WorkflowRef`, which holds the instance; that is a known limitation, harmless for a process that launches once.
 
-Every free function and most methods return a [`PendingStep`](./workflows-steps.md#pendingstep), which takes its step ID when it is built, or a [`PendingStart`](./workflows-steps.md#pendingstart) for calls that start a workflow.
+Most free functions and methods return a [`PendingStep`](./workflows-steps.md#pendingstep), which takes its step ID when it is built, or a [`PendingStart`](./workflows-steps.md#pendingstart) for calls that start a workflow. The exceptions are noted below: `patch`, `join_workflows`, the stream readers and `retrieve_workflow`.
 The free functions take the calling workflow's error type `E`, so `?` works on them in any workflow.
 
 Full API documentation is on [docs.rs](https://docs.rs/dbos/latest/dbos/).
@@ -302,7 +302,7 @@ impl DBOS {
 ```
 
 Mark workflows `CANCELLED` and remove enqueued ones from their queues.
-A running workflow isn't interrupted: the execution running it loses ownership, its step in progress runs to its end without being recorded, and its next durable call fails with `Error::WorkflowCancelled`.
+A running workflow isn't interrupted: the execution running it loses ownership, and its step in progress runs to its end but fails when it tries to record its result (`Error::SystemDatabase` holding `sysdb::Error::WorkflowConflict`); a durable call after that fails with `Error::SystemDatabase` holding `sysdb::Error::WorkflowCancelled`. A preemptible step fails with `Error::WorkflowCancelled`.
 `cancel_all` returns the IDs it cancelled.
 [`Children`](https://docs.rs/dbos/latest/dbos/enum.Children.html)`::Include` also cancels every descendant; `Skip` only the workflows named.
 A workflow can't cancel itself.
@@ -352,7 +352,7 @@ impl DBOS {
 // Free functions: dbos::rewind_workflow(id), dbos::rewind_workflow_with(id, options)
 ```
 
-Re-run a finished workflow (`SUCCESS`, `ERROR` or `CANCELLED`) under the same ID: its steps from `start_step` on are discarded, its outcome cleared, and it is re-enqueued.
+Re-run a finished workflow (`SUCCESS`, `ERROR`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) under the same ID: its steps from `start_step` on are discarded, its outcome cleared, and it is re-enqueued.
 [`RewindOptions`](https://docs.rs/dbos/latest/dbos/struct.RewindOptions.html): `start_step` (default 0, the whole workflow), `app_version`, `queue_name`, `queue_partition_key`.
 Rewinding an unfinished workflow returns `dbos::sysdb::Error::WorkflowNotRewindable`; cancel it first.
 
@@ -401,7 +401,7 @@ An unknown workflow ID fails with `dbos::sysdb::Error::NonExistentWorkflow`.
 
 ## Schedules
 
-These are methods of `DBOS` (and of `Client`), for use outside a workflow; there are no free-function forms.
+These are methods of `DBOS` (and of `Client`); there are no free-function forms. Called from inside a workflow, `create_schedule`, `list_schedules`, `get_schedule`, `update_schedule`, `pause_schedule`, `resume_schedule` and `delete_schedule` are recorded as steps, though calling them there means capturing the `DBOS` instance; `apply_schedules`, `backfill_schedule` and `trigger_schedule` are refused with `Error::InsideWorkflow`.
 See the [scheduling tutorial](../tutorials/scheduled-workflows.md).
 
 ### ScheduleSpec
@@ -544,4 +544,4 @@ impl<'a> DebouncerClient<'a> {
 }
 ```
 
-A debouncer for a [`Client`](./client.md), naming the workflow and its queue. Its fields match `Debouncer`'s, plus `app_version`.
+A debouncer for a [`Client`](./client.md). Its fields are `client`, `workflow` (a `QualifiedWorkflowName`), `queue` (required, a `&str`), `serialization`, `timeout`, `attributes`, `app_version`, `app_name` and `debounce_timeout`.

@@ -21,14 +21,14 @@ Read [Before you upgrade](#before-you-upgrade) first: **stop every 0.5 executor 
 
 1. Stop every 0.5 executor. Workflows they were running stay `PENDING`.
 2. Rename the system database URL variable, if you use it: 0.6 reads `DBOS_SYSTEM_DATABASE_URL`, not `DBOS_DATABASE_URL`.
-3. Start the 0.6 executors **with the same application version** (`Config::app_version` or `DBOS__APPVERSION`) as the 0.5 executors they replace. They migrate the system database at launch, then recover the workflows 0.5 left unfinished; recovery only resumes workflows started on the running version.
+3. Start the 0.6 executors **with the same application version and executor ID** (`Config::app_version` or `DBOS__APPVERSION`, and `Config::executor_id` or `DBOS__VMID`) as the 0.5 executors they replace. They migrate the system database at launch, then recover the workflows 0.5 left unfinished: an executor recovers only the workflows recorded under its own executor ID and the running version. The executor ID defaults to `"local"` in both releases, so this only matters if you set it per host.
 4. Don't run a 0.5 executor against the database again.
 
 Why 0.5 and 0.6 can't run together: 0.6 stores workflow inputs and outputs in new tables, which 0.5 doesn't read, so a 0.5 executor would run a workflow 0.6 enqueued with no input and report no outcome. A rolling upgrade that mixes the two isn't safe.
 
 What carries over: everything 0.5 recorded stays readable and replays under 0.6. Inputs, outputs and errors in the old columns are still read, rows with no serialization tag read as `rust_serde`, the names of the steps DBOS records for its own operations are unchanged, and 0.5's sleeps, errors and management-call records replay as before.
 
-If you change the application version as part of the upgrade, 0.6 won't recover 0.5's workflows. Let them finish on 0.5 first, or [fork](./tutorials/workflow-management.md#forking-workflows) them onto the new version afterwards.
+If you change the application version or the executor IDs as part of the upgrade, 0.6 won't recover 0.5's workflows. Let them finish on 0.5 first, or [fork](./tutorials/workflow-management.md#forking-workflows) them onto the new version afterwards.
 
 #### System database migrations
 
@@ -121,10 +121,10 @@ client.enqueue_with::<_, R, E>(QualifiedWorkflowName::instance("charge", "Billin
 
 #### Messages
 
-`Message` is renamed `SendMessage`, and the topic and idempotency key moved onto it from `SendOptions`.
+`Message` is renamed `SendMessage`, and `SendOptions` loses its `topic` and `idempotency_key` fields: set them on the `SendMessage`, which already had them.
 `SendBulkOptions` is removed: bulk sends take `SendOptions`, whose `forks` field is renamed `send_to_forks`.
 `send_with` takes a `SendMessage` and a `SendOptions`, on the free function, `DBOS` and `Client`.
-`send` and `send_bulk` are unchanged for callers.
+`send` is unchanged for callers, and `send_bulk` callers only rename `Message` to `SendMessage`.
 
 ```rust
 // 0.5
@@ -214,9 +214,9 @@ These change what an application does without a compile error.
 - **A concurrency of 0 pauses a queue**, where 0.5 refused it.
 - **A queue is partitioned only when it has a per-partition limit.** A deduplication ID may now be combined with a partition key; it holds across the whole queue.
 
-#### CockroachDB
+#### Retried database errors
 
-Only serialization failures and deadlocks (`40001` and `40P01`) are retried, on their own schedule; the rest of SQLSTATE class 40, including `40003`, no longer is.
+Only serialization failures and deadlocks (`40001` and `40P01`) are retried, on their own schedule, on Postgres and CockroachDB alike; the rest of SQLSTATE class 40, including `40003`, no longer is.
 
 ### Toolchain and features
 

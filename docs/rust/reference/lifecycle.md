@@ -42,8 +42,8 @@ Start the instance:
 2. Connect to the system database, creating the database if it doesn't exist.
 3. Create and migrate the DBOS tables, unless `Config::migrate` is off.
 4. Register the application version.
-5. Start the background tasks: queue polling, the scheduler, and the workflow-timeout sweep.
-6. Recover the workflows this executor left `PENDING` in a previous run, on this application version.
+5. Recover the workflows left `PENDING` under this executor's ID and this application version, by a previous run.
+6. Start the background tasks: queue polling, the scheduler, and the workflow-timeout sweep.
 
 Launching an instance that is already launched logs a warning and does nothing.
 DBOS logs `DBOS launched` through `tracing`.
@@ -106,4 +106,4 @@ The identity `launch` resolved from the configuration and the environment. Each 
 ## Panics
 
 A panic in a workflow body, or in a step it runs, doesn't crash the process.
-DBOS logs it with the workflow's ID and records nothing, so the workflow stays `PENDING`, as if the process had crashed, and is recovered from its last completed step the next time an executor of its version launches.
+DBOS logs it with the workflow's ID and records nothing, so the workflow stays `PENDING`, as if the process had crashed, and is recovered from its last completed step the next time an executor with its executor ID and application version launches.

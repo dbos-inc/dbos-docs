@@ -107,10 +107,9 @@ async fn cancel_tree(dbos: &DBOS, workflow_ids: &[&str]) -> dbos::Result<()> {
 ```
 
 If the workflow is enqueued, cancelling removes it from the queue.
-If the workflow is currently executing, cancelling sets its status to `CANCELLED` and takes the workflow away from the execution running it. That execution isn't interrupted: a step in progress runs to its end, but its result is no longer recorded, so the step runs again if the workflow is resumed. The execution stops at its **next durable call** (step, child workflow, sleep, `send`/`recv`, and so on).
-That call returns `Error::WorkflowCancelled`.
+If the workflow is currently executing, cancelling sets its status to `CANCELLED` and takes the workflow away from the execution running it. That execution isn't interrupted: a step in progress runs to its end, but its result is no longer recorded, so the step runs again if the workflow is resumed. The step in progress fails when it tries to record its result, with `Error::SystemDatabase` holding `dbos::sysdb::Error::WorkflowConflict`; a durable call made after that fails with `Error::SystemDatabase` holding `dbos::sysdb::Error::WorkflowCancelled`.
 Don't ignore that error to continue execution: return it, which is what `?` does.
-A step marked [`preemptible`](./step-tutorial.md#step-timeouts) stops as soon as DBOS sees the cancellation, instead of running to its end.
+A step marked [`preemptible`](./step-tutorial.md#step-timeouts) stops as soon as DBOS sees the cancellation, instead of running to its end, and fails with `Error::WorkflowCancelled`.
 
 A workflow is also cancelled when its [durable timeout](./workflow-tutorial.md#workflow-timeouts) expires.
 [Shutting down](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.shutdown) DBOS stops the workflows running in the process without cancelling them: they stay `PENDING` and are recovered from their last completed step on the next launch.
@@ -180,7 +179,7 @@ The difference between rewind and fork is that fork creates a copy of the workfl
 Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams, and its child workflows keep the same IDs.
 Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
 
-You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+You can only rewind a workflow that has finished (`SUCCESS`, `ERROR`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); cancel a running workflow before rewinding it.
 Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
 
 You can rewind a workflow with [`rewind`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.rewind), or with [`rewind_with`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.rewind_with) and [`RewindOptions`](https://docs.rs/dbos/latest/dbos/struct.RewindOptions.html) to choose the step:

@@ -370,9 +370,9 @@ async fn timeout_example(example_workflow: &WorkflowRef<String, String>) -> dbos
 ```
 
 When the timeout expires, the workflow is cancelled, along with the children that inherited its deadline; a child with its own timeout, or `Timeout::None`, is left running.
-In the process running the workflow, the timeout stops it at once, including a step in progress (whose [cancellation token](./step-tutorial.md#step-timeouts) fires); the step records nothing and runs again if the workflow is resumed.
+In the process running the workflow, the timeout drops the workflow at once, including a step in progress (whose [cancellation token](./step-tutorial.md#step-timeouts) fires): its code stops at its current `.await`, and the step records nothing and runs again if the workflow is resumed.
 A workflow no process is running is marked `CANCELLED` by a sweep.
-Either way, the workflow's next durable call fails with `Error::WorkflowCancelled`.
+Awaiting a timed-out workflow's handle returns `Error::WorkflowCancelled` (or `Error::AwaitedWorkflowCancelled`, from inside a workflow).
 See [cancelling workflows](./workflow-management.md#cancelling-workflows) for details.
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution.

@@ -214,7 +214,7 @@ async fn reconfigure(dbos: &DBOS) -> dbos::Result<()> {
 [`queue`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.queue) and [`list_queues`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.list_queues) read the stored configuration, and [`delete_queue`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.delete_queue) removes it.
 
 :::warning
-If your application calls `register_queue` with `UpdateIfLatestVersion` or `AlwaysUpdate` on startup, the next process to start on the latest version overwrites settings you applied at runtime.
+If your application calls `register_queue` on startup with `AlwaysUpdate`, or with `UpdateIfLatestVersion` from the latest version, the next process to start overwrites settings you applied at runtime.
 Either update the `register_queue` call to match the new configuration, or register with `NeverUpdate` to preserve the runtime changes.
 :::
 
@@ -381,5 +381,5 @@ fn listen_config() -> dbos::Config {
 }
 ```
 
-`Some(vec![])` listens to no queues, for a process that enqueues workflows but never runs them.
+`Some(vec![])` listens to none of the application's queues, for a process that enqueues workflows but doesn't run queued ones.
 DBOS's internal queue, where resumed and forked workflows run, is always dequeued from.

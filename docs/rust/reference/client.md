@@ -155,6 +155,21 @@ As [on `DBOS`](./methods.md#schedules).
 Build a spec with [`ScheduleSpec::for_workflow`](./methods.md#schedulespec), which names the workflow.
 A client with no `app_name` and a spec with none writes an unclaimed schedule, which every application sharing the database fires.
 
+### Application versions
+
+```rust
+pub async fn list_app_versions(&self) -> dbos::Result<Vec<VersionInfo>>;
+pub async fn latest_app_version(&self) -> dbos::Result<Option<VersionInfo>>;
+pub async fn set_latest_app_version(&self, version_name: &str) -> dbos::Result<()>;
+pub async fn set_latest_app_version_for(&self, version_name: &str, app_name: &str) -> dbos::Result<()>;
+```
+
+The application versions that have registered, newest first, and the latest one, which an enqueue naming no version runs on.
+`set_latest_app_version` promotes a version to latest; promoting an older one is a rollback.
+A client named for an application sees and promotes that application's versions; `set_latest_app_version_for` names the application explicitly.
+`DBOS` has the same methods, for its own application.
+A [`VersionInfo`](https://docs.rs/dbos/latest/dbos/sysdb/types/struct.VersionInfo.html) has `app_name`, `version_id`, `version_name`, `version_timestamp` and `created_at`.
+
 ### DebouncerClient
 
 See [`DebouncerClient`](./methods.md#debouncerclient).

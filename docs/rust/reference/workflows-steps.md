@@ -173,8 +173,8 @@ Timeouts are stored in the database, so they survive restarts.
 - **None**: no deadline, even under a parent that has one.
 - **Explicit(duration)**: this long, counted from the start, replacing any inherited deadline, whether it is longer or shorter. `Duration` converts into it: `timeout: Duration::from_secs(60).into()`.
 
-When the deadline passes, the workflow is cancelled, with the children that inherited its deadline; its next durable call fails with `Error::WorkflowCancelled`.
-In the process running the workflow, a timeout stops it at once, including a step in progress.
+When the deadline passes, the workflow is cancelled, with the children that inherited its deadline.
+In the process running the workflow, the timeout drops the workflow at once, including a step in progress, which records nothing; a workflow no process is running is marked `CANCELLED` by a sweep.
 
 ### WorkflowHandle
 
@@ -270,9 +270,9 @@ Build with `..StepOptions::default()`.
 - **max_interval**: The longest the wait may grow to. Default: 1 hour.
 - **timeout**: The longest one attempt may run. Default: `None`. An attempt that runs past it is dropped and fails with `Error::StepTimeout`, which counts as a failed attempt and is offered to `should_retry`.
 - **preemptible**: Whether to stop the step as soon as its workflow is seen to be cancelled. Default: `false`, so a running step finishes. DBOS checks by polling the workflow's status while the step runs.
-- **should_retry**: Decides whether a failure is retried; one it declines is returned at once. Default: `None` (retry every failure). Set it with `StepOptions::should_retry`. Cancellations, shutdowns and database failures are never retried and never reach it.
+- **should_retry**: Decides whether a failure is retried; one it declines ends the step at once, whatever attempts are left. Default: `None` (retry every failure). Set it with `StepOptions::should_retry`. Cancellations, shutdowns and database failures are never retried and never reach it.
 
-With `max_attempts` above 1, a step that fails every attempt returns `Error::MaxStepRetriesExceeded`, carrying every attempt's error; with the default of 1, its own error comes back unwrapped.
+With `max_attempts` above 1, a step that fails every attempt, or whose `should_retry` declines a failure after earlier failed attempts, returns `Error::MaxStepRetriesExceeded`, carrying every attempt's error. A step that fails its only attempt (the default of 1, or a failure declined on the first attempt) returns its own error unwrapped.
 
 #### StepOptions::should_retry
 
@@ -500,7 +500,7 @@ async fn checkout(cart: u32) -> dbos::Result<u32, CheckoutError> {
 | `Interrupted` | Shutdown interrupted the workflow; it stays `PENDING`. |
 | `WorkflowFailed` | A workflow failed with an error this process can't rebuild as its type. |
 | `Portable` | A workflow failed with a [portable error](../../explanations/portable-workflows.md#portable-errors) (`name`, `message`, `code`, `data`) this process has no type for. |
-| `WorkflowCancelled` | This workflow was cancelled or timed out; or, outside a workflow, the workflow a handle awaited was. Return it. |
+| `WorkflowCancelled` | Outside a workflow, the workflow a handle awaited was cancelled or timed out; or a `preemptible` step of a cancelled workflow was stopped. Inside a cancelled workflow, other durable calls fail with `SystemDatabase` holding `WorkflowConflict` or `WorkflowCancelled` (see below). Return it. |
 | `AwaitedWorkflowCancelled` | Inside a workflow, a workflow it awaited was cancelled. |
 | `MaxRecoveryAttemptsExceeded` | The workflow was recovered too many times and was parked. |
 | `StepFailed` | A recorded step error couldn't be rebuilt as its type. |
@@ -521,8 +521,9 @@ The variants you're most likely to match on:
 | `WorkflowIdInUse` | A start with `WorkflowIdReusePolicy::Reject` named an ID that exists. |
 | `QueueDeduplicated` | An enqueue's deduplication ID is held by a workflow on the queue. |
 | `ConflictingWorkflow` | A workflow ID is already used by a different workflow. |
+| `WorkflowCancelled` | A durable call was made in a workflow that has been cancelled. Return it. |
 | `UnexpectedStep` | A recovery reached a different step than the one recorded at that position. The workflow stays `PENDING` and is retried, then parked. |
-| `WorkflowConflict` | The workflow was taken over by another execution (cancelled, resumed or recovered); the stale execution adopts the owner's outcome. |
+| `WorkflowConflict` | The workflow was taken over (cancelled, resumed or recovered) while this execution ran it, such as a step finishing after a cancel. Return it; the stale execution adopts the outcome of whatever owns the workflow now. |
 | `NonExistentWorkflow` | The workflow no longer exists, for example because it was deleted while running. |
 | `WorkflowNotRewindable` | A rewind named a workflow that hasn't finished. |
 | `Backend` | The database connection or a query failed. |

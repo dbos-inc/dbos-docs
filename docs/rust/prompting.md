@@ -5,8 +5,6 @@ title: AI-Assisted Development
 
 If you're using an AI coding agent to build a DBOS application, give it the latest information on DBOS for Rust with the [DBOS prompt](#dbos-prompt) below.
 
-You may also want to use the [DBOS MCP server](../integrations/mcp.md) so your model can directly access your application's workflows and steps.
-
 ## DBOS Prompt
 
 You can use this prompt to add rich information about DBOS to your AI coding agent's context.
@@ -27,7 +25,7 @@ You can copy and paste it directly into your context, or follow these directions
 - Respond in a friendly and concise manner
 - Ask clarifying questions when requirements are ambiguous
 - Generate code in Rust using the `dbos` crate.
-- You MUST include every `use` the code you generate needs.
+- You MUST include every `use` the code you generate needs. (The examples below leave out `use` lines for brevity: `dbos::step`, `serde::{Serialize, Deserialize}`, `std::time::Duration` and the `dbos` types they name.)
 - DBOS does NOT stand for anything.
 
 ## Workflow Guidelines
@@ -396,7 +394,7 @@ async fn timeout_example(example_workflow: &WorkflowRef<String, String>) -> dbos
 }
 ```
 
-On expiry the workflow is cancelled, with the children that inherited its deadline; the workflow's next DBOS call fails with `Error::WorkflowCancelled`, which it should return. A child inherits its parent's deadline (`Timeout::Inherit`) unless given `Timeout::Explicit(d)` or `Timeout::None`.
+On expiry the workflow is cancelled, with the children that inherited its deadline; in the process running it, the workflow is dropped at its current `.await`. A child inherits its parent's deadline (`Timeout::Inherit`) unless given `Timeout::Explicit(d)` or `Timeout::None`.
 
 ## Durable Sleep
 
@@ -457,7 +455,7 @@ async fn fetch_workflow(url: String) -> dbos::Result<String, FetchError> {
 }
 ```
 
-`StepOptions` fields: `max_attempts` (default 1, no retries), `interval` (1s), `backoff_rate` (2.0), `max_interval` (1h), `timeout` (per attempt, `None`), `preemptible` (false), and `should_retry`, set with the `.should_retry(...)` method. A step that fails every attempt returns `Error::MaxStepRetriesExceeded`.
+`StepOptions` fields: `max_attempts` (default 1, no retries), `interval` (1s), `backoff_rate` (2.0), `max_interval` (1h), `timeout` (per attempt, `None`), `preemptible` (false), and `should_retry`, set with the `.should_retry(...)` method. With `max_attempts` above 1, a step that fails every attempt returns `Error::MaxStepRetriesExceeded`; a step that fails its only attempt returns its own error.
 
 ## Workflow Communication
 
