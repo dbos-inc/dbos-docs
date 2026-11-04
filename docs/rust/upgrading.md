@@ -26,7 +26,15 @@ Read [Before you upgrade](#before-you-upgrade) first: **stop every 0.5 executor 
 
 Why 0.5 and 0.6 can't run together: 0.6 stores workflow inputs and outputs in new tables, which 0.5 doesn't read, so a 0.5 executor would run a workflow 0.6 enqueued with no input and report no outcome. A rolling upgrade that mixes the two isn't safe.
 
-What carries over: everything 0.5 recorded stays readable and replays under 0.6. Inputs, outputs and errors in the old columns are still read, rows with no serialization tag read as `rust_serde`, the names of the steps DBOS records for its own operations are unchanged, and 0.5's sleeps, errors and management-call records replay as before.
+What carries over: what 0.5 recorded stays readable and replays under 0.6, with one exception, below. Inputs, outputs and errors in the old columns are still read, rows with no serialization tag read as `rust_serde`, the names of the steps DBOS records for its own operations are unchanged, and 0.5's sleeps, errors and management-call records replay as before.
+
+#### Finish reading streams that 0.5 closed
+
+0.6 doesn't recognise the marker 0.5 wrote when it [closed a stream](./tutorials/workflow-communication.md#workflow-streaming).
+A 0.6 reader treats 0.5's close as an ordinary value, can't decode it, and its `next()` (or `read_stream_value` at that offset) fails with `Error::Deserialization` instead of returning `None`.
+Values before the close still read, and a read a workflow already recorded under 0.5, including reaching the close, replays as before; the error comes only from reading past where a 0.5 reader had got to.
+So before upgrading, finish reading any stream that 0.5 closed, and let 0.5 workflows that read streams complete on 0.5 rather than relying on 0.6 to recover them.
+Streams 0.6 closes are unaffected.
 
 If you change the application version or the executor IDs as part of the upgrade, 0.6 won't recover 0.5's workflows. Let them finish on 0.5 first, or [fork](./tutorials/workflow-management.md#forking-workflows) them onto the new version afterwards.
 
@@ -188,6 +196,8 @@ These change what an application does without a compile error.
 - **Idle transactions are ended.** System-database connections end a session left idle in a transaction for 60 seconds, unless the connection string or `PGOPTIONS` sets `idle_in_transaction_session_timeout`. `IdleTransactionTimeout::ServerSetting` restores 0.5's behaviour.
 
 #### Recorded data
+
+- **A stream closed by 0.5 doesn't read as closed.** Reading past its close fails with `Error::Deserialization`; see [Finish reading streams that 0.5 closed](#finish-reading-streams-that-05-closed).
 
 - **Unknown serialization tags are refused.** 0.5 read every payload as `rust_serde`, whatever its tag. A row tagged with an encoding this process doesn't have, such as another SDK's, is now `Error::UnknownSerialization`, and such a queued workflow isn't run.
 - **Non-finite floats round-trip.** `NaN` and the infinities are stored as `"NaN"`, `"Infinity"` and `"-Infinity"` in the default encoding, where 0.5 stored them as `null`.
