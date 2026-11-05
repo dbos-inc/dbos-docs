@@ -302,7 +302,7 @@ impl DBOS {
 ```
 
 Mark workflows `CANCELLED` and remove enqueued ones from their queues.
-A running workflow isn't interrupted: the execution running it loses ownership, and its step in progress runs to its end but fails when it tries to record its result (`Error::SystemDatabase` holding `sysdb::Error::WorkflowConflict`); a durable call after that fails with `Error::SystemDatabase` holding `sysdb::Error::WorkflowCancelled`. A preemptible step fails with `Error::WorkflowCancelled`.
+A running workflow isn't interrupted: the execution running it loses ownership, and its step in progress runs to its end but fails when it tries to record its result. That step, any later call that checkpoints, and a preemptible step all fail with `Error::WorkflowCancelled`.
 `cancel_all` returns the IDs it cancelled.
 [`Children`](https://docs.rs/dbos/latest/dbos/enum.Children.html)`::Include` also cancels every descendant; `Skip` only the workflows named.
 A workflow can't cancel itself.

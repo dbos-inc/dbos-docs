@@ -107,9 +107,9 @@ async fn cancel_tree(dbos: &DBOS, workflow_ids: &[&str]) -> dbos::Result<()> {
 ```
 
 If the workflow is enqueued, cancelling removes it from the queue.
-If the workflow is currently executing, cancelling sets its status to `CANCELLED` and takes the workflow away from the execution running it. That execution isn't interrupted: a step in progress runs to its end, but its result is no longer recorded, so the step runs again if the workflow is resumed. The step in progress fails when it tries to record its result, with `Error::SystemDatabase` holding `dbos::sysdb::Error::WorkflowConflict`; a durable call made after that fails with `Error::SystemDatabase` holding `dbos::sysdb::Error::WorkflowCancelled`.
+If the workflow is currently executing, cancelling sets its status to `CANCELLED` and takes the workflow away from the execution running it. That execution isn't interrupted: a step in progress runs to its end, but its result is no longer recorded, so the step runs again if the workflow is resumed. The step in progress fails with `Error::WorkflowCancelled` when it tries to record its result, and so does any later call that checkpoints.
 Don't ignore that error to continue execution: return it, which is what `?` does.
-A step marked [`preemptible`](./step-tutorial.md#step-timeouts) stops as soon as DBOS sees the cancellation, instead of running to its end, and fails with `Error::WorkflowCancelled`.
+A step marked [`preemptible`](./step-tutorial.md#step-timeouts) stops as soon as DBOS sees the cancellation, instead of running to its end, and fails with the same error.
 
 A workflow is also cancelled when its [durable timeout](./workflow-tutorial.md#workflow-timeouts) expires.
 [Shutting down](https://docs.rs/dbos/latest/dbos/struct.DBOS.html#method.shutdown) DBOS stops the workflows running in the process without cancelling them: they stay `PENDING` and are recovered from their last completed step on the next launch.

@@ -501,7 +501,7 @@ async fn checkout(cart: u32) -> dbos::Result<u32, CheckoutError> {
 | `Interrupted` | Shutdown interrupted the workflow; it stays `PENDING`. |
 | `WorkflowFailed` | A workflow failed with an error this process can't rebuild as its type. |
 | `Portable` | A workflow failed with a [portable error](../../explanations/portable-workflows.md#portable-errors) (`name`, `message`, `code`, `data`) this process has no type for. |
-| `WorkflowCancelled` | Outside a workflow, the workflow a handle awaited was cancelled or timed out; or a `preemptible` step of a cancelled workflow was stopped. Inside a cancelled workflow, other durable calls fail with `SystemDatabase` holding `WorkflowConflict` or `WorkflowCancelled` (see below). Return it. |
+| `WorkflowCancelled` | Outside a workflow, the workflow a handle awaited was cancelled or timed out. Inside a workflow, that workflow was cancelled: its step in progress couldn't record its result, a later call that checkpoints was refused, or a `preemptible` step was stopped. Return it. |
 | `AwaitedWorkflowCancelled` | Inside a workflow, a workflow it awaited was cancelled. |
 | `MaxRecoveryAttemptsExceeded` | The workflow was recovered too many times and was parked. |
 | `StepFailed` | A recorded step error couldn't be rebuilt as its type. |
@@ -522,9 +522,9 @@ The variants you're most likely to match on:
 | `WorkflowIdInUse` | A start with `WorkflowIdReusePolicy::Reject` named an ID that exists. |
 | `QueueDeduplicated` | An enqueue's deduplication ID is held by a workflow on the queue. |
 | `ConflictingWorkflow` | A workflow ID is already used by a different workflow. |
-| `WorkflowCancelled` | A durable call was made in a workflow that has been cancelled. Return it. |
+| `WorkflowCancelled` | The workflow has been cancelled. A workflow's own calls report this as `Error::WorkflowCancelled`, so you see this one only by calling `SystemDatabase` directly. |
 | `UnexpectedStep` | A recovery reached a different step than the one recorded at that position. The workflow stays `PENDING` and is retried, then parked. |
-| `WorkflowConflict` | The workflow was taken over (cancelled, resumed or recovered) while this execution ran it, such as a step finishing after a cancel. Return it; the stale execution adopts the outcome of whatever owns the workflow now. |
+| `WorkflowConflict` | The workflow was taken over (resumed or recovered) while this execution ran it, such as a step finishing after a recovery. Return it; the stale execution adopts the outcome of whatever owns the workflow now. |
 | `NonExistentWorkflow` | The workflow no longer exists, for example because it was deleted while running. |
 | `WorkflowNotRewindable` | A rewind named a workflow that hasn't finished. |
 | `Backend` | The database connection or a query failed. |

@@ -206,6 +206,7 @@ These change what an application does without a compile error.
 
 - **A result DBOS can't encode fails the workflow.** A workflow result or error that can't be encoded (such as a map with non-string keys) now ends the workflow `ERROR`; in 0.5 it stayed `PENDING` and was re-run. A step output that can't be encoded is recorded as the step's error.
 - **DBOS's refusals inside a workflow are recorded.** A refusal such as sending to a missing workflow, returned with `?`, now ends the workflow `ERROR`, and replays take the same branch. In 0.5 the workflow stayed `PENDING` until parked.
+- **A running workflow's cancellation is one error.** Inside a cancelled workflow, a step in progress, a later call that checkpoints and a preemptible step all return `Error::WorkflowCancelled`. In 0.5, a durable call returned `Error::SystemDatabase` holding `sysdb::Error::WorkflowCancelled`, so a match on that shape still compiles but no longer fires.
 - **A workflow can't cancel or resume itself.** Naming the calling workflow in `cancel`, `cancel_all` (including through a `Children::Include` cascade) or `resume` returns an error; in 0.5 it went through.
 - **Updating a missing workflow's attributes fails** with `NonExistentWorkflow`, where 0.5 returned `Ok(())`.
 - **Durations too long to store are refused** with `InvalidArgument`, where 0.5 truncated them.
