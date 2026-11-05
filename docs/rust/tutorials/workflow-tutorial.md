@@ -251,7 +251,7 @@ DBOS records step results, not which future won a race, so a recovery can take a
 - **Timeouts around durable calls.** A timeout is a race against a timer.
   Use `select_step!` with a durable [`dbos::sleep`](#durable-sleep), or the call's own timeout option where it has one (such as [step timeouts](./step-tutorial.md#step-timeouts) or `recv`'s timeout).
   - Tokio: `tokio::time::timeout` and `timeout_at`
-  - smol and async-global-executor: an `async_io::Timer` (also `smol::Timer`) raced with `or` or `race`
+  - smol and async-global-executor: an `async_io::Timer` (also `smol::Timer`) raced with `or` or `race`, and timeout crates built on it
 - **Non-durable sleeps.** `tokio::time::sleep`, `smol::Timer::after` or an `async_io::Timer` used as a delay in a workflow body isn't recorded, so it runs again in full on every recovery.
   Use [`dbos::sleep`](#durable-sleep).
 - **Completion-order streams over durable calls.** The order in which concurrent calls finish comes from their latency, which isn't recorded.
