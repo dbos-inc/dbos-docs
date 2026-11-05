@@ -130,6 +130,25 @@ var handle = client.enqueueWorkflow(options, new Object[] {"order-123"});
 ```
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn enqueue_portable() -> dbos::Result<()> {
+    let client = Client::connect(ClientConfig::from_env()).await?;
+    let options = EnqueueOptions {
+        // The name of the application that implements process_order
+        app_name: Some("order-service"),
+        serialization: SerializationFormat::Portable,
+        ..EnqueueOptions::new("orders")
+    };
+    let handle: WorkflowHandle<String> = client
+        .enqueue_with("process_order", "order-123", options)
+        .await?;
+    Ok(())
+}
+```
+
+</TabItem>
 <TabItem value="golang" label="Go">
 
 ```go
@@ -235,6 +254,24 @@ public String processOrder(String orderId) {
     // All inputs, outputs, events, and streams for this workflow
     // use portable JSON serialization by default
     return "processed: " + orderId;
+}
+```
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+fn register_process_order(dbos: &DBOS) -> dbos::Result<WorkflowRef<String, String>> {
+    // All inputs, outputs and errors of this workflow, and the events, messages
+    // and streams it writes, use portable JSON serialization by default
+    dbos.register_workflow_with(
+        "process_order",
+        dbos::WorkflowOptions {
+            serialization: SerializationFormat::Portable,
+            ..dbos::WorkflowOptions::default()
+        },
+        |order_id: String| async move { Ok::<_, dbos::Error>(format!("processed: {order_id}")) },
+    )
 }
 ```
 
@@ -375,6 +412,50 @@ dbos.setEvent(
 ```
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn portable_communication(dbos: &DBOS) -> dbos::Result<()> {
+    let portable = || SendOptions {
+        serialization: SerializationFormat::Portable,
+        ..SendOptions::default()
+    };
+    // Send a message readable by any language
+    let update = serde_json::json!({"status": "complete", "count": 42});
+    let message = SendMessage {
+        topic: Some("updates"),
+        ..SendMessage::new("workflow-123", &update)
+    };
+    dbos.send_with(message, portable()).await?;
+    Ok(())
+}
+
+async fn portable_writes(_: ()) -> dbos::Result<()> {
+    // Inside a workflow: set an event readable by any language
+    let progress = serde_json::json!({"percent": 75});
+    dbos::set_event_with(
+        "progress",
+        &progress,
+        SetEventOptions {
+            serialization: SerializationFormat::Portable,
+        },
+    )
+    .await?;
+
+    // Write to a stream readable by any language
+    dbos::write_stream_with(
+        "results",
+        &serde_json::json!({"item": 1}),
+        WriteStreamOptions {
+            serialization: SerializationFormat::Portable,
+        },
+    )
+    .await?;
+    Ok(())
+}
+```
+
+</TabItem>
 <TabItem value="plpgsql" label="PL/pgSQL">
 
 ```sql
@@ -467,6 +548,22 @@ throw new PortableWorkflowException(
     Map.of("orderId", "order-123")
 );
 ```
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn find_order(order_id: String) -> dbos::Result<String> {
+    Err(dbos::Error::Portable {
+        name: "NotFoundError".to_owned(),
+        message: "Order not found".to_owned(),
+        code: Some(404.into()),
+        data: Some(serde_json::json!({"orderId": order_id})),
+    })
+}
+```
+
+An application error returned from a portable workflow is also written portably: `name` is the error's Rust type name, `message` its `Display` text, and `data` its fields.
 
 </TabItem>
 </Tabs>
