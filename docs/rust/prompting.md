@@ -47,7 +47,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - A workflow's future must be `Send + 'static`: don't hold an `Rc`, a `std::sync::MutexGuard` or a borrow across an `.await` in a workflow body.
 - To start a child workflow, capture the child's `WorkflowRef` in the parent's registered closure (a `WorkflowRef` can't be a workflow's input), as the queue example below does.
 - Do NOT start or enqueue workflows, or call `dbos::recv`, `dbos::set_event` or `dbos::patch`, from inside a step.
-- Do NOT capture the `DBOS` instance in a workflow closure (capturing a child's `WorkflowRef` to start it is the one accepted exception). Inside a workflow, use the free functions in the `dbos` crate (`dbos::step`, `dbos::send`, `dbos::cancel_workflow`, ...), which need no instance.
+- Do NOT capture the `DBOS` instance in a workflow closure. Inside a workflow, use the free functions in the `dbos` crate (`dbos::step`, `dbos::send`, `dbos::cancel_workflow`, ...), which need no instance.
 - Workflows and steps should NOT mutate shared state in memory outside their own scope.
 - Register every workflow with `register_workflow` BEFORE `launch`. Register queues and create schedules AFTER `launch`.
 

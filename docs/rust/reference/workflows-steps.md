@@ -81,7 +81,8 @@ pub struct WorkflowRef<P, R, E = EngineOnly>;
 
 A registered workflow, with its input type `P`, result type `R` and error type `E`.
 It is cheap to clone.
-A `WorkflowRef` holds the `DBOS` instance, so a workflow that captures one (to start it as a child) keeps the instance alive; that is a known limitation, harmless for a process that launches once.
+A `WorkflowRef` starts workflows while its instance is launched, whether or not a `DBOS` handle is still held, and returns `Error::NotLaunched` before launch and after shutdown.
+It doesn't keep the instance alive, so a workflow can capture one to start it as a child.
 
 #### WorkflowRef::start
 

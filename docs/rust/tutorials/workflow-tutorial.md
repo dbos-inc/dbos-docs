@@ -79,8 +79,7 @@ Called from inside another workflow, `start` and `run` start a **child workflow*
 Don't capture the `DBOS` instance in a workflow closure.
 The instance owns its registered workflows, so a workflow that holds the instance keeps it from ever being freed.
 A workflow body doesn't need it: steps, sleeps, events, messages and the [workflow management calls](./workflow-management.md) are all free functions in the `dbos` crate that find the running workflow on their own.
-Starting a child workflow is the exception: it needs the child's `WorkflowRef`, which holds the instance too, so a workflow that captures one (as the [queue example](../programming-guide.md#3-queues-and-parallelism) does) keeps the instance alive.
-That is a known limitation, harmless for a process that launches DBOS once and runs until it exits.
+To start a child workflow, capture the child's `WorkflowRef` instead, as the [queue example](../programming-guide.md#3-queues-and-parallelism) does: a `WorkflowRef` doesn't keep the instance alive.
 :::
 
 ## Errors

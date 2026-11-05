@@ -10,7 +10,7 @@ Most operations come in two forms:
 - a **method** of the same operation on [`DBOS`](./lifecycle.md), for use outside a workflow, and on [`Client`](./client.md), from another application.
 
 Don't capture the `DBOS` instance in a workflow to call its methods: the instance owns the workflow, so the two would keep each other alive.
-Starting a child workflow needs the child's `WorkflowRef`, which holds the instance; that is a known limitation, harmless for a process that launches once.
+To start a child workflow, capture the child's `WorkflowRef` instead: it doesn't keep the instance alive.
 
 Most free functions and methods return a [`PendingStep`](./workflows-steps.md#pendingstep), which takes its step ID when it is built, or a [`PendingStart`](./workflows-steps.md#pendingstart) for calls that start a workflow. The exceptions are noted below: `patch`, `join_workflows`, the stream readers and `retrieve_workflow`.
 The free functions take the calling workflow's error type `E`, so `?` works on them in any workflow.
