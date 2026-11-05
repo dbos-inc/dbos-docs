@@ -41,7 +41,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action into a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, reading environment variables, generating a random number or UUID, or getting the current time.
 - A workflow function must be deterministic: given the same step results, it must make the same DBOS calls in the same order.
-- Do NOT race, time out, spawn, or consume in completion order any DBOS call inside a workflow body. In particular, do NOT use `tokio::select!`, `futures::select!`, `futures::future::select`/`select_all`, `smol::future::race`/`or`, `tokio::time::timeout`, `FuturesUnordered`, `buffer_unordered`, `for_each_concurrent`, `tokio::spawn`, `smol::spawn` or `std::thread::spawn` around DBOS calls in a workflow body. Use `dbos::select_step!` to race DBOS calls, `dbos::sleep` for delays, and `tokio::join!` / `futures::future::join_all` to run them concurrently. Inside a step, any of these is fine.
+- Do NOT race, time out, spawn, or consume in completion order any DBOS call inside a workflow body. In particular, do NOT use `tokio::select!`, `futures::select!`, `futures::future::select`/`select_all`, `smol::future::race`/`or`, `tokio::time::timeout`, `FuturesUnordered`, `buffer_unordered`, `for_each_concurrent`, `tokio::spawn`, `smol::spawn` or `std::thread::spawn` around DBOS calls in a workflow body. Use `dbos::select_step!` to race DBOS calls, `dbos::sleep` for delays, and `tokio::join!` / `futures::future::join_all` to run them concurrently, with exactly one DBOS call per join element and never an `async` block containing several. `tokio::try_join!` and `try_join_all` stop at the first failure: use them only when the error goes straight out of the workflow, and never branch on which error came back. Do NOT call `start` or `run` inside a spawned task: each recovery that repeats the spawn starts another top-level workflow. Inside a step, plain races, timeouts and spawns are fine, but a DBOS call spawned from a step fails.
 - Do NOT use `tokio::time::sleep` or another non-durable sleep in a workflow body; use `dbos::sleep`.
 - Await `dbos::patch`, `dbos::deprecate_patch` and a debouncer's `debounce` on their own, never inside a join: they claim their step position when awaited.
 - A workflow's future must be `Send + 'static`: don't hold an `Rc`, a `std::sync::MutexGuard` or a borrow across an `.await` in a workflow body.
@@ -295,7 +295,8 @@ async fn fan_out(urls: Vec<String>) -> dbos::Result<Vec<String>> {
         .iter()
         .map(|url| step("fetch", move || fetch(url.clone())))
         .collect();
-    // The steps run concurrently, and the results come back in the same order.
+    // The steps run concurrently, and the results come back in the same order. The first failure
+    // stops the join, which is fine here because the error goes straight out of the workflow.
     futures::future::try_join_all(fetches).await
 }
 

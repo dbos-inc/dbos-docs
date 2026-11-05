@@ -217,7 +217,10 @@ async fn good_workflow(_: ()) -> dbos::Result<String> {
 
 When a recovery does reach a different step than the one recorded at that position, DBOS refuses it with `dbos::sysdb::Error::UnexpectedStep` (inside `Error::SystemDatabase`) rather than replaying the wrong result.
 The refusal isn't recorded as the workflow's outcome: the workflow stays `PENDING`, recovery tries it again, and after 100 attempts it is parked as `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
-DBOS compares step names, not inputs, so a recovery that reaches the same step with different inputs isn't detected. Don't rely on the error to catch every mistake.
+
+**Most divergence reports nothing**, so don't rely on that error.
+DBOS compares step names, not inputs, so a recovery that reaches the same step with different inputs isn't detected.
+It also compares only at positions that have a record: in `bad_workflow` above, if the process stops before `charge` is recorded and the recovery draws the other value, `refund` runs as well, with no error, and both have happened.
 
 ### Step IDs are taken where a call is written
 
@@ -246,37 +249,45 @@ DBOS records step results, not which future won a race, so a recovery can take a
 - **Races over durable calls.** The winner isn't recorded, so a recovery can take another branch.
   Use [`select_step!`](#selecting-the-first-result) instead.
   - Tokio: `tokio::select!`
-  - `futures`: `futures::select!`, `select_biased!`, `futures::future::select`, `select_all` and `select_ok`
-  - smol and `futures-lite`: `future::or`, `future::race`, and `FutureExt::or` / `FutureExt::race` (`smol::future` re-exports `futures_lite::future`)
+  - `futures`: `futures::select!`, `select_biased!`, `futures::future::select`, `try_select`, `select_all` and `select_ok`, and `futures::stream::select` and `select_all`
+  - smol and `futures-lite`: `future::or`, `future::race`, `stream::or` and `stream::race`, and `FutureExt::or` / `FutureExt::race` (`smol::future` and `smol::stream` re-export `futures_lite::future` and `futures_lite::stream`)
 - **Timeouts around durable calls.** A timeout is a race against a timer.
   Use `select_step!` with a durable [`dbos::sleep`](#durable-sleep), or the call's own timeout option where it has one (such as [step timeouts](./step-tutorial.md#step-timeouts) or `recv`'s timeout).
   - Tokio: `tokio::time::timeout` and `timeout_at`
   - smol and async-global-executor: an `async_io::Timer` (also `smol::Timer`) raced with `or` or `race`, and timeout crates built on it
-- **Non-durable sleeps.** `tokio::time::sleep`, `smol::Timer::after` or an `async_io::Timer` used as a delay in a workflow body isn't recorded, so it runs again in full on every recovery.
+- **Non-durable sleeps.** `tokio::time::sleep`, `sleep_until` or `interval`, or a `smol::Timer::after` or `async_io::Timer::at`, used as a delay in a workflow body isn't recorded, so it runs again in full on every recovery.
   Use [`dbos::sleep`](#durable-sleep).
 - **Completion-order streams over durable calls.** The order in which concurrent calls finish comes from their latency, which isn't recorded.
-  On a recovery, every completed call is ready at once and comes out in the order it was pushed, so steps a loop runs for each completion can be handed each other's recorded results.
+  On a recovery they come out in an order unrelated to the first run, so steps a loop runs for each completion can be handed each other's recorded results.
   Nothing reports an error.
   DBOS has no durable replacement for these yet; run such a fan-out as [child workflows](#starting-workflows-in-parallel) on a queue, or sequentially.
   - `futures::stream::FuturesUnordered`, `StreamExt::buffer_unordered` and `StreamExt::for_each_concurrent`
   - any other combinator that yields results in completion order, including `futures-lite`'s
-- **Spawning a durable call.** DBOS finds the running workflow through a task-local, which a spawned task doesn't inherit, on any runtime. What happens then depends on the call, and the commonest case is silent:
-  a step or `dbos::sleep` built inside the spawned task runs as a plain call and records nothing;
-  a step built in the workflow and awaited in the spawned task fails with `Error::StepBuiltElsewhere`;
-  and `send`, `recv`, `set_event`, `get_event` and the management calls fail with `Error::NotInWorkflow`.
-  - Tokio: `tokio::spawn`, `tokio::task::spawn_blocking` and `JoinSet`
+- **Spawning a durable call.** DBOS finds the running workflow through a task-local, which a spawned task doesn't inherit, on any runtime. What happens then depends on the call and on where it was built, and the commonest cases are silent:
+  - Built inside the spawned task, a step or `dbos::sleep` runs as a plain call and records nothing, and so do a handle's `result()` and the methods on `DBOS`.
+  - Built inside the spawned task, `start` and `run` start a new top-level workflow with no parent, so each recovery that repeats the spawn starts another.
+  - Built inside the spawned task, `send`, `recv`, `set_event`, `get_event` and the management functions fail with `Error::NotInWorkflow`.
+  - Built in the workflow and awaited in the spawned task, any of them fails with `Error::StepBuiltElsewhere`.
+
+  The ways to spawn include:
+  - Tokio: `tokio::spawn`, `tokio::task::spawn_blocking`, `spawn_local`, `LocalSet` and `JoinSet`
   - smol: `smol::spawn`, `smol::unblock` and `Executor::spawn`
   - async-global-executor: `async_global_executor::spawn`, `spawn_local` and `spawn_blocking`
   - `std::thread::spawn`
 
-None of this applies **inside a step**: a step's body runs once per attempt and only its result is recorded, so it can use any of these freely.
+None of this applies **inside a step**: a step's body runs once per attempt and only its result is recorded, so plain races, timeouts, sleeps and spawns are all fine there.
+A durable call still has to be awaited where it was built, though, so one spawned from a step body fails.
 
 These are supported in a workflow body:
 
-- `tokio::join!`, `futures::join!`, `futures::future::join_all` and `try_join_all`, and `futures_lite::future::zip` and `try_zip`.
-  Each returns results in input order, and each step took its ID when it was built.
-  The exceptions are `dbos::patch`, `dbos::deprecate_patch` and a debouncer's `debounce`, which claim their positions when awaited: await each of those on its own, not inside a join.
+- `tokio::join!`, `futures::join!`, `futures::future::join_all` and `futures_lite::future::zip`, when each element is one durable call.
+  Each waits for all of its elements and returns results in input order, and each call took its ID when it was built.
   They work on every runtime DBOS supports.
+  - **An `async` block isn't one durable call.** The calls in it are built when it is polled, so several such blocks take IDs in the order they happen to run, which a recovery doesn't reproduce. Work needing several calls in one branch is a child workflow or a single step.
+  - **Some calls don't belong in a join.** `dbos::patch` and `dbos::deprecate_patch` claim their positions when awaited, and a debouncer's `debounce` can claim more when awaited: await each of those on its own.
+- `tokio::try_join!`, `futures::try_join!`, `futures::future::try_join_all` and `futures_lite::future::try_zip`, under the same rules, **only when the error goes straight out of the workflow**.
+  These stop at the first failure and drop the rest, which makes them a race on the error path: nothing records which error came back, so code that branches on it can take a different path on a recovery.
+  To handle a failure, use an all-wait and inspect the results.
 - [`select_step!`](#selecting-the-first-result), and [`select_workflow`](#waiting-for-child-workflows) and [`join_workflows`](#waiting-for-child-workflows) (and their `select_workflow!` and `join_workflows!` macro forms).
 - [`dbos::sleep`](#durable-sleep), for durable delays.
 
@@ -294,7 +305,8 @@ async fn fan_out(urls: Vec<String>) -> dbos::Result<Vec<String>> {
         .iter()
         .map(|url| step("fetch", move || fetch(url.clone())))
         .collect();
-    // The steps run concurrently, and the results come back in the same order.
+    // The steps run concurrently, and the results come back in the same order. The first failure
+    // stops the join, which is fine here because the error goes straight out of the workflow.
     futures::future::try_join_all(fetches).await
 }
 
