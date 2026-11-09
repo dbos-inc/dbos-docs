@@ -4,6 +4,11 @@ title: Learn DBOS Rust
 pagination_prev: quickstart
 ---
 
+:::caution Pre-production release
+DBOS Transact for Rust isn't production-ready yet: 0.6 is a pre-production release.
+Use it to evaluate DBOS and to build with it, but don't run it in production, and expect breaking API changes between releases.
+:::
+
 This guide shows you how to use DBOS to build Rust apps that are **resilient to any failure**.
 
 ## 1. Setting Up Your Environment

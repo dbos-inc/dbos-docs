@@ -703,6 +703,11 @@ Next:
 </LargeTabItem>
 <LargeTabItem value="rust" label="Rust">
 
+:::caution Pre-production release
+DBOS Transact for Rust isn't production-ready yet: 0.6 is a pre-production release.
+Use it to evaluate DBOS and to build with it, but don't run it in production, and expect breaking API changes between releases.
+:::
+
 #### 1. Download an Application
 
 <section className="row list">

@@ -3,6 +3,11 @@ sidebar_position: 20
 title: Add DBOS To Your App
 ---
 
+:::caution Pre-production release
+DBOS Transact for Rust isn't production-ready yet: 0.6 is a pre-production release.
+Use it to evaluate DBOS and to build with it, but don't run it in production, and expect breaking API changes between releases.
+:::
+
 This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-rust) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### 1. Install DBOS
