@@ -58,7 +58,7 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 - `app_version`: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued by a process running the latest application version.
 - `timeout_ms`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution. 
 - `deadline_epoch_ms`: Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status ENQUEUED, DELAYED, or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status ENQUEUED, DELAYED, SUSPENDED, or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 0 to 2,147,483,647, where a low number indicates a higher priority. If a priority is not supplied, it defaults to 0, the highest priority.
 - `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned. Partitioned queues apply their per-partition flow control limits (concurrency and rate limits) to each partition separately.
 - `authenticated_user`: The authenticated user to associate with the enqueued workflow. Defaults to null.
@@ -95,7 +95,7 @@ Each row represents a different workflow execution.
 
 **Columns:**
 - **workflow_uuid**: The unique identifier of the workflow execution.
-- **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`.
+- **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `CANCELLED`.
 - **name**: The name of the workflow function.
 - **authenticated_user**: The user who ran the workflow. Empty string if not set.
 - **assumed_role**: The role used to run this workflow.  Empty string if authorization is not required.
@@ -117,7 +117,7 @@ Each row represents a different workflow execution.
 - **forked_from**: The ID of the workflow that this was forked from, if applicable.
 - **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
-- **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution.
+- **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution. For workflows in the `SUSPENDED` state, the epoch timestamp at which the workflow should be re-enqueued.
 - **owner_xid**: The ownership token of the execution currently running this workflow, used to [detect concurrent executions](./concurrent-executions.md#workflow-ownership). Null when no execution owns the workflow.
 - **creator_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.
@@ -129,6 +129,7 @@ Each row represents a different workflow execution.
 - **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
 - **is_debounced**: Whether this workflow was created by a debouncer.
 - **application_name**: The application that owns this workflow.
+- **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting.
 
 ### dbos.workflow_input
 This table stores workflow inputs.

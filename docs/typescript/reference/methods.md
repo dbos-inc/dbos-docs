@@ -80,7 +80,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - `'reject'`: throw `DBOSQueueDuplicatedError`.
   - `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `queueName` and `enqueueOptions.deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - **enqueueOptions**:
-  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) queue, deduplication IDs are unique across the whole queue, including all its partitions. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) queue, deduplication IDs are unique across the whole queue, including all its partitions. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -197,6 +197,7 @@ interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
   pollingIntervalMs?: number;
+  suspend?: boolean;
 }
 ```
 
@@ -212,6 +213,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **suspend**: If `true`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`. When set, `pollingIntervalMs` is ignored.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -271,7 +273,14 @@ If the event does not yet exist, wait for it to be published, returning `null` i
 ```typescript
 DBOS.sleep(
     durationMS: number,
+    options?: SleepOptions,
 ): Promise<void>;
+```
+
+```typescript
+interface SleepOptions {
+  suspend?: boolean;
+}
 ```
 
 Sleep for the given number of milliseconds.
@@ -279,6 +288,8 @@ When called from a workflow (outside of a step), this sleep is durable&mdash;it 
 
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
+- **options**:
+  - **suspend**: If `true`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `false`.
 
 ### DBOS.now
 
@@ -465,7 +476,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string | string[]; // Retrieve workflows with this name (or any of these names).
-  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   completedAfter?: string; // Retrieve workflows completed at or after this (RFC 3339-compliant) timestamp.
@@ -507,7 +518,7 @@ DBOS.listQueuedWorkflows(
 ): Promise<WorkflowStatus[]>
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** (status `DELAYED`, `ENQUEUED`, or `PENDING`) workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`) workflows matching specified criteria.
 The input type is the same as [`DBOS.listWorkflows`](#dboslistworkflows); this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
 Like `DBOS.listWorkflows`, it is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout unless `workflowIDs` is set.
 
@@ -782,7 +793,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, SUSPENDED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;

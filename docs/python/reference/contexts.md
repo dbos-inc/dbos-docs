@@ -189,6 +189,8 @@ Coroutine version of [`send_bulk`](#send_bulk)
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
@@ -202,6 +204,7 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 **Parameters:**
 - `topic`: A topic queue on which to wait.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
+- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `None` if the wait times out.
@@ -212,6 +215,8 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 DBOS.recv_async(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, Any]
 ```
 
@@ -319,7 +324,9 @@ Coroutine version of [`get_all_events`](#get_all_events).
 
 ```python
 DBOS.sleep(
-    seconds: float
+    seconds: float,
+    *,
+    suspend: bool = False,
 ) -> None
 ```
 
@@ -330,12 +337,15 @@ The `sleep` function should not be used in [coroutine workflows](../tutorials/wo
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
+- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `False`.
 
 ### sleep_async
 
 ```python
 DBOS.sleep_async(
-    seconds: float
+    seconds: float,
+    *,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, None]
 ```
 
@@ -1084,7 +1094,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -1104,7 +1114,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
@@ -1154,11 +1164,11 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -1754,7 +1764,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, SUSPENDED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str

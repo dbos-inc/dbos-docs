@@ -14,6 +14,7 @@ DBOS Transact Enterprise provides:
 - **Sharding**: Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
+- **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no memory until they wake.
 
 ## Installing DBOS Transact Enterprise
 

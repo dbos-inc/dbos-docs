@@ -144,7 +144,7 @@ def workflow_without_patches():
 Auto-upgrade runs in the background on processes running the latest application version.
 When auto-upgrade runs:
 
-- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
 - **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
 If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
 To give processes running old code time to complete their `PENDING` workflows first, set `auto_upgrade_grace_sec`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that many seconds.
@@ -211,7 +211,7 @@ You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to 
 ```python
 active = DBOS.list_workflows(
     app_version="1.0.0",
-    status=["ENQUEUED", "DELAYED", "PENDING"],
+    status=["ENQUEUED", "DELAYED", "SUSPENDED", "PENDING"],
 )
 if not active:
     print("Safe to retire version 1.0.0")

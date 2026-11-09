@@ -7,7 +7,7 @@ If you are using [Conductor](./overview.md), you can configure workflow history 
 These settings let you configure how long workflow history is retained in your application's [system database](../explanations/system-tables.md).
 This is useful for managing the database disk usage of workflow history.
 
-Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, or delayed are never deleted.
+Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, delayed, or suspended are never deleted.
 Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams.
 Retention runs in the background and deletes history in batches.
 
