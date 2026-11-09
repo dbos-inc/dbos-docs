@@ -89,6 +89,31 @@ In a test environment, after this completes DBOS can be re-configured and `launc
 - **deregister**: If true, all current function, instance, data source, event receiver, and any other in-process registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Queues and schedules persisted in the system database are not affected. Useful for testing.
 - **workflowCompletionTimeoutMS**: Wait this many milliseconds for workflows running in this process to complete before shutting down. Defaults to not waiting.
 
+### DBOS.deactivateEventReceivers
+
+```typescript
+DBOS.deactivateEventReceivers(): Promise<void>
+```
+
+Stop bringing new work into this process by stopping queue dispatch and registered event receivers.
+Workflows already running in this process keep running, and schedules keep firing so other processes can run their workflows.
+Restart with [`DBOS.initEventReceivers`](#dbosiniteventreceivers).
+
+Has no effect if receivers are already stopped.
+Throws if DBOS is not launched or if called from within a workflow.
+
+### DBOS.initEventReceivers
+
+```typescript
+DBOS.initEventReceivers(): Promise<void>
+```
+
+Restart queue dispatch and registered event receivers after [`DBOS.deactivateEventReceivers`](#dbosdeactivateeventreceivers).
+
+Has no effect if receivers are already running.
+Throws if DBOS is not launched or if called from within a workflow.
+If a receiver fails to start, stops any that did start and rethrows the error, so you can retry the call.
+
 ### DBOS.migrate
 
 ```typescript
