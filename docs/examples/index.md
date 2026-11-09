@@ -20,6 +20,7 @@ import { RiCustomerService2Line } from "react-icons/ri";
 import { TbClock2 } from "react-icons/tb";
 import { VscGraphLine } from "react-icons/vsc";
 import { FiInbox } from "react-icons/fi";
+import { GiHoneypot } from "react-icons/gi";
 
   <section className="row list">
   <CardLink
@@ -76,6 +77,13 @@ import { FiInbox } from "react-icons/fi";
       go: "golang/examples/widget-store",
       java: "java/examples/widget-store",
     }}
+  />
+  <CardLink
+    label="Durable Honey Badger"
+    href="typescript/examples/durable-honey-badger"
+    description="Play a pixel-art maze game built on durable workflows, and rewind the workflow when a cobra gets you."
+    icon={<GiHoneypot color="white" size={50}/>}
+    language="typescript"
   />
   <CardLink
     label="Reliable Customer Service Agent"
