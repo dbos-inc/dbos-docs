@@ -215,6 +215,16 @@ Each entry represents a different message in a stream.
 - **function_id**: The monotonically increasing step ID responsible for emitting this stream.
 - **serialization**: The name of the serialization format used for the stream value. Null if the default serializer was used.
 
+### dbos.external_objects
+This table tracks objects stored with external storage, so that DBOS can delete them after their owner workflow is deleted.
+Each entry represents a single object.
+
+**Columns:**
+- **object_key**: The object's key in its store.
+- **store_id**: The ID of the store holding the object.
+- **workflow_uuid**: The ID of the workflow that owns the object.
+- **created_at**: The epoch timestamp (in milliseconds) at which the object was stored.
+
 ### dbos.application_versions
 This table stores registered application versions.
 Each time DBOS launches, it records the current application version.

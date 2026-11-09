@@ -38,7 +38,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -61,6 +61,8 @@ class DBOSClient {
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
+    storeExternalObject<T>(value: T, options: ClientStoreExternalObjectOptions): Promise<ExternalObjectRef<T>>;
+    loadExternalObject<T>(ref: ExternalObjectRef<T>): Promise<T>;
 
     getWorkflow(workflowID: string, options?: { shardKey?: string }): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
@@ -118,6 +120,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 - **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
+- **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
 
 Example:
 
@@ -469,6 +472,29 @@ Similar to [`DBOS.readStreamOffset`](./methods.md#dbosreadstreamoffset).
 ```ts
 const value = await client.readStreamOffset(workflowID, "example_key", 5, { timeoutSeconds: 30 });
 ```
+
+#### `storeExternalObject`
+
+```typescript
+interface ClientStoreExternalObjectOptions extends StoreExternalObjectOptions {
+  ownerWorkflowID: string;
+}
+
+client.storeExternalObject<T>(value: T, options: ClientStoreExternalObjectOptions): Promise<ExternalObjectRef<T>>
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+Similar to [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject), except that `ownerWorkflowID` is required.
+The owner doesn't have to exist yet, so you can upload a large input and then enqueue the workflow that will process it.
+
+#### `loadExternalObject`
+
+```typescript
+client.loadExternalObject<T>(ref: ExternalObjectRef<T>): Promise<T>
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+Similar to [`DBOS.loadExternalObject`](./methods.md#dbosloadexternalobject).
 
 ### Workflow Inspection
 

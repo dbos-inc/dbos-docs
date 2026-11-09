@@ -431,6 +431,100 @@ When a checkpointed timeout is replayed, it is revived as a plain `Error` rather
 Use the `isStreamTimeoutError` helper, exported in the SDK's `Error` namespace (`import { Error as DBOSErrors } from "@dbos-inc/dbos-sdk"`, then `DBOSErrors.isStreamTimeoutError(e)`), to match it in either case.
 :::
 
+### DBOS.storeExternalObject
+
+```typescript
+DBOS.storeExternalObject<T>(
+  value: T,
+  options?: StoreExternalObjectOptions
+): Promise<ExternalObjectRef<T>>
+```
+
+```typescript
+interface StoreExternalObjectOptions {
+  ownerWorkflowID?: string;
+  serializationType?: WorkflowSerializationFormat;
+  key?: string;
+  shardKey?: string;
+  storeID?: string;
+}
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+From workflow code, the upload runs as a step.
+Requires [`externalStores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+
+**Parameters:**
+- **value**: The value to store. A `Uint8Array`, such as a `Buffer`, is stored as is, without serialization, and loads as a `Buffer`.
+- **options**:
+  - **ownerWorkflowID**: The workflow that owns the object, which is deleted some time after its owner is. Defaults to the calling workflow. Required outside a workflow.
+  - **serializationType**: The [serialization format](#serialization-strategy) for the value. Defaults to the calling workflow's. To load the object from another language, store bytes or use portable serialization.
+  - **key**: Names the object within its owner, so storing under the same key again overwrites it. Up to 512 characters in `/`-separated segments of letters, digits, `.`, `_`, `=`, or `-`, each starting with a letter or digit. Defaults to a new random key.
+  - **shardKey**: The owner's [shard key](../tutorials/sharding.md). Required on a sharded system database when storing outside the owner.
+  - **storeID**: The store to upload to. Required if several stores are configured.
+
+**Returns:**
+- An [`ExternalObjectRef`](#externalobjectref) to the stored object.
+
+**Throws:**
+- `DBOSExternalStoreNotConfiguredError`: If no external store is configured, or `storeID` names a store that isn't.
+- `DBOSExternalStoreError`: If the store fails.
+
+### DBOS.loadExternalObject
+
+```typescript
+DBOS.loadExternalObject<T>(
+  ref: ExternalObjectRef<T>
+): Promise<T>
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+May be called from a step or outside a workflow, but not from workflow code.
+
+**Parameters:**
+- **ref**: A reference returned by [`DBOS.storeExternalObject`](#dbosstoreexternalobject).
+
+**Returns:**
+- The stored value.
+
+**Throws:**
+- `DBOSExternalStoreNotConfiguredError`: If the store the reference names isn't configured.
+- `DBOSExternalObjectMissingError`: If the object no longer exists.
+- `DBOSExternalObjectIntegrityError`: If the stored bytes don't match the reference.
+- `DBOSExternalStoreError`: If the store fails.
+
+### ExternalObjectRef
+
+```typescript
+interface ExternalObjectRef<T = unknown> {
+  version: number;
+  store: string;
+  key: string;
+  size: number;
+  sha256: string;
+  serialization: string;
+  encoding: string;
+}
+```
+
+A small, serializable reference to an external object.
+Treat it as opaque: return it from steps and workflows or pass it as a workflow input.
+
+### ExternalStore
+
+```typescript
+interface ExternalStore {
+  readonly storeID: string;
+  put(key: string, data: Uint8Array): Promise<void>;
+  get(key: string): Promise<Uint8Array | undefined>;
+  delete(keys: string[]): Promise<void>;
+}
+```
+
+Where external objects are stored.
+See [Custom Stores](../tutorials/external-storage.md#custom-stores).
+`get` must return `undefined` if no object has the key, and `delete` must ignore keys with no object.
+
 ### DBOS.retrieveWorkflow
 
 ```typescript

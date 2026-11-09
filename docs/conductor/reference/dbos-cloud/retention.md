@@ -8,7 +8,7 @@ These settings let you configure how long workflow history is retained in your a
 This is useful for managing the database disk usage of workflow history.
 
 Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, delayed, or suspended are never deleted.
-Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams.
+Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams, as well as any objects it owns in external storage.
 
 <img src={require('@site/static/img/retention/retention.png').default} alt="Retention Page" width="1000" className="custom-img" />
 

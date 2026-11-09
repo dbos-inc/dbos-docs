@@ -32,6 +32,7 @@ export interface DBOSConfig {
   autoUpgradeGraceMs?: number;
   sharding?: boolean;
   suspendMode?: boolean;
+  externalStores?: ExternalStore[];
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -81,6 +82,7 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 - **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows are moved without waiting. Defaults to 0.
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 - **suspendMode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./methods.md#dbossleep) or [`DBOS.recv`](./methods.md#dbosrecv). Requires DBOS Transact Enterprise. Defaults to `false`.
+- **externalStores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject) must specify one. Requires DBOS Transact Enterprise.
 
 ### Database Connection Settings
 

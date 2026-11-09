@@ -777,6 +777,119 @@ DBOS.read_stream_offset_async(
 
 Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
+### store_external_object
+
+```python
+DBOS.store_external_object(
+    value: T,
+    *,
+    owner_workflow_id: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+From workflow code, the upload runs as a step.
+Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+
+**Parameters:**
+- `value`: The value to store. A `bytes` value is stored as is, without serialization.
+- `owner_workflow_id`: The workflow that owns the object, which is deleted some time after its owner is. Defaults to the calling workflow. Required outside a workflow.
+- `serialization_type`: The [serialization strategy](#serialization-strategy) for the value. Defaults to the calling workflow's. To load the object from another language, store `bytes` or use portable serialization.
+- `key`: Names the object within its owner, so storing under the same key again overwrites it. Up to 512 characters in `/`-separated segments of letters, digits, `.`, `_`, `=`, or `-`, each starting with a letter or digit. Defaults to a new random key.
+- `shard_key`: The owner's [shard key](../tutorials/sharding.md). Required on a sharded system database when storing outside the owner.
+- `store_id`: The store to upload to. Required if several stores are configured.
+
+**Returns:**
+- An [`ExternalObjectRef`](#externalobjectref) to the stored object.
+
+**Raises:**
+- `DBOSExternalStoreNotConfiguredError`: If no external store is configured, or `store_id` names a store that isn't.
+- `DBOSExternalStoreError`: If the store fails.
+
+### store_external_object_async
+
+```python
+DBOS.store_external_object_async(
+    value: T,
+    *,
+    owner_workflow_id: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> Coroutine[Any, Any, ExternalObjectRef[T]]
+```
+
+Coroutine version of [`store_external_object`](#store_external_object)
+
+### load_external_object
+
+```python
+DBOS.load_external_object(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+May be called from a step or outside a workflow, but not from workflow code.
+
+**Parameters:**
+- `ref`: A reference returned by [`store_external_object`](#store_external_object).
+
+**Returns:**
+- The stored value.
+
+**Raises:**
+- `DBOSExternalStoreNotConfiguredError`: If the store the reference names isn't configured.
+- `DBOSExternalObjectMissingError`: If the object no longer exists.
+- `DBOSExternalObjectIntegrityError`: If the stored bytes don't match the reference.
+- `DBOSExternalStoreError`: If the store fails.
+
+### load_external_object_async
+
+```python
+DBOS.load_external_object_async(
+    ref: ExternalObjectRef[T],
+) -> Coroutine[Any, Any, T]
+```
+
+Coroutine version of [`load_external_object`](#load_external_object)
+
+### ExternalObjectRef
+
+```python
+class ExternalObjectRef(TypedDict, Generic[T]):
+    version: int
+    store: str
+    key: str
+    size: int
+    sha256: str
+    serialization: str
+    encoding: str
+```
+
+A small, serializable reference to an external object.
+Treat it as opaque: return it from steps and workflows or pass it as a workflow input.
+
+### ExternalStore
+
+```python
+class ExternalStore(Protocol):
+    @property
+    def store_id(self) -> str: ...
+    def put(self, key: str, data: bytes) -> None: ...
+    def get(self, key: str) -> bytes: ...
+    def delete(self, keys: Sequence[str]) -> None: ...
+```
+
+Where external objects are stored.
+See [Custom Stores](../tutorials/external-storage.md#custom-stores).
+`get` must raise `KeyError` if no object has the key, and `delete` must ignore keys with no object.
+
 ### patch
 
 ```python

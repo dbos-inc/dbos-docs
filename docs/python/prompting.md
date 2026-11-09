@@ -1499,6 +1499,17 @@ Then, once all workflows of the old version are complete (you can use `DBOS.list
 To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
+## External Storage
+
+To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
+Set `"external_stores": [S3ExternalStore(boto3.client("s3"), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `dbos_enterprise`.
+`DBOS.store_external_object(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
+`DBOS.load_external_object(ref)` returns the value.
+You MUST call `load_external_object` from a step, not from workflow code, and return only a small result from that step.
+Prefer storing `bytes` for large objects, because they are not serialized.
+Outside a workflow, you MUST pass `owner_workflow_id`.
+Objects are deleted only after their owner workflow has been deleted, by a retention run.
+
 ## Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.

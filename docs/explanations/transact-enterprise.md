@@ -15,6 +15,7 @@ DBOS Transact Enterprise provides:
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
 - **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no memory until they wake.
+- **External storage**: Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
 
 ## Installing DBOS Transact Enterprise
 

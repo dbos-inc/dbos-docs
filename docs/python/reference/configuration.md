@@ -50,6 +50,7 @@ class DBOSConfig(TypedDict):
     auto_upgrade_grace_sec: Optional[float]
     sharding: Optional[bool]
     suspend_mode: Optional[bool]
+    external_stores: Optional[List[ExternalStore]]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -139,6 +140,7 @@ A system database ahead of the required version is accepted, so a process with m
 - **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows are moved without waiting. Defaults to 0.
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 - **suspend_mode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./contexts.md#sleep) or [`DBOS.recv`](./contexts.md#recv). Requires DBOS Transact Enterprise. Defaults to `False`.
+- **external_stores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.store_external_object`](./contexts.md#store_external_object) must specify one. Requires DBOS Transact Enterprise.
 
 ### Logging and Tracing Settings
 

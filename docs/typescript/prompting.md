@@ -2013,6 +2013,17 @@ You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow`
 To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
+## External Storage
+
+To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
+Set `externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `@dbos-inc/dbos-enterprise`.
+`DBOS.storeExternalObject(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
+`DBOS.loadExternalObject(ref)` returns the value.
+You MUST call `loadExternalObject` from a step, not from workflow code, and return only a small result from that step.
+Prefer storing a `Buffer` or `Uint8Array` for large objects, because they are not serialized.
+Outside a workflow, you MUST pass `ownerWorkflowID`.
+Objects are deleted only after their owner workflow has been deleted, by a retention run.
+
 ## Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
