@@ -435,10 +435,10 @@ async fn process_input(input: String) -> dbos::Result<String> {
 }
 
 async fn debounce_example(dbos: &DBOS) -> dbos::Result<()> {
-    // Registered before launch:
+    // Register workflows before launch, and debounce after it.
     let process_input = dbos.register_workflow("process_input", process_input)?;
+    dbos.launch().await?;
 
-    // After launch:
     let debouncer = dbos::Debouncer {
         // Never hold the workflow back more than a minute after the first call.
         debounce_timeout: Some(Duration::from_secs(60)),
