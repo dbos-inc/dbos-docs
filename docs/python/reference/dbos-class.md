@@ -87,9 +87,14 @@ DBOS.destroy(
 ```
 
 Destroy the DBOS singleton, stopping its background threads (such as queue polling and the scheduler) and closing database connections.
-`destroy` waits up to `workflow_completion_timeout_sec` for active workflows to complete and cancels executor tasks that have not yet started; it does not interrupt workflows that are still running, but they can no longer checkpoint their progress.
-After this completes, the singleton can be re-initialized: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
-Useful for testing.
+`destroy` waits up to `workflow_completion_timeout_sec` for active workflows to complete and cancels executor tasks that have not yet started.
+
+Workflows still running after `destroy` will likely not be able to continue, because they rely on DBOS resources such as the system database and thread pool executor.
+Any errors they raise after `destroy` are safe, as they are not durably persisted.
+If your application has long-running workflows, we recommend shutting down your process shortly after calling `destroy`; its workflows will safely recover from their last completed step.
+
+After destroy completes, DBOS can be re-launched: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
+This is useful for testing.
 
 **Parameters:**
 - `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
