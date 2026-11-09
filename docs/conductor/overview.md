@@ -13,6 +13,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Autoscaling and version management**](./autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 - [**Programmatic access**](./reference/conductor-api.md): Conductor's workflow, queue, and schedule management is available over an OpenAPI-described HTTP API and from the [`dbosctl` command-line client](./reference/dbosctl.md), so you can script incident response and wire Conductor into your own tooling.
+- [**DBOS Transact Enterprise access**](../explanations/transact-enterprise.md): Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.
 
 Architecturally, Conductor is not part of your workflows orchestration path.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
