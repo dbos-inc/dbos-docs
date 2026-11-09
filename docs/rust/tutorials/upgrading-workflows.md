@@ -28,6 +28,14 @@ fn config() -> dbos::Config {
 }
 ```
 
+:::warning
+Patching protects old workflows from new code, not new workflows from old code.
+Under a pinned version, a process still running the old code can dequeue or recover a workflow the new code started.
+Where the new code recorded a patch marker, the old code expects one of its own steps, so the workflow fails with `UnexpectedStep` there: it stays `PENDING`, and recovery retries it until it is parked.
+So don't let processes running old code pick up new workflows: stop them all before starting processes running the new code, rather than rolling the new code out alongside them.
+If old and new code have to run side by side, use [versioning](#versioning) instead.
+:::
+
 For example, let's say our original workflow is:
 
 ```rust

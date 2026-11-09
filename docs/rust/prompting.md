@@ -881,6 +881,8 @@ async fn workflow(_: ()) -> dbos::Result<String> {
 }
 ```
 
+Patching protects old executions from new code, not the reverse: a process still running the old code that dequeues or recovers a workflow the new code patched fails with `UnexpectedStep`. Stop every process running the old code before starting the new code; if they must run side by side, give each deployment its own `app_version` instead of patching.
+
 Once no old execution can run, replace `patch` with `dbos::deprecate_patch("use-baz")` and keep only the new path; later remove it entirely.
 
 ## Testing
@@ -895,7 +897,7 @@ async fn quote_applies_the_discount() {
 }
 ```
 
-To test durable behavior, launch DBOS against a test database in the test, with fresh workflow IDs, and shut it down at the end.
+To test durable behavior, launch DBOS against a test database in the test, with fresh workflow IDs, and shut it down at the end. Tests that run in parallel need separate databases or `Config::schema` values (or `--test-threads=1`): they share the executor ID and application version, so one test's launch recovers another's `PENDING` workflows.
 
 ## Configuration
 

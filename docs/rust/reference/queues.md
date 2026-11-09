@@ -96,8 +96,8 @@ pub struct QueueOptions {
 
 Build with `..QueueOptions::default()`.
 
-- **worker_concurrency**: The most of the queue's workflows one process runs at once. Default: `None`. `Some(0)` pauses the queue on every executor.
-- **concurrency**: The most that run at once across all processes, counting every `PENDING` workflow on the queue, including older versions'. Default: `None`. It can't be below `worker_concurrency` or a per-partition concurrency limit, so `Some(0)` pauses the queue only when those are 0 or unset.
+- **worker_concurrency**: The most of the queue's workflows one process runs at once. Default: `None`. `Some(0)` pauses the queue on every executor. It can't be below `partition_worker_concurrency`, which must be at least 1, so to pause a queue that sets one, clear `partition_worker_concurrency` in the same update.
+- **concurrency**: The most that run at once across all processes, counting every `PENDING` workflow on the queue, including older versions'. Default: `None`. It can't be below `worker_concurrency` or a per-partition concurrency limit, which must be at least 1, so `Some(0)` pauses the queue only when `worker_concurrency` is 0 or unset and no per-partition concurrency limit is set.
 - **rate_limit**: At most [`RateLimit`](https://docs.rs/dbos/latest/dbos/sysdb/types/struct.RateLimit.html)`{ limit, period }` starts in any `period`, across all processes. Default: `None`.
 - **partition_concurrency**, **partition_worker_concurrency**, **partition_rate_limit**: The same limits per partition key. Setting any of them partitions the queue; queue-wide limits on a partitioned queue are enforced too.
 - **polling_interval**: How often a quiet queue is polled. Default: 1 second.

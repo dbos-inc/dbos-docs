@@ -164,7 +164,11 @@ async fn global_concurrency(dbos: &DBOS) -> dbos::Result<()> {
 }
 ```
 
-Setting `worker_concurrency` to `Some(0)` pauses the queue: nothing is dequeued from it until the limit is raised. `concurrency` can't be set below `worker_concurrency` or a per-partition limit, so `concurrency: Some(0)` pauses the queue only when those are 0 or unset.
+Setting `worker_concurrency` to `Some(0)` pauses the queue: nothing is dequeued from it until the limit is raised.
+`worker_concurrency` can't be set below `partition_worker_concurrency`, `concurrency` can't be set below either per-partition concurrency limit, and the per-partition limits must be at least 1, so:
+
+- To pause a queue that sets `partition_worker_concurrency`, clear it and set `worker_concurrency` to `Some(0)` in the same update. If it was the queue's only per-partition limit, clearing it also stops partitioning the queue until you set it again.
+- `concurrency: Some(0)` pauses the queue only when `worker_concurrency` is 0 or unset and neither per-partition concurrency limit is set. Otherwise, pause it through `worker_concurrency`.
 
 ## Rate Limiting
 
