@@ -79,6 +79,23 @@ WorkflowHandle<Object, Exception> handle =
 Object result = handle.getResult();
 ```
 
+**Rust**
+
+```rust
+async fn call_order_service(dbos: &DBOS) -> dbos::Result<()> {
+    let options = EnqueueOptions {
+        // The name of the application that implements process_order
+        app_name: Some("order-service"),
+        ..EnqueueOptions::new("orders")
+    };
+    let handle: WorkflowHandle<String> = dbos
+        .enqueue_with("process_order", "order-123", options)
+        .await?;
+    let result = handle.result().await?;
+    Ok(())
+}
+```
+
 If the applications are written in different languages, also set the serialization type to portable so the target application can read the arguments.
 See [Cross-Language Interaction](./portable-workflows.md) for details.
 

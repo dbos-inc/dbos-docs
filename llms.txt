@@ -153,7 +153,28 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Workflows](https://docs.dbos.dev/python/tutorials/workflow-tutorial.md): Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
 - [Upgrading to 3.0](https://docs.dbos.dev/python/upgrading.md): DBOS Python 3.0 removes features that were deprecated in DBOS 2.x.
 - [Get Started with DBOS](https://docs.dbos.dev/quickstart.md): DBOS is a library for building reliable programs.
+- [Add DBOS To Your App](https://docs.dbos.dev/rust/integrating-dbos.md): :::caution Pre-production release
+- [Learn DBOS Rust](https://docs.dbos.dev/rust/programming-guide.md): :::caution Pre-production release
+- [AI-Assisted Development](https://docs.dbos.dev/rust/prompting.md): If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS for Rust by either:
+- [DBOS Client](https://docs.dbos.dev/rust/reference/client.md): A [`Client`](https://docs.rs/dbos/latest/dbos/struct.Client.html) connects to a DBOS application's system database from outside the application: an...
+- [Configuration](https://docs.dbos.dev/rust/reference/configuration.md): A DBOS application is configured with a [`Config`](https://docs.rs/dbos/latest/dbos/struct.Config.html), and a client with a [`ClientConfig`](https...
+- [Cargo Features](https://docs.dbos.dev/rust/reference/features.md): The [`dbos`](https://crates.io/crates/dbos) crate's Cargo features:
+- [DBOS Lifecycle](https://docs.dbos.dev/rust/reference/lifecycle.md): A [`DBOS`](https://docs.rs/dbos/latest/dbos/struct.DBOS.html) instance is your application's handle to DBOS.
+- [DBOS Methods & Functions](https://docs.dbos.dev/rust/reference/methods.md): Most operations come in two forms:
+- [Queues](https://docs.dbos.dev/rust/reference/queues.md): See the [queues tutorial](../tutorials/queue-tutorial.md) for how to use these.
+- [Workflows & Steps](https://docs.dbos.dev/rust/reference/workflows-steps.md): Full API documentation, with every type and trait bound, is on [docs.rs](https://docs.rs/dbos/latest/dbos/).
+- [Async Runtimes](https://docs.dbos.dev/rust/tutorials/async-runtimes.md): DBOS for Rust runs on [Tokio](https://tokio.rs) by default, and also on [smol](https://github.com/smol-rs/smol) and [async-global-executor](https:/...
+- [Queues & Concurrency](https://docs.dbos.dev/rust/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
+- [Scheduling Workflows](https://docs.dbos.dev/rust/tutorials/scheduled-workflows.md): You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
+- [Serialization](https://docs.dbos.dev/rust/tutorials/serialization.md): DBOS records workflow inputs and results, step results, events, messages and stream values in the system database.
+- [Steps](https://docs.dbos.dev/rust/tutorials/step-tutorial.md): When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
+- [Testing](https://docs.dbos.dev/rust/tutorials/testing.md): A DBOS workflow is an ordinary `async fn`, so you can test it at two levels: as plain code, without a database, and as a durable workflow, against ...
+- [Upgrading Workflow Code](https://docs.dbos.dev/rust/tutorials/upgrading-workflows.md): A challenge encountered when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progr...
+- [Communicating with Workflows](https://docs.dbos.dev/rust/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
+- [Workflow Management](https://docs.dbos.dev/rust/tutorials/workflow-management.md): You can view and manage your durable workflow executions programmatically.
+- [Workflows](https://docs.dbos.dev/rust/tutorials/workflow-tutorial.md): Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/typescript/examples/checkout-tutorial.md): :::info
+- [Durable Honey Badger](https://docs.dbos.dev/typescript/examples/durable-honey-badger.md): <img src={require('@site/static/img/examples/honeybadger.gif').default} alt="A cobra bites the badger, and rewinding the workflow takes the game ba...
 - [Hacker News Research Agent](https://docs.dbos.dev/typescript/examples/hacker-news-agent.md): :::info
 - [Queue Worker](https://docs.dbos.dev/typescript/examples/queue-worker.md): :::info
 - [Add DBOS To Your App](https://docs.dbos.dev/typescript/integrating-dbos.md): This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing application ...

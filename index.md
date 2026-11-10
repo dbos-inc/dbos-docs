@@ -40,6 +40,16 @@ import { FaHackerNews } from "react-icons/fa6";
   
 </section>
 </LargeTabItem>
+<LargeTabItem value="rust" label="Rust">
+
+<section className="row list">
+  
+  
+  
+  
+</section>
+
+</LargeTabItem>
 
 ### Example Applications
 import { MdOutlineShoppingCart } from "react-icons/md";
@@ -70,6 +80,13 @@ import { VscGraphLine } from "react-icons/vsc";
 <section className="row list">
   
 </section>
+</LargeTabItem>
+<LargeTabItem value="rust" label="Rust">
+
+<section className="row list">
+  
+</section>
+
 </LargeTabItem>
 
 ### Features
