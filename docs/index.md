@@ -249,7 +249,7 @@ import { VscGraphLine } from "react-icons/vsc";
 <section className="row list">
   <NarrowCardLink
     label="Fault-Tolerant Checkout"
-    href="https://github.com/dbos-inc/dbos-transact-rust/tree/main/demo-apps/dbos-rust-widget-store"
+    href="https://github.com/dbos-inc/dbos-demo-apps/tree/main/rust/widget-store"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />

@@ -3,7 +3,23 @@ sidebar_position: 30
 title: AI-Assisted Development
 ---
 
-If you're using an AI coding agent to build a DBOS application, give it the latest information on DBOS for Rust with the [DBOS prompt](#dbos-prompt) below.
+If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS for Rust by either:
+
+1. [Installing DBOS skills.](#dbos-agent-skills)
+2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
+
+## DBOS Agent Skills
+
+[Agent Skills](https://agentskills.io/home) help developers use AI agents to add DBOS durable workflows to their applications.
+DBOS provides open-source skills you can check out [here](https://github.com/dbos-inc/agent-skills), including `dbos-rust` for the Rust SDK.
+
+To install them into your coding agent, run:
+
+```
+npx skills add dbos-inc/agent-skills
+```
+
+The [Skills CLI](https://skills.sh/) is compatible with most coding agents, including Claude Code, Codex, Antigravity, and Cursor.
 
 ## DBOS Prompt
 

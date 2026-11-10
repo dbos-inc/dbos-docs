@@ -708,20 +708,24 @@ DBOS Transact for Rust 0.6 is a pre-production release, and isn't yet supported 
 Its API may still change in breaking ways between releases.
 :::
 
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./rust/prompting.md).
+:::
+
 #### 1. Download an Application
 
 <section className="row list">
 <article className="col col--6">
 
-Download the DBOS Rust repository, which contains the starter app, and enter its directory.
+Download an example application and enter its directory.
 DBOS requires Rust 1.97 or later.
 </article>
 
 <article className="col col--6">
 
 ```shell
-git clone https://github.com/dbos-inc/dbos-transact-rust.git
-cd dbos-transact-rust
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd dbos-demo-apps/rust/dbos-starter
 ```
 </article>
 </section>
@@ -756,7 +760,7 @@ Now, start your app!
 
 <article className="col col--6">
 ```bash
-cargo run -p dbos-rust-starter
+cargo run
 ```
 </article>
 
@@ -766,7 +770,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
-Then, restart it with `cargo run -p dbos-rust-starter` and watch it seamlessly recover from where it left off.
+Then, restart it with `cargo run` and watch it seamlessly recover from where it left off.
 
 Congratulations, you've run your first durable workflow with DBOS!
 </article>
