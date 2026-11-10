@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.d58c183a.js" defer="defer"></script>
-<script src="/assets/js/main.dcc3d919.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8c8c7b47.js" defer="defer"></script>
+<script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -35,7 +35,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 <li class=""><code>-u, --user &lt;string&gt;</code>                 Retrieve workflows run by this user</li>
 <li class=""><code>-t, --start-time &lt;string&gt;</code>           Retrieve workflows starting after this timestamp (ISO 8601 format)</li>
 <li class=""><code>-e, --end-time &lt;string&gt;</code>             Retrieve workflows starting before this timestamp (ISO 8601 format)</li>
-<li class=""><code>-S, --status &lt;string&gt;</code>               Retrieve workflows with this status (<code>PENDING</code>, <code>SUCCESS</code>, <code>ERROR</code>, <code>MAX_RECOVERY_ATTEMPTS_EXCEEDED</code>, <code>ENQUEUED</code>, <code>DELAYED</code>, or <code>CANCELLED</code>)</li>
+<li class=""><code>-S, --status &lt;string&gt;</code>               Retrieve workflows with this status (<code>PENDING</code>, <code>SUCCESS</code>, <code>ERROR</code>, <code>MAX_RECOVERY_ATTEMPTS_EXCEEDED</code>, <code>ENQUEUED</code>, <code>DELAYED</code>, <code>SUSPENDED</code>, or <code>CANCELLED</code>)</li>
 <li class=""><code>-v, --application-version &lt;string&gt;</code>  Retrieve workflows with this application version</li>
 <li class=""><code>-a, --application-name &lt;string&gt;</code>     Retrieve workflows owned by this application (workflows owned by no application are always included)</li>
 </ul>
@@ -107,7 +107,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 <li class=""><code>-n, --name &lt;string&gt;</code>        Retrieve functions with this name</li>
 <li class=""><code>-t, --start-time &lt;string&gt;</code>  Retrieve functions starting after this timestamp (ISO 8601 format)</li>
 <li class=""><code>-e, --end-time &lt;string&gt;</code>    Retrieve functions starting before this timestamp (ISO 8601 format)</li>
-<li class=""><code>-S, --status &lt;string&gt;</code>      Retrieve functions with this status (<code>ENQUEUED</code>, <code>PENDING</code>, or <code>DELAYED</code>)</li>
+<li class=""><code>-S, --status &lt;string&gt;</code>      Retrieve functions with this status (<code>ENQUEUED</code>, <code>PENDING</code>, <code>DELAYED</code>, or <code>SUSPENDED</code>)</li>
 <li class=""><code>-l, --limit &lt;number&gt;</code>       Limit the results returned</li>
 <li class=""><code>-q, --queue &lt;string&gt;</code>       Retrieve functions run on this queue</li>
 <li class=""><code>-a, --application-name &lt;string&gt;</code>  Retrieve functions owned by this application (functions owned by no application are always included)</li>

@@ -139,6 +139,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Workflow Handles](https://docs.dbos.dev/python/reference/workflow_handles.md): API reference for DBOS workflow handles
 - [Authentication and Authorization](https://docs.dbos.dev/python/tutorials/authentication-authorization.md): Use declarative security and authentication middleware in DBOS
 - [Working With Python Classes](https://docs.dbos.dev/python/tutorials/classes.md): You can add DBOS decorators to your Python class instance methods.
+- [External Storage](https://docs.dbos.dev/python/tutorials/external-storage.md): :::info
 - [Integrating with Kafka](https://docs.dbos.dev/python/tutorials/kafka-integration.md): Overview of using DBOS with Kafka
 - [Logging & Tracing](https://docs.dbos.dev/python/tutorials/logging-and-tracing.md): For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/contexts.md#logger).
 - [Queues & Concurrency](https://docs.dbos.dev/python/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
@@ -188,6 +189,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [DBOS Methods & Variables](https://docs.dbos.dev/typescript/reference/methods.md): ```typescript
 - [Queues](https://docs.dbos.dev/typescript/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 - [Workflows & Steps](https://docs.dbos.dev/typescript/reference/workflows-steps.md): ```typescript
+- [External Storage](https://docs.dbos.dev/typescript/tutorials/external-storage.md): :::info
 - [Kafka Integration](https://docs.dbos.dev/typescript/tutorials/externalmessages.md): In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) messages with exactly...
 - [Using Typescript Objects](https://docs.dbos.dev/typescript/tutorials/instantiated-objects.md): You can use class instance methods as workflows and steps.
 - [Logging & Tracing](https://docs.dbos.dev/typescript/tutorials/logging.md): For convenience, DBOS provides a logging facility accessed via [`DBOS.logger`](../reference/methods.md#dboslogger).

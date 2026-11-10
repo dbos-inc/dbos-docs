@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.d58c183a.js" defer="defer"></script>
-<script src="/assets/js/main.dcc3d919.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8c8c7b47.js" defer="defer"></script>
+<script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -113,7 +113,7 @@ Take care when partitioning a queue at runtime: workflows already enqueued on it
 These options are <strong>not propagated</strong> to child workflows.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li class=""><code>deduplication_id</code>: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status <code>DELAYED</code>, <code>ENQUEUED</code>, or <code>PENDING</code>), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a <code>DBOSQueueDeduplicatedError</code> exception. Defaults to <code>None</code>.</li>
+<li class=""><code>deduplication_id</code>: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status <code>DELAYED</code>, <code>ENQUEUED</code>, <code>SUSPENDED</code>, or <code>PENDING</code>), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a <code>DBOSQueueDeduplicatedError</code> exception. Defaults to <code>None</code>.</li>
 <li class=""><code>duplication_policy</code>: How to handle a collision with another workflow that has the same <code>deduplication_id</code> on the same queue. Defaults to <code>&quot;reject&quot;</code>.<!-- -->
 <ul>
 <li class=""><code>&quot;reject&quot;</code>: raise <code>DBOSQueueDeduplicatedError</code>.</li>

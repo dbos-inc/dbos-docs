@@ -35,7 +35,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -58,6 +58,8 @@ class DBOSClient {
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
+    storeExternalObject<T>(value: T, options: ClientStoreExternalObjectOptions): Promise<ExternalObjectRef<T>>;
+    loadExternalObject<T>(ref: ExternalObjectRef<T>): Promise<T>;
 
     getWorkflow(workflowID: string, options?: { shardKey?: string }): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
@@ -115,6 +117,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 - **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
+- **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
 
 Example:
 
@@ -155,7 +158,7 @@ Additional but optional metadata includes:
   * `'reject'`: throw `DBOSWorkflowIDInUseError` without enqueueing a new workflow or modifying the existing one. Match it with `isWorkflowIDInUseError`, as described in [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow).
 * **appVersion**: The version of your application that should process this workflow. If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
-* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception. On a partitioned queue, deduplication IDs are unique across the whole queue, including all its partitions.
+* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception. On a partitioned queue, deduplication IDs are unique across the whole queue, including all its partitions.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
 * **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -467,6 +470,29 @@ Similar to [`DBOS.readStreamOffset`](./methods.md#dbosreadstreamoffset).
 const value = await client.readStreamOffset(workflowID, "example_key", 5, { timeoutSeconds: 30 });
 ```
 
+#### `storeExternalObject`
+
+```typescript
+interface ClientStoreExternalObjectOptions extends StoreExternalObjectOptions {
+  ownerWorkflowID: string;
+}
+
+client.storeExternalObject<T>(value: T, options: ClientStoreExternalObjectOptions): Promise<ExternalObjectRef<T>>
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+Similar to [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject), except that `ownerWorkflowID` is required.
+The owner doesn't have to exist yet, so you can upload a large input and then enqueue the workflow that will process it.
+
+#### `loadExternalObject`
+
+```typescript
+client.loadExternalObject<T>(ref: ExternalObjectRef<T>): Promise<T>
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+Similar to [`DBOS.loadExternalObject`](./methods.md#dbosloadexternalobject).
+
 ### Workflow Inspection
 
 #### `getWorkflow`
@@ -484,7 +510,7 @@ Unless `workflowIDs` is set, this query is subject to the client's [`observabili
 
 #### `listQueuedWorkflows`
 
-Retrieves information about currently enqueued workflows (status `DELAYED`, `ENQUEUED`, or `PENDING`).
+Retrieves information about currently enqueued workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`).
 Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more information.
 If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
 Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.

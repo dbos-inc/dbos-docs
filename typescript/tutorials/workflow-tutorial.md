@@ -256,6 +256,51 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
+### Suspending Workflows
+
+:::info
+Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
+If your application has many workflows with long waits, you can instead suspend them, so they use no memory or queue capacity until they wake.
+
+To suspend workflows, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) or [`DBOS.recv`](../reference/methods.md#dbosrecv):
+
+```typescript
+DBOS.setConfig({
+  name: "my-app-name",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  suspendMode: true,
+});
+await DBOS.launch();
+
+async function sendReminderFunction(user: string) {
+  // Sleep suspended for 30 days, then send the reminder
+  await DBOS.sleep(30 * 24 * 60 * 60 * 1000, { suspend: true });
+  await DBOS.runStep(() => sendEmail(user), { name: "sendEmail" });
+}
+const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
+```
+
+When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
+When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+
+Keep in mind:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a handle or a direct call, keeps waiting.
+- **Suspending throws `DBOSWorkflowSuspendedError`** to exit the execution. If you wrap a suspending call in a `try`/`catch`, rethrow this error; otherwise, your `catch` block runs even though nothing failed:
+
+```typescript
+try {
+  const message = await DBOS.recv("topic", { timeoutSeconds: 3600, suspend: true });
+} catch (e) {
+  if (e instanceof DBOSWorkflowSuspendedError) throw e;
+  // Handle other errors
+}
+```
+
 ## Debouncing Workflows
 
 You can debounce workflows to delay their execution until some time has passed since the workflow has last been called.

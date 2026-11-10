@@ -16,14 +16,15 @@ You can manage individual workflows directly from the DBOS Console.
 
 #### Cancelling Workflows
 
-You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, or `DELAYED`.
+You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`.
 Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued or delayed, cancelling removes it from the queue.
+If the workflow is suspended, cancelling it means it never wakes.
 
 #### Resuming Workflows
 
-You can resume any `ENQUEUED`, `DELAYED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
+You can resume any `ENQUEUED`, `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
 If the workflow is enqueued, this bypasses the queue to start it immediately.
 

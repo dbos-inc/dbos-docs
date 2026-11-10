@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.d58c183a.js" defer="defer"></script>
-<script src="/assets/js/main.dcc3d919.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8c8c7b47.js" defer="defer"></script>
+<script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -101,7 +101,7 @@ Then, a DBOS application can run without privilege (requiring only access to the
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-does-dbos-scale">How does DBOS scale?<a href="#how-does-dbos-scale" class="hash-link" aria-label="Direct link to How does DBOS scale?" title="Direct link to How does DBOS scale?" translate="no">​</a></h3>
 <p>The <a class="" href="/architecture">architecture page</a> describes how to architect a distributed DBOS application and how DBOS scales.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="when-should-i-use-the-dbos-conductor">When should I use the DBOS Conductor?<a href="#when-should-i-use-the-dbos-conductor" class="hash-link" aria-label="Direct link to When should I use the DBOS Conductor?" title="Direct link to When should I use the DBOS Conductor?" translate="no">​</a></h3>
-<p>Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, and organization management with RBAC. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.</p>
+<p>Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, organization management with RBAC, and access to <a class="" href="/explanations/transact-enterprise">DBOS Transact Enterprise</a> features. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-is-my-application-not-connecting-to-conductor">Why is my application not connecting to Conductor?<a href="#why-is-my-application-not-connecting-to-conductor" class="hash-link" aria-label="Direct link to Why is my application not connecting to Conductor?" title="Direct link to Why is my application not connecting to Conductor?" translate="no">​</a></h3>
 <p>The most common reason an application fails to connect to Conductor is that the name the application is registered with in its DBOS configuration does not match the name it was registered with in Conductor.
 Additionally, if you are <a class="" href="/conductor/self-hosting/hosting-conductor">self-hosting Conductor</a> with a free license, you may connect at most one executor per application to Conductor, so additional executors may see their connections rejected.

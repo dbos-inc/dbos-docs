@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.d58c183a.js" defer="defer"></script>
-<script src="/assets/js/main.dcc3d919.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8c8c7b47.js" defer="defer"></script>
+<script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -49,9 +49,12 @@ Must be called after DBOS is constructed and before it is launched, and may be c
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="destroy">destroy<a href="#destroy" class="hash-link" aria-label="Direct link to destroy" title="Direct link to destroy" translate="no">​</a></h3>
 <div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain">DBOS</span><span class="token punctuation" style="color:rgb(199, 146, 234)">.</span><span class="token plain">destroy</span><span class="token punctuation" style="color:rgb(199, 146, 234)">(</span><span class="token plain"></span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain">    </span><span class="token operator" style="color:#66d9ef">*</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain">    destroy_registry</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token builtin" style="color:#e6db74">bool</span><span class="token plain"> </span><span class="token operator" style="color:#66d9ef">=</span><span class="token plain"> </span><span class="token boolean" style="color:#ae81ff">False</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain">    workflow_completion_timeout_sec</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token builtin" style="color:#e6db74">int</span><span class="token plain"> </span><span class="token operator" style="color:#66d9ef">=</span><span class="token plain"> </span><span class="token number" style="color:#ae81ff">0</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#f8f8f2"><span class="token plain"></span><span class="token punctuation" style="color:rgb(199, 146, 234)">)</span><br></div></code></pre></div></div>
 <p>Destroy the DBOS singleton, stopping its background threads (such as queue polling and the scheduler) and closing database connections.
-<code>destroy</code> waits up to <code>workflow_completion_timeout_sec</code> for active workflows to complete and cancels executor tasks that have not yet started; it does not interrupt workflows that are still running, but they can no longer checkpoint their progress.
-After this completes, the singleton can be re-initialized: construct a new instance with <code>DBOS(config=...)</code> before calling <code>DBOS.launch()</code> again.
-Useful for testing.</p>
+<code>destroy</code> waits up to <code>workflow_completion_timeout_sec</code> for active workflows to complete and cancels executor tasks that have not yet started.</p>
+<p>Workflows still running after <code>destroy</code> will likely not be able to continue, because they rely on DBOS resources such as the system database and thread pool executor.
+Any errors they raise after <code>destroy</code> are safe, as they are not durably persisted.
+If your application has long-running workflows, we recommend shutting down your process shortly after calling <code>destroy</code>; its workflows will safely recover from their last completed step.</p>
+<p>After destroy completes, DBOS can be re-launched: construct a new instance with <code>DBOS(config=...)</code> before calling <code>DBOS.launch()</code> again.
+This is useful for testing.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li class=""><code>workflow_completion_timeout_sec</code>: Wait this many seconds for active workflows to complete before shutting down.</li>

@@ -250,7 +250,7 @@ These options are **not propagated** to child workflows.
 
 **Parameters:**
 
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
 - `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
   - `"reject"`: raise `DBOSQueueDeduplicatedError`.
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires a queue and a `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).

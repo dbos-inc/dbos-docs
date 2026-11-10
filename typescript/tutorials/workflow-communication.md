@@ -26,12 +26,26 @@ or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-ta
 #### Recv
 
 ```typescript
-DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
+DBOS.recv<T>(topic?: string, options?: RecvOptions): Promise<T | null>
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.  The default timeout is 60 seconds.  A timeout is recommended even for operations that "should eventually complete"; the timeout should exceed the longest normal execution time and serve as a safeguard to detect and report unexpected behavior rather than waiting forever.
 If the topic is not specified, this method only receives messages sent without a topic.
+
+If a workflow may wait a long time for a message, you can [suspend it](./workflow-tutorial.md#suspending-workflows) while it waits by passing `suspend: true` so it consumes no resources while waiting:
+
+```typescript
+async function approvalWorkflowFunction() {
+  // ... Ask a reviewer for approval.
+  // Suspend for up to a week while waiting for a decision
+  const decision = await DBOS.recv<string>("approval", { timeoutSeconds: 7 * 24 * 60 * 60, suspend: true });
+}
+```
+
+If a message is already waiting, `recv` returns it immediately.
+Otherwise, the workflow suspends until a message is sent on its topic or the timeout passes.
+Any `send` on that topic wakes it, including one from a [`DBOSClient`](../reference/client.md) or a process without suspend mode.
 
 #### Messages Example
 

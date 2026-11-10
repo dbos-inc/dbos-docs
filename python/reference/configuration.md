@@ -46,6 +46,8 @@ class DBOSConfig(TypedDict):
     auto_upgrade_interval_sec: Optional[float]
     auto_upgrade_grace_sec: Optional[float]
     sharding: Optional[bool]
+    suspend_mode: Optional[bool]
+    external_stores: Optional[List[ExternalStore]]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -130,8 +132,10 @@ A system database ahead of the required version is accepted, so a process with m
 - **transact_enterprise_key**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `conductor_key`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 - **auto_upgrade**: If `True`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `auto_upgrade=False` in [`@DBOS.workflow`](./decorators.md#workflow). Requires DBOS Transact Enterprise. Defaults to `False`.
 - **auto_upgrade_interval_sec**: How often, in seconds, to check for workflows to auto-upgrade. Defaults to 30 seconds.
-- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows are moved without waiting. Defaults to 0.
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
+- **suspend_mode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./contexts.md#sleep) or [`DBOS.recv`](./contexts.md#recv). Requires DBOS Transact Enterprise. Defaults to `False`.
+- **external_stores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.store_external_object`](./contexts.md#store_external_object) must specify one. Requires DBOS Transact Enterprise.
 
 ### Logging and Tracing Settings
 

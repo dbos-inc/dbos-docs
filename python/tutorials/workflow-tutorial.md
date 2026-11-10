@@ -160,6 +160,41 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
+### Suspending Workflows
+
+:::info
+Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
+If your application has many workflows with long waits, you can instead suspend them, so they use no memory, threads, or queue capacity until they wake.
+
+To suspend workflows, set [`suspend_mode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) or [`DBOS.recv`](../reference/contexts.md#recv) (or their async versions):
+
+```python
+config: DBOSConfig = {
+    "name": "my-app-name",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "suspend_mode": True,
+}
+DBOS(config=config)
+
+@DBOS.workflow()
+def send_reminder(user):
+    # Sleep suspended for 30 days, then send the reminder
+    DBOS.sleep(30 * 24 * 60 * 60, suspend=True)
+    send_email(user)
+```
+
+When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
+When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+
+Keep in mind:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a [handle](../reference/workflow_handles.md) or a direct call, keeps waiting.
+- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
+
 ## Debouncing Workflows
 
 You can debounce workflows to delay their execution until some time has passed since the workflow has last been called.

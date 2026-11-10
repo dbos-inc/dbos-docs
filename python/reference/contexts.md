@@ -186,6 +186,8 @@ Coroutine version of [`send_bulk`](#send_bulk)
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
@@ -199,6 +201,7 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 **Parameters:**
 - `topic`: A topic queue on which to wait.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
+- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `None` if the wait times out.
@@ -209,6 +212,8 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 DBOS.recv_async(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, Any]
 ```
 
@@ -315,7 +320,9 @@ Coroutine version of [`get_all_events`](#get_all_events).
 
 ```python
 DBOS.sleep(
-    seconds: float
+    seconds: float,
+    *,
+    suspend: bool = False,
 ) -> None
 ```
 
@@ -326,12 +333,15 @@ The `sleep` function should not be used in [coroutine workflows](../tutorials/wo
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
+- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `False`.
 
 ### sleep_async
 
 ```python
 DBOS.sleep_async(
-    seconds: float
+    seconds: float,
+    *,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, None]
 ```
 
@@ -762,6 +772,119 @@ DBOS.read_stream_offset_async(
 
 Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
+### store_external_object
+
+```python
+DBOS.store_external_object(
+    value: T,
+    *,
+    owner_workflow_id: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+From workflow code, the upload runs as a step.
+Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+
+**Parameters:**
+- `value`: The value to store. A `bytes` value is stored as is, without serialization.
+- `owner_workflow_id`: The workflow that owns the object, which is deleted some time after its owner is. Defaults to the calling workflow. Required outside a workflow.
+- `serialization_type`: The [serialization strategy](#serialization-strategy) for the value. Defaults to the calling workflow's. To load the object from another language, store `bytes` or use portable serialization.
+- `key`: Names the object within its owner, so storing under the same key again overwrites it. Up to 512 characters in `/`-separated segments of letters, digits, `.`, `_`, `=`, or `-`, each starting with a letter or digit. Defaults to a new random key.
+- `shard_key`: The owner's [shard key](../tutorials/sharding.md). Required on a sharded system database when storing outside the owner.
+- `store_id`: The store to upload to. Required if several stores are configured.
+
+**Returns:**
+- An [`ExternalObjectRef`](#externalobjectref) to the stored object.
+
+**Raises:**
+- `DBOSExternalStoreNotConfiguredError`: If no external store is configured, or `store_id` names a store that isn't.
+- `DBOSExternalStoreError`: If the store fails.
+
+### store_external_object_async
+
+```python
+DBOS.store_external_object_async(
+    value: T,
+    *,
+    owner_workflow_id: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> Coroutine[Any, Any, ExternalObjectRef[T]]
+```
+
+Coroutine version of [`store_external_object`](#store_external_object)
+
+### load_external_object
+
+```python
+DBOS.load_external_object(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+May be called from a step or outside a workflow, but not from workflow code.
+
+**Parameters:**
+- `ref`: A reference returned by [`store_external_object`](#store_external_object).
+
+**Returns:**
+- The stored value.
+
+**Raises:**
+- `DBOSExternalStoreNotConfiguredError`: If the store the reference names isn't configured.
+- `DBOSExternalObjectMissingError`: If the object no longer exists.
+- `DBOSExternalObjectIntegrityError`: If the stored bytes don't match the reference.
+- `DBOSExternalStoreError`: If the store fails.
+
+### load_external_object_async
+
+```python
+DBOS.load_external_object_async(
+    ref: ExternalObjectRef[T],
+) -> Coroutine[Any, Any, T]
+```
+
+Coroutine version of [`load_external_object`](#load_external_object)
+
+### ExternalObjectRef
+
+```python
+class ExternalObjectRef(TypedDict, Generic[T]):
+    version: int
+    store: str
+    key: str
+    size: int
+    sha256: str
+    serialization: str
+    encoding: str
+```
+
+A small, serializable reference to an external object.
+Treat it as opaque: return it from steps and workflows or pass it as a workflow input.
+
+### ExternalStore
+
+```python
+class ExternalStore(Protocol):
+    @property
+    def store_id(self) -> str: ...
+    def put(self, key: str, data: bytes) -> None: ...
+    def get(self, key: str) -> bytes: ...
+    def delete(self, keys: Sequence[str]) -> None: ...
+```
+
+Where external objects are stored.
+See [Custom Stores](../tutorials/external-storage.md#custom-stores).
+`get` must raise `KeyError` if no object has the key, and `delete` must ignore keys with no object.
+
 ### patch
 
 ```python
@@ -1079,7 +1202,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -1099,7 +1222,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
@@ -1149,11 +1272,11 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -1749,7 +1872,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, SUSPENDED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str

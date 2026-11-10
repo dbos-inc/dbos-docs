@@ -33,12 +33,28 @@ or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-ta
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+
+If a workflow may wait a long time for a message, you can [suspend it](./workflow-tutorial.md#suspending-workflows) while it waits by passing `suspend=True` so it consumes no resources while waiting:
+
+```python
+@DBOS.workflow()
+def approval_workflow():
+    ... # Ask a reviewer for approval.
+    # Suspend for up to a week while waiting for a decision
+    decision = DBOS.recv("approval", timeout_seconds=7 * 24 * 60 * 60, suspend=True)
+```
+
+If a message is already waiting, `recv` returns it immediately.
+Otherwise, the workflow suspends until a message is sent on its topic or the timeout passes.
+Any `send` on that topic wakes it, including one from a [`DBOSClient`](../reference/client.md) or a process without suspend mode.
 
 #### Messages Example
 

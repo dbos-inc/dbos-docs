@@ -457,6 +457,12 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
+To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
+Pass `suspend=True` to `DBOS.sleep` or `DBOS.recv` (or their async versions).
+The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
+Waking takes a second or two, so only suspend for long waits.
+Suspending raises `DBOSWorkflowSuspendedError`, a `BaseException`; you MUST re-raise it if you use a bare `except:` or `except BaseException` around a suspending call.
+
 ## Debouncing Workflows
 
 You can create a `Debouncer` to debounce your workflows.
@@ -687,12 +693,15 @@ You can also call `send` from outside of your DBOS application with the DBOS Cli
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+With `suspend=True`, a `recv` that has to wait suspends the workflow until a message arrives on its topic or the timeout passes (see Durable Sleep for requirements).
 
 ### Messages Example
 
@@ -1222,7 +1231,7 @@ Deduplication is not supported on partitioned queues.
 
 You can set a deduplication ID for an enqueued workflow with `SetEnqueueOptions`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -1376,7 +1385,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```python
 config: DBOSConfig = {
@@ -1476,6 +1485,17 @@ Then, once all workflows of the old version are complete (you can use `DBOS.list
 To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
+## External Storage
+
+To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
+Set `"external_stores": [S3ExternalStore(boto3.client("s3"), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `dbos_enterprise`.
+`DBOS.store_external_object(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
+`DBOS.load_external_object(ref)` returns the value.
+You MUST call `load_external_object` from a step, not from workflow code, and return only a small result from that step.
+Prefer storing `bytes` for large objects, because they are not serialized.
+Outside a workflow, you MUST pass `owner_workflow_id`.
+Objects are deleted only after their owner workflow has been deleted, by a retention run.
+
 ## Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.
@@ -1542,7 +1562,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this name.
@@ -1557,7 +1577,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null).
 - **is_fork**: If `True`, only retrieve workflows that were forked from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose custom attributes contain all the given key-value pairs. Only supported when using a Postgres system database.
@@ -1589,11 +1609,11 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this name.
@@ -1740,7 +1760,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, SUSPENDED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str

@@ -880,6 +880,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Managed Retention Policies**](./conductor/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 - [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./conductor/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
+- [**DBOS Transact Enterprise access**](./explanations/transact-enterprise.md): Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.
 
 Architecturally, Conductor looks like this:
 
@@ -1788,6 +1789,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Autoscaling and version management**](./autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 - [**Programmatic access**](./reference/conductor-api.md): Conductor's workflow, queue, and schedule management is available over an OpenAPI-described HTTP API and from the [`dbosctl` command-line client](./reference/dbosctl.md), so you can script incident response and wire Conductor into your own tooling.
+- [**DBOS Transact Enterprise access**](../explanations/transact-enterprise.md): Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.
 
 Architecturally, Conductor is not part of your workflows orchestration path.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
@@ -3773,8 +3775,8 @@ You can configure workflow history retention policies for your application from 
 These settings let you configure how long workflow history is retained in your application's [system database](../../../explanations/system-tables.md).
 This is useful for managing the database disk usage of workflow history.
 
-Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, or delayed are never deleted.
-Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams.
+Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, delayed, or suspended are never deleted.
+Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams, as well as any objects it owns in external storage.
 
 #### Time Threshold
 
@@ -3891,14 +3893,15 @@ You can manage individual workflows directly from the DBOS Console.
 
 ##### Cancelling Workflows
 
-You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, or `DELAYED`.
+You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`.
 Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued or delayed, cancelling removes it from the queue.
+If the workflow is suspended, cancelling it means it never wakes.
 
 ##### Resuming Workflows
 
-You can resume any `ENQUEUED`, `DELAYED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
+You can resume any `ENQUEUED`, `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
 If the workflow is enqueued, this bypasses the queue to start it immediately.
 
@@ -4660,8 +4663,8 @@ If you are using [Conductor](./overview.md), you can configure workflow history 
 These settings let you configure how long workflow history is retained in your application's [system database](../explanations/system-tables.md).
 This is useful for managing the database disk usage of workflow history.
 
-Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, or delayed are never deleted.
-Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams.
+Retention policies only delete the history of completed workflows (workflows with status `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); workflows that are still running, enqueued, delayed, or suspended are never deleted.
+Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams, as well as any objects it owns in external storage.
 Retention runs in the background and deletes history in batches.
 
 If multiple applications [share a system database](../explanations/sharing-a-system-database.md), retention policies apply to the entire system database, including workflows owned by other applications.
@@ -5928,14 +5931,15 @@ You can manage individual workflows directly from the DBOS Console.
 
 ##### Cancelling Workflows
 
-You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, or `DELAYED`.
+You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`.
 Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued or delayed, cancelling removes it from the queue.
+If the workflow is suspended, cancelling it means it never wakes.
 
 ##### Resuming Workflows
 
-You can resume any `ENQUEUED`, `DELAYED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
+You can resume any `ENQUEUED`, `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
 If the workflow is enqueued, this bypasses the queue to start it immediately.
 
@@ -8093,7 +8097,7 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 - `app_version`: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued by a process running the latest application version.
 - `timeout_ms`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution. 
 - `deadline_epoch_ms`: Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status ENQUEUED, DELAYED, or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status ENQUEUED, DELAYED, SUSPENDED, or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 0 to 2,147,483,647, where a low number indicates a higher priority. If a priority is not supplied, it defaults to 0, the highest priority.
 - `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned. Partitioned queues apply their per-partition flow control limits (concurrency and rate limits) to each partition separately.
 - `authenticated_user`: The authenticated user to associate with the enqueued workflow. Defaults to null.
@@ -8130,7 +8134,7 @@ Each row represents a different workflow execution.
 
 **Columns:**
 - **workflow_uuid**: The unique identifier of the workflow execution.
-- **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`.
+- **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `CANCELLED`.
 - **name**: The name of the workflow function.
 - **authenticated_user**: The user who ran the workflow. Empty string if not set.
 - **assumed_role**: The role used to run this workflow.  Empty string if authorization is not required.
@@ -8152,7 +8156,7 @@ Each row represents a different workflow execution.
 - **forked_from**: The ID of the workflow that this was forked from, if applicable.
 - **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
-- **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution.
+- **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution. For workflows in the `SUSPENDED` state, the epoch timestamp at which the workflow should be re-enqueued.
 - **owner_xid**: The ownership token of the execution currently running this workflow, used to [detect concurrent executions](./concurrent-executions.md#workflow-ownership). Null when no execution owns the workflow.
 - **creator_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.
@@ -8164,6 +8168,7 @@ Each row represents a different workflow execution.
 - **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
 - **is_debounced**: Whether this workflow was created by a debouncer.
 - **application_name**: The application that owns this workflow.
+- **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting.
 
 #### dbos.workflow_input
 This table stores workflow inputs.
@@ -8249,6 +8254,16 @@ Each entry represents a different message in a stream.
 - **function_id**: The monotonically increasing step ID responsible for emitting this stream.
 - **serialization**: The name of the serialization format used for the stream value. Null if the default serializer was used.
 
+#### dbos.external_objects
+This table tracks objects stored with external storage, so that DBOS can delete them after their owner workflow is deleted.
+Each entry represents a single object.
+
+**Columns:**
+- **object_key**: The object's key in its store.
+- **store_id**: The ID of the store holding the object.
+- **workflow_uuid**: The ID of the workflow that owns the object.
+- **created_at**: The epoch timestamp (in milliseconds) at which the object was stored.
+
 #### dbos.application_versions
 This table stores registered application versions.
 Each time DBOS launches, it records the current application version.
@@ -8322,6 +8337,8 @@ DBOS Transact Enterprise provides:
 - **Sharding**: Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
+- **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
+- **External storage**: Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
 
 ### Installing DBOS Transact Enterprise
 
@@ -8542,7 +8559,7 @@ The [architecture page](./architecture.md) describes how to architect a distribu
 
 #### When should I use the DBOS Conductor?
 
-Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, and organization management with RBAC. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.
+Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, organization management with RBAC, and access to [DBOS Transact Enterprise](./explanations/transact-enterprise.md) features. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.
 
 #### Why is my application not connecting to Conductor?
 
@@ -35259,6 +35276,12 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
+To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
+Pass `suspend=True` to `DBOS.sleep` or `DBOS.recv` (or their async versions).
+The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
+Waking takes a second or two, so only suspend for long waits.
+Suspending raises `DBOSWorkflowSuspendedError`, a `BaseException`; you MUST re-raise it if you use a bare `except:` or `except BaseException` around a suspending call.
+
 ### Debouncing Workflows
 
 You can create a `Debouncer` to debounce your workflows.
@@ -35489,12 +35512,15 @@ You can also call `send` from outside of your DBOS application with the DBOS Cli
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+With `suspend=True`, a `recv` that has to wait suspends the workflow until a message arrives on its topic or the timeout passes (see Durable Sleep for requirements).
 
 #### Messages Example
 
@@ -36024,7 +36050,7 @@ Deduplication is not supported on partitioned queues.
 
 You can set a deduplication ID for an enqueued workflow with `SetEnqueueOptions`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -36178,7 +36204,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```python
 config: DBOSConfig = {
@@ -36278,6 +36304,17 @@ Then, once all workflows of the old version are complete (you can use `DBOS.list
 To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
+### External Storage
+
+To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
+Set `"external_stores": [S3ExternalStore(boto3.client("s3"), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `dbos_enterprise`.
+`DBOS.store_external_object(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
+`DBOS.load_external_object(ref)` returns the value.
+You MUST call `load_external_object` from a step, not from workflow code, and return only a small result from that step.
+Prefer storing `bytes` for large objects, because they are not serialized.
+Outside a workflow, you MUST pass `owner_workflow_id`.
+Objects are deleted only after their owner workflow has been deleted, by a retention run.
+
 ### Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.
@@ -36344,7 +36381,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this name.
@@ -36359,7 +36396,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null).
 - **is_fork**: If `True`, only retrieve workflows that were forked from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose custom attributes contain all the given key-value pairs. Only supported when using a Postgres system database.
@@ -36391,11 +36428,11 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this name.
@@ -36542,7 +36579,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, SUSPENDED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str
@@ -36845,7 +36882,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 * `-u, --user TEXT`: Retrieve workflows run by this user
 * `-t, --start-time TEXT`: Retrieve workflows starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve workflows starting before this timestamp (ISO 8601 format)
-* `-S, --status TEXT`: Retrieve workflows with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
+* `-S, --status TEXT`: Retrieve workflows with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, SUSPENDED, or CANCELLED)
 * `-v, --application-version TEXT`: Retrieve workflows with this application version
 * `-n, --name TEXT`: Retrieve workflows with this name
 * `-a, --application-name TEXT`: Retrieve workflows owned by this application (workflows owned by no application are always included)
@@ -36931,7 +36968,7 @@ Lists all currently enqueued tasks in JSON format ordered by recency (most recen
 * `-l, --limit INTEGER`: Limit the results returned
 * `-t, --start-time TEXT`: Retrieve functions starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve functions starting before this timestamp (ISO 8601 format)
-* `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
+* `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, SUSPENDED, or CANCELLED)
 * `-q, --queue-name TEXT`: Retrieve functions on this queue
 * `-n, --name TEXT`: Retrieve functions with this name
 * `-a, --application-name TEXT`: Retrieve functions owned by this application (functions owned by no application are always included)
@@ -37053,6 +37090,7 @@ DBOSClient(
     observability_query_timeout_sec: Optional[float] = None,
     sys_db_idle_transaction_timeout_sec: Optional[float] = None,
     sharding: bool = False,
+    external_stores: Optional[Sequence[ExternalStore]] = None,
 )
 ```
 **Parameters:**
@@ -37069,6 +37107,7 @@ DBOSClient(
 - `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
 - `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
+- `external_stores`: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
 
 **Example syntax:**
 
@@ -37162,7 +37201,7 @@ Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflo
 * `app_version`: The version of your application that should process this workflow. 
 If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
   - `"reject"`: raise `DBOSQueueDeduplicatedError`.
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
@@ -37735,6 +37774,61 @@ client.read_stream_offset_async(
 
 Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
+#### store_external_object
+
+```python
+client.store_external_object(
+    value: T,
+    *,
+    owner_workflow_id: str,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+Similar to [`DBOS.store_external_object`](./contexts.md#store_external_object), except that `owner_workflow_id` is required.
+The owner doesn't have to exist yet, so you can upload a large input and then enqueue the workflow that will process it.
+
+#### store_external_object_async
+
+```python
+await client.store_external_object_async(
+    value: T,
+    *,
+    owner_workflow_id: str,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Asynchronous version of [`store_external_object`](#store_external_object).
+
+#### load_external_object
+
+```python
+client.load_external_object(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+Similar to [`DBOS.load_external_object`](./contexts.md#load_external_object).
+
+#### load_external_object_async
+
+```python
+await client.load_external_object_async(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Asynchronous version of [`load_external_object`](#load_external_object).
+
 #### set_workflow_delay
 
 ```python
@@ -37945,7 +38039,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -37965,7 +38059,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
@@ -38048,12 +38142,12 @@ client.list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -38803,6 +38897,8 @@ class DBOSConfig(TypedDict):
     auto_upgrade_interval_sec: Optional[float]
     auto_upgrade_grace_sec: Optional[float]
     sharding: Optional[bool]
+    suspend_mode: Optional[bool]
+    external_stores: Optional[List[ExternalStore]]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -38887,8 +38983,10 @@ A system database ahead of the required version is accepted, so a process with m
 - **transact_enterprise_key**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `conductor_key`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 - **auto_upgrade**: If `True`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `auto_upgrade=False` in [`@DBOS.workflow`](./decorators.md#workflow). Requires DBOS Transact Enterprise. Defaults to `False`.
 - **auto_upgrade_interval_sec**: How often, in seconds, to check for workflows to auto-upgrade. Defaults to 30 seconds.
-- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows are moved without waiting. Defaults to 0.
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
+- **suspend_mode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./contexts.md#sleep) or [`DBOS.recv`](./contexts.md#recv). Requires DBOS Transact Enterprise. Defaults to `False`.
+- **external_stores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.store_external_object`](./contexts.md#store_external_object) must specify one. Requires DBOS Transact Enterprise.
 
 #### Logging and Tracing Settings
 
@@ -39146,6 +39244,8 @@ Coroutine version of [`send_bulk`](#send_bulk)
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
@@ -39159,6 +39259,7 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 **Parameters:**
 - `topic`: A topic queue on which to wait.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
+- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `None` if the wait times out.
@@ -39169,6 +39270,8 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 DBOS.recv_async(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, Any]
 ```
 
@@ -39275,7 +39378,9 @@ Coroutine version of [`get_all_events`](#get_all_events).
 
 ```python
 DBOS.sleep(
-    seconds: float
+    seconds: float,
+    *,
+    suspend: bool = False,
 ) -> None
 ```
 
@@ -39286,12 +39391,15 @@ The `sleep` function should not be used in [coroutine workflows](../tutorials/wo
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
+- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `False`.
 
 #### sleep_async
 
 ```python
 DBOS.sleep_async(
-    seconds: float
+    seconds: float,
+    *,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, None]
 ```
 
@@ -39722,6 +39830,119 @@ DBOS.read_stream_offset_async(
 
 Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
+#### store_external_object
+
+```python
+DBOS.store_external_object(
+    value: T,
+    *,
+    owner_workflow_id: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+From workflow code, the upload runs as a step.
+Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+
+**Parameters:**
+- `value`: The value to store. A `bytes` value is stored as is, without serialization.
+- `owner_workflow_id`: The workflow that owns the object, which is deleted some time after its owner is. Defaults to the calling workflow. Required outside a workflow.
+- `serialization_type`: The [serialization strategy](#serialization-strategy) for the value. Defaults to the calling workflow's. To load the object from another language, store `bytes` or use portable serialization.
+- `key`: Names the object within its owner, so storing under the same key again overwrites it. Up to 512 characters in `/`-separated segments of letters, digits, `.`, `_`, `=`, or `-`, each starting with a letter or digit. Defaults to a new random key.
+- `shard_key`: The owner's [shard key](../tutorials/sharding.md). Required on a sharded system database when storing outside the owner.
+- `store_id`: The store to upload to. Required if several stores are configured.
+
+**Returns:**
+- An [`ExternalObjectRef`](#externalobjectref) to the stored object.
+
+**Raises:**
+- `DBOSExternalStoreNotConfiguredError`: If no external store is configured, or `store_id` names a store that isn't.
+- `DBOSExternalStoreError`: If the store fails.
+
+#### store_external_object_async
+
+```python
+DBOS.store_external_object_async(
+    value: T,
+    *,
+    owner_workflow_id: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> Coroutine[Any, Any, ExternalObjectRef[T]]
+```
+
+Coroutine version of [`store_external_object`](#store_external_object)
+
+#### load_external_object
+
+```python
+DBOS.load_external_object(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+May be called from a step or outside a workflow, but not from workflow code.
+
+**Parameters:**
+- `ref`: A reference returned by [`store_external_object`](#store_external_object).
+
+**Returns:**
+- The stored value.
+
+**Raises:**
+- `DBOSExternalStoreNotConfiguredError`: If the store the reference names isn't configured.
+- `DBOSExternalObjectMissingError`: If the object no longer exists.
+- `DBOSExternalObjectIntegrityError`: If the stored bytes don't match the reference.
+- `DBOSExternalStoreError`: If the store fails.
+
+#### load_external_object_async
+
+```python
+DBOS.load_external_object_async(
+    ref: ExternalObjectRef[T],
+) -> Coroutine[Any, Any, T]
+```
+
+Coroutine version of [`load_external_object`](#load_external_object)
+
+#### ExternalObjectRef
+
+```python
+class ExternalObjectRef(TypedDict, Generic[T]):
+    version: int
+    store: str
+    key: str
+    size: int
+    sha256: str
+    serialization: str
+    encoding: str
+```
+
+A small, serializable reference to an external object.
+Treat it as opaque: return it from steps and workflows or pass it as a workflow input.
+
+#### ExternalStore
+
+```python
+class ExternalStore(Protocol):
+    @property
+    def store_id(self) -> str: ...
+    def put(self, key: str, data: bytes) -> None: ...
+    def get(self, key: str) -> bytes: ...
+    def delete(self, keys: Sequence[str]) -> None: ...
+```
+
+Where external objects are stored.
+See [Custom Stores](../tutorials/external-storage.md#custom-stores).
+`get` must raise `KeyError` if no object has the key, and `delete` must ignore keys with no object.
+
 #### patch
 
 ```python
@@ -40039,7 +40260,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -40059,7 +40280,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
@@ -40109,11 +40330,11 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -40709,7 +40930,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, SUSPENDED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str
@@ -41711,9 +41932,14 @@ DBOS.destroy(
 ```
 
 Destroy the DBOS singleton, stopping its background threads (such as queue polling and the scheduler) and closing database connections.
-`destroy` waits up to `workflow_completion_timeout_sec` for active workflows to complete and cancels executor tasks that have not yet started; it does not interrupt workflows that are still running, but they can no longer checkpoint their progress.
-After this completes, the singleton can be re-initialized: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
-Useful for testing.
+`destroy` waits up to `workflow_completion_timeout_sec` for active workflows to complete and cancels executor tasks that have not yet started.
+
+Workflows still running after `destroy` will likely not be able to continue, because they rely on DBOS resources such as the system database and thread pool executor.
+Any errors they raise after `destroy` are safe, as they are not durably persisted.
+If your application has long-running workflows, we recommend shutting down your process shortly after calling `destroy`; its workflows will safely recover from their last completed step.
+
+After destroy completes, DBOS can be re-launched: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
+This is useful for testing.
 
 **Parameters:**
 - `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
@@ -42301,7 +42527,7 @@ These options are **not propagated** to child workflows.
 
 **Parameters:**
 
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
 - `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
   - `"reject"`: raise `DBOSQueueDeduplicatedError`.
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires a queue and a `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
@@ -42638,6 +42864,165 @@ class ExampleClass():
         def classmethod_workflow(cls):
             return
 ```
+
+---
+
+## External Storage
+
+:::info
+External storage is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+DBOS checkpoints workflow inputs, step outputs, and workflow outputs in your system database, which isn't a good fit for large objects such as files or datasets.
+With **external storage**, you keep large objects in a separate store such as [Amazon S3](https://aws.amazon.com/s3/) and checkpoint only a small reference to each one.
+
+### Setting Up External Storage
+
+Install DBOS Transact Enterprise and `boto3`:
+
+```shell
+pip install "dbos[enterprise]" boto3
+```
+
+Then, set `external_stores` in your DBOS configuration:
+
+```python
+import boto3
+from dbos import DBOS, DBOSConfig
+from dbos_enterprise import S3ExternalStore
+
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "external_stores": [S3ExternalStore(boto3.client("s3"), "my-bucket", prefix="dbos")],
+}
+DBOS(config=config)
+```
+
+DBOS provides two stores, and you can also [write your own](#custom-stores):
+
+- `S3ExternalStore(client, bucket, prefix="", store_id=None)` stores objects in an S3 bucket.
+- `FilesystemExternalStore(root, store_id=None)` stores objects as files under a directory, for development and testing.
+
+### Storing and Loading Objects
+
+Call [`DBOS.store_external_object`](../reference/contexts.md#store_external_object) to upload a value.
+It returns an [`ExternalObjectRef`](../reference/contexts.md#externalobjectref), a small reference you can return from a step or workflow or pass as a workflow input.
+When you need the value, call [`DBOS.load_external_object`](../reference/contexts.md#load_external_object) on the reference from a step:
+
+```python
+from dbos import DBOS, ExternalObjectRef
+
+@DBOS.step()
+def generate() -> ExternalObjectRef[list[float]]:
+    readings = [float(i) for i in range(10_000_000)]
+    # Uploads to the store. Only this small reference is checkpointed.
+    return DBOS.store_external_object(readings)
+
+@DBOS.step()
+def summarize(ref: ExternalObjectRef[list[float]]) -> float:
+    readings = DBOS.load_external_object(ref)
+    return sum(readings) / len(readings)
+
+@DBOS.workflow()
+def pipeline() -> float:
+    ref = generate()
+    return summarize(ref)
+```
+
+You can store objects from a step or from workflow code, where DBOS runs the upload as a step.
+You can't load objects from workflow code.
+Load them in a step and use them there, returning only a small result, because a step's return value is checkpointed.
+
+For the best performance with large objects, store `bytes`.
+A `bytes` value is uploaded and loaded as is, without being serialized.
+
+#### Naming Objects
+
+By default, each call to `store_external_object` creates a new object with a random key.
+If you set a `key`, storing under that key again overwrites the object, so a step that retries doesn't leave extra copies behind:
+
+```python
+ref = DBOS.store_external_object(report, key="reports/final.json")
+```
+
+Keys are scoped to the workflow that owns the object, so two workflows can use the same key.
+If you overwrite an object with a different value, references to the old value can no longer be loaded and raise `DBOSExternalObjectIntegrityError`.
+
+#### Using Multiple Stores
+
+If you configure several stores, each needs a unique store ID and you must choose one with `store_id` when storing.
+Loading uses the store named in the reference:
+
+```python
+ref = DBOS.store_external_object(data, store_id="s3://archive-bucket")
+```
+
+A store's ID defaults to its location, such as `s3://my-bucket/dbos`.
+Don't change the ID of a store while references to it exist.
+To be able to move a store's data to a new location, set `store_id` to a name that doesn't depend on the location.
+
+### Storing Objects Outside a Workflow
+
+Outside a workflow, you must name the workflow that owns the object.
+The workflow doesn't have to exist yet, so you can use [`DBOSClient`](../reference/client.md#store_external_object) to upload a large input and then enqueue a workflow to process it.
+The client must be configured with the same stores as your application:
+
+```python
+import uuid
+from dbos import DBOSClient
+from dbos_enterprise import S3ExternalStore
+
+store = S3ExternalStore(boto3.client("s3"), "my-bucket", prefix="dbos")
+client = DBOSClient(
+    system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"],
+    external_stores=[store],
+)
+
+workflow_id = str(uuid.uuid4())
+ref = client.store_external_object(large_input, owner_workflow_id=workflow_id)
+client.enqueue(
+    {"queue_name": "example_queue", "workflow_name": "process_input", "workflow_id": workflow_id},
+    ref,
+)
+```
+
+### Object Lifetime
+
+Every object is owned by a workflow: by default, the workflow that stored it.
+DBOS doesn't delete an object while its owner exists.
+Once the owner has been deleted, either by a [retention policy](../../conductor/retention.md) or with [`DBOS.delete_workflow`](../reference/contexts.md#delete_workflow), the next retention run deletes the object from its store.
+Without a retention policy, objects are never deleted.
+
+Only the owner keeps an object alive.
+If you fork a workflow and then delete the original, references held by the fork stop working and raise `DBOSExternalObjectMissingError`.
+
+### Custom Stores
+
+To use another storage system, implement the [`ExternalStore`](../reference/contexts.md#externalstore) protocol and pass an instance in `external_stores`:
+
+```python
+from typing import Sequence
+
+class MyStore:
+    @property
+    def store_id(self) -> str:
+        return "my-store"
+
+    def put(self, key: str, data: bytes) -> None:
+        ...
+
+    def get(self, key: str) -> bytes:
+        # Raise KeyError if no object has this key.
+        ...
+
+    def delete(self, keys: Sequence[str]) -> None:
+        # Ignore keys with no object.
+        ...
+```
+
+Each method should retry its own transient failures.
 
 ---
 
@@ -43323,7 +43708,7 @@ Each per-partition concurrency limit must be less than or equal to its queue-wid
 
 You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -44486,7 +44871,7 @@ def workflow_without_patches():
 Auto-upgrade runs in the background on processes running the latest application version.
 When auto-upgrade runs:
 
-- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
 - **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
 If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
 To give processes running old code time to complete their `PENDING` workflows first, set `auto_upgrade_grace_sec`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that many seconds.
@@ -44552,7 +44937,7 @@ You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to 
 ```python
 active = DBOS.list_workflows(
     app_version="1.0.0",
-    status=["ENQUEUED", "DELAYED", "PENDING"],
+    status=["ENQUEUED", "DELAYED", "SUSPENDED", "PENDING"],
 )
 if not active:
     print("Safe to retire version 1.0.0")
@@ -44601,12 +44986,28 @@ or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-ta
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
+    *,
+    suspend: bool = False,
 ) -> Any
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+
+If a workflow may wait a long time for a message, you can [suspend it](./workflow-tutorial.md#suspending-workflows) while it waits by passing `suspend=True` so it consumes no resources while waiting:
+
+```python
+@DBOS.workflow()
+def approval_workflow():
+    ... # Ask a reviewer for approval.
+    # Suspend for up to a week while waiting for a decision
+    decision = DBOS.recv("approval", timeout_seconds=7 * 24 * 60 * 60, suspend=True)
+```
+
+If a message is already waiting, `recv` returns it immediately.
+Otherwise, the workflow suspends until a message is sent on its topic or the timeout passes.
+Any `send` on that topic wakes it, including one from a [`DBOSClient`](../reference/client.md) or a process without suspend mode.
 
 ##### Messages Example
 
@@ -45063,6 +45464,41 @@ def schedule_task(time_to_sleep, task):
   DBOS.sleep(time_to_sleep)
   run_task(task)
 ```
+
+#### Suspending Workflows
+
+:::info
+Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
+If your application has many workflows with long waits, you can instead suspend them, so they use no memory, threads, or queue capacity until they wake.
+
+To suspend workflows, set [`suspend_mode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) or [`DBOS.recv`](../reference/contexts.md#recv) (or their async versions):
+
+```python
+config: DBOSConfig = {
+    "name": "my-app-name",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "suspend_mode": True,
+}
+DBOS(config=config)
+
+@DBOS.workflow()
+def send_reminder(user):
+    # Sleep suspended for 30 days, then send the reminder
+    DBOS.sleep(30 * 24 * 60 * 60, suspend=True)
+    send_email(user)
+```
+
+When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
+When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+
+Keep in mind:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a [handle](../reference/workflow_handles.md) or a direct call, keeps waiting.
+- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
 
 ### Debouncing Workflows
 
@@ -53757,6 +54193,12 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
+To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
+Pass `{ suspend: true }` to `DBOS.sleep` or `DBOS.recv`.
+The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
+Waking takes a second or two, so only suspend for long waits.
+Suspending throws `DBOSWorkflowSuspendedError`; you MUST rethrow it if you wrap a suspending call in a `try`/`catch`.
+
 ### Debouncing Workflows
 
 You can create a `Debouncer` to debounce your workflows.
@@ -53861,12 +54303,14 @@ interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
   pollingIntervalMs?: number;
+  suspend?: boolean;
 }
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.  The default timeout is 60 seconds.
 If the topic is not specified, this method only receives messages sent without a topic.
+With `suspend: true`, a `recv` that has to wait suspends the workflow until a message arrives on its topic or the timeout passes (see Durable Sleep for requirements).
 
 #### Messages Example
 
@@ -54518,7 +54962,7 @@ On a partitioned queue, deduplication IDs are unique across the whole queue, not
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -54758,7 +55202,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, SUSPENDED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
@@ -54883,7 +55327,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string; // Retrieve workflows with this name.
-  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status or any of these statuses (each must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status or any of these statuses (each must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
@@ -54915,7 +55359,7 @@ DBOS.listQueuedWorkflows(
 ): Promise<WorkflowStatus[]>
 ```
 
-Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING`, `ENQUEUED`, or `DELAYED`) workflows matching specified criteria.
+Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`) workflows matching specified criteria.
 The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
 
 #### DBOS.listWorkflowSteps
@@ -55088,7 +55532,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```typescript
 DBOS.setConfig({
@@ -55207,6 +55651,17 @@ You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow`
 To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
+### External Storage
+
+To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
+Set `externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `@dbos-inc/dbos-enterprise`.
+`DBOS.storeExternalObject(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
+`DBOS.loadExternalObject(ref)` returns the value.
+You MUST call `loadExternalObject` from a step, not from workflow code, and return only a small result from that step.
+Prefer storing a `Buffer` or `Uint8Array` for large objects, because they are not serialized.
+Outside a workflow, you MUST pass `ownerWorkflowID`.
+Objects are deleted only after their owner workflow has been deleted, by a retention run.
+
 ### Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
@@ -55305,7 +55760,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-u, --user <string>`                 Retrieve workflows run by this user
 - `-t, --start-time <string>`           Retrieve workflows starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`             Retrieve workflows starting before this timestamp (ISO 8601 format)
-- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`)
+- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `CANCELLED`)
 - `-v, --application-version <string>`  Retrieve workflows with this application version
 - `-a, --application-name <string>`     Retrieve workflows owned by this application (workflows owned by no application are always included)
 
@@ -55381,7 +55836,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 - `-n, --name <string>`        Retrieve functions with this name
 - `-t, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
-- `-S, --status <string>`      Retrieve functions with this status (`ENQUEUED`, `PENDING`, or `DELAYED`)
+- `-S, --status <string>`      Retrieve functions with this status (`ENQUEUED`, `PENDING`, `DELAYED`, or `SUSPENDED`)
 - `-l, --limit <number>`       Limit the results returned
 - `-q, --queue <string>`       Retrieve functions run on this queue
 - `-a, --application-name <string>`  Retrieve functions owned by this application (functions owned by no application are always included)
@@ -55511,7 +55966,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -55534,6 +55989,8 @@ class DBOSClient {
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
+    storeExternalObject<T>(value: T, options: ClientStoreExternalObjectOptions): Promise<ExternalObjectRef<T>>;
+    loadExternalObject<T>(ref: ExternalObjectRef<T>): Promise<T>;
 
     getWorkflow(workflowID: string, options?: { shardKey?: string }): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
@@ -55591,6 +56048,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 - **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
+- **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
 
 Example:
 
@@ -55631,7 +56089,7 @@ Additional but optional metadata includes:
   * `'reject'`: throw `DBOSWorkflowIDInUseError` without enqueueing a new workflow or modifying the existing one. Match it with `isWorkflowIDInUseError`, as described in [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow).
 * **appVersion**: The version of your application that should process this workflow. If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
-* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception. On a partitioned queue, deduplication IDs are unique across the whole queue, including all its partitions.
+* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception. On a partitioned queue, deduplication IDs are unique across the whole queue, including all its partitions.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
 * **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -55943,6 +56401,29 @@ Similar to [`DBOS.readStreamOffset`](./methods.md#dbosreadstreamoffset).
 const value = await client.readStreamOffset(workflowID, "example_key", 5, { timeoutSeconds: 30 });
 ```
 
+##### `storeExternalObject`
+
+```typescript
+interface ClientStoreExternalObjectOptions extends StoreExternalObjectOptions {
+  ownerWorkflowID: string;
+}
+
+client.storeExternalObject<T>(value: T, options: ClientStoreExternalObjectOptions): Promise<ExternalObjectRef<T>>
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+Similar to [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject), except that `ownerWorkflowID` is required.
+The owner doesn't have to exist yet, so you can upload a large input and then enqueue the workflow that will process it.
+
+##### `loadExternalObject`
+
+```typescript
+client.loadExternalObject<T>(ref: ExternalObjectRef<T>): Promise<T>
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+Similar to [`DBOS.loadExternalObject`](./methods.md#dbosloadexternalobject).
+
 #### Workflow Inspection
 
 ##### `getWorkflow`
@@ -55960,7 +56441,7 @@ Unless `workflowIDs` is set, this query is subject to the client's [`observabili
 
 ##### `listQueuedWorkflows`
 
-Retrieves information about currently enqueued workflows (status `DELAYED`, `ENQUEUED`, or `PENDING`).
+Retrieves information about currently enqueued workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`).
 Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more information.
 If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
 Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
@@ -56452,6 +56933,8 @@ export interface DBOSConfig {
   autoUpgradeIntervalMs?: number;
   autoUpgradeGraceMs?: number;
   sharding?: boolean;
+  suspendMode?: boolean;
+  externalStores?: ExternalStore[];
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -56498,8 +56981,10 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 - **transactEnterpriseKey**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by passing a [`conductorKey`](./dbos-class.md#dboslaunch) to `DBOS.launch`. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 - **autoUpgrade**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `autoUpgrade: false` in their [`WorkflowConfig`](./workflows-steps.md#dbosworkflow). Requires DBOS Transact Enterprise. Defaults to `false`.
 - **autoUpgradeIntervalMs**: How often, in milliseconds, to check for workflows to auto-upgrade. Defaults to 30000 (30 seconds).
-- **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **autoUpgradeGraceMs**: How long, in milliseconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows are moved without waiting. Defaults to 0.
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
+- **suspendMode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./methods.md#dbossleep) or [`DBOS.recv`](./methods.md#dbosrecv). Requires DBOS Transact Enterprise. Defaults to `false`.
+- **externalStores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject) must specify one. Requires DBOS Transact Enterprise.
 
 #### Database Connection Settings
 
@@ -56949,14 +57434,42 @@ DBOS.shutdown(
 
 Shut down DBOS, stopping background processing (such as queue dispatch, schedules, and event receivers) and closing database connections.
 Shutdown does not wait for workflows still running in this process to complete unless `workflowCompletionTimeoutMS` is set.
-A workflow still running when database connections close fails in this process at its next database operation, but it remains `PENDING` in the system database so it can be recovered later.
 
-In a test environment, after this completes DBOS can be re-configured and `launch()` can be called again.
-[`DBOS.applicationVersion`](./methods.md#dbosapplicationversion) and [`DBOS.executorID`](./methods.md#dbosexecutorid) keep their values from the last launch until DBOS is launched again.
+Workflows still running after `shutdown` will likely not be able to continue, because they rely on DBOS resources such as the system database.
+Any errors they raise after `shutdown` are safe, as they are not durably persisted.
+If your application has long-running workflows, we recommend shutting down your process shortly after calling `shutdown`; its workflows will safely recover from their last completed step.
+
+After shutdown completes, DBOS can be re-configured and re-launched by calling `DBOS.setConfig` and `DBOS.launch` again.
+This is useful for testing.
 
 **Parameters:**
 - **deregister**: If true, all current function, instance, data source, event receiver, and any other in-process registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Queues and schedules persisted in the system database are not affected. Useful for testing.
 - **workflowCompletionTimeoutMS**: Wait this many milliseconds for workflows running in this process to complete before shutting down. Defaults to not waiting.
+
+#### DBOS.deactivateEventReceivers
+
+```typescript
+DBOS.deactivateEventReceivers(): Promise<void>
+```
+
+Stop bringing new work into this process by stopping queue dispatch and registered event receivers.
+Workflows already running in this process keep running, and schedules keep firing so other processes can run their workflows.
+Restart with [`DBOS.initEventReceivers`](#dbosiniteventreceivers).
+
+Has no effect if receivers are already stopped.
+Throws if DBOS is not launched or if called from within a workflow.
+
+#### DBOS.initEventReceivers
+
+```typescript
+DBOS.initEventReceivers(): Promise<void>
+```
+
+Restart queue dispatch and registered event receivers after [`DBOS.deactivateEventReceivers`](#dbosdeactivateeventreceivers).
+
+Has no effect if receivers are already running.
+Throws if DBOS is not launched or if called from within a workflow.
+If a receiver fails to start, stops any that did start and rethrows the error, so you can retry the call.
 
 #### DBOS.migrate
 
@@ -57078,7 +57591,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - `'reject'`: throw `DBOSQueueDuplicatedError`.
   - `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `queueName` and `enqueueOptions.deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - **enqueueOptions**:
-  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) queue, deduplication IDs are unique across the whole queue, including all its partitions. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) queue, deduplication IDs are unique across the whole queue, including all its partitions. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
@@ -57195,6 +57708,7 @@ interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
   pollingIntervalMs?: number;
+  suspend?: boolean;
 }
 ```
 
@@ -57210,6 +57724,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **suspend**: If `true`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`. When set, `pollingIntervalMs` is ignored.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -57269,7 +57784,14 @@ If the event does not yet exist, wait for it to be published, returning `null` i
 ```typescript
 DBOS.sleep(
     durationMS: number,
+    options?: SleepOptions,
 ): Promise<void>;
+```
+
+```typescript
+interface SleepOptions {
+  suspend?: boolean;
+}
 ```
 
 Sleep for the given number of milliseconds.
@@ -57277,6 +57799,8 @@ When called from a workflow (outside of a step), this sleep is durable&mdash;it 
 
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
+- **options**:
+  - **suspend**: If `true`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `false`.
 
 #### DBOS.now
 
@@ -57418,6 +57942,100 @@ When a checkpointed timeout is replayed, it is revived as a plain `Error` rather
 Use the `isStreamTimeoutError` helper, exported in the SDK's `Error` namespace (`import { Error as DBOSErrors } from "@dbos-inc/dbos-sdk"`, then `DBOSErrors.isStreamTimeoutError(e)`), to match it in either case.
 :::
 
+#### DBOS.storeExternalObject
+
+```typescript
+DBOS.storeExternalObject<T>(
+  value: T,
+  options?: StoreExternalObjectOptions
+): Promise<ExternalObjectRef<T>>
+```
+
+```typescript
+interface StoreExternalObjectOptions {
+  ownerWorkflowID?: string;
+  serializationType?: WorkflowSerializationFormat;
+  key?: string;
+  shardKey?: string;
+  storeID?: string;
+}
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+From workflow code, the upload runs as a step.
+Requires [`externalStores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+
+**Parameters:**
+- **value**: The value to store. A `Uint8Array`, such as a `Buffer`, is stored as is, without serialization, and loads as a `Buffer`.
+- **options**:
+  - **ownerWorkflowID**: The workflow that owns the object, which is deleted some time after its owner is. Defaults to the calling workflow. Required outside a workflow.
+  - **serializationType**: The [serialization format](#serialization-strategy) for the value. Defaults to the calling workflow's. To load the object from another language, store bytes or use portable serialization.
+  - **key**: Names the object within its owner, so storing under the same key again overwrites it. Up to 512 characters in `/`-separated segments of letters, digits, `.`, `_`, `=`, or `-`, each starting with a letter or digit. Defaults to a new random key.
+  - **shardKey**: The owner's [shard key](../tutorials/sharding.md). Required on a sharded system database when storing outside the owner.
+  - **storeID**: The store to upload to. Required if several stores are configured.
+
+**Returns:**
+- An [`ExternalObjectRef`](#externalobjectref) to the stored object.
+
+**Throws:**
+- `DBOSExternalStoreNotConfiguredError`: If no external store is configured, or `storeID` names a store that isn't.
+- `DBOSExternalStoreError`: If the store fails.
+
+#### DBOS.loadExternalObject
+
+```typescript
+DBOS.loadExternalObject<T>(
+  ref: ExternalObjectRef<T>
+): Promise<T>
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+May be called from a step or outside a workflow, but not from workflow code.
+
+**Parameters:**
+- **ref**: A reference returned by [`DBOS.storeExternalObject`](#dbosstoreexternalobject).
+
+**Returns:**
+- The stored value.
+
+**Throws:**
+- `DBOSExternalStoreNotConfiguredError`: If the store the reference names isn't configured.
+- `DBOSExternalObjectMissingError`: If the object no longer exists.
+- `DBOSExternalObjectIntegrityError`: If the stored bytes don't match the reference.
+- `DBOSExternalStoreError`: If the store fails.
+
+#### ExternalObjectRef
+
+```typescript
+interface ExternalObjectRef<T = unknown> {
+  version: number;
+  store: string;
+  key: string;
+  size: number;
+  sha256: string;
+  serialization: string;
+  encoding: string;
+}
+```
+
+A small, serializable reference to an external object.
+Treat it as opaque: return it from steps and workflows or pass it as a workflow input.
+
+#### ExternalStore
+
+```typescript
+interface ExternalStore {
+  readonly storeID: string;
+  put(key: string, data: Uint8Array): Promise<void>;
+  get(key: string): Promise<Uint8Array | undefined>;
+  delete(keys: string[]): Promise<void>;
+}
+```
+
+Where external objects are stored.
+See [Custom Stores](../tutorials/external-storage.md#custom-stores).
+`get` must return `undefined` if no object has the key, and `delete` must ignore keys with no object.
+
 #### DBOS.retrieveWorkflow
 
 ```typescript
@@ -57463,7 +58081,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string | string[]; // Retrieve workflows with this name (or any of these names).
-  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   completedAfter?: string; // Retrieve workflows completed at or after this (RFC 3339-compliant) timestamp.
@@ -57505,7 +58123,7 @@ DBOS.listQueuedWorkflows(
 ): Promise<WorkflowStatus[]>
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** (status `DELAYED`, `ENQUEUED`, or `PENDING`) workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`) workflows matching specified criteria.
 The input type is the same as [`DBOS.listWorkflows`](#dboslistworkflows); this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
 Like `DBOS.listWorkflows`, it is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout unless `workflowIDs` is set.
 
@@ -57779,7 +58397,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, SUSPENDED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
@@ -59167,6 +59785,163 @@ Must be called from a workflow.
 
 ---
 
+## External Storage(Tutorials)
+
+:::info
+External storage is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+DBOS checkpoints workflow inputs, step outputs, and workflow outputs in your system database, which isn't a good fit for large objects such as files or datasets.
+With **external storage**, you keep large objects in a separate store such as [Amazon S3](https://aws.amazon.com/s3/) and checkpoint only a small reference to each one.
+
+### Setting Up External Storage
+
+Install DBOS Transact Enterprise and the AWS SDK:
+
+```shell
+npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage
+```
+
+Then, set `externalStores` in your DBOS configuration:
+
+```typescript
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { S3ExternalStore } from "@dbos-inc/dbos-enterprise";
+import { S3Client } from "@aws-sdk/client-s3";
+
+DBOS.setConfig({
+  name: "dbos-app",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  conductorKey: process.env.DBOS_CONDUCTOR_KEY,
+  externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket", { prefix: "dbos" })],
+});
+await DBOS.launch();
+```
+
+DBOS provides two stores, and you can also [write your own](#custom-stores):
+
+- `new S3ExternalStore(client, bucket, { prefix, storeID })` stores objects in an S3 bucket.
+- `new FilesystemExternalStore(root, { storeID })` stores objects as files under a directory, for development and testing.
+
+### Storing and Loading Objects
+
+Call [`DBOS.storeExternalObject`](../reference/methods.md#dbosstoreexternalobject) to upload a value.
+It returns an [`ExternalObjectRef`](../reference/methods.md#externalobjectref), a small reference you can return from a step or workflow or pass as a workflow input.
+When you need the value, call [`DBOS.loadExternalObject`](../reference/methods.md#dbosloadexternalobject) on the reference from a step:
+
+```typescript
+import { DBOS, type ExternalObjectRef } from "@dbos-inc/dbos-sdk";
+
+async function generate(): Promise<ExternalObjectRef<number[]>> {
+  const readings = Array.from({ length: 10_000_000 }, (_, i) => i);
+  // Uploads to the store. Only this small reference is checkpointed.
+  return await DBOS.storeExternalObject(readings);
+}
+
+async function summarize(ref: ExternalObjectRef<number[]>): Promise<number> {
+  const readings = await DBOS.loadExternalObject(ref);
+  return readings.reduce((sum, r) => sum + r, 0) / readings.length;
+}
+
+async function pipelineFunction(): Promise<number> {
+  const ref = await DBOS.runStep(generate, { name: "generate" });
+  return await DBOS.runStep(() => summarize(ref), { name: "summarize" });
+}
+const pipeline = DBOS.registerWorkflow(pipelineFunction);
+```
+
+You can store objects from a step or from workflow code, where DBOS runs the upload as a step.
+You can't load objects from workflow code.
+Load them in a step and use them there, returning only a small result, because a step's return value is checkpointed.
+
+For the best performance with large objects, store a `Uint8Array` such as a `Buffer`.
+It is uploaded as is, without being serialized, and loads as a `Buffer`.
+
+#### Naming Objects
+
+By default, each call to `storeExternalObject` creates a new object with a random key.
+If you set a `key`, storing under that key again overwrites the object, so a step that retries doesn't leave extra copies behind:
+
+```typescript
+const ref = await DBOS.storeExternalObject(report, { key: "reports/final.json" });
+```
+
+Keys are scoped to the workflow that owns the object, so two workflows can use the same key.
+If you overwrite an object with a different value, references to the old value can no longer be loaded and throw `DBOSExternalObjectIntegrityError`.
+
+#### Using Multiple Stores
+
+If you configure several stores, each needs a unique store ID and you must choose one with `storeID` when storing.
+Loading uses the store named in the reference:
+
+```typescript
+const ref = await DBOS.storeExternalObject(data, { storeID: "s3://archive-bucket" });
+```
+
+A store's ID defaults to its location, such as `s3://my-bucket/dbos`.
+Don't change the ID of a store while references to it exist.
+To be able to move a store's data to a new location, set `storeID` to a name that doesn't depend on the location.
+
+### Storing Objects Outside a Workflow
+
+Outside a workflow, you must name the workflow that owns the object.
+The workflow doesn't have to exist yet, so you can use [`DBOSClient`](../reference/client.md#storeexternalobject) to upload a large input and then enqueue a workflow to process it.
+The client must be configured with the same stores as your application:
+
+```typescript
+import { randomUUID } from "node:crypto";
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+import { S3ExternalStore } from "@dbos-inc/dbos-enterprise";
+import { S3Client } from "@aws-sdk/client-s3";
+
+const client = await DBOSClient.create({
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
+  externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket", { prefix: "dbos" })],
+});
+
+const workflowID = randomUUID();
+const ref = await client.storeExternalObject(largeInput, { ownerWorkflowID: workflowID });
+await client.enqueue({ queueName: "example_queue", workflowName: "processInput", workflowID }, ref);
+```
+
+### Object Lifetime
+
+Every object is owned by a workflow: by default, the workflow that stored it.
+DBOS doesn't delete an object while its owner exists.
+Once the owner has been deleted, either by a [retention policy](../../conductor/retention.md) or with [`DBOS.deleteWorkflow`](../reference/methods.md#dbosdeleteworkflow), the next retention run deletes the object from its store.
+Without a retention policy, objects are never deleted.
+
+Only the owner keeps an object alive.
+If you fork a workflow and then delete the original, references held by the fork stop working and throw `DBOSExternalObjectMissingError`.
+
+### Custom Stores
+
+To use another storage system, implement the [`ExternalStore`](../reference/methods.md#externalstore) interface and pass an instance in `externalStores`:
+
+```typescript
+import type { ExternalStore } from "@dbos-inc/dbos-sdk";
+
+class MyStore implements ExternalStore {
+  readonly storeID = "my-store";
+
+  async put(key: string, data: Uint8Array): Promise<void> {
+    // ...
+  }
+
+  async get(key: string): Promise<Uint8Array | undefined> {
+    // Return undefined if no object has this key.
+  }
+
+  async delete(keys: string[]): Promise<void> {
+    // Ignore keys with no object.
+  }
+}
+```
+
+Each method should retry its own transient failures.
+
+---
+
 ## Kafka Integration
 
 In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) messages with exactly-once semantics.
@@ -60096,7 +60871,7 @@ Each per-partition concurrency limit must be less than or equal to its queue-wid
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -61495,7 +62270,7 @@ static async workflowWithoutPatches() {
 Auto-upgrade runs in the background on processes running the latest application version.
 When auto-upgrade runs:
 
-- **`ENQUEUED` and `DELAYED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
+- **`ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows** are upgraded immediately, so they are dequeued by processes running the latest version.
 - **`PENDING` workflows** are re-enqueued on the latest version, which then recovers them from their last completed step, just as it would recover a workflow interrupted by a crash.
 If a process running old code is still executing such a workflow, DBOS [detects the concurrent execution](../../explanations/concurrent-executions.md) and ensures only one outcome is recorded.
 To give processes running old code time to complete their `PENDING` workflows first, set `autoUpgradeGraceMs`: DBOS then only upgrades `PENDING` workflows once the latest version has been the latest for that many milliseconds.
@@ -61556,7 +62331,7 @@ You can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to
 ```typescript
 const active = await DBOS.listWorkflows({
   applicationVersion: "1.0.0",
-  status: ["ENQUEUED", "DELAYED", "PENDING"],
+  status: ["ENQUEUED", "DELAYED", "SUSPENDED", "PENDING"],
 });
 if (active.length === 0) {
   console.log("Safe to retire version 1.0.0");
@@ -61599,12 +62374,26 @@ or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-ta
 ##### Recv
 
 ```typescript
-DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
+DBOS.recv<T>(topic?: string, options?: RecvOptions): Promise<T | null>
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.  The default timeout is 60 seconds.  A timeout is recommended even for operations that "should eventually complete"; the timeout should exceed the longest normal execution time and serve as a safeguard to detect and report unexpected behavior rather than waiting forever.
 If the topic is not specified, this method only receives messages sent without a topic.
+
+If a workflow may wait a long time for a message, you can [suspend it](./workflow-tutorial.md#suspending-workflows) while it waits by passing `suspend: true` so it consumes no resources while waiting:
+
+```typescript
+async function approvalWorkflowFunction() {
+  // ... Ask a reviewer for approval.
+  // Suspend for up to a week while waiting for a decision
+  const decision = await DBOS.recv<string>("approval", { timeoutSeconds: 7 * 24 * 60 * 60, suspend: true });
+}
+```
+
+If a message is already waiting, `recv` returns it immediately.
+Otherwise, the workflow suspends until a message is sent on its topic or the timeout passes.
+Any `send` on that topic wakes it, including one from a [`DBOSClient`](../reference/client.md) or a process without suspend mode.
 
 ##### Messages Example
 
@@ -62144,6 +62933,51 @@ For example:
 static async exampleWorkflow(timeToSleep, task) {
     await DBOS.sleep(timeToSleep);
     await runTask(task);
+}
+```
+
+#### Suspending Workflows
+
+:::info
+Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
+If your application has many workflows with long waits, you can instead suspend them, so they use no memory or queue capacity until they wake.
+
+To suspend workflows, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) or [`DBOS.recv`](../reference/methods.md#dbosrecv):
+
+```typescript
+DBOS.setConfig({
+  name: "my-app-name",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  suspendMode: true,
+});
+await DBOS.launch();
+
+async function sendReminderFunction(user: string) {
+  // Sleep suspended for 30 days, then send the reminder
+  await DBOS.sleep(30 * 24 * 60 * 60 * 1000, { suspend: true });
+  await DBOS.runStep(() => sendEmail(user), { name: "sendEmail" });
+}
+const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
+```
+
+When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
+When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+
+Keep in mind:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a handle or a direct call, keeps waiting.
+- **Suspending throws `DBOSWorkflowSuspendedError`** to exit the execution. If you wrap a suspending call in a `try`/`catch`, rethrow this error; otherwise, your `catch` block runs even though nothing failed:
+
+```typescript
+try {
+  const message = await DBOS.recv("topic", { timeoutSeconds: 3600, suspend: true });
+} catch (e) {
+  if (e instanceof DBOSWorkflowSuspendedError) throw e;
+  // Handle other errors
 }
 ```
 

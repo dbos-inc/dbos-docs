@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.d58c183a.js" defer="defer"></script>
-<script src="/assets/js/main.dcc3d919.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8c8c7b47.js" defer="defer"></script>
+<script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -31,6 +31,7 @@ Conductor is the control plane for your durable workflows, providing:</p>
 <li class=""><a class="" href="/conductor/autoscaling"><strong>Autoscaling and version management</strong></a>: Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.</li>
 <li class=""><a class="" href="/conductor/metrics"><strong>Observability Integrations</strong></a>: Conductor exposes metrics about your applications&#x27; workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.</li>
 <li class=""><a class="" href="/conductor/reference/conductor-api"><strong>Programmatic access</strong></a>: Conductor&#x27;s workflow, queue, and schedule management is available over an OpenAPI-described HTTP API and from the <a class="" href="/conductor/reference/dbosctl"><code>dbosctl</code> command-line client</a>, so you can script incident response and wire Conductor into your own tooling.</li>
+<li class=""><a class="" href="/explanations/transact-enterprise"><strong>DBOS Transact Enterprise access</strong></a>: Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.</li>
 </ul>
 <p>Architecturally, Conductor is not part of your workflows orchestration path.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
