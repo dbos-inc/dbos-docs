@@ -139,7 +139,7 @@ The [architecture page](./architecture.md) describes how to architect a distribu
 
 ### When should I use the DBOS Conductor?
 
-Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, and organization management with RBAC. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.
+Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, organization management with RBAC, and access to [DBOS Transact Enterprise](./explanations/transact-enterprise.md) features. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.
 
 ### Why is my application not connecting to Conductor?
 

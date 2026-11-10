@@ -543,6 +543,12 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
+To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
+Pass `{ suspend: true }` to `DBOS.sleep` or `DBOS.recv`.
+The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
+Waking takes a second or two, so only suspend for long waits.
+Suspending throws `DBOSWorkflowSuspendedError`; you MUST rethrow it if you wrap a suspending call in a `try`/`catch`.
+
 ## Debouncing Workflows
 
 You can create a `Debouncer` to debounce your workflows.
@@ -651,12 +657,14 @@ interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
   pollingIntervalMs?: number;
+  suspend?: boolean;
 }
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.  The default timeout is 60 seconds.
 If the topic is not specified, this method only receives messages sent without a topic.
+With `suspend: true`, a `recv` that has to wait suspends the workflow until a message arrives on its topic or the timeout passes (see Durable Sleep for requirements).
 
 ### Messages Example
 
@@ -1314,7 +1322,7 @@ On a partitioned queue, deduplication IDs are unique across the whole queue, not
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, suspended, or actively executing (status `ENQUEUED`, `DELAYED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -1556,7 +1564,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, SUSPENDED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
@@ -1681,7 +1689,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string; // Retrieve workflows with this name.
-  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status or any of these statuses (each must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status or any of these statuses (each must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
@@ -1713,7 +1721,7 @@ DBOS.listQueuedWorkflows(
 ): Promise<WorkflowStatus[]>
 ```
 
-Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING`, `ENQUEUED`, or `DELAYED`) workflows matching specified criteria.
+Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`) workflows matching specified criteria.
 The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
 
 ### DBOS.listWorkflowSteps
@@ -1886,7 +1894,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```typescript
 DBOS.setConfig({
@@ -2004,6 +2012,17 @@ You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow`
 
 To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
+
+## External Storage
+
+To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
+Set `externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `@dbos-inc/dbos-enterprise`.
+`DBOS.storeExternalObject(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
+`DBOS.loadExternalObject(ref)` returns the value.
+You MUST call `loadExternalObject` from a step, not from workflow code, and return only a small result from that step.
+Prefer storing a `Buffer` or `Uint8Array` for large objects, because they are not serialized.
+Outside a workflow, you MUST pass `ownerWorkflowID`.
+Objects are deleted only after their owner workflow has been deleted, by a retention run.
 
 ## Configuring DBOS
 

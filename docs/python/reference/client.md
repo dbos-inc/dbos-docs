@@ -31,6 +31,7 @@ DBOSClient(
     observability_query_timeout_sec: Optional[float] = None,
     sys_db_idle_transaction_timeout_sec: Optional[float] = None,
     sharding: bool = False,
+    external_stores: Optional[Sequence[ExternalStore]] = None,
 )
 ```
 **Parameters:**
@@ -47,6 +48,7 @@ DBOSClient(
 - `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
 - `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
+- `external_stores`: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
 
 **Example syntax:**
 
@@ -140,7 +142,7 @@ Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflo
 * `app_version`: The version of your application that should process this workflow. 
 If left undefined, the workflow is only dequeued by an executor running the latest application version, and its version is set to that executor's version when it is first dequeued.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, suspended, or actively executing (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
   - `"reject"`: raise `DBOSQueueDeduplicatedError`.
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
@@ -713,6 +715,61 @@ client.read_stream_offset_async(
 
 Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
+### store_external_object
+
+```python
+client.store_external_object(
+    value: T,
+    *,
+    owner_workflow_id: str,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
+Similar to [`DBOS.store_external_object`](./contexts.md#store_external_object), except that `owner_workflow_id` is required.
+The owner doesn't have to exist yet, so you can upload a large input and then enqueue the workflow that will process it.
+
+### store_external_object_async
+
+```python
+await client.store_external_object_async(
+    value: T,
+    *,
+    owner_workflow_id: str,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    key: Optional[str] = None,
+    shard_key: Optional[str] = None,
+    store_id: Optional[str] = None,
+) -> ExternalObjectRef[T]
+```
+
+Asynchronous version of [`store_external_object`](#store_external_object).
+
+### load_external_object
+
+```python
+client.load_external_object(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Load the value an [external object](../tutorials/external-storage.md) reference points to.
+Similar to [`DBOS.load_external_object`](./contexts.md#load_external_object).
+
+### load_external_object_async
+
+```python
+await client.load_external_object_async(
+    ref: ExternalObjectRef[T],
+) -> T
+```
+
+Asynchronous version of [`load_external_object`](#load_external_object).
+
 ### set_workflow_delay
 
 ```python
@@ -924,7 +981,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `SUSPENDED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
@@ -944,7 +1001,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
-- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **is_fork**: If `True`, only retrieve workflows that were [forked](../tutorials/workflow-management.md#forking-workflows) from another workflow. If `False`, only retrieve workflows that are not forks.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
@@ -1027,12 +1084,12 @@ client.list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, or `PENDING` and `queue_name` not null) matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING` and `queue_name` not null) matching specified criteria.
 Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `DELAYED`, `ENQUEUED`, `SUSPENDED`, or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.

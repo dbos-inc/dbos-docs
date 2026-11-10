@@ -126,6 +126,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Managed Retention Policies**](./conductor/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 - [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./conductor/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
+- [**DBOS Transact Enterprise access**](./explanations/transact-enterprise.md): Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.
 
 Architecturally, Conductor looks like this:
 
