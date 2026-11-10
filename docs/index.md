@@ -142,6 +142,40 @@ import { FaHackerNews } from "react-icons/fa6";
   />
 </section>
 </LargeTabItem>
+<LargeTabItem value="rust" label="Rust">
+
+<section className="row list">
+  <IndexCardLink
+    label="Run Your First Durable App"
+    href="/quickstart?language=rust"
+    description="Install DBOS on your computer and run your first durable app"
+    index="1"
+    icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Learn DBOS Rust"
+    href="/rust/programming-guide"
+    description="Learn how to build reliable applications with DBOS"
+    index="2️"
+    icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Add DBOS To Your App"
+    href="/rust/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
+    index="3"
+    icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Write Deterministic Workflows"
+    href="/rust/tutorials/workflow-tutorial#determinism"
+    description="What a Rust workflow body can and can't do with async concurrency"
+    index="4"
+    icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+</section>
+
+</LargeTabItem>
 </LargeTabs>
 
 ### Example Applications
@@ -209,6 +243,18 @@ import { VscGraphLine } from "react-icons/vsc";
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />
 </section>
+</LargeTabItem>
+<LargeTabItem value="rust" label="Rust">
+
+<section className="row list">
+  <NarrowCardLink
+    label="Fault-Tolerant Checkout"
+    href="https://github.com/dbos-inc/dbos-demo-apps/tree/main/rust/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+  />
+</section>
+
 </LargeTabItem>
 </LargeTabs>
 

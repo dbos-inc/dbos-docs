@@ -103,6 +103,19 @@ public String orderWorkflow(Order order) {
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn order_workflow(order: Order) -> dbos::Result<String> {
+    let result = step("validate_order", || validate_order(&order)).await?;
+    let confirmation = step("process_payment", || process_payment(&result)).await?;
+    Ok(confirmation)
+}
+```
+
+Learn more in the [workflows tutorial](../rust/tutorials/workflow-tutorial.md).
+
+</TabItem>
 </Tabs>
 
 ### Starting Workflows
@@ -207,6 +220,35 @@ Object result = handle.getResult();
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn start_order(
+    order_workflow: &WorkflowRef<Order, String>,
+    order: Order,
+) -> dbos::Result<()> {
+    // Starting a workflow from in your application
+    let options = StartOptions {
+        workflow_id: Some("order-123"),
+        ..StartOptions::default()
+    };
+    let handle = order_workflow.start_with(order, options).await?;
+    let result = handle.result().await?;
+    Ok(())
+}
+
+async fn start_order_from_client(order: Order) -> dbos::Result<()> {
+    // Starting a workflow from another application using the DBOS Client
+    let client = Client::connect(ClientConfig::from_env()).await?;
+    let handle: WorkflowHandle<String> = client.enqueue("order_workflow", "orders", order).await?;
+    let result = handle.result().await?;
+    Ok(())
+}
+```
+
+Learn more in the [workflows tutorial](../rust/tutorials/workflow-tutorial.md).
+
+</TabItem>
 </Tabs>
 
 ### Workflow IDs and Idempotency
@@ -256,6 +298,22 @@ dbos.startWorkflow(
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn idempotent(order_workflow: &WorkflowRef<Order, String>, order: Order) -> dbos::Result<()> {
+    let options = StartOptions {
+        workflow_id: Some("payment-idempotency-key"),
+        ..StartOptions::default()
+    };
+    order_workflow.start_with(order, options).await?;
+    Ok(())
+}
+```
+
+Learn more in the [workflows tutorial](../rust/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 </TabItem>
 </Tabs>
@@ -310,6 +368,15 @@ dbos.sleep(Duration.ofHours(24));
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#durable-sleep).
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+dbos::sleep(Duration::from_secs(24 * 60 * 60)).await?;
+```
+
+Learn more in the [workflows tutorial](../rust/tutorials/workflow-tutorial.md#durable-sleep).
 
 </TabItem>
 </Tabs>
@@ -391,6 +458,16 @@ boolean result = dbos.runStep(() -> sendEmail(to, body), "sendEmail");
 ```
 
 Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md).
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+// Steps are called inline with dbos::step
+let result = step("send_email", || send_email(&to, &body)).await?;
+```
+
+Learn more in the [steps tutorial](../rust/tutorials/step-tutorial.md).
 
 </TabItem>
 </Tabs>
@@ -475,6 +552,21 @@ boolean result = dbos.runStep(
 ```
 
 Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md#configurable-retries).
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+let options = StepOptions {
+    max_attempts: 5,
+    interval: Duration::from_secs(1),
+    backoff_rate: 2.0,
+    ..StepOptions::default()
+};
+let result = step_with("send_email", options, || send_email(&to, &body)).await?;
+```
+
+Learn more in the [steps tutorial](../rust/tutorials/step-tutorial.md#configurable-retries).
 
 </TabItem>
 </Tabs>
@@ -651,6 +743,35 @@ dbos.send("order-123", "paid", "payment_status");
 Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+// In the workflow
+async fn order_with_payment(order: Order) -> dbos::Result<()> {
+    // ... start order processing ...
+    let payment_status: Option<String> =
+        dbos::recv(Some("payment_status"), Duration::from_secs(60 * 60)).await?;
+    if payment_status.as_deref() == Some("paid") {
+        // handle success
+    } else {
+        // handle failure
+    }
+    Ok(())
+}
+
+// Sending the message
+async fn send_payment_status(dbos: &DBOS) -> dbos::Result<()> {
+    let message = SendMessage {
+        topic: Some("payment_status"),
+        ..SendMessage::new("order-123", &"paid")
+    };
+    dbos.send_with(message, SendOptions::default()).await
+}
+```
+
+Learn more in the [workflow communication tutorial](../rust/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
+
+</TabItem>
 </Tabs>
 
 Messages are persisted to the database, so they remain available even after the workflow completes.
@@ -757,6 +878,27 @@ Optional<Integer> progress = dbos.getEvent("order-123", "progress", Duration.ofS
 Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-events).
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn order_with_progress(order: Order) -> dbos::Result<()> {
+    dbos::set_event("progress", &25).await?;
+    // ... validate order ...
+    dbos::set_event("progress", &50).await?;
+    // ...
+    Ok(())
+}
+
+// Reading workflow state
+async fn read_progress(dbos: &DBOS) -> dbos::Result<Option<i32>> {
+    dbos.get_event("order-123", "progress", Duration::from_secs(30))
+        .await
+}
+```
+
+Learn more in the [workflow communication tutorial](../rust/tutorials/workflow-communication.md#workflow-events).
+
+</TabItem>
 </Tabs>
 
 Events are persisted to the database, so they remain available even after the workflow completes.
@@ -842,6 +984,40 @@ String result = handle.getResult();
 ```
 
 Learn more in the [queues tutorial](../java/tutorials/queue-tutorial.md).
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn queue_order(
+    dbos: &DBOS,
+    order_workflow: &WorkflowRef<Order, String>,
+    order: Order,
+) -> dbos::Result<()> {
+    // Register a queue with concurrency limits (after dbos.launch())
+    let options = QueueOptions {
+        concurrency: Some(10),
+        ..QueueOptions::default()
+    };
+    dbos.register_queue(
+        "order-processing",
+        options,
+        QueueConflict::UpdateIfLatestVersion,
+    )
+    .await?;
+
+    // Enqueue a workflow
+    let options = StartOptions {
+        queue: Some(QueueRequest::new("order-processing")),
+        ..StartOptions::default()
+    };
+    let handle = order_workflow.start_with(order, options).await?;
+    let result = handle.result().await?;
+    Ok(())
+}
+```
+
+Learn more in the [queues tutorial](../rust/tutorials/queue-tutorial.md).
 
 </TabItem>
 </Tabs>
@@ -993,6 +1169,22 @@ public String parentWorkflow() {
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+async fn parent_workflow(child: WorkflowRef<String, String>) -> dbos::Result<String> {
+    // Run a child workflow and wait for its result
+    let result = child.run("data".to_owned()).await?;
+
+    // Or start it in the background
+    let handle = child.start("data".to_owned()).await?;
+    handle.result().await
+}
+```
+
+Learn more in the [workflows tutorial](../rust/tutorials/workflow-tutorial.md).
 
 </TabItem>
 </Tabs>
