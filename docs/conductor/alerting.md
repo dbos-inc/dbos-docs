@@ -23,6 +23,8 @@ Currently, you can create alerts for the following failure conditions:
 
 - **Workflow Failure:** If at least a certain number of workflows (optionally filtered by workflow name) created within a set time window have failed with an error.
 - **Slow Queue:** If a workflow remains enqueued for more than a certain period of time (optionally filtered by queue name), indicating the queue is overwhelmed or stuck.
+
+To monitor all workflows or all queues, omit the workflow or queue name filter (do not pass `*`).
 - **Unresponsive Application:** If an application is unresponsive (no healthy executors, or healthy executors that fail to respond to a probe request from Conductor).
 
 Conductor evaluates each rule once per minute.
@@ -53,13 +55,13 @@ The handler receives three arguments:
 - **metadata**: Additional key-value string metadata about the alert. The metadata keys depend on the rule type:
 
   **`WorkflowFailure`**:
-  - `workflow_name`: The workflow name filter, or `*` for all workflows.
+  - `workflow_name`: The rule's workflow name filter, or `*` if the rule has no filter and monitors all workflows.
   - `failed_workflow_count`: The number of failed workflows detected in the time window.
   - `threshold`: The configured failure count threshold.
   - `period_secs`: The time window in seconds.
 
   **`SlowQueue`**:
-  - `queue_name`: The queue name filter, or `*` for all queues.
+  - `queue_name`: The rule's queue name filter, or `*` if the rule has no filter and monitors all queues.
   - `stuck_workflow_count`: The number of workflows that have been in the queue for longer than the time threshold.
   - `threshold_secs`: The enqueue time threshold in seconds.
 
