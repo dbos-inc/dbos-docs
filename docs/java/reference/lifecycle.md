@@ -116,7 +116,6 @@ When deploying to DBOS Cloud, several environment variables are automatically se
 | `DBOS__VMID` | The executor ID of this process. Overrides `withExecutorId(...)` when `DBOS__CLOUD=true`. |
 
 These variables take precedence over any values set in `DBOSConfig`. In local development you do not need to set them.
-On DBOS Cloud, the application connects to Conductor when `DBOS__CONDUCTOR_APP_NAME`, `DBOS__CONDUCTOR_KEY`, and `DBOS__CONDUCTOR_URL` are all set, which requires the `dev.dbos:transact-enterprise` artifact.
 
 ### DBOS Constructor
 

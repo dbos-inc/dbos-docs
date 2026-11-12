@@ -21,7 +21,7 @@ For new features, such as [rewinding workflows](./tutorials/workflow-management.
 
 The DBOS Conductor client is no longer part of `dev.dbos:transact`.
 It ships in a separate artifact, `dev.dbos:transact-enterprise`, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license), which DBOS loads automatically when it is on the class path.
-An application that sets a Conductor key (`withConductorKey`, or `dbos.conductor.key` in Spring Boot), or that runs on DBOS Cloud with Conductor settings, must add it at exactly the same version as `dev.dbos:transact`:
+An application that connects to Conductor (by setting a Conductor key with `withConductorKey`, or `dbos.conductor.key` in Spring Boot) must add it at exactly the same version as `dev.dbos:transact`:
 
 <Tabs groupId="build-tool">
 <TabItem value="gradle" label="Gradle">
