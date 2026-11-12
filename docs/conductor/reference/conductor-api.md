@@ -298,7 +298,7 @@ The policy names the queue whose backlog drives the executor count; the two `aut
 | Delete alerting rule | `DELETE /v2/orgs/{orgName}/apps/{appName}/alerting-rules/{ruleId}` |
 | List audit logs | `GET /v2/orgs/{orgName}/audit-logs` |
 
-Alerting rules are described in [Alerting](../alerting.md). Audit log listing accepts `startTime`, `endTime`, `operation`, `subject`, and `target` filters alongside `limit` and `offset`; see [Audit Logs](../audit-logs.md).
+Alerting rules are described in [Alerting](../alerting.md). Rules can't be updated in place; delete and recreate a rule to change it. Creating a rule takes a `ruleType` (`WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`), a `ruleMetadata` object, an optional `minIntervalSecs` (the minimum time between two alerts from the rule), and an optional `receivingAppName` (defaults to the rule's own application; required, and different from it, for `UnresponsiveApplication`). `ruleMetadata` holds `num_failures`, `period_secs`, and an optional `workflow_name` for `WorkflowFailure`; `enqueued_secs` and an optional `queue_name` for `SlowQueue`; and nothing (`{}`) for `UnresponsiveApplication`. Omit `workflow_name` or `queue_name` to match all workflows or all queues (do not pass `*`). Audit log listing accepts `startTime`, `endTime`, `operation`, `subject`, and `target` filters alongside `limit` and `offset`; see [Audit Logs](../audit-logs.md).
 
 ## Self-Hosted Differences
 
