@@ -14,20 +14,29 @@ Alerts require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 
 ### Creating Alerts
 
-You can create new alerts (or view or update your existing alerts) from your application's "Alerting" page on the DBOS Console.
+You can create alerting rules (and view or delete your existing rules) from your application's "Alerting" page on the DBOS Console, or through the [Conductor API](./reference/conductor-api.md#alerting-and-audit-logs).
+Rules cannot be edited after they are created; to change a rule, delete it and create a new one.
 
 <img src={require('@site/static/img/alerts/alerts.png').default} alt="Alerts" width="750" className="custom-img"/>
 
 Currently, you can create alerts for the following failure conditions:
 
-- If a certain number of workflows (parameterizable by workflow type) fail in a set period of time.
-- If a workflow remains enqueued for more than a certain period of time (parameterizable by queue name), indicating the queue is overwhelmed or stuck.
-- If an application is unresponsive (no connected executors, or connected but unresponsive executors).
+- **Workflow Failure:** If at least a certain number of workflows (optionally filtered by workflow name) created within a set time window have failed with an error.
+- **Slow Queue:** If a workflow remains enqueued for more than a certain period of time (optionally filtered by queue name), indicating the queue is overwhelmed or stuck.
+- **Unresponsive Application:** If an application is unresponsive (no healthy executors, or healthy executors that fail to respond to a probe request from Conductor).
+
+Conductor evaluates each rule once per minute.
+While a rule's condition holds, the rule fires again on every evaluation.
+To limit how often a rule fires, set its optional **Interval**: the minimum time, in seconds, between two alerts from that rule.
 
 If multiple applications [share a system database](../explanations/sharing-a-system-database.md), each application's alerts consider only the workflows it owns.
 
-You may also specify an application to receive the alert&mdash;this does not need to be the same as the application that generated the alert.
-For some failure conditions (e.g., unresponsive application), the application receiving the alert is required to be different from the one generating it.
+You may also specify an application to receive the alert&mdash;this does not need to be the same as the application that generated the alert, and defaults to it.
+For Unresponsive Application rules, the application receiving the alert is required to be different from the one generating it.
+
+Conductor delivers each alert to one healthy executor of the receiving application.
+If that executor's handler throws an error, Conductor tries the receiving application's other healthy executors.
+If the receiving application has no healthy executors, the alert is not delivered.
 
 ### Receiving Alerts
 
@@ -56,7 +65,7 @@ The handler receives three arguments:
 
   **`UnresponsiveApplication`**:
   - `application_name`: The application name.
-  - `connected_executor_count`: The number of executors currently connected to this application.
+  - `connected_executor_count`: The number of healthy executors currently connected to this application.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
@@ -76,6 +85,9 @@ def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None
 Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
 
 ```python
+import os
+import requests
+
 @DBOS.alert_handler
 def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
@@ -92,6 +104,9 @@ def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None
 Example forwarding alerts to PagerDuty using the [Events API](https://developer.pagerduty.com/docs/events-api-v2-overview):
 
 ```python
+import os
+import requests
+
 @DBOS.alert_handler
 def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
     routing_key = os.environ.get("PAGERDUTY_ROUTING_KEY")
@@ -276,14 +291,17 @@ dbos.registerAlertHandler((ruleType, message, metadata) -> {
         .collect(Collectors.joining("\n"));
     String slackText = String.format("*Alert: %s*\n%s\n%s", ruleType, message, metaLines);
 
-    HttpClient client = HttpClient.newHttpClient();
-    HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(webhookUrl))
-        .header("Content-Type", "application/json")
-        .POST(HttpRequest.BodyPublishers.ofString("{\"text\":\"" + slackText + "\"}"))
-        .build();
     try {
-        client.send(request, HttpResponse.BodyHandlers.ofString());
+        String body = new ObjectMapper().writeValueAsString(Map.of("text", slackText));
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(webhookUrl))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+        HttpResponse<String> resp = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() >= 300) {
+            logger.error("Failed to send Slack alert: {}", resp.statusCode());
+        }
     } catch (Exception e) {
         logger.error("Failed to send Slack alert: {}", e.getMessage());
     }
@@ -296,25 +314,33 @@ Example forwarding alerts to PagerDuty using the [Events API](https://developer.
 dbos.registerAlertHandler((ruleType, message, metadata) -> {
     String routingKey = System.getenv("PAGERDUTY_ROUTING_KEY");
 
-    String payload = String.format("""
-        {"routing_key":"%s","event_action":"trigger","payload":{
-          "summary":"%s: %s","severity":"error","source":"my-app",
-          "custom_details":%s}}""",
-        routingKey, ruleType, message, new ObjectMapper().writeValueAsString(metadata));
+    Map<String, Object> payload = Map.of(
+        "routing_key", routingKey,
+        "event_action", "trigger",
+        "payload", Map.of(
+            "summary", ruleType + ": " + message,
+            "severity", "error",
+            "source", "my-app",
+            "custom_details", metadata));
 
-    HttpClient client = HttpClient.newHttpClient();
-    HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create("https://events.pagerduty.com/v2/enqueue"))
-        .header("Content-Type", "application/json")
-        .POST(HttpRequest.BodyPublishers.ofString(payload))
-        .build();
     try {
-        client.send(request, HttpResponse.BodyHandlers.ofString());
+        String body = new ObjectMapper().writeValueAsString(payload);
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://events.pagerduty.com/v2/enqueue"))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+        HttpResponse<String> resp = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() >= 300) {
+            logger.error("Failed to send PagerDuty alert: {}", resp.statusCode());
+        }
     } catch (Exception e) {
         logger.error("Failed to send PagerDuty alert: {}", e.getMessage());
     }
 });
 ```
+
+See the [Java reference](../java/reference/methods.md#registeralerthandler) for more details.
 
 </TabItem>
 </Tabs>
@@ -344,5 +370,5 @@ time() - dbos_conductor_v1_workflow_oldest_enqueued_timestamp_seconds > 300
 absent(dbos_conductor_v1_executor_count{application="my-app", status="HEALTHY"})
 ```
 
-Detecting an offline application is a "missing data" condition: a fully disconnected application emits no executor series at all.
+Detecting an offline application is a "missing data" condition: an application with no healthy executors emits no `status="HEALTHY"` series at all (its disconnected executors are reported with status `DISCONNECTED` or `DEAD` instead).
 In PromQL, use `absent()` with an explicit `application` label for each app you want to monitor.
