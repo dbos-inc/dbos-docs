@@ -39,12 +39,19 @@ All properties are in the `dbos.*` namespace.
 | `dbos.datasource.schema` | `String` | `dbos` | Schema for DBOS system tables. |
 | `dbos.datasource.migrate` | `boolean` | `true` | Whether to run database migrations on startup. |
 
+When `dbos.datasource.url` is unset, the starter passes the application's `DataSource` bean to DBOS with [`withDataSource`](./lifecycle.md#dbosconfig), so DBOS doesn't create a pool of its own and doesn't apply its 1-minute [system database idle-transaction timeout](./lifecycle.md#dbosconfig).
+To keep a stalled session from holding a workflow's row lock, set `idle_in_transaction_session_timeout` on that pool yourself, for example with `spring.datasource.hikari.connection-init-sql=SET idle_in_transaction_session_timeout = '1min'`.
+This also applies to your application's own transactions on that pool.
+
 ### DBOS Conductor
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `dbos.conductor.key` | `String` | — | DBOS Conductor API key. |
 | `dbos.conductor.domain` | `String` | — | DBOS Conductor domain. |
+| `dbos.conductor.metadata-only-mode` | `boolean` | `false` | Send Conductor only workflow metadata, never workflow data. See [`withConductorMetadataOnlyMode`](./lifecycle.md#dbosconfig). |
+
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact-spring-boot-starter`. See [Connecting to Conductor](../../conductor/overview.md#connecting-to-conductor).
 
 ### Admin Server
 
@@ -64,7 +71,7 @@ All properties are in the `dbos.*` namespace.
 | `dbos.executor-id` | `String` | — | Unique executor ID for this instance. |
 | `dbos.enable-patching` | `boolean` | `false` | Enable [workflow patching](./methods.md#patch). |
 | `dbos.listen-queues` | `List<String>` | `[]` | Queues this executor should dequeue from. |
-| `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval. |
+| `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval of 30 seconds. Must be at least 1 millisecond; see [`withSchedulerPollingInterval`](./lifecycle.md#dbosconfig). |
 | `dbos.use-listen-notify` | `boolean` | `true` | Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery. Automatically set to `false` when CockroachDB is detected. |
 
 ## DBOSConfigCustomizer

@@ -1897,14 +1897,46 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 
 **Java**
 
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact`:
+
+**Gradle**
+
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+
+**Maven**
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+
+Then, set the Conductor key in your DBOS configuration:
+
 ```java
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
     .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-    .withConductorKey(conductorKey)
+    .withConductorKey(conductorKey);
 ```
+
+Without `dev.dbos:transact-enterprise` on the class path, `dbos.launch()` throws `IllegalStateException` when a Conductor key is set.
 
 ### Managing Conductor Applications
 
@@ -1963,13 +1995,13 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 **Java**
 
 ```java
-String appName = System.getenv("DBOS_APPLICATION_NAME")
+String appName = System.getenv("DBOS_APPLICATION_NAME");
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults(appName)
     .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-    .withConductorKey(conductorKey)
+    .withConductorKey(conductorKey);
 ```
 
 :::
@@ -1986,7 +2018,7 @@ In this mode, only workflow and step metadata (but not data, like workflow or st
 As a result, workflow data will not be visible from the console.
 Note that Conductor does not store application data in any mode.
 
-You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings), `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch), or `ConductorMetadataOnlyMode` in your [Go configuration](../golang/reference/configuration.md#connecting-to-conductor).
+You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings), `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch), `ConductorMetadataOnlyMode` in your [Go configuration](../golang/reference/configuration.md#connecting-to-conductor), or `withConductorMetadataOnlyMode(true)` in your [Java configuration](../java/reference/lifecycle.md#dbosconfig).
 
 ---
 
@@ -5694,6 +5726,8 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 
 **Java**
 
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact` (see [Connecting to Conductor](../overview.md#connecting-to-conductor)).
+
 ```java
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 String conductorDomain = System.getenv("DBOS_CONDUCTOR_URL");
@@ -5743,6 +5777,8 @@ Without [OAuth authentication](#security), the Console has no user or organizati
 #### Reverse Proxy and TLS
 
 Place Conductor and the Console behind a reverse proxy or load balancer (such as Nginx, an ingress controller, or a cloud load balancer) that **supports WebSockets** and does **TLS termination** (Conductor and the Console serve plain HTTP). Route traffic to Conductor on port 8090 and to the Console on port 8080.
+
+Applications verify the proxy's certificate against their platform's default trust store, so use a certificate from a public certificate authority, or make your private certificate authority trusted on every application host. For Java (1.3 and later), add the certificate to a trust store and pass it with the standard `javax.net.ssl.trustStore` and `javax.net.ssl.trustStorePassword` system properties. An application that doesn't trust the certificate logs the failure and keeps retrying, but never connects.
 
 We recommend setting long idle timeouts on the proxy and on any load balancer in front of it to handle network hiccups (for example, 3600 seconds). The DBOS SDK sends periodic pings and reconnects automatically after a disconnect.
 
@@ -8400,6 +8436,38 @@ go get go.dbos.dev/dbos-enterprise-go
 import _ "go.dbos.dev/dbos-enterprise-go"
 ```
 
+**Java**
+
+Add the `dev.dbos:transact-enterprise` artifact, at exactly the same version as `dev.dbos:transact`.
+DBOS loads it automatically; no code change is needed.
+In Java, DBOS Transact Enterprise provides the connection to Conductor.
+
+**Gradle**
+
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+
+**Maven**
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+
 ### DBOS Transact Enterprise Keys
 
 In production, applications using DBOS Transact Enterprise should [connect to Conductor](../conductor/overview.md#connecting-to-conductor).
@@ -8438,6 +8506,11 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     TransactEnterpriseKey: os.Getenv("DBOS_TRANSACT_ENTERPRISE_KEY"),
 })
 ```
+
+**Java**
+
+Java needs no DBOS Transact Enterprise key.
+In Java, DBOS Transact Enterprise provides the connection to Conductor, so it needs only your [Conductor key](../conductor/overview.md#connecting-to-conductor).
 
 :::warning
 Use a DBOS Transact Enterprise key without Conductor only for development.
@@ -21881,7 +21954,7 @@ Add DBOS to your application by including it in your build configuration.
 
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:1.2.0'
+    implementation 'dev.dbos:transact:1.3.0'
 }
 ```
 
@@ -21892,7 +21965,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -22032,7 +22105,7 @@ Then, install DBOS (plus Logback for logging) by adding the following to your `a
 
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact:1.2.0")
+  implementation("dev.dbos:transact:1.3.0")
   implementation("org.slf4j:slf4j-simple:2.0.17") // needed to see DBOS log messages
   implementation("io.javalin:javalin:7.0.1") // needed for creating HTTP endpoint later in the guide
 
@@ -22127,7 +22200,7 @@ Now, build and run this code with:
 Your program should print output like:
 
 ```shell
-[main] INFO dev.dbos.transact.DBOS - Launching DBOS v1.2.0
+[main] INFO dev.dbos.transact.DBOS - Launching DBOS v1.3.0
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - DBOS Executor starting
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - System Database: jdbc:postgresql://localhost:5432/dbos_java_starter
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - System Database User name: postgres
@@ -22499,7 +22572,7 @@ The main addition to any project is additional dependencies.
 For **Gradle** (`build.gradle`):
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:1.2.0'
+    implementation 'dev.dbos:transact:1.3.0'
 }
 ```
 
@@ -22509,7 +22582,7 @@ For **Maven** (`pom.xml`):
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -22831,6 +22904,8 @@ Create workflow options with all fields set to their defaults.
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`** - What to do when a workflow with this ID already exists: `RETURN_EXISTING` (the default) returns a handle to it; `REJECT` throws `DBOSWorkflowIdInUseException` and leaves it unchanged.
+
 - **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue. The queue must be registered first. `new StartWorkflowOptions(QueueName queue)` is equivalent; do NOT use `new StartWorkflowOptions(String)` for a queue, because its `String` argument is a workflow ID.
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
@@ -22843,7 +22918,7 @@ Create workflow options with all fields set to their defaults.
 
 - Do NOT use `withDeadline`; it is deprecated since 1.2. Use `withTimeout`.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a partitioned queue, it applies across the whole queue, whatever the partition key.
 
 - **`withPriority(Integer priority)`** - May only be used when enqueuing. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority.
 
@@ -23584,7 +23659,7 @@ dbos.registerQueue("tenant-queue",
 ```
 
 When both are set, each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`; limits that are not set are not compared.
-Deduplication is not supported on partitioned queues: setting both `withQueuePartitionKey` and `withDeduplicationId` throws `IllegalArgumentException`.
+A deduplication ID on a partitioned queue applies across the whole queue, whatever the partition key. To deduplicate within one partition, include the partition key in the ID.
 
 :::warning
 Workflows already on a queue without a partition key are never dequeued once the queue becomes partitioned.
@@ -23980,6 +24055,8 @@ void cancelWorkflows(List<String> workflowIds)
 
 Cancel one or more workflows. Sets status to `CANCELLED`, removes from queue, and preempts execution at the next step boundary.
 
+A workflow can't cancel, resume, or delete itself: called from inside a workflow or one of its steps with the calling workflow among the targets, `cancelWorkflow`, `resumeWorkflow`, and `deleteWorkflow` throw `IllegalArgumentException` and change nothing. To stop a workflow from inside, return or throw.
+
 #### resumeWorkflow
 
 ```java
@@ -23989,6 +24066,15 @@ List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds
 ```
 
 Resume one or more workflows from their last completed step. Optionally re-enqueue on a queue instead of starting immediately.
+
+#### rewindWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep, RewindOptions options)
+```
+
+Re-run a finished workflow (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) in place, under the same workflow ID, from `startStep` (`0` re-runs it all). Steps before `startStep` replay their recorded outputs; from `startStep` on, recorded steps, events set, and messages consumed are discarded, as is every message sent to the workflow that it hasn't consumed yet, and the workflow is re-enqueued. Child workflows are left alone and keep their IDs: a replayed child start returns the existing child. Cancel a running workflow before rewinding it. `RewindOptions` sets the application version, queue, and partition key: `new RewindOptions().withApplicationVersion("2.0.0").withQueue("q")`. Use fork instead when you want a new workflow ID.
 
 #### forkWorkflow
 
@@ -24060,9 +24146,11 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withMigrate(boolean enable)`**: If true, apply migrations to the system database on launch. Defaults to true. If false, launch only checks that the system database schema is new enough, and throws if it isn't; migrate it out-of-band with `dbosctl sysdb migrate`.
 
-- **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, the application is connected to Conductor.
+- **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, the application is connected to Conductor. Connecting requires the `dev.dbos:transact-enterprise` artifact at the same version as `dev.dbos:transact`; without it, `dbos.launch()` throws `IllegalStateException`.
 
 - **`withConductorDomain(String domain)`**: A custom hostname for DBOS Conductor, for self-hosted Conductor.
+
+- **`withConductorMetadataOnlyMode(boolean enable)`**: If true, Conductor receives only workflow metadata, never workflow data (inputs, outputs, errors, step outputs, events, notifications, streams, schedule context, exports, or imports). Defaults to false.
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows.
 
@@ -24074,11 +24162,13 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database.
 
-- **`withSchedulerPollingInterval(Duration interval)`**: How often the scheduler polls for due scheduled workflows.
+- **`withSchedulerPollingInterval(Duration interval)`**: How often the scheduler polls for due scheduled workflows. Defaults to 30 seconds. Must be at least 1 millisecond and no more than `Long.MAX_VALUE` milliseconds; other values throw `IllegalArgumentException` when the configuration is built.
 
 - **`withUseListenNotify(boolean enable)`**: Use PostgreSQL LISTEN/NOTIFY to wake waiting workflows instead of polling. Defaults to true; set to false on databases that don't support it.
 
 - **`withNotificationCoalesceInterval(Duration interval)`**: How often batched workflow event and stream notifications are sent to other processes. Defaults to 10ms; must be at least 1ms.
+
+- **`withSystemDatabaseIdleTransactionTimeout(Duration timeout)`**: How long PostgreSQL lets a session of the system database pool DBOS creates stay idle inside a transaction before ending it and releasing its locks. Defaults to 1 minute; zero or a negative duration leaves the server's setting. Not applied to a `DataSource` supplied with `withDataSource`, or when the database URL already sets `idle_in_transaction_session_timeout`.
 
 - **`withDatabasePollingConcurrency(Integer limit)`**: The maximum number of polling reads (from waiting on a result, `recv`, `getEvent`, or reading a stream) that may run against the system database at once. Defaults to half the connection pool (at least one); a non-positive value removes the cap.
 
@@ -24196,6 +24286,7 @@ The workflow name and queue must not be null or empty.
 **Methods:**
 
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`**: What to do when a workflow with this ID already exists, whatever its status: return it (`RETURN_EXISTING`, the default) or throw [`DBOSWorkflowIdInUseException`](./methods.md#dbosworkflowidinuseexception) and leave it unchanged (`REJECT`).
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
 If left undefined, the workflow is enqueued without a version and is only dequeued by an executor running the owning application's latest registered version, which sets the version when it first dequeues it.
 - **`withTimeout(Duration timeout)`**, **`withTimeout(long value, TimeUnit unit)`**:  Set an explicit timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
@@ -24207,7 +24298,7 @@ An explicit timeout and a deadline cannot both be set.
 :::
 
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
-- **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+- **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception. On a partitioned queue, the deduplication ID applies across the whole queue, whatever the partition key; to deduplicate within one partition, include the partition key in the ID.
 - **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority.
 - **`withSerialization(SerializationStrategy serialization)`**: Specify the [serialization strategy](./lifecycle.md#custom-serialization) for the workflow arguments. Options are `SerializationStrategy.DEFAULT`, `SerializationStrategy.PORTABLE`, or `SerializationStrategy.NATIVE`.
 - **`withQueuePartitionKey(String partitionKey)`**: Set a queue partition key for the workflow. Use if and only if the queue is partitioned, which it is when any per-partition limit (`partitionConcurrency`, `partitionWorkerConcurrency`, or `partitionRateLimit`) is set, or when it was registered with the deprecated `partitionQueue` flag. Per-partition limits apply to each partition key separately; queue-wide limits still apply to the queue as a whole, except on a queue registered with the deprecated `partitionQueue` flag, where they apply to each partition instead. See [Partitioning Queues](../tutorials/queue-tutorial.md#partitioning-queues).
@@ -24215,7 +24306,7 @@ An explicit timeout and a deadline cannot both be set.
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.
 - Partition keys cannot be used with non-partitioned queues.
-- Partition keys and deduplication IDs cannot be used together.
+- A deduplication ID used with a partition key is deduplicated across the whole queue, not within the partition.
 :::
 
 - **`withAuthenticatedUser(String user)`**: Set the authenticated user for the enqueued workflow. Stored in the workflow record and accessible via `DBOS.authenticatedUser()` when the workflow executes.
@@ -24363,7 +24454,7 @@ void cancelWorkflows(List<String> workflowIds)
 void cancelWorkflows(List<String> workflowIds, boolean cancelChildren)
 ```
 
-Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow). When `cancelChildren` is `true`, also recursively cancels all descendant workflows.
+Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow). When `cancelChildren` is `true`, also recursively cancels all descendant workflows. A client call isn't made from inside a workflow, so the refusal of a workflow cancelling itself doesn't apply.
 
 #### resumeWorkflow
 
@@ -24374,7 +24465,7 @@ List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds
 List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds, String queueName)
 ```
 
-Similar to [`dbos.resumeWorkflow`](./methods.md#resumeworkflow).
+Similar to [`dbos.resumeWorkflow`](./methods.md#resumeworkflow). A client call isn't made from inside a workflow, so the refusal of a workflow resuming itself doesn't apply.
 
 #### deleteWorkflow
 
@@ -24385,7 +24476,7 @@ void deleteWorkflows(List<String> workflowIds)
 void deleteWorkflows(List<String> workflowIds, boolean deleteChildren)
 ```
 
-Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow).
+Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow). A client call isn't made from inside a workflow, so the refusal of a workflow deleting itself doesn't apply.
 
 #### forkWorkflow
 
@@ -24394,7 +24485,23 @@ Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow).
       String originalWorkflowId, int startStep, ForkOptions options)
 ```
 
-Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow).
+Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow), except that the client doesn't check that the queue exists or that the partition key matches whether the queue is partitioned.
+
+#### rewindWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(
+      String workflowId, int startStep, RewindOptions options)
+```
+
+Similar to [`dbos.rewindWorkflow`](./methods.md#rewindworkflow), except that the client doesn't check that the queue exists or that the partition key matches whether the queue is partitioned.
+
+:::info
+A client cannot reach your application's databases, so a client rewind does not delete [step factory](./workflows-steps.md#step-factories) transaction checkpoints.
+A transactional step past `startStep` that still has one replays its recorded result instead of running again.
+To re-run those transactions, rewind with [`dbos.rewindWorkflow`](./methods.md#rewindworkflow) from within the application.
+:::
 
 #### updateWorkflowAttributes
 
@@ -24818,10 +24925,14 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`withDatabaseSchema(String schema)`**: PostgreSQL database schema for system database tables. Defaults to `dbos`.
 
 - **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
+If false, `dbos.launch()` checks that the system database has every migration this version of DBOS defines (version 125 for 1.3) and throws `IllegalStateException` otherwise. A schema migrated further by a newer DBOS release is accepted. See [Upgrading a Running Application](../upgrading.md#upgrading-a-running-application).
 
 - **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS Console](https://console.dbos.dev).
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact on the class path, at the same version as `dev.dbos:transact`; without it, `dbos.launch()` throws `IllegalStateException`. See [Connecting to Conductor](../../conductor/overview.md#connecting-to-conductor).
 
 - **`withConductorDomain(String domain)`**: The domain of the DBOS Conductor instance to connect to. Only needed when using a self-hosted Conductor.
+
+- **`withConductorMetadataOnlyMode(boolean enable)`**: If true, the application sends Conductor only workflow metadata, never workflow data: no inputs, outputs, errors, step outputs, events, notifications, streams, schedule context, exports, or imports. See [Metadata-Only Mode](../../conductor/overview.md#metadata-only-mode). Defaults to false. Has no effect without Conductor.
 
 - **`withConductorExecutorMetadata(Map<String, Object> metadata)`**: Arbitrary key-value metadata attached to this executor and reported to Conductor.
 
@@ -24843,9 +24954,11 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withListenQueue(Queue queue)`** / **`withListenQueues(Queue... queues)`** *(deprecated since 1.1)*: Equivalent to the `QueueName` overloads, taking the name of each `Queue`.
 
-- **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds.
+- **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds (`DBOSConfig.DEFAULT_SCHEDULER_POLLING_INTERVAL`); `null` means the default. The interval must be at least 1 millisecond and no more than `Long.MAX_VALUE` milliseconds: a value outside that range, including zero or a negative duration, throws `IllegalArgumentException` when the configuration is built.
 
 - **`withUseListenNotify(boolean enable)`**: Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery (e.g. `recv`, `getEvent`). Defaults to `true`. Automatically set to `false` when CockroachDB is detected, since CockroachDB does not support `LISTEN`/`NOTIFY`. Set this to `false` explicitly if your PostgreSQL configuration does not support it.
+
+- **`withSystemDatabaseIdleTransactionTimeout(Duration timeout)`**: How long PostgreSQL lets a connection from the system database pool DBOS creates stay idle inside a transaction before ending the session and releasing its locks. This keeps a stalled session from holding a workflow's row lock, which would block its cancellation, resumption, and recovery. Defaults to 1 minute; `null` means the default. Pass zero or a negative duration to leave the server's setting. Not applied to a `DataSource` you supply with `withDataSource`, or when the database URL already sets `idle_in_transaction_session_timeout`. Must not exceed `Integer.MAX_VALUE` milliseconds.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
 
@@ -24928,6 +25041,7 @@ Deprecated for removal: use [`dbos.findQueue`](./queues.md#dbosfindqueue), which
 
 DBOS must serialize data such as workflow inputs and outputs and step return values to store it in the system database.
 By default, data is serialized with Jackson (format name `java_jackson`), but you can optionally supply a custom serializer through DBOS configuration.
+DBOS's own steps, such as a `cancelWorkflow` called from a workflow, record their errors in the default `java_jackson` format whatever serializer is configured, so a replay rethrows the same exception type; only `getResult` keeps the configured serializer, since its error is the awaited workflow's own.
 A custom serializer must implement the `DBOSSerializer` interface:
 
 ```java
@@ -25664,6 +25778,10 @@ void cancelWorkflows(List<String> workflowIds, boolean cancelChildren)
 
 Cancel one or more workflows. This sets their status to `CANCELLED`, removes them from their queue (if enqueued) and preempts execution (interrupting at the beginning of the next step).
 
+A workflow can't cancel itself: called from inside a workflow, or one of its steps, with the calling workflow among the targets, this throws `IllegalArgumentException` and cancels nothing.
+From a workflow body, the refusal is recorded as the call's step, so a recovered workflow throws it again.
+A workflow that wants to stop should return or throw instead.
+
 **Parameters:**
 - **cancelChildren**: If `true`, recursively cancel all descendant workflows spawned by the cancelled workflow(s). Defaults to `false`.
 
@@ -25681,7 +25799,9 @@ Resume one or more workflows from their last completed step. You can use this to
 Resuming a workflow sets it back to `ENQUEUED`, on `queueName` if given and otherwise on the DBOS internal queue, which has no flow control, so the workflow starts as soon as an executor dequeues it.
 This works on a workflow that is already `ENQUEUED`, so you can also use it to start an enqueued workflow without waiting on its queue, or to move a workflow stranded on a deleted or [newly partitioned](./queues.md#queueoptions) queue.
 A resumed workflow keeps its application version, so it runs only on an executor of that version.
-Workflows that already completed with `SUCCESS` or `ERROR` are left unchanged.
+Workflows that already completed with `SUCCESS` or `ERROR` are left unchanged; to run one of them again, [rewind](#rewindworkflow) or [fork](#forkworkflow) it.
+
+A workflow can't resume itself: called from inside a workflow, or one of its steps, with the calling workflow among the targets, this throws `IllegalArgumentException` and resumes nothing.
 
 **Parameters:**
 - **queueName**: The queue to enqueue the resumed workflow on. If omitted or `null`, it is enqueued on the DBOS internal queue.
@@ -25696,6 +25816,8 @@ void deleteWorkflows(List<String> workflowIds, boolean deleteChildren)
 ```
 
 Permanently delete one or more workflows and their recorded steps from the database.
+
+A workflow can't delete itself: called from inside a workflow, or one of its steps, with the calling workflow among the targets, this throws `IllegalArgumentException` and deletes nothing.
 
 **Parameters:**
 - **deleteChildren**: If `true`, also delete all child workflows spawned by the deleted workflow(s). Defaults to `false`.
@@ -25737,6 +25859,62 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
   - **timeout**: A `Duration` timeout for the forked workflow. Pass `null` for no timeout.
   - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately. Set it with `withQueue(QueueName)` or `withQueue(String)`; `withQueue(Queue)` is *(deprecated since 1.1)*.
   - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
+
+#### rewindWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep, RewindOptions options)
+```
+
+```java
+public record RewindOptions(
+    String applicationVersion,
+    String queueName,
+    String queuePartitionKey
+) {
+    RewindOptions withApplicationVersion(String applicationVersion);
+    RewindOptions withQueue(QueueName queue);
+    RewindOptions withQueue(String queueName);
+    RewindOptions withQueuePartitionKey(String queuePartitionKey);
+}
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps from `startStep` on, then re-enqueues the workflow so it re-executes from that step.
+Steps before `startStep` are not re-executed; their recorded outputs are replayed.
+The input step ID must match the `functionId` of the step returned by [`listWorkflowSteps`](#listworkflowsteps).
+A `startStep` of `0` discards the workflow's entire history, so it re-executes from the beginning.
+
+Unlike [`forkWorkflow`](#forkworkflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#cancelworkflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after `startStep`, restoring each such event to the last value it set before `startStep` (or removing it if there is none).
+- Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages. A message consumed before the system database reached migration 121 (DBOS Java 1.3), or by a DBOS version that doesn't record the consuming step, such as a 1.2 executor, can't be matched to the step that consumed it, so it stays consumed, and a replayed `recv` past `startStep` waits for a new message instead.
+- Does not modify streamed values. New values are appended to the end of existing streams, but streams closed at or after `startStep` are reopened.
+- Deletes the [step factories'](./workflows-steps.md#step-factories) transaction checkpoints from `startStep` on, so those transactions run again.
+- Does not modify child workflows, even those started at or after `startStep`. They keep their IDs, so the replay gets the existing child back instead of starting a new one. To re-run a child, rewind it separately.
+
+Called from a workflow, the rewind is recorded as a step, so a recovered caller does not rewind its target again.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow to rewind.
+- **startStep**: The first step to discard and run again. `0` re-runs the whole workflow.
+- **options**:
+  - **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
+  - **queueName**: The queue on which to enqueue the rewound workflow. Defaults to the DBOS internal queue, which dequeues it immediately.
+  - **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if the queue is partitioned.
+
+**Throws:**
+- `DBOSNonExistentWorkflowException` if the workflow does not exist.
+- `IllegalArgumentException` if `startStep` is negative, the queue does not exist, or the partition key does not match whether the queue is partitioned.
+- `IllegalStateException` if the workflow is not in a terminal state, or its status changed while it was being rewound. In the second case, retry the rewind.
+- `RuntimeException` if a step factory's checkpoints could not be deleted. The workflow is not rewound, and the rewind can be retried.
 
 #### updateWorkflowAttributes
 
@@ -25951,13 +26129,15 @@ Obtain a `Debouncer` via `dbos.debouncer()`:
 `Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
 
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
-- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): a debounced workflow has no partition key, and partitioned queues don't support deduplication IDs. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): the debouncer enqueues the user workflow without a partition key. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
 - **`withPriority(Integer priority)`**: Set the priority for the user workflow. A negative priority throws `IllegalArgumentException` when set. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
 - **`withTimeout(Duration timeout)`**: Set a timeout for every user workflow this debouncer starts, timed from when that workflow is dequeued. It takes precedence over a timeout set with [`WorkflowOptions`](./workflows-steps.md#workflowoptions) around the `debounce` call, which applies when this isn't set. A zero or negative timeout throws `IllegalArgumentException` when set.
 - **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Ignored since 1.2. The debounced workflow holds its debounce key as its deduplication ID.
 
 The user workflow never inherits the calling workflow's timeout or deadline, and a deadline set with `WorkflowOptions` around the call is ignored, because the workflow may start long after the call.
+
+The debouncer decides how its workflow starts, so `debounce` inside a [`WorkflowOptions`](./workflows-steps.md#workflowoptions) block that sets `WorkflowIdReusePolicy.REJECT` throws `IllegalArgumentException`. The block's workflow ID is used up by the refused call.
 
 #### debouncer.debounce
 
@@ -26194,6 +26374,44 @@ This covers two different situations, which `sqlState()` distinguishes:
 - **`sqlState()`**: The SQLSTATE of the underlying failure, or `null` if it carried none.
 - **`getCause()`**: The underlying `SQLException`. It is the only level of wrapping, so the database's own exception is always one level down.
 - **`databaseException()`** *(deprecated since 1.1)*: Returns the same object as `getCause()`; use `getCause()` instead.
+
+#### DBOSStepNondeterminismException
+
+```java
+public class DBOSStepNondeterminismException extends RuntimeException {
+    String workflowId();  // The ID of the nondeterministic workflow
+    int stepId();         // The step that was recorded twice
+}
+```
+
+Thrown when an execution of a workflow records a step that it already recorded, with a different result.
+Only the execution that owns a workflow can record its steps, so the earlier result is that execution's own: the workflow function is not deterministic.
+The exception is recorded as the workflow's error.
+An execution that has lost its workflow to a cancellation, resumption, recovery, or timeout is instead stopped at its next write, records nothing, and returns the outcome the current owner records.
+
+#### DBOSDelayPastLatestInstantException
+
+```java
+public class DBOSDelayPastLatestInstantException extends IllegalArgumentException
+```
+
+Thrown when a workflow is enqueued with a delay that carries the current time past the largest instant that 64-bit epoch milliseconds can hold, so its release time can't be stored.
+Nothing is enqueued.
+Whether a delay does so depends on the clock, so a workflow starting a child records this refusal at its step, and a recovery throws it again.
+
+#### DBOSWorkflowIdInUseException
+
+```java
+public class DBOSWorkflowIdInUseException extends RuntimeException {
+    String workflowId();             // The ID the refused call asked for
+    WorkflowState workflowStatus();  // The status of the workflow that already holds the ID
+    String workflowName();           // The name of the workflow that already holds the ID
+}
+```
+
+Thrown when a workflow is started or enqueued with [`WorkflowIdReusePolicy.REJECT`](./workflows-steps.md#startworkflowoptions) and a workflow with its ID already exists, in any status.
+The existing workflow is left unchanged, and no workflow is created.
+A child workflow refused this way is recorded at its parent's step, so a recovered parent throws it again.
 
 ---
 
@@ -26544,15 +26762,15 @@ new QueueOptions()
 ```
 
 **Parameters:**
-- **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit.
-- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit.
+- **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit. `0` pauses the queue: nothing is dequeued from it until an update raises the limit.
+- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit. `0` pauses the queue on every process until an update raises the limit.
 - **rateLimit**: A limit on the maximum number of workflows (`max`) that may be started in a given `period`. Pass `null` for both to remove the limit. On [`updateQueue`](#dbosupdatequeue), `withRateLimitMax` or `withRateLimitPeriod` changes one half of the stored limit and keeps the other.
 - **partitionConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit.
 - **partitionWorkerConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit.
 - **partitionRateLimit**: A limit on the maximum number of workflows (`max`) that may be started from any one partition in a given `period`. Pass `null` for both to remove the limit. On [`updateQueue`](#dbosupdatequeue), `withPartitionRateLimitMax` or `withPartitionRateLimitPeriod` changes one half of the stored limit and keeps the other.
 - **priorityEnabled** *(deprecated since 1.1)*: Ignored. Every queue dequeues workflows in priority order, so priority needs no queue configuration, and the queue is always stored as a priority queue.
 - **pollingInterval**: How often DBOS polls the database for new workflows to dequeue. Defaults to 1 second.
-- **partitionQueue** *(deprecated since 1.1)*: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) with the queue-wide limits (`concurrency`, `workerConcurrency`, `rateLimit`) enforced per partition rather than across the queue. Set a per-partition limit instead. If a per-partition limit is also set at registration, this flag has no effect.
+- **partitionQueue** *(deprecated since 1.1)*: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) with the queue-wide limits (`concurrency`, `workerConcurrency`, `rateLimit`) enforced per partition rather than across the queue. Set a per-partition limit instead. Setting it to `true` together with a per-partition limit throws `IllegalArgumentException`.
 
 Passing `null` to a builder clears that limit on `updateQueue`.
 While the deprecated `Field` overloads below exist, a bare `null` is ambiguous and doesn't compile, so write it with a cast: `withConcurrency((Integer) null)`.
@@ -26566,11 +26784,18 @@ Partitioning a queue that already has enqueued workflows strands them: they have
 Workflows stranded this way can be moved to a queue that is not partitioned with [`dbos.resumeWorkflow(workflowId, queueName)`](./methods.md#resumeworkflow).
 
 The limits are validated when a queue is registered or updated, and an invalid combination throws `IllegalArgumentException`:
-- Every concurrency limit, rate-limit `max`, rate-limit `period`, and `pollingInterval` must be greater than zero.
+- `concurrency` and `workerConcurrency` must not be negative; `0` pauses the queue.
+- `partitionConcurrency`, `partitionWorkerConcurrency`, and every rate-limit `max` must be greater than zero.
+- Every rate-limit `period` and the `pollingInterval` must be at least 1 millisecond.
+- The deprecated `partitionQueue` flag can't be `true` together with a per-partition limit.
 - A rate limit's `max` and `period` go together: registering a queue with only one of them set, or an update that would leave only one set, throws. Pass `null` for both to register without a limit or to clear one. `withRateLimitMax` and `withRateLimitPeriod` (and their partition counterparts) are only useful on `updateQueue` for a queue that already has a stored limit.
 - A concurrency limit must be less than or equal to any wider limit that is also set; limits that are not set are not compared:
   - `workerConcurrency` and `partitionConcurrency` must each be less than or equal to `concurrency`.
   - `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`, `workerConcurrency`, and `concurrency`.
+
+  So `concurrency` can be set to 0 only when `workerConcurrency` is unset or 0 and no per-partition concurrency limit is set, and `workerConcurrency` can be set to 0 only when `partitionWorkerConcurrency` is unset. To pause a queue, set `workerConcurrency` to 0, after clearing `partitionWorkerConcurrency` if it's set.
+
+Limits are checked only when a queue is written. A queue already stored with values these rules refuse, for example by another DBOS SDK or an older release, still loads in `findQueue` and `listQueues` and keeps running; a stored limit of zero or less leaves no room, and a stored `pollingInterval` of zero or less is read as the 1-second default.
 
 ### QueueConflictResolution
 
@@ -26757,12 +26982,19 @@ All properties are in the `dbos.*` namespace.
 | `dbos.datasource.schema` | `String` | `dbos` | Schema for DBOS system tables. |
 | `dbos.datasource.migrate` | `boolean` | `true` | Whether to run database migrations on startup. |
 
+When `dbos.datasource.url` is unset, the starter passes the application's `DataSource` bean to DBOS with [`withDataSource`](./lifecycle.md#dbosconfig), so DBOS doesn't create a pool of its own and doesn't apply its 1-minute [system database idle-transaction timeout](./lifecycle.md#dbosconfig).
+To keep a stalled session from holding a workflow's row lock, set `idle_in_transaction_session_timeout` on that pool yourself, for example with `spring.datasource.hikari.connection-init-sql=SET idle_in_transaction_session_timeout = '1min'`.
+This also applies to your application's own transactions on that pool.
+
 #### DBOS Conductor
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `dbos.conductor.key` | `String` | — | DBOS Conductor API key. |
 | `dbos.conductor.domain` | `String` | — | DBOS Conductor domain. |
+| `dbos.conductor.metadata-only-mode` | `boolean` | `false` | Send Conductor only workflow metadata, never workflow data. See [`withConductorMetadataOnlyMode`](./lifecycle.md#dbosconfig). |
+
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact-spring-boot-starter`. See [Connecting to Conductor](../../conductor/overview.md#connecting-to-conductor).
 
 #### Admin Server
 
@@ -26782,7 +27014,7 @@ All properties are in the `dbos.*` namespace.
 | `dbos.executor-id` | `String` | — | Unique executor ID for this instance. |
 | `dbos.enable-patching` | `boolean` | `false` | Enable [workflow patching](./methods.md#patch). |
 | `dbos.listen-queues` | `List<String>` | `[]` | Queues this executor should dequeue from. |
-| `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval. |
+| `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval of 30 seconds. Must be at least 1 millisecond; see [`withSchedulerPollingInterval`](./lifecycle.md#dbosconfig). |
 | `dbos.use-listen-notify` | `boolean` | `true` | Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery. Automatically set to `false` when CockroachDB is detected. |
 
 ### DBOSConfigCustomizer
@@ -27171,6 +27403,12 @@ new StartWorkflowOptions(Queue queue)
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`** - What to do when a workflow with this workflow's ID already exists, whatever its status:
+  - `WorkflowIdReusePolicy.RETURN_EXISTING` (the default, also chosen by `null`): return a handle to the existing workflow instead of starting another.
+  - `WorkflowIdReusePolicy.REJECT`: throw [`DBOSWorkflowIdInUseException`](./methods.md#dbosworkflowidinuseexception) and leave the existing workflow unchanged.
+
+  Applies to starting and to enqueueing. See [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+
 - **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
   `withQueue(Queue queue)` is *(deprecated since 1.1)*; pass the queue's name instead.
 
@@ -27201,14 +27439,14 @@ An explicit timeout and deadline cannot both be set: building a `StartWorkflowOp
 
 - **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority. Priority works on every queue; no queue configuration is needed.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception. On a partitioned queue, the deduplication ID applies across the whole queue, whatever the partition key; to deduplicate within one partition, include the partition key in the ID.
 
 - **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned, which it is when any per-partition limit (`partitionConcurrency`, `partitionWorkerConcurrency`, or `partitionRateLimit`) is set, or when it was registered with the deprecated `partitionQueue` flag. Per-partition limits apply to each partition key separately; queue-wide limits still apply to the queue as a whole, except on a queue registered with the deprecated `partitionQueue` flag, where they apply to each partition instead. See [Partitioning Queues](../tutorials/queue-tutorial.md#partitioning-queues).
 
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.
 - Partition keys cannot be used with non-partitioned queues.
-- Partition keys and deduplication IDs cannot be used together.
+- A deduplication ID used with a partition key is deduplicated across the whole queue, not within the partition.
 :::
 
 - **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued. Only applicable when enqueuing.
@@ -27359,6 +27597,9 @@ Shortcut for `new WorkflowOptions().withWorkflowId(workflowId)`.
 **Methods:**
 
 - **`withWorkflowId(String workflowId)`** - Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow run.
+The first workflow called in the block, including one called inside a nested block that sets no ID of its own, takes the ID; later workflows in the block get IDs of their own.
+
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`** - What to do when a workflow with the block's ID already exists: return it (`RETURN_EXISTING`, the default) or throw [`DBOSWorkflowIdInUseException`](./methods.md#dbosworkflowidinuseexception) (`REJECT`). The policy applies to whichever workflow takes the block's ID, whether called directly, started, or enqueued; a call that gives its own ID, or its own policy, isn't governed by it. Setting a policy without a workflow ID makes `setContext()` throw `IllegalArgumentException`. [`debounce`](./methods.md#debouncerdebounce) inside a block with `REJECT` throws `IllegalArgumentException`, because the debouncer decides how its workflow starts.
 
 - **`withTimeout(Timeout timeout)`** / **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for all enclosed workflow invocations. When the timeout expires, the workflow **and all its children** are cancelled. Timeouts are **start-to-completion**: the timeout does not begin until the workflow starts execution. Timeouts are also **durable**: they persist across restarts. Child workflows inherit the workflow's deadline, not its timeout.
 
@@ -27387,7 +27628,7 @@ An explicit timeout and deadline cannot both be set.
 A step factory commits your database work and the DBOS step checkpoint in the **same transaction**, making the step exactly-once even for database writes.
 On workflow retry, the recorded output is replayed without re-executing the callback.
 
-Step factories must be constructed before `dbos.launch()`. Each constructor immediately opens a connection to verify the datasource is PostgreSQL and to create the `tx_step_outputs` table in the target schema if it does not already exist.
+Step factories must be constructed before `dbos.launch()`; constructing one after launch throws `IllegalStateException`. DBOS registers every factory at launch so that it can delete the factory's checkpoints when a workflow finishes or is [rewound](./methods.md#rewindworkflow). Each constructor immediately opens a connection to verify the datasource is PostgreSQL and to create the `tx_step_outputs` table in the target schema if it does not already exist.
 
 **Common constructor parameters:**
 - **dbos**: The DBOS runtime instance.
@@ -27479,7 +27720,11 @@ new JdbiStepFactory(DBOS dbos, Jdbi jdbi)
 new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema)
 new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DBOSSerializer serializer)
 new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema, DBOSSerializer serializer)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DataSource dataSource)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DataSource dataSource, String schema, DBOSSerializer serializer)
 ```
+
+- **dataSource**: The pool `jdbi` was created from, as in `Jdbi.create(dataSource)`. Jdbi doesn't expose its pool, so pass it when it may be the pool the DBOS system database uses (as with the Spring Boot starter's defaults). DBOS then checks that a step's workflow execution still owns the workflow on the step's own connection, instead of taking a second connection from the same pool.
 
 ##### inStep
 
@@ -27561,7 +27806,7 @@ The Kotlin extensions are included in the main `transact` artifact alongside the
 
 ```kotlin
 dependencies {
-    implementation("dev.dbos:transact:1.2.0")
+    implementation("dev.dbos:transact:1.3.0")
 }
 ```
 
@@ -27572,7 +27817,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -27985,7 +28230,12 @@ dbos.updateQueue("example-queue", new QueueOptions().withConcurrency(20));
 
 // Change its rate limit
 dbos.updateQueue("example-queue", new QueueOptions().withRateLimit(25, 30, TimeUnit.SECONDS));
+
+// Pause the queue: no process dequeues from it until the limit is raised again
+dbos.updateQueue("example-queue", new QueueOptions().withWorkerConcurrency(0));
 ```
+
+Setting `concurrency` to 0 also pauses a queue, but a narrower limit can't exceed a wider one, so that works only when `workerConcurrency` and the per-partition concurrency limits are unset (or `workerConcurrency` is also 0). See [`QueueOptions`](../reference/queues.md#queueoptions).
 
 :::warning
 If your application calls `dbos.registerQueue` on startup, the next process to start can overwrite settings you applied at runtime via `updateQueue`.
@@ -28160,7 +28410,7 @@ When both are set, each per-partition concurrency limit must be less than or equ
 See [`QueueOptions`](../reference/queues.md#queueoptions) for the full set of rules.
 
 :::note
-[Deduplication](#deduplication) is not supported on partitioned queues.
+On a partitioned queue, a [deduplication](#deduplication) ID applies across the whole queue, not within one partition.
 :::
 
 :::info Deprecated `partitionQueue` option
@@ -28176,6 +28426,9 @@ At any given time, only one workflow with a specific deduplication ID can be enq
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
+
+On a [partitioned queue](#partitioning-queues), a deduplication ID applies across the whole queue: while a workflow holds it, enqueueing another workflow with the same ID fails whatever its partition key.
+To deduplicate within one partition, include the partition key in the ID, as in `partitionKey + ":" + userID`.
 
 **Example syntax:**
 
@@ -28400,7 +28653,7 @@ that illustrates the features described in this documentation.
 
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact-spring-boot-starter:1.2.0")
+  implementation("dev.dbos:transact-spring-boot-starter:1.3.0")
 }
 ```
 
@@ -28411,7 +28664,7 @@ dependencies {
   <dependency>
     <groupId>dev.dbos</groupId>
     <artifactId>transact-spring-boot-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
   </dependency>
 </dependencies>
 ```
@@ -28678,6 +28931,9 @@ implementation("dev.dbos:transact-jdbi-step-factory:<version>")
 
 Construct with a `Jdbi` instance and call `inStep` (with return value) or `useStep` (void) inside workflows.
 The lambda receives an open `Handle` — do **not** call `commit` or `close` on it.
+
+If the `Jdbi` was created from the same pool as the DBOS system database, as it is by default with the Spring Boot starter, also pass that pool: `new JdbiStepFactory(dbos, Jdbi.create(dataSource), dataSource)`.
+DBOS then checks that the step's workflow execution still owns the workflow on the step's own connection, instead of taking a second connection from the pool while the step holds one.
 
 ```java
 JdbiStepFactory factory = new JdbiStepFactory(dbos, jdbi);
@@ -29832,6 +30088,10 @@ dbos.cancelWorkflows(workflowIds, true);
 
 When a workflow is cancelled while it is waiting inside [`recv`](../reference/methods.md#recv) or [`getEvent`](../reference/methods.md#getevent), a `DBOSWorkflowCancelledException` is thrown to abort it immediately rather than waiting for the timeout to expire.
 
+A workflow can't cancel, resume, or delete itself.
+Called from inside a workflow, or from one of its steps, `cancelWorkflow`, `resumeWorkflow`, and `deleteWorkflow` (and their list forms) throw `IllegalArgumentException` when the calling workflow is among their targets, and change nothing.
+A workflow that wants to stop should return or throw instead.
+
 ### Resuming Workflows
 
 You can resume a workflow from its last completed step from the web UI, programmatically via [`dbos.resumeWorkflow`](../reference/methods.md#resumeworkflow), or using the [`DBOSClient`](../reference/client.md#resumeworkflow).
@@ -29848,6 +30108,35 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 You can fork a workflow programmatically using [`dbos.forkWorkflow`](../reference/methods.md#forkworkflow) or using the [`DBOSClient`](../reference/client.md#forkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's graph visualization:
+
+### Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams.
+Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
+
+Rewinding doesn't modify a workflow's child workflows, even those started after the selected step: they keep their IDs, so the rewound workflow gets the existing children back instead of starting new ones. To re-run a child, rewind it separately.
+
+You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
+
+You can rewind a workflow programmatically using [`dbos.rewindWorkflow`](../reference/methods.md#rewindworkflow) or using the [`DBOSClient`](../reference/client.md#rewindworkflow):
+
+```java
+// Re-execute the workflow from step 3, keeping its workflow ID
+WorkflowHandle<String, Exception> handle = dbos.rewindWorkflow(workflowId, 3);
+String result = handle.getResult();
+
+// Rewind onto a new application version, on a specific queue
+dbos.rewindWorkflow(workflowId, 3,
+    new RewindOptions().withApplicationVersion("2.0.0").withQueue("recovery-queue"));
+```
+
+Rewinding from the application also deletes the [step factories'](../reference/workflows-steps.md#step-factories) transaction checkpoints from the selected step on, so those transactions run again. A rewind through `DBOSClient` can't reach your application database, so it leaves any it finds. A workflow that finished on 1.3 has none left, because they are deleted when it finishes, so its transactions run again either way. A workflow that was cancelled, or that finished before you upgraded to 1.3, still has them, and a client rewind replays those transactional steps' recorded results.
 
 ### Workflow Attributes
 
@@ -29954,7 +30243,7 @@ Here's an example:
 ```java
 public void runWorkflowExample(DBOS dbos, Example proxy) throws Exception {
   // Start the background task
-  WorkflowHandle<String, Exception> handle = dbos.startWorkflow(() -> proxy.workflow());
+  WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(() -> proxy.workflow());
 
   // Wait for the background task to complete and retrieve its result
   String result = handle.getResult();
@@ -29983,7 +30272,7 @@ For example:
 public void directInvocationExample(DBOS dbos, Example proxy) throws Exception {
   String myID = "unique-workflow-id-123";
   WorkflowOptions options = new WorkflowOptions().withWorkflowId(myID);
-  try (var _ctx = new options.setContext()) {
+  try (var _ctx = options.setContext()) {
     var result = proxy.workflow();
     System.out.println("Result: " + result);
   }
@@ -29992,13 +30281,31 @@ public void directInvocationExample(DBOS dbos, Example proxy) throws Exception {
 public void startWorkflowExample(DBOS dbos, Example proxy) throws Exception {
   String myID = "unique-workflow-id-123";
   WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
-    () -> proxy.exampleWorkflow(),
+    () -> proxy.workflow(),
     new StartWorkflowOptions().withWorkflowId(myID)
   );
   String result = handle.getResult();
   System.out.println("Result: " + result);
 }
+```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead throw an exception when a workflow ID is already in use, set `WorkflowIdReusePolicy.REJECT` with `withWorkflowIdReusePolicy` on [`StartWorkflowOptions`](../reference/workflows-steps.md#startworkflowoptions), [`WorkflowOptions`](../reference/workflows-steps.md#workflowoptions), or [`EnqueueOptions`](../reference/client.md#enqueueoptions).
+The call then throws [`DBOSWorkflowIdInUseException`](../reference/methods.md#dbosworkflowidinuseexception), whatever the existing workflow's status, and leaves that workflow unchanged:
+
+```java
+public String submitOrder(DBOS dbos, Example proxy, String orderId) {
+  try {
+    WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
+        () -> proxy.workflow(),
+        new StartWorkflowOptions()
+            .withWorkflowId("order-" + orderId)
+            .withWorkflowIdReusePolicy(WorkflowIdReusePolicy.REJECT));
+    return handle.getResult();
+  } catch (DBOSWorkflowIdInUseException e) {
+    return "already started";
+  }
+}
 ```
 
 ### Determinism
@@ -30022,10 +30329,11 @@ public String workflow() {
     // This workflow is not idempotent!
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
-        return dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return dbos.runStep(() -> stepTwo(), "stepTwo");
+        dbos.runStep(() -> stepTwo(), "stepTwo");
     }
+    return "success";
 }
 ```
 
@@ -30042,10 +30350,11 @@ public String workflow() {
     // is inside a step so it only gets executed once per workflow ID
     int randomChoice = dbos.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
-        return dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return dbos.runStep(() -> stepTwo(), "stepTwo");
+        dbos.runStep(() -> stepTwo(), "stepTwo");
     }
+    return "success";
 }
 ```
 
@@ -30156,6 +30465,161 @@ With `withMigrate(true)` (the default), `dbos.launch()` migrates the system data
 If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) before deploying the upgrade.
 [`DBOSClient`](./reference/client.md) never migrates, so upgrade clients only after an upgraded application has launched or you have run `dbosctl sysdb migrate`.
 An application or client that needs a newer schema than the system database has throws `IllegalStateException` at launch or construction.
+
+### Upgrading to v1.3
+
+Most code written against DBOS Transact Java 1.2 compiles and runs on 1.3; the exceptions, including public classes 1.3 removes and records that gain components, are listed below.
+This section covers what might require a change to your code, configuration, or operations.
+For new features, such as [rewinding workflows](./tutorials/workflow-management.md#rewinding-workflows) and the [workflow ID reuse policy](./tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), see the [release notes](https://github.com/dbos-inc/dbos-transact-java/releases).
+
+#### Conductor Requires `dev.dbos:transact-enterprise`
+
+The DBOS Conductor client is no longer part of `dev.dbos:transact`.
+It ships in a separate artifact, `dev.dbos:transact-enterprise`, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license), which DBOS loads automatically when it is on the class path.
+An application that connects to Conductor (by setting a Conductor key with `withConductorKey`, or `dbos.conductor.key` in Spring Boot) must add it at exactly the same version as `dev.dbos:transact`:
+
+**Gradle**
+
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+
+**Maven**
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+
+Without it, `dbos.launch()` throws `IllegalStateException`: "Connecting to DBOS Conductor requires dev.dbos:transact-enterprise on the class path. Add dev.dbos:transact-enterprise:1.3.0, the same version as dev.dbos:transact".
+If the two versions don't match, launch throws `IllegalStateException` naming both versions and asking you to depend on the same version of both.
+Applications that don't connect to Conductor need no change.
+
+The Conductor client now also verifies Conductor's TLS certificate against the JVM's default trust store; 1.2 accepted any certificate.
+If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md#reverse-proxy-and-tls) behind a self-signed or private-CA certificate the JVM doesn't trust, your application stops connecting: it logs the failure and keeps retrying.
+Add the certificate to a trust store and pass it with the `javax.net.ssl.trustStore` and `javax.net.ssl.trustStorePassword` system properties.
+
+#### System Database Migrations
+
+1.3 migrates the system database from version 114 to 125:
+
+| Migrations | Change |
+|---|---|
+| 115–120 | Rebuild three indexes on `workflow_status` and `operation_outputs` with `application_name` as an `INCLUDE` column |
+| 121 | Add `notifications.consumed_by_function_id`, which records the step that consumed each message, for rewind |
+| 122 | Add an index over the deadlines of active workflows, for the timeout sweep |
+| 123 | Add `workflow_status.creator_xid` |
+| 124–125 | Add two indexes on `application_versions`, for finding the latest version |
+
+On PostgreSQL, the index migrations run `CONCURRENTLY`, so they don't block writes, but on a large system database they take a while, and the launch that runs them waits for them.
+
+If you run with `withMigrate(false)`, apply the migrations with [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) (dbosctl v0.12.0 or later) before deploying 1.3.
+A 1.3 application with migrations off, and every 1.3 [`DBOSClient`](./reference/client.md), now requires every migration this release defines, not a fixed minimum, and throws `IllegalStateException` against a system database below version 125.
+Upgrade clients only after a 1.3 application has launched or you have run `dbosctl sysdb migrate`.
+`MigrationManager.MINIMUM_SYSDB_VERSION` is removed; `MigrationManager.latestMigrationVersion()` returns the required version.
+
+#### Rolling Upgrades
+
+1.2 and 1.3 servers can share a system database during a rolling upgrade, with these caveats:
+
+- **Application version.** Unless you set it with `withAppVersion`, the application version DBOS computes includes the DBOS version, so it changes with the upgrade. 1.3 servers don't recover workflows that 1.2 servers left `PENDING`, or dequeue workflows that 1.2 servers enqueued, because those keep the old version. Resuming that work doesn't change its version. If your 1.2 servers set an application version, keep the same value. If they don't, set 1.3's to the version 1.2 computed (from `listApplicationVersions()` or a workflow's status), or fork that work with `new ForkOptions().withApplicationVersion(...)` naming the 1.3 version.
+- **Ownership.** A 1.3 server fences its writes to a workflow on the execution that owns it, but a 1.2 server doesn't. During the upgrade, a 1.2 server can still write a step for a stale execution of a workflow, and the 1.3 execution that owns the workflow then fails it with `DBOSStepNondeterminismException`.
+- **Schedules.** On hosts not in UTC, schedules without `cronTimezone` run twice while 1.2 and 1.3 servers run together; see [below](#schedules-without-a-time-zone-run-in-utc).
+- **Pausing queues.** Don't pause a queue (a `concurrency` or `workerConcurrency` of 0) until every server runs 1.3. A 1.2 server can't read such a queue: its queue discovery fails on every poll, so it stops seeing new and changed queues and keeps dequeuing the paused queue with the limits it last read.
+
+#### Rolling Back to 1.2
+
+The system database needs nothing undone: 1.2 runs against a schema migrated to 125 and ignores the columns 1.3 added. Before you roll back:
+
+- **Remove `dev.dbos:transact-enterprise`.** 1.2 has its Conductor client built in, and `dev.dbos:transact-enterprise` 1.3.0 requires exactly `dev.dbos:transact` 1.3.0.
+- **Unpause your queues.** Raise any `concurrency` or `workerConcurrency` of 0 to at least 1 first, since 1.2 can't read a queue stored with a limit of 0.
+- **Keep the application version**, as on the way up.
+- **Errors only 1.3 has can't be read back by 1.2.** A workflow or step that recorded `DBOSStepNondeterminismException`, `DBOSWorkflowIdInUseException` or `DBOSDelayPastLatestInstantException` fails when 1.2 replays it or reads its result.
+- **Schedules without a time zone change tick IDs again** on hosts not in UTC, with the same caveats as on the way up.
+- **Deadlines go back to 1.2's rules.** 1.2 has no timeout sweep, so a queued or delayed workflow past its deadline waits until it is dequeued.
+
+#### Changes That May Require Action
+
+##### Schedules Without a Time Zone Run in UTC
+
+A [schedule](./tutorials/scheduled-workflows.md) without `cronTimezone` is now read in UTC everywhere.
+In 1.2 the scheduler read it in the JVM's default time zone, while backfill read it in UTC.
+If your hosts aren't in UTC, such a schedule now fires at different times: `0 0 9 * * *` on a host in New York moves from 09:00 New York time to 09:00 UTC.
+To keep the old times, set `withCronTimezone` to the zone you mean.
+
+Each tick of a schedule runs under a workflow ID built from the tick's time, and that ID also changes on a host not in UTC.
+1.2 built it in the host's time zone and 1.3 builds it in the schedule's zone, UTC without `cronTimezone`.
+So on such a host every schedule without `cronTimezone` gets new tick IDs in 1.3, even one whose firing times don't move, such as `*/5 * * * * *`:
+
+- While 1.2 and 1.3 servers run together, every tick of such a schedule runs twice, once under each ID. A schedule whose firing times move also runs at both sets of times.
+- A 1.3 backfill over ticks that 1.2 already fired runs them again.
+- On the first start after the upgrade, automatic backfill reads the schedule in UTC from a last-fired time recorded in the host's zone, and may enqueue a tick that was never due.
+
+On hosts not in UTC, if your application has such schedules, don't run 1.2 and 1.3 servers together, and don't backfill across the upgrade.
+
+##### Workflows Can't Cancel, Resume, or Delete Themselves
+
+Called from inside a workflow, or from one of its steps, [`cancelWorkflow`](./reference/methods.md#cancelworkflow), [`resumeWorkflow`](./reference/methods.md#resumeworkflow), and [`deleteWorkflow`](./reference/methods.md#deleteworkflow) (and their list forms) now throw `IllegalArgumentException` when the calling workflow is among their targets, and change nothing.
+A workflow that wants to stop should return or throw instead.
+
+##### Step Factories Must Be Created Before Launch
+
+Constructing a [step factory](./reference/workflows-steps.md#step-factories) (`JdbcStepFactory`, `JdbiStepFactory`, `JooqStepFactory`, a custom `PostgresStepFactory`, or Spring's `TransactionalStepFactory`) after `dbos.launch()` now throws `IllegalStateException`.
+DBOS needs every factory at launch so that it can delete the factory's checkpoints.
+A workflow's rows in `tx_step_outputs` are now deleted when it finishes, instead of accumulating.
+
+`JdbiStepFactory` steps no longer go through a `TransactionHandler` installed on the `Jdbi` instance, such as `SerializableTransactionRunner`.
+If the factory's `Jdbi` uses the same pool as the system database, as it does by default with the Spring Boot starter, pass that pool to the new `JdbiStepFactory(DBOS, Jdbi, DataSource)` constructor.
+
+##### Queues
+
+- `concurrency` and `workerConcurrency` may now be 0, which [pauses the queue](./reference/queues.md#queueoptions). A negative value is still refused, now with "must not be negative".
+- A polling interval or rate-limit period under 1 millisecond is now refused when a queue is registered or updated.
+- Registering or updating a queue with the deprecated `partitionQueue` flag set to `true` together with a per-partition limit now throws `IllegalArgumentException`. Remove the flag.
+- An enqueue can now set both a partition key and a deduplication ID. The deduplication ID applies across the whole queue; to deduplicate within one partition, include the partition key in the ID.
+- `listQueues` and `findQueue` now load a stored queue whose limits Java would refuse on write, such as one another SDK wrote, instead of throwing.
+
+##### Durations and Configuration
+
+- A timeout, delay, or `sleep` duration too long to store as milliseconds in a 64-bit integer now throws `IllegalArgumentException` before anything is recorded.
+- `DBOSConfig.withSchedulerPollingInterval` must be at least 1 millisecond and no more than `Long.MAX_VALUE` milliseconds; other values throw `IllegalArgumentException` when the configuration is built, instead of failing partway through launch.
+- The connection pool DBOS creates now ends a system database session left idle inside a transaction for 1 minute. Change this with [`withSystemDatabaseIdleTransactionTimeout`](./reference/lifecycle.md#dbosconfig); zero or a negative duration keeps the server's setting.
+
+##### Other Behavior Changes
+
+- Every server runs a database-side sweep that cancels its application's `ENQUEUED`, `PENDING`, and `DELAYED` workflows once their deadline passes, so a workflow no process is running is cancelled at its deadline. Deadlines, and the release of delayed workflows, now use the database's clock instead of each server's.
+- Only the execution that currently owns a workflow can write its checkpoints. An execution that lost its workflow to a cancellation, resumption, recovery, or timeout stops at its next write and returns the outcome the current owner records. If the same execution records a different result at a step it already recorded, the workflow fails with [`DBOSStepNondeterminismException`](./reference/methods.md#dbosstepnondeterminismexception); an execution that no longer owns the workflow gets a conflict instead, and stops.
+- In a nested [`WorkflowOptions`](./reference/workflows-steps.md#workflowoptions) block that sets no ID, a workflow that takes the outer block's ID now uses it up: the next workflow called in the outer block gets an ID of its own instead of the same one.
+- `WorkflowHandle.getResult()` for a workflow whose deadline passed reports what the database records: if the workflow was resumed after timing out, it waits for the resumed run, and if the workflow was deleted, it throws `DBOSNonExistentWorkflowException`.
+
+##### New Record Components
+
+`StartWorkflowOptions`, `EnqueueOptions`, `WorkflowOptions`, and the deprecated `DBOSClient.EnqueueOptions` gain `workflowIdReusePolicy`, and `DBOSConfig` gains `systemDatabaseIdleTransactionTimeout` and `conductorMetadataOnlyMode`.
+Code that calls their canonical constructors directly must pass the new values, and code compiled against 1.2 that calls them fails with `NoSuchMethodError`.
+Code that builds them from their other constructors or `DBOSConfig.defaults(...)` and the `with` methods is unaffected.
+
+##### Removed Conductor-Only Classes
+
+1.3 removes these public classes, which existed only for operations that only Conductor runs (workflow export and import, fork-from-failure, and dashboard metrics and listings) and were not part of the `DBOS` or `DBOSClient` API:
+
+- In `dev.dbos.transact.workflow`: `ExportedWorkflow`, `ForkFromFailureOptions`, `GetWorkflowAggregatesInput`, `GetStepAggregatesInput`, `WorkflowAggregateRow`, `StepAggregateRow`, `NotificationInfo`, `WorkflowEvent`, `WorkflowEventHistory`, and `WorkflowStream`.
+- In `dev.dbos.transact.database`: `MetricData`.
+- The Conductor client, `dev.dbos.transact.conductor.Conductor`, and the `dev.dbos.transact.conductor.protocol` package, which move to `dev.dbos:transact-enterprise`.
+
+---
 
 ### Upgrading to v1.2
 

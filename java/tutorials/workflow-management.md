@@ -32,6 +32,10 @@ dbos.cancelWorkflows(workflowIds, true);
 
 When a workflow is cancelled while it is waiting inside [`recv`](../reference/methods.md#recv) or [`getEvent`](../reference/methods.md#getevent), a `DBOSWorkflowCancelledException` is thrown to abort it immediately rather than waiting for the timeout to expire.
 
+A workflow can't cancel, resume, or delete itself.
+Called from inside a workflow, or from one of its steps, `cancelWorkflow`, `resumeWorkflow`, and `deleteWorkflow` (and their list forms) throw `IllegalArgumentException` when the calling workflow is among their targets, and change nothing.
+A workflow that wants to stop should return or throw instead.
+
 ## Resuming Workflows
 
 You can resume a workflow from its last completed step from the web UI, programmatically via [`dbos.resumeWorkflow`](../reference/methods.md#resumeworkflow), or using the [`DBOSClient`](../reference/client.md#resumeworkflow).
@@ -48,6 +52,35 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 You can fork a workflow programmatically using [`dbos.forkWorkflow`](../reference/methods.md#forkworkflow) or using the [`DBOSClient`](../reference/client.md#forkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's graph visualization:
+
+## Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+
+The difference between rewind and fork is that fork creates a copy of the workflow with a new ID, while rewind actually "rewinds" the original workflow (modifying its state) and keeps its original ID.
+Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams.
+Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
+
+Rewinding doesn't modify a workflow's child workflows, even those started after the selected step: they keep their IDs, so the rewound workflow gets the existing children back instead of starting new ones. To re-run a child, rewind it separately.
+
+You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
+Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
+
+You can rewind a workflow programmatically using [`dbos.rewindWorkflow`](../reference/methods.md#rewindworkflow) or using the [`DBOSClient`](../reference/client.md#rewindworkflow):
+
+```java
+// Re-execute the workflow from step 3, keeping its workflow ID
+WorkflowHandle<String, Exception> handle = dbos.rewindWorkflow(workflowId, 3);
+String result = handle.getResult();
+
+// Rewind onto a new application version, on a specific queue
+dbos.rewindWorkflow(workflowId, 3,
+    new RewindOptions().withApplicationVersion("2.0.0").withQueue("recovery-queue"));
+```
+
+Rewinding from the application also deletes the [step factories'](../reference/workflows-steps.md#step-factories) transaction checkpoints from the selected step on, so those transactions run again. A rewind through `DBOSClient` can't reach your application database, so it leaves any it finds. A workflow that finished on 1.3 has none left, because they are deleted when it finishes, so its transactions run again either way. A workflow that was cancelled, or that finished before you upgraded to 1.3, still has them, and a client rewind replays those transactional steps' recorded results.
 
 ## Workflow Attributes
 

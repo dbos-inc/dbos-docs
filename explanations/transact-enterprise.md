@@ -47,6 +47,38 @@ go get go.dbos.dev/dbos-enterprise-go
 import _ "go.dbos.dev/dbos-enterprise-go"
 ```
 
+**Java**
+
+Add the `dev.dbos:transact-enterprise` artifact, at exactly the same version as `dev.dbos:transact`.
+DBOS loads it automatically; no code change is needed.
+In Java, DBOS Transact Enterprise provides the connection to Conductor.
+
+**Gradle**
+
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+
+**Maven**
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+
 ## DBOS Transact Enterprise Keys
 
 In production, applications using DBOS Transact Enterprise should [connect to Conductor](../conductor/overview.md#connecting-to-conductor).
@@ -85,6 +117,11 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     TransactEnterpriseKey: os.Getenv("DBOS_TRANSACT_ENTERPRISE_KEY"),
 })
 ```
+
+**Java**
+
+Java needs no DBOS Transact Enterprise key.
+In Java, DBOS Transact Enterprise provides the connection to Conductor, so it needs only your [Conductor key](../conductor/overview.md#connecting-to-conductor).
 
 :::warning
 Use a DBOS Transact Enterprise key without Conductor only for development.

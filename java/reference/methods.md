@@ -652,6 +652,10 @@ void cancelWorkflows(List<String> workflowIds, boolean cancelChildren)
 
 Cancel one or more workflows. This sets their status to `CANCELLED`, removes them from their queue (if enqueued) and preempts execution (interrupting at the beginning of the next step).
 
+A workflow can't cancel itself: called from inside a workflow, or one of its steps, with the calling workflow among the targets, this throws `IllegalArgumentException` and cancels nothing.
+From a workflow body, the refusal is recorded as the call's step, so a recovered workflow throws it again.
+A workflow that wants to stop should return or throw instead.
+
 **Parameters:**
 - **cancelChildren**: If `true`, recursively cancel all descendant workflows spawned by the cancelled workflow(s). Defaults to `false`.
 
@@ -669,7 +673,9 @@ Resume one or more workflows from their last completed step. You can use this to
 Resuming a workflow sets it back to `ENQUEUED`, on `queueName` if given and otherwise on the DBOS internal queue, which has no flow control, so the workflow starts as soon as an executor dequeues it.
 This works on a workflow that is already `ENQUEUED`, so you can also use it to start an enqueued workflow without waiting on its queue, or to move a workflow stranded on a deleted or [newly partitioned](./queues.md#queueoptions) queue.
 A resumed workflow keeps its application version, so it runs only on an executor of that version.
-Workflows that already completed with `SUCCESS` or `ERROR` are left unchanged.
+Workflows that already completed with `SUCCESS` or `ERROR` are left unchanged; to run one of them again, [rewind](#rewindworkflow) or [fork](#forkworkflow) it.
+
+A workflow can't resume itself: called from inside a workflow, or one of its steps, with the calling workflow among the targets, this throws `IllegalArgumentException` and resumes nothing.
 
 **Parameters:**
 - **queueName**: The queue to enqueue the resumed workflow on. If omitted or `null`, it is enqueued on the DBOS internal queue.
@@ -684,6 +690,8 @@ void deleteWorkflows(List<String> workflowIds, boolean deleteChildren)
 ```
 
 Permanently delete one or more workflows and their recorded steps from the database.
+
+A workflow can't delete itself: called from inside a workflow, or one of its steps, with the calling workflow among the targets, this throws `IllegalArgumentException` and deletes nothing.
 
 **Parameters:**
 - **deleteChildren**: If `true`, also delete all child workflows spawned by the deleted workflow(s). Defaults to `false`.
@@ -725,6 +733,62 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
   - **timeout**: A `Duration` timeout for the forked workflow. Pass `null` for no timeout.
   - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately. Set it with `withQueue(QueueName)` or `withQueue(String)`; `withQueue(Queue)` is *(deprecated since 1.1)*.
   - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
+
+### rewindWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep, RewindOptions options)
+```
+
+```java
+public record RewindOptions(
+    String applicationVersion,
+    String queueName,
+    String queuePartitionKey
+) {
+    RewindOptions withApplicationVersion(String applicationVersion);
+    RewindOptions withQueue(QueueName queue);
+    RewindOptions withQueue(String queueName);
+    RewindOptions withQueuePartitionKey(String queuePartitionKey);
+}
+```
+
+Rewind a workflow to a specific step and run it again from that step, keeping its workflow ID.
+DBOS discards the workflow's recorded steps from `startStep` on, then re-enqueues the workflow so it re-executes from that step.
+Steps before `startStep` are not re-executed; their recorded outputs are replayed.
+The input step ID must match the `functionId` of the step returned by [`listWorkflowSteps`](#listworkflowsteps).
+A `startStep` of `0` discards the workflow's entire history, so it re-executes from the beginning.
+
+Unlike [`forkWorkflow`](#forkworkflow), which creates a new workflow with a new ID, rewind replays the workflow in place.
+Other workflows and clients can keep sending messages to, reading events from, and reading streams from the same workflow ID.
+
+Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound.
+To rewind a workflow that is still running, [cancel](#cancelworkflow) it first.
+
+Rewinding a workflow:
+- Clears its recorded output or error.
+- Discards events it set at or after `startStep`, restoring each such event to the last value it set before `startStep` (or removing it if there is none).
+- Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages. A message consumed before the system database reached migration 121 (DBOS Java 1.3), or by a DBOS version that doesn't record the consuming step, such as a 1.2 executor, can't be matched to the step that consumed it, so it stays consumed, and a replayed `recv` past `startStep` waits for a new message instead.
+- Does not modify streamed values. New values are appended to the end of existing streams, but streams closed at or after `startStep` are reopened.
+- Deletes the [step factories'](./workflows-steps.md#step-factories) transaction checkpoints from `startStep` on, so those transactions run again.
+- Does not modify child workflows, even those started at or after `startStep`. They keep their IDs, so the replay gets the existing child back instead of starting a new one. To re-run a child, rewind it separately.
+
+Called from a workflow, the rewind is recorded as a step, so a recovered caller does not rewind its target again.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow to rewind.
+- **startStep**: The first step to discard and run again. `0` re-runs the whole workflow.
+- **options**:
+  - **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
+  - **queueName**: The queue on which to enqueue the rewound workflow. Defaults to the DBOS internal queue, which dequeues it immediately.
+  - **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if the queue is partitioned.
+
+**Throws:**
+- `DBOSNonExistentWorkflowException` if the workflow does not exist.
+- `IllegalArgumentException` if `startStep` is negative, the queue does not exist, or the partition key does not match whether the queue is partitioned.
+- `IllegalStateException` if the workflow is not in a terminal state, or its status changed while it was being rewound. In the second case, retry the rewind.
+- `RuntimeException` if a step factory's checkpoints could not be deleted. The workflow is not rewound, and the rewind can be retried.
 
 ### updateWorkflowAttributes
 
@@ -939,13 +1003,15 @@ Obtain a `Debouncer` via `dbos.debouncer()`:
 `Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
 
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
-- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): a debounced workflow has no partition key, and partitioned queues don't support deduplication IDs. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): the debouncer enqueues the user workflow without a partition key. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
 - **`withPriority(Integer priority)`**: Set the priority for the user workflow. A negative priority throws `IllegalArgumentException` when set. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
 - **`withTimeout(Duration timeout)`**: Set a timeout for every user workflow this debouncer starts, timed from when that workflow is dequeued. It takes precedence over a timeout set with [`WorkflowOptions`](./workflows-steps.md#workflowoptions) around the `debounce` call, which applies when this isn't set. A zero or negative timeout throws `IllegalArgumentException` when set.
 - **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Ignored since 1.2. The debounced workflow holds its debounce key as its deduplication ID.
 
 The user workflow never inherits the calling workflow's timeout or deadline, and a deadline set with `WorkflowOptions` around the call is ignored, because the workflow may start long after the call.
+
+The debouncer decides how its workflow starts, so `debounce` inside a [`WorkflowOptions`](./workflows-steps.md#workflowoptions) block that sets `WorkflowIdReusePolicy.REJECT` throws `IllegalArgumentException`. The block's workflow ID is used up by the refused call.
 
 ### debouncer.debounce
 
@@ -1182,3 +1248,41 @@ This covers two different situations, which `sqlState()` distinguishes:
 - **`sqlState()`**: The SQLSTATE of the underlying failure, or `null` if it carried none.
 - **`getCause()`**: The underlying `SQLException`. It is the only level of wrapping, so the database's own exception is always one level down.
 - **`databaseException()`** *(deprecated since 1.1)*: Returns the same object as `getCause()`; use `getCause()` instead.
+
+### DBOSStepNondeterminismException
+
+```java
+public class DBOSStepNondeterminismException extends RuntimeException {
+    String workflowId();  // The ID of the nondeterministic workflow
+    int stepId();         // The step that was recorded twice
+}
+```
+
+Thrown when an execution of a workflow records a step that it already recorded, with a different result.
+Only the execution that owns a workflow can record its steps, so the earlier result is that execution's own: the workflow function is not deterministic.
+The exception is recorded as the workflow's error.
+An execution that has lost its workflow to a cancellation, resumption, recovery, or timeout is instead stopped at its next write, records nothing, and returns the outcome the current owner records.
+
+### DBOSDelayPastLatestInstantException
+
+```java
+public class DBOSDelayPastLatestInstantException extends IllegalArgumentException
+```
+
+Thrown when a workflow is enqueued with a delay that carries the current time past the largest instant that 64-bit epoch milliseconds can hold, so its release time can't be stored.
+Nothing is enqueued.
+Whether a delay does so depends on the clock, so a workflow starting a child records this refusal at its step, and a recovery throws it again.
+
+### DBOSWorkflowIdInUseException
+
+```java
+public class DBOSWorkflowIdInUseException extends RuntimeException {
+    String workflowId();             // The ID the refused call asked for
+    WorkflowState workflowStatus();  // The status of the workflow that already holds the ID
+    String workflowName();           // The name of the workflow that already holds the ID
+}
+```
+
+Thrown when a workflow is started or enqueued with [`WorkflowIdReusePolicy.REJECT`](./workflows-steps.md#startworkflowoptions) and a workflow with its ID already exists, in any status.
+The existing workflow is left unchanged, and no workflow is created.
+A child workflow refused this way is recorded at its parent's step, so a recovered parent throws it again.

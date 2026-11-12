@@ -15,7 +15,7 @@ that illustrates the features described in this documentation.
 
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact-spring-boot-starter:1.2.0")
+  implementation("dev.dbos:transact-spring-boot-starter:1.3.0")
 }
 ```
 
@@ -26,7 +26,7 @@ dependencies {
   <dependency>
     <groupId>dev.dbos</groupId>
     <artifactId>transact-spring-boot-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
   </dependency>
 </dependencies>
 ```

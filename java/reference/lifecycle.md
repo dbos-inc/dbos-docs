@@ -55,10 +55,14 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`withDatabaseSchema(String schema)`**: PostgreSQL database schema for system database tables. Defaults to `dbos`.
 
 - **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
+If false, `dbos.launch()` checks that the system database has every migration this version of DBOS defines (version 125 for 1.3) and throws `IllegalStateException` otherwise. A schema migrated further by a newer DBOS release is accepted. See [Upgrading a Running Application](../upgrading.md#upgrading-a-running-application).
 
 - **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../conductor/overview.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS Console](https://console.dbos.dev).
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact on the class path, at the same version as `dev.dbos:transact`; without it, `dbos.launch()` throws `IllegalStateException`. See [Connecting to Conductor](../../conductor/overview.md#connecting-to-conductor).
 
 - **`withConductorDomain(String domain)`**: The domain of the DBOS Conductor instance to connect to. Only needed when using a self-hosted Conductor.
+
+- **`withConductorMetadataOnlyMode(boolean enable)`**: If true, the application sends Conductor only workflow metadata, never workflow data: no inputs, outputs, errors, step outputs, events, notifications, streams, schedule context, exports, or imports. See [Metadata-Only Mode](../../conductor/overview.md#metadata-only-mode). Defaults to false. Has no effect without Conductor.
 
 - **`withConductorExecutorMetadata(Map<String, Object> metadata)`**: Arbitrary key-value metadata attached to this executor and reported to Conductor.
 
@@ -80,9 +84,11 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withListenQueue(Queue queue)`** / **`withListenQueues(Queue... queues)`** *(deprecated since 1.1)*: Equivalent to the `QueueName` overloads, taking the name of each `Queue`.
 
-- **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds.
+- **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds (`DBOSConfig.DEFAULT_SCHEDULER_POLLING_INTERVAL`); `null` means the default. The interval must be at least 1 millisecond and no more than `Long.MAX_VALUE` milliseconds: a value outside that range, including zero or a negative duration, throws `IllegalArgumentException` when the configuration is built.
 
 - **`withUseListenNotify(boolean enable)`**: Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery (e.g. `recv`, `getEvent`). Defaults to `true`. Automatically set to `false` when CockroachDB is detected, since CockroachDB does not support `LISTEN`/`NOTIFY`. Set this to `false` explicitly if your PostgreSQL configuration does not support it.
+
+- **`withSystemDatabaseIdleTransactionTimeout(Duration timeout)`**: How long PostgreSQL lets a connection from the system database pool DBOS creates stay idle inside a transaction before ending the session and releasing its locks. This keeps a stalled session from holding a workflow's row lock, which would block its cancellation, resumption, and recovery. Defaults to 1 minute; `null` means the default. Pass zero or a negative duration to leave the server's setting. Not applied to a `DataSource` you supply with `withDataSource`, or when the database URL already sets `idle_in_transaction_session_timeout`. Must not exceed `Integer.MAX_VALUE` milliseconds.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
 
@@ -165,6 +171,7 @@ Deprecated for removal: use [`dbos.findQueue`](./queues.md#dbosfindqueue), which
 
 DBOS must serialize data such as workflow inputs and outputs and step return values to store it in the system database.
 By default, data is serialized with Jackson (format name `java_jackson`), but you can optionally supply a custom serializer through DBOS configuration.
+DBOS's own steps, such as a `cancelWorkflow` called from a workflow, record their errors in the default `java_jackson` format whatever serializer is configured, so a replay rethrows the same exception type; only `getResult` keeps the configured serializer, since its error is the awaited workflow's own.
 A custom serializer must implement the `DBOSSerializer` interface:
 
 ```java

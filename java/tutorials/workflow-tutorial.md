@@ -69,7 +69,7 @@ Here's an example:
 ```java
 public void runWorkflowExample(DBOS dbos, Example proxy) throws Exception {
   // Start the background task
-  WorkflowHandle<String, Exception> handle = dbos.startWorkflow(() -> proxy.workflow());
+  WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(() -> proxy.workflow());
 
   // Wait for the background task to complete and retrieve its result
   String result = handle.getResult();
@@ -98,7 +98,7 @@ For example:
 public void directInvocationExample(DBOS dbos, Example proxy) throws Exception {
   String myID = "unique-workflow-id-123";
   WorkflowOptions options = new WorkflowOptions().withWorkflowId(myID);
-  try (var _ctx = new options.setContext()) {
+  try (var _ctx = options.setContext()) {
     var result = proxy.workflow();
     System.out.println("Result: " + result);
   }
@@ -107,13 +107,31 @@ public void directInvocationExample(DBOS dbos, Example proxy) throws Exception {
 public void startWorkflowExample(DBOS dbos, Example proxy) throws Exception {
   String myID = "unique-workflow-id-123";
   WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
-    () -> proxy.exampleWorkflow(),
+    () -> proxy.workflow(),
     new StartWorkflowOptions().withWorkflowId(myID)
   );
   String result = handle.getResult();
   System.out.println("Result: " + result);
 }
+```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead throw an exception when a workflow ID is already in use, set `WorkflowIdReusePolicy.REJECT` with `withWorkflowIdReusePolicy` on [`StartWorkflowOptions`](../reference/workflows-steps.md#startworkflowoptions), [`WorkflowOptions`](../reference/workflows-steps.md#workflowoptions), or [`EnqueueOptions`](../reference/client.md#enqueueoptions).
+The call then throws [`DBOSWorkflowIdInUseException`](../reference/methods.md#dbosworkflowidinuseexception), whatever the existing workflow's status, and leaves that workflow unchanged:
+
+```java
+public String submitOrder(DBOS dbos, Example proxy, String orderId) {
+  try {
+    WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
+        () -> proxy.workflow(),
+        new StartWorkflowOptions()
+            .withWorkflowId("order-" + orderId)
+            .withWorkflowIdReusePolicy(WorkflowIdReusePolicy.REJECT));
+    return handle.getResult();
+  } catch (DBOSWorkflowIdInUseException e) {
+    return "already started";
+  }
+}
 ```
 
 ## Determinism
@@ -137,10 +155,11 @@ public String workflow() {
     // This workflow is not idempotent!
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
-        return dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return dbos.runStep(() -> stepTwo(), "stepTwo");
+        dbos.runStep(() -> stepTwo(), "stepTwo");
     }
+    return "success";
 }
 ```
 
@@ -157,10 +176,11 @@ public String workflow() {
     // is inside a step so it only gets executed once per workflow ID
     int randomChoice = dbos.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
-        return dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return dbos.runStep(() -> stepTwo(), "stepTwo");
+        dbos.runStep(() -> stepTwo(), "stepTwo");
     }
+    return "success";
 }
 ```
 

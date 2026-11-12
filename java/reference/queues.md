@@ -126,15 +126,15 @@ new QueueOptions()
 ```
 
 **Parameters:**
-- **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit.
-- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit.
+- **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit. `0` pauses the queue: nothing is dequeued from it until an update raises the limit.
+- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit. `0` pauses the queue on every process until an update raises the limit.
 - **rateLimit**: A limit on the maximum number of workflows (`max`) that may be started in a given `period`. Pass `null` for both to remove the limit. On [`updateQueue`](#dbosupdatequeue), `withRateLimitMax` or `withRateLimitPeriod` changes one half of the stored limit and keeps the other.
 - **partitionConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently across all DBOS processes. Pass `null` to remove the limit.
 - **partitionWorkerConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently within a single DBOS process. Pass `null` to remove the limit.
 - **partitionRateLimit**: A limit on the maximum number of workflows (`max`) that may be started from any one partition in a given `period`. Pass `null` for both to remove the limit. On [`updateQueue`](#dbosupdatequeue), `withPartitionRateLimitMax` or `withPartitionRateLimitPeriod` changes one half of the stored limit and keeps the other.
 - **priorityEnabled** *(deprecated since 1.1)*: Ignored. Every queue dequeues workflows in priority order, so priority needs no queue configuration, and the queue is always stored as a priority queue.
 - **pollingInterval**: How often DBOS polls the database for new workflows to dequeue. Defaults to 1 second.
-- **partitionQueue** *(deprecated since 1.1)*: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) with the queue-wide limits (`concurrency`, `workerConcurrency`, `rateLimit`) enforced per partition rather than across the queue. Set a per-partition limit instead. If a per-partition limit is also set at registration, this flag has no effect.
+- **partitionQueue** *(deprecated since 1.1)*: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) with the queue-wide limits (`concurrency`, `workerConcurrency`, `rateLimit`) enforced per partition rather than across the queue. Set a per-partition limit instead. Setting it to `true` together with a per-partition limit throws `IllegalArgumentException`.
 
 Passing `null` to a builder clears that limit on `updateQueue`.
 While the deprecated `Field` overloads below exist, a bare `null` is ambiguous and doesn't compile, so write it with a cast: `withConcurrency((Integer) null)`.
@@ -148,11 +148,18 @@ Partitioning a queue that already has enqueued workflows strands them: they have
 Workflows stranded this way can be moved to a queue that is not partitioned with [`dbos.resumeWorkflow(workflowId, queueName)`](./methods.md#resumeworkflow).
 
 The limits are validated when a queue is registered or updated, and an invalid combination throws `IllegalArgumentException`:
-- Every concurrency limit, rate-limit `max`, rate-limit `period`, and `pollingInterval` must be greater than zero.
+- `concurrency` and `workerConcurrency` must not be negative; `0` pauses the queue.
+- `partitionConcurrency`, `partitionWorkerConcurrency`, and every rate-limit `max` must be greater than zero.
+- Every rate-limit `period` and the `pollingInterval` must be at least 1 millisecond.
+- The deprecated `partitionQueue` flag can't be `true` together with a per-partition limit.
 - A rate limit's `max` and `period` go together: registering a queue with only one of them set, or an update that would leave only one set, throws. Pass `null` for both to register without a limit or to clear one. `withRateLimitMax` and `withRateLimitPeriod` (and their partition counterparts) are only useful on `updateQueue` for a queue that already has a stored limit.
 - A concurrency limit must be less than or equal to any wider limit that is also set; limits that are not set are not compared:
   - `workerConcurrency` and `partitionConcurrency` must each be less than or equal to `concurrency`.
   - `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`, `workerConcurrency`, and `concurrency`.
+
+  So `concurrency` can be set to 0 only when `workerConcurrency` is unset or 0 and no per-partition concurrency limit is set, and `workerConcurrency` can be set to 0 only when `partitionWorkerConcurrency` is unset. To pause a queue, set `workerConcurrency` to 0, after clearing `partitionWorkerConcurrency` if it's set.
+
+Limits are checked only when a queue is written. A queue already stored with values these rules refuse, for example by another DBOS SDK or an older release, still loads in `findQueue` and `listQueues` and keeps running; a stored limit of zero or less leaves no room, and a stored `pollingInterval` of zero or less is read as the 1-second default.
 
 ## QueueConflictResolution
 
