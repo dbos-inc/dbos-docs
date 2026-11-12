@@ -89,7 +89,7 @@ dbos.rewindWorkflow(workflowId, 3,
     new RewindOptions().withApplicationVersion("2.0.0").withQueue("recovery-queue"));
 ```
 
-Rewinding from the application also deletes the [step factories'](../reference/workflows-steps.md#step-factories) transaction checkpoints from the selected step on, so those transactions run again. A rewind through `DBOSClient` can't reach your application database, so it leaves them, and those transactional steps replay their recorded results.
+Rewinding from the application also deletes the [step factories'](../reference/workflows-steps.md#step-factories) transaction checkpoints from the selected step on, so those transactions run again. A rewind through `DBOSClient` can't reach your application database, so it leaves any it finds. A workflow that finished on 1.3 has none left, because they are deleted when it finishes, so its transactions run again either way. A workflow that was cancelled, or that finished before you upgraded to 1.3, still has them, and a client rewind replays those transactional steps' recorded results.
 
 ## Workflow Attributes
 

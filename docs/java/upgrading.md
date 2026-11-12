@@ -54,6 +54,10 @@ Without it, `dbos.launch()` throws `IllegalStateException`: "Connecting to DBOS 
 If the two versions don't match, launch throws `IllegalStateException` naming both versions and asking you to depend on the same version of both.
 Applications that don't connect to Conductor need no change.
 
+The Conductor client now also verifies Conductor's TLS certificate against the JVM's default trust store; 1.2 accepted any certificate.
+If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md#reverse-proxy-and-tls) behind a self-signed or private-CA certificate the JVM doesn't trust, your application stops connecting: it logs the failure and keeps retrying.
+Add the certificate to a trust store and pass it with the `javax.net.ssl.trustStore` and `javax.net.ssl.trustStorePassword` system properties.
+
 ### System Database Migrations
 
 1.3 migrates the system database from version 114 to 125:
