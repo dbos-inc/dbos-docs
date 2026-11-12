@@ -80,7 +80,7 @@ The main addition to any project is additional dependencies.
 For **Gradle** (`build.gradle`):
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:1.2.0'
+    implementation 'dev.dbos:transact:1.3.0'
 }
 ```
 
@@ -90,7 +90,7 @@ For **Maven** (`pom.xml`):
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -414,6 +414,8 @@ Create workflow options with all fields set to their defaults.
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`** - What to do when a workflow with this ID already exists: `RETURN_EXISTING` (the default) returns a handle to it; `REJECT` throws `DBOSWorkflowIdInUseException` and leaves it unchanged.
+
 - **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue. The queue must be registered first. `new StartWorkflowOptions(QueueName queue)` is equivalent; do NOT use `new StartWorkflowOptions(String)` for a queue, because its `String` argument is a workflow ID.
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
@@ -426,7 +428,7 @@ Create workflow options with all fields set to their defaults.
 
 - Do NOT use `withDeadline`; it is deprecated since 1.2. Use `withTimeout`.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. On a partitioned queue, it applies across the whole queue, whatever the partition key.
 
 - **`withPriority(Integer priority)`** - May only be used when enqueuing. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority.
 
@@ -1174,7 +1176,7 @@ dbos.registerQueue("tenant-queue",
 ```
 
 When both are set, each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`; limits that are not set are not compared.
-Deduplication is not supported on partitioned queues: setting both `withQueuePartitionKey` and `withDeduplicationId` throws `IllegalArgumentException`.
+A deduplication ID on a partitioned queue applies across the whole queue, whatever the partition key. To deduplicate within one partition, include the partition key in the ID.
 
 :::warning
 Workflows already on a queue without a partition key are never dequeued once the queue becomes partitioned.
@@ -1573,6 +1575,8 @@ void cancelWorkflows(List<String> workflowIds)
 
 Cancel one or more workflows. Sets status to `CANCELLED`, removes from queue, and preempts execution at the next step boundary.
 
+A workflow can't cancel, resume, or delete itself: called from inside a workflow or one of its steps with the calling workflow among the targets, `cancelWorkflow`, `resumeWorkflow`, and `deleteWorkflow` throw `IllegalArgumentException` and change nothing. To stop a workflow from inside, return or throw.
+
 ### resumeWorkflow
 
 ```java
@@ -1582,6 +1586,15 @@ List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds
 ```
 
 Resume one or more workflows from their last completed step. Optionally re-enqueue on a queue instead of starting immediately.
+
+### rewindWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep, RewindOptions options)
+```
+
+Re-run a finished workflow (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) in place, under the same workflow ID, from `startStep` (`0` re-runs it all). Steps before `startStep` replay their recorded outputs; from `startStep` on, recorded steps, events set, and messages consumed are discarded, as is every message sent to the workflow that it hasn't consumed yet, and the workflow is re-enqueued. Child workflows are left alone and keep their IDs: a replayed child start returns the existing child. Cancel a running workflow before rewinding it. `RewindOptions` sets the application version, queue, and partition key: `new RewindOptions().withApplicationVersion("2.0.0").withQueue("q")`. Use fork instead when you want a new workflow ID.
 
 ### forkWorkflow
 
@@ -1655,9 +1668,11 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withMigrate(boolean enable)`**: If true, apply migrations to the system database on launch. Defaults to true. If false, launch only checks that the system database schema is new enough, and throws if it isn't; migrate it out-of-band with `dbosctl sysdb migrate`.
 
-- **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, the application is connected to Conductor.
+- **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, the application is connected to Conductor. Connecting requires the `dev.dbos:transact-enterprise` artifact at the same version as `dev.dbos:transact`; without it, `dbos.launch()` throws `IllegalStateException`.
 
 - **`withConductorDomain(String domain)`**: A custom hostname for DBOS Conductor, for self-hosted Conductor.
+
+- **`withConductorMetadataOnlyMode(boolean enable)`**: If true, Conductor receives only workflow metadata, never workflow data (inputs, outputs, errors, step outputs, events, notifications, streams, schedule context, exports, or imports). Defaults to false.
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows.
 
@@ -1669,11 +1684,13 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database.
 
-- **`withSchedulerPollingInterval(Duration interval)`**: How often the scheduler polls for due scheduled workflows.
+- **`withSchedulerPollingInterval(Duration interval)`**: How often the scheduler polls for due scheduled workflows. Defaults to 30 seconds. Must be at least 1 millisecond and no more than `Long.MAX_VALUE` milliseconds; other values throw `IllegalArgumentException` when the configuration is built.
 
 - **`withUseListenNotify(boolean enable)`**: Use PostgreSQL LISTEN/NOTIFY to wake waiting workflows instead of polling. Defaults to true; set to false on databases that don't support it.
 
 - **`withNotificationCoalesceInterval(Duration interval)`**: How often batched workflow event and stream notifications are sent to other processes. Defaults to 10ms; must be at least 1ms.
+
+- **`withSystemDatabaseIdleTransactionTimeout(Duration timeout)`**: How long PostgreSQL lets a session of the system database pool DBOS creates stay idle inside a transaction before ending it and releasing its locks. Defaults to 1 minute; zero or a negative duration leaves the server's setting. Not applied to a `DataSource` supplied with `withDataSource`, or when the database URL already sets `idle_in_transaction_session_timeout`.
 
 - **`withDatabasePollingConcurrency(Integer limit)`**: The maximum number of polling reads (from waiting on a result, `recv`, `getEvent`, or reading a stream) that may run against the system database at once. Defaults to half the connection pool (at least one); a non-positive value removes the cap.
 

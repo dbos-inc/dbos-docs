@@ -15,7 +15,7 @@ The Kotlin extensions are included in the main `transact` artifact alongside the
 <TabItem value="gradle" label="Gradle">
 ```kotlin
 dependencies {
-    implementation("dev.dbos:transact:1.2.0")
+    implementation("dev.dbos:transact:1.3.0")
 }
 ```
 </TabItem>
@@ -25,7 +25,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```

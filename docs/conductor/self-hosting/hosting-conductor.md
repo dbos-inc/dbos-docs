@@ -210,6 +210,8 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 
 <TabItem value="java" label="Java">
 
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact` (see [Connecting to Conductor](../overview.md#connecting-to-conductor)).
+
 ```java
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 String conductorDomain = System.getenv("DBOS_CONDUCTOR_URL");
@@ -261,6 +263,8 @@ Without [OAuth authentication](#security), the Console has no user or organizati
 ### Reverse Proxy and TLS
 
 Place Conductor and the Console behind a reverse proxy or load balancer (such as Nginx, an ingress controller, or a cloud load balancer) that **supports WebSockets** and does **TLS termination** (Conductor and the Console serve plain HTTP). Route traffic to Conductor on port 8090 and to the Console on port 8080.
+
+Applications verify the proxy's certificate against their platform's default trust store, so use a certificate from a public certificate authority, or make your private certificate authority trusted on every application host. For Java (1.3 and later), add the certificate to a trust store and pass it with the standard `javax.net.ssl.trustStore` and `javax.net.ssl.trustStorePassword` system properties. An application that doesn't trust the certificate logs the failure and keeps retrying, but never connects.
 
 We recommend setting long idle timeouts on the proxy and on any load balancer in front of it to handle network hiccups (for example, 3600 seconds). The DBOS SDK sends periodic pings and reconnects automatically after a disconnect.
 

@@ -103,14 +103,47 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 
 <TabItem value="java" label="Java">
 
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact`:
+
+<Tabs groupId="build-tool">
+<TabItem value="gradle" label="Gradle">
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+</TabItem>
+<TabItem value="maven" label="Maven">
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+</TabItem>
+</Tabs>
+
+Then, set the Conductor key in your DBOS configuration:
+
 ```java
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
     .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-    .withConductorKey(conductorKey)
+    .withConductorKey(conductorKey);
 ```
+
+Without `dev.dbos:transact-enterprise` on the class path, `dbos.launch()` throws `IllegalStateException` when a Conductor key is set.
 </TabItem>
 
 </Tabs>
@@ -177,13 +210,13 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 <TabItem value="java" label="Java">
 
 ```java
-String appName = System.getenv("DBOS_APPLICATION_NAME")
+String appName = System.getenv("DBOS_APPLICATION_NAME");
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults(appName)
     .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-    .withConductorKey(conductorKey)
+    .withConductorKey(conductorKey);
 ```
 </TabItem>
 </Tabs>
@@ -201,6 +234,6 @@ In this mode, only workflow and step metadata (but not data, like workflow or st
 As a result, workflow data will not be visible from the console.
 Note that Conductor does not store application data in any mode.
 
-You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings), `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch), or `ConductorMetadataOnlyMode` in your [Go configuration](../golang/reference/configuration.md#connecting-to-conductor).
+You can also enable metadata-only mode from your application, so it is enforced by the application process regardless of the setting in the console, by setting `conductor_metadata_only_mode` in your [Python configuration](../python/reference/configuration.md#conductor-settings), `conductorMetadataOnlyMode` in your [TypeScript launch options](../typescript/reference/dbos-class.md#dboslaunch), `ConductorMetadataOnlyMode` in your [Go configuration](../golang/reference/configuration.md#connecting-to-conductor), or `withConductorMetadataOnlyMode(true)` in your [Java configuration](../java/reference/lifecycle.md#dbosconfig).
 
 <img src={require('@site/static/img/conductor/metadata.png').default} alt="Workflow List" width="800" className="custom-img"/>

@@ -11,6 +11,162 @@ If you run with `withMigrate(false)`, run [`dbosctl sysdb migrate`](../conductor
 [`DBOSClient`](./reference/client.md) never migrates, so upgrade clients only after an upgraded application has launched or you have run `dbosctl sysdb migrate`.
 An application or client that needs a newer schema than the system database has throws `IllegalStateException` at launch or construction.
 
+## Upgrading to v1.3
+
+Most code written against DBOS Transact Java 1.2 compiles and runs on 1.3; the exceptions, including public classes 1.3 removes and records that gain components, are listed below.
+This section covers what might require a change to your code, configuration, or operations.
+For new features, such as [rewinding workflows](./tutorials/workflow-management.md#rewinding-workflows) and the [workflow ID reuse policy](./tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), see the [release notes](https://github.com/dbos-inc/dbos-transact-java/releases).
+
+### Conductor Requires `dev.dbos:transact-enterprise`
+
+The DBOS Conductor client is no longer part of `dev.dbos:transact`.
+It ships in a separate artifact, `dev.dbos:transact-enterprise`, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license), which DBOS loads automatically when it is on the class path.
+An application that connects to Conductor (by setting a Conductor key with `withConductorKey`, or `dbos.conductor.key` in Spring Boot) must add it at exactly the same version as `dev.dbos:transact`:
+
+<Tabs groupId="build-tool">
+<TabItem value="gradle" label="Gradle">
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+</TabItem>
+<TabItem value="maven" label="Maven">
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+</TabItem>
+</Tabs>
+
+Without it, `dbos.launch()` throws `IllegalStateException`: "Connecting to DBOS Conductor requires dev.dbos:transact-enterprise on the class path. Add dev.dbos:transact-enterprise:1.3.0, the same version as dev.dbos:transact".
+If the two versions don't match, launch throws `IllegalStateException` naming both versions and asking you to depend on the same version of both.
+Applications that don't connect to Conductor need no change.
+
+The Conductor client now also verifies Conductor's TLS certificate against the JVM's default trust store; 1.2 accepted any certificate.
+If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md#reverse-proxy-and-tls) behind a self-signed or private-CA certificate the JVM doesn't trust, your application stops connecting: it logs the failure and keeps retrying.
+Add the certificate to a trust store and pass it with the `javax.net.ssl.trustStore` and `javax.net.ssl.trustStorePassword` system properties.
+
+### System Database Migrations
+
+1.3 migrates the system database from version 114 to 125:
+
+| Migrations | Change |
+|---|---|
+| 115–120 | Rebuild three indexes on `workflow_status` and `operation_outputs` with `application_name` as an `INCLUDE` column |
+| 121 | Add `notifications.consumed_by_function_id`, which records the step that consumed each message, for rewind |
+| 122 | Add an index over the deadlines of active workflows, for the timeout sweep |
+| 123 | Add `workflow_status.creator_xid` |
+| 124–125 | Add two indexes on `application_versions`, for finding the latest version |
+
+On PostgreSQL, the index migrations run `CONCURRENTLY`, so they don't block writes, but on a large system database they take a while, and the launch that runs them waits for them.
+
+If you run with `withMigrate(false)`, apply the migrations with [`dbosctl sysdb migrate`](../conductor/reference/dbosctl.md#dbosctl-sysdb-migrate) (dbosctl v0.12.0 or later) before deploying 1.3.
+A 1.3 application with migrations off, and every 1.3 [`DBOSClient`](./reference/client.md), now requires every migration this release defines, not a fixed minimum, and throws `IllegalStateException` against a system database below version 125.
+Upgrade clients only after a 1.3 application has launched or you have run `dbosctl sysdb migrate`.
+`MigrationManager.MINIMUM_SYSDB_VERSION` is removed; `MigrationManager.latestMigrationVersion()` returns the required version.
+
+### Rolling Upgrades
+
+1.2 and 1.3 servers can share a system database during a rolling upgrade, with these caveats:
+
+- **Application version.** Unless you set it with `withAppVersion`, the application version DBOS computes includes the DBOS version, so it changes with the upgrade. 1.3 servers don't recover workflows that 1.2 servers left `PENDING`, or dequeue workflows that 1.2 servers enqueued, because those keep the old version. Resuming that work doesn't change its version. If your 1.2 servers set an application version, keep the same value. If they don't, set 1.3's to the version 1.2 computed (from `listApplicationVersions()` or a workflow's status), or fork that work with `new ForkOptions().withApplicationVersion(...)` naming the 1.3 version.
+- **Ownership.** A 1.3 server fences its writes to a workflow on the execution that owns it, but a 1.2 server doesn't. During the upgrade, a 1.2 server can still write a step for a stale execution of a workflow, and the 1.3 execution that owns the workflow then fails it with `DBOSStepNondeterminismException`.
+- **Schedules.** On hosts not in UTC, schedules without `cronTimezone` run twice while 1.2 and 1.3 servers run together; see [below](#schedules-without-a-time-zone-run-in-utc).
+- **Pausing queues.** Don't pause a queue (a `concurrency` or `workerConcurrency` of 0) until every server runs 1.3. A 1.2 server can't read such a queue: its queue discovery fails on every poll, so it stops seeing new and changed queues and keeps dequeuing the paused queue with the limits it last read.
+
+### Rolling Back to 1.2
+
+The system database needs nothing undone: 1.2 runs against a schema migrated to 125 and ignores the columns 1.3 added. Before you roll back:
+
+- **Remove `dev.dbos:transact-enterprise`.** 1.2 has its Conductor client built in, and `dev.dbos:transact-enterprise` 1.3.0 requires exactly `dev.dbos:transact` 1.3.0.
+- **Unpause your queues.** Raise any `concurrency` or `workerConcurrency` of 0 to at least 1 first, since 1.2 can't read a queue stored with a limit of 0.
+- **Keep the application version**, as on the way up.
+- **Errors only 1.3 has can't be read back by 1.2.** A workflow or step that recorded `DBOSStepNondeterminismException`, `DBOSWorkflowIdInUseException` or `DBOSDelayPastLatestInstantException` fails when 1.2 replays it or reads its result.
+- **Schedules without a time zone change tick IDs again** on hosts not in UTC, with the same caveats as on the way up.
+- **Deadlines go back to 1.2's rules.** 1.2 has no timeout sweep, so a queued or delayed workflow past its deadline waits until it is dequeued.
+
+### Changes That May Require Action
+
+#### Schedules Without a Time Zone Run in UTC
+
+A [schedule](./tutorials/scheduled-workflows.md) without `cronTimezone` is now read in UTC everywhere.
+In 1.2 the scheduler read it in the JVM's default time zone, while backfill read it in UTC.
+If your hosts aren't in UTC, such a schedule now fires at different times: `0 0 9 * * *` on a host in New York moves from 09:00 New York time to 09:00 UTC.
+To keep the old times, set `withCronTimezone` to the zone you mean.
+
+Each tick of a schedule runs under a workflow ID built from the tick's time, and that ID also changes on a host not in UTC.
+1.2 built it in the host's time zone and 1.3 builds it in the schedule's zone, UTC without `cronTimezone`.
+So on such a host every schedule without `cronTimezone` gets new tick IDs in 1.3, even one whose firing times don't move, such as `*/5 * * * * *`:
+
+- While 1.2 and 1.3 servers run together, every tick of such a schedule runs twice, once under each ID. A schedule whose firing times move also runs at both sets of times.
+- A 1.3 backfill over ticks that 1.2 already fired runs them again.
+- On the first start after the upgrade, automatic backfill reads the schedule in UTC from a last-fired time recorded in the host's zone, and may enqueue a tick that was never due.
+
+On hosts not in UTC, if your application has such schedules, don't run 1.2 and 1.3 servers together, and don't backfill across the upgrade.
+
+#### Workflows Can't Cancel, Resume, or Delete Themselves
+
+Called from inside a workflow, or from one of its steps, [`cancelWorkflow`](./reference/methods.md#cancelworkflow), [`resumeWorkflow`](./reference/methods.md#resumeworkflow), and [`deleteWorkflow`](./reference/methods.md#deleteworkflow) (and their list forms) now throw `IllegalArgumentException` when the calling workflow is among their targets, and change nothing.
+A workflow that wants to stop should return or throw instead.
+
+#### Step Factories Must Be Created Before Launch
+
+Constructing a [step factory](./reference/workflows-steps.md#step-factories) (`JdbcStepFactory`, `JdbiStepFactory`, `JooqStepFactory`, a custom `PostgresStepFactory`, or Spring's `TransactionalStepFactory`) after `dbos.launch()` now throws `IllegalStateException`.
+DBOS needs every factory at launch so that it can delete the factory's checkpoints.
+A workflow's rows in `tx_step_outputs` are now deleted when it finishes, instead of accumulating.
+
+`JdbiStepFactory` steps no longer go through a `TransactionHandler` installed on the `Jdbi` instance, such as `SerializableTransactionRunner`.
+If the factory's `Jdbi` uses the same pool as the system database, as it does by default with the Spring Boot starter, pass that pool to the new `JdbiStepFactory(DBOS, Jdbi, DataSource)` constructor.
+
+#### Queues
+
+- `concurrency` and `workerConcurrency` may now be 0, which [pauses the queue](./reference/queues.md#queueoptions). A negative value is still refused, now with "must not be negative".
+- A polling interval or rate-limit period under 1 millisecond is now refused when a queue is registered or updated.
+- Registering or updating a queue with the deprecated `partitionQueue` flag set to `true` together with a per-partition limit now throws `IllegalArgumentException`. Remove the flag.
+- An enqueue can now set both a partition key and a deduplication ID. The deduplication ID applies across the whole queue; to deduplicate within one partition, include the partition key in the ID.
+- `listQueues` and `findQueue` now load a stored queue whose limits Java would refuse on write, such as one another SDK wrote, instead of throwing.
+
+#### Durations and Configuration
+
+- A timeout, delay, or `sleep` duration too long to store as milliseconds in a 64-bit integer now throws `IllegalArgumentException` before anything is recorded.
+- `DBOSConfig.withSchedulerPollingInterval` must be at least 1 millisecond and no more than `Long.MAX_VALUE` milliseconds; other values throw `IllegalArgumentException` when the configuration is built, instead of failing partway through launch.
+- The connection pool DBOS creates now ends a system database session left idle inside a transaction for 1 minute. Change this with [`withSystemDatabaseIdleTransactionTimeout`](./reference/lifecycle.md#dbosconfig); zero or a negative duration keeps the server's setting.
+
+#### Other Behavior Changes
+
+- Every server runs a database-side sweep that cancels its application's `ENQUEUED`, `PENDING`, and `DELAYED` workflows once their deadline passes, so a workflow no process is running is cancelled at its deadline. Deadlines, and the release of delayed workflows, now use the database's clock instead of each server's.
+- Only the execution that currently owns a workflow can write its checkpoints. An execution that lost its workflow to a cancellation, resumption, recovery, or timeout stops at its next write and returns the outcome the current owner records. If the same execution records a different result at a step it already recorded, the workflow fails with [`DBOSStepNondeterminismException`](./reference/methods.md#dbosstepnondeterminismexception); an execution that no longer owns the workflow gets a conflict instead, and stops.
+- In a nested [`WorkflowOptions`](./reference/workflows-steps.md#workflowoptions) block that sets no ID, a workflow that takes the outer block's ID now uses it up: the next workflow called in the outer block gets an ID of its own instead of the same one.
+- `WorkflowHandle.getResult()` for a workflow whose deadline passed reports what the database records: if the workflow was resumed after timing out, it waits for the resumed run, and if the workflow was deleted, it throws `DBOSNonExistentWorkflowException`.
+
+#### New Record Components
+
+`StartWorkflowOptions`, `EnqueueOptions`, `WorkflowOptions`, and the deprecated `DBOSClient.EnqueueOptions` gain `workflowIdReusePolicy`, and `DBOSConfig` gains `systemDatabaseIdleTransactionTimeout` and `conductorMetadataOnlyMode`.
+Code that calls their canonical constructors directly must pass the new values, and code compiled against 1.2 that calls them fails with `NoSuchMethodError`.
+Code that builds them from their other constructors or `DBOSConfig.defaults(...)` and the `with` methods is unaffected.
+
+#### Removed Conductor-Only Classes
+
+1.3 removes these public classes, which existed only for operations that only Conductor runs (workflow export and import, fork-from-failure, and dashboard metrics and listings) and were not part of the `DBOS` or `DBOSClient` API:
+
+- In `dev.dbos.transact.workflow`: `ExportedWorkflow`, `ForkFromFailureOptions`, `GetWorkflowAggregatesInput`, `GetStepAggregatesInput`, `WorkflowAggregateRow`, `StepAggregateRow`, `NotificationInfo`, `WorkflowEvent`, `WorkflowEventHistory`, and `WorkflowStream`.
+- In `dev.dbos.transact.database`: `MetricData`.
+- The Conductor client, `dev.dbos.transact.conductor.Conductor`, and the `dev.dbos.transact.conductor.protocol` package, which move to `dev.dbos:transact-enterprise`.
+
+---
+
 ## Upgrading to v1.2
 
 Most code written against DBOS Transact Java 1.1 compiles and runs unchanged on 1.2; the exceptions are listed below.
