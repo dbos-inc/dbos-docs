@@ -110,6 +110,7 @@ The workflow name and queue must not be null or empty.
 **Methods:**
 
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`**: What to do when a workflow with this ID already exists, whatever its status: return it (`RETURN_EXISTING`, the default) or throw [`DBOSWorkflowIdInUseException`](./methods.md#dbosworkflowidinuseexception) and leave it unchanged (`REJECT`).
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
 If left undefined, the workflow is enqueued without a version and is only dequeued by an executor running the owning application's latest registered version, which sets the version when it first dequeues it.
 - **`withTimeout(Duration timeout)`**, **`withTimeout(long value, TimeUnit unit)`**:  Set an explicit timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
@@ -121,7 +122,7 @@ An explicit timeout and a deadline cannot both be set.
 :::
 
 - **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
-- **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+- **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception. On a partitioned queue, the deduplication ID applies across the whole queue, whatever the partition key; to deduplicate within one partition, include the partition key in the ID.
 - **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority.
 - **`withSerialization(SerializationStrategy serialization)`**: Specify the [serialization strategy](./lifecycle.md#custom-serialization) for the workflow arguments. Options are `SerializationStrategy.DEFAULT`, `SerializationStrategy.PORTABLE`, or `SerializationStrategy.NATIVE`.
 - **`withQueuePartitionKey(String partitionKey)`**: Set a queue partition key for the workflow. Use if and only if the queue is partitioned, which it is when any per-partition limit (`partitionConcurrency`, `partitionWorkerConcurrency`, or `partitionRateLimit`) is set, or when it was registered with the deprecated `partitionQueue` flag. Per-partition limits apply to each partition key separately; queue-wide limits still apply to the queue as a whole, except on a queue registered with the deprecated `partitionQueue` flag, where they apply to each partition instead. See [Partitioning Queues](../tutorials/queue-tutorial.md#partitioning-queues).
@@ -129,7 +130,7 @@ An explicit timeout and a deadline cannot both be set.
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.
 - Partition keys cannot be used with non-partitioned queues.
-- Partition keys and deduplication IDs cannot be used together.
+- A deduplication ID used with a partition key is deduplicated across the whole queue, not within the partition.
 :::
 
 - **`withAuthenticatedUser(String user)`**: Set the authenticated user for the enqueued workflow. Stored in the workflow record and accessible via `DBOS.authenticatedUser()` when the workflow executes.
@@ -309,6 +310,22 @@ Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow).
 ```
 
 Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow).
+
+### rewindWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> rewindWorkflow(
+      String workflowId, int startStep, RewindOptions options)
+```
+
+Similar to [`dbos.rewindWorkflow`](./methods.md#rewindworkflow).
+
+:::info
+A client cannot reach your application's databases, so a client rewind does not delete [step factory](./workflows-steps.md#step-factories) transaction checkpoints.
+A transactional step past `startStep` that still has one replays its recorded result instead of running again.
+To re-run those transactions, rewind with [`dbos.rewindWorkflow`](./methods.md#rewindworkflow) from within the application.
+:::
 
 ### updateWorkflowAttributes
 

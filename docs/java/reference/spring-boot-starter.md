@@ -49,6 +49,9 @@ All properties are in the `dbos.*` namespace.
 |----------|------|---------|-------------|
 | `dbos.conductor.key` | `String` | — | DBOS Conductor API key. |
 | `dbos.conductor.domain` | `String` | — | DBOS Conductor domain. |
+| `dbos.conductor.metadata-only-mode` | `boolean` | `false` | Send Conductor only workflow metadata, never workflow data. See [`withConductorMetadataOnlyMode`](./lifecycle.md#dbosconfig). |
+
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact-spring-boot-starter`. See [Connecting to Conductor](../../conductor/overview.md#connecting-to-conductor).
 
 ### Admin Server
 
@@ -68,7 +71,7 @@ All properties are in the `dbos.*` namespace.
 | `dbos.executor-id` | `String` | — | Unique executor ID for this instance. |
 | `dbos.enable-patching` | `boolean` | `false` | Enable [workflow patching](./methods.md#patch). |
 | `dbos.listen-queues` | `List<String>` | `[]` | Queues this executor should dequeue from. |
-| `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval. |
+| `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval of 30 seconds. Must be at least 1 millisecond; see [`withSchedulerPollingInterval`](./lifecycle.md#dbosconfig). |
 | `dbos.use-listen-notify` | `boolean` | `true` | Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery. Automatically set to `false` when CockroachDB is detected. |
 
 ## DBOSConfigCustomizer

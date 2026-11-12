@@ -251,6 +251,12 @@ new StartWorkflowOptions(Queue queue)
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`** - What to do when a workflow with this workflow's ID already exists, whatever its status:
+  - `WorkflowIdReusePolicy.RETURN_EXISTING` (the default, also chosen by `null`): return a handle to the existing workflow instead of starting another.
+  - `WorkflowIdReusePolicy.REJECT`: throw [`DBOSWorkflowIdInUseException`](./methods.md#dbosworkflowidinuseexception) and leave the existing workflow unchanged.
+
+  Applies to starting and to enqueueing. See [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+
 - **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
   `withQueue(Queue queue)` is *(deprecated since 1.1)*; pass the queue's name instead.
 
@@ -281,14 +287,14 @@ An explicit timeout and deadline cannot both be set: building a `StartWorkflowOp
 
 - **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `0` to `2,147,483,647`, where a low number indicates a higher priority. A negative priority throws `IllegalArgumentException`. Workflows without assigned priorities have priority `0`, the highest priority. Priority works on every queue; no queue configuration is needed.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `PENDING`, or `DELAYED`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception. On a partitioned queue, the deduplication ID applies across the whole queue, whatever the partition key; to deduplicate within one partition, include the partition key in the ID.
 
 - **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned, which it is when any per-partition limit (`partitionConcurrency`, `partitionWorkerConcurrency`, or `partitionRateLimit`) is set, or when it was registered with the deprecated `partitionQueue` flag. Per-partition limits apply to each partition key separately; queue-wide limits still apply to the queue as a whole, except on a queue registered with the deprecated `partitionQueue` flag, where they apply to each partition instead. See [Partitioning Queues](../tutorials/queue-tutorial.md#partitioning-queues).
 
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.
 - Partition keys cannot be used with non-partitioned queues.
-- Partition keys and deduplication IDs cannot be used together.
+- A deduplication ID used with a partition key is deduplicated across the whole queue, not within the partition.
 :::
 
 - **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued. Only applicable when enqueuing.
@@ -440,6 +446,9 @@ Shortcut for `new WorkflowOptions().withWorkflowId(workflowId)`.
 **Methods:**
 
 - **`withWorkflowId(String workflowId)`** - Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow run.
+The first workflow called in the block, including one called inside a nested block that sets no ID of its own, takes the ID; later workflows in the block get IDs of their own.
+
+- **`withWorkflowIdReusePolicy(WorkflowIdReusePolicy policy)`** - What to do when a workflow with the block's ID already exists: return it (`RETURN_EXISTING`, the default) or throw [`DBOSWorkflowIdInUseException`](./methods.md#dbosworkflowidinuseexception) (`REJECT`). The policy applies to whichever workflow takes the block's ID, whether called directly, started, or enqueued; a call that gives its own ID, or its own policy, isn't governed by it. Setting a policy without a workflow ID makes `setContext()` throw `IllegalArgumentException`.
 
 - **`withTimeout(Timeout timeout)`** / **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for all enclosed workflow invocations. When the timeout expires, the workflow **and all its children** are cancelled. Timeouts are **start-to-completion**: the timeout does not begin until the workflow starts execution. Timeouts are also **durable**: they persist across restarts. Child workflows inherit the workflow's deadline, not its timeout.
 
@@ -468,7 +477,7 @@ An explicit timeout and deadline cannot both be set.
 A step factory commits your database work and the DBOS step checkpoint in the **same transaction**, making the step exactly-once even for database writes.
 On workflow retry, the recorded output is replayed without re-executing the callback.
 
-Step factories must be constructed before `dbos.launch()`. Each constructor immediately opens a connection to verify the datasource is PostgreSQL and to create the `tx_step_outputs` table in the target schema if it does not already exist.
+Step factories must be constructed before `dbos.launch()`; constructing one after launch throws `IllegalStateException`. DBOS registers every factory at launch so that it can delete the factory's checkpoints when a workflow finishes or is [rewound](./methods.md#rewindworkflow). Each constructor immediately opens a connection to verify the datasource is PostgreSQL and to create the `tx_step_outputs` table in the target schema if it does not already exist.
 
 **Common constructor parameters:**
 - **dbos**: The DBOS runtime instance.
@@ -560,7 +569,11 @@ new JdbiStepFactory(DBOS dbos, Jdbi jdbi)
 new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema)
 new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DBOSSerializer serializer)
 new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema, DBOSSerializer serializer)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DataSource dataSource)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DataSource dataSource, String schema, DBOSSerializer serializer)
 ```
+
+- **dataSource**: The pool `jdbi` was created from, as in `Jdbi.create(dataSource)`. Jdbi doesn't expose its pool, so pass it when it may be the pool the DBOS system database uses (as with the Spring Boot starter's defaults). DBOS then checks that a step's workflow execution still owns the workflow on the step's own connection, instead of taking a second connection from the same pool.
 
 #### inStep
 

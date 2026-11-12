@@ -120,6 +120,25 @@ public void startWorkflowExample(DBOS dbos, Example proxy) throws Exception {
 
 ```
 
+By default, if you start a workflow with an ID that is already in use, DBOS returns a handle to the existing workflow instead of starting a new one.
+To instead throw an exception when a workflow ID is already in use, set `WorkflowIdReusePolicy.REJECT` with `withWorkflowIdReusePolicy` on [`StartWorkflowOptions`](../reference/workflows-steps.md#startworkflowoptions), [`WorkflowOptions`](../reference/workflows-steps.md#workflowoptions), or [`EnqueueOptions`](../reference/client.md#enqueueoptions).
+The call then throws [`DBOSWorkflowIdInUseException`](../reference/methods.md#dbosworkflowidinuseexception), whatever the existing workflow's status, and leaves that workflow unchanged:
+
+```java
+public String submitOrder(DBOS dbos, Example proxy, String orderId, Order order) {
+  try {
+    WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
+        () -> proxy.processOrder(order),
+        new StartWorkflowOptions()
+            .withWorkflowId("order-" + orderId)
+            .withWorkflowIdReusePolicy(WorkflowIdReusePolicy.REJECT));
+    return handle.getResult();
+  } catch (DBOSWorkflowIdInUseException e) {
+    return "already started";
+  }
+}
+```
+
 ## Determinism
 
 Workflows are in most respects normal Java methods.

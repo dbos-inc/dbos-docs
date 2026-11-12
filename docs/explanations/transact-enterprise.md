@@ -54,6 +54,40 @@ import _ "go.dbos.dev/dbos-enterprise-go"
 ```
 
 </TabItem>
+<TabItem value="java" label="Java">
+
+Add the `dev.dbos:transact-enterprise` artifact, at exactly the same version as `dev.dbos:transact`.
+DBOS loads it automatically; no code change is needed.
+In Java, DBOS Transact Enterprise provides the connection to Conductor.
+
+<Tabs groupId="build-tool">
+<TabItem value="gradle" label="Gradle">
+```kotlin
+dependencies {
+    implementation("dev.dbos:transact:1.3.0")
+    implementation("dev.dbos:transact-enterprise:1.3.0")
+}
+```
+</TabItem>
+<TabItem value="maven" label="Maven">
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact-enterprise</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+</dependencies>
+```
+</TabItem>
+</Tabs>
+
+</TabItem>
 </Tabs>
 
 ## DBOS Transact Enterprise Keys

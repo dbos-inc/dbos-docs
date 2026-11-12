@@ -210,6 +210,8 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 
 <TabItem value="java" label="Java">
 
+Connecting to Conductor requires the `dev.dbos:transact-enterprise` artifact, at the same version as `dev.dbos:transact` (see [Connecting to Conductor](../overview.md#connecting-to-conductor)).
+
 ```java
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 String conductorDomain = System.getenv("DBOS_CONDUCTOR_URL");

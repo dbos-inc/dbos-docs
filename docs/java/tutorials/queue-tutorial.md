@@ -319,7 +319,12 @@ dbos.updateQueue("example-queue", new QueueOptions().withConcurrency(20));
 
 // Change its rate limit
 dbos.updateQueue("example-queue", new QueueOptions().withRateLimit(25, 30, TimeUnit.SECONDS));
+
+// Pause the queue: no process dequeues from it until the limit is raised again
+dbos.updateQueue("example-queue", new QueueOptions().withWorkerConcurrency(0));
 ```
+
+Setting `concurrency` to 0 also pauses a queue, but a narrower limit can't exceed a wider one, so that works only when `workerConcurrency` and the per-partition concurrency limits are unset (or `workerConcurrency` is also 0). See [`QueueOptions`](../reference/queues.md#queueoptions).
 
 :::warning
 If your application calls `dbos.registerQueue` on startup, the next process to start can overwrite settings you applied at runtime via `updateQueue`.
@@ -494,7 +499,7 @@ When both are set, each per-partition concurrency limit must be less than or equ
 See [`QueueOptions`](../reference/queues.md#queueoptions) for the full set of rules.
 
 :::note
-[Deduplication](#deduplication) is not supported on partitioned queues.
+On a partitioned queue, a [deduplication](#deduplication) ID applies across the whole queue, not within one partition.
 :::
 
 :::info Deprecated `partitionQueue` option
@@ -510,6 +515,9 @@ At any given time, only one workflow with a specific deduplication ID can be enq
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
+
+On a [partitioned queue](#partitioning-queues), a deduplication ID applies across the whole queue: while a workflow holds it, enqueueing another workflow with the same ID fails whatever its partition key.
+To deduplicate within one partition, include the partition key in the ID, as in `partitionKey + ":" + userID`.
 
 **Example syntax:**
 
