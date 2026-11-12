@@ -140,7 +140,7 @@ String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
     .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-    .withConductorKey(conductorKey)
+    .withConductorKey(conductorKey);
 ```
 
 Without `dev.dbos:transact-enterprise` on the class path, `dbos.launch()` throws `IllegalStateException` when a Conductor key is set.
@@ -210,13 +210,13 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 <TabItem value="java" label="Java">
 
 ```java
-String appName = System.getenv("DBOS_APPLICATION_NAME")
+String appName = System.getenv("DBOS_APPLICATION_NAME");
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults(appName)
     .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-    .withConductorKey(conductorKey)
+    .withConductorKey(conductorKey);
 ```
 </TabItem>
 </Tabs>

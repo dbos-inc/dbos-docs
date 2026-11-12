@@ -134,6 +134,12 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 ```
 
 </TabItem>
+<TabItem value="java" label="Java">
+
+Java needs no DBOS Transact Enterprise key.
+In Java, DBOS Transact Enterprise provides the connection to Conductor, so it needs only your [Conductor key](../conductor/overview.md#connecting-to-conductor).
+
+</TabItem>
 </Tabs>
 
 :::warning

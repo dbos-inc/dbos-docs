@@ -177,6 +177,7 @@ Deprecated for removal: use [`dbos.findQueue`](./queues.md#dbosfindqueue), which
 
 DBOS must serialize data such as workflow inputs and outputs and step return values to store it in the system database.
 By default, data is serialized with Jackson (format name `java_jackson`), but you can optionally supply a custom serializer through DBOS configuration.
+DBOS's own steps, such as a `cancelWorkflow` called from a workflow, record their errors in the default `java_jackson` format whatever serializer is configured, so a replay rethrows the same exception type; only `getResult` keeps the configured serializer, since its error is the awaited workflow's own.
 A custom serializer must implement the `DBOSSerializer` interface:
 
 ```java

@@ -13,7 +13,7 @@ An application or client that needs a newer schema than the system database has 
 
 ## Upgrading to v1.3
 
-Code written against DBOS Transact Java 1.2 compiles and runs on 1.3 with the exceptions listed below.
+Most code written against DBOS Transact Java 1.2 compiles and runs on 1.3; the exceptions, including public classes 1.3 removes and records that gain components, are listed below.
 This section covers what might require a change to your code, configuration, or operations.
 For new features, such as [rewinding workflows](./tutorials/workflow-management.md#rewinding-workflows) and the [workflow ID reuse policy](./tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), see the [release notes](https://github.com/dbos-inc/dbos-transact-java/releases).
 
@@ -50,8 +50,8 @@ dependencies {
 </TabItem>
 </Tabs>
 
-Without it, `dbos.launch()` throws `IllegalStateException`: "Connecting to DBOS Conductor requires dev.dbos:transact-enterprise on the class path."
-If the two versions don't match, launch fails naming both.
+Without it, `dbos.launch()` throws `IllegalStateException`: "Connecting to DBOS Conductor requires dev.dbos:transact-enterprise on the class path. Add dev.dbos:transact-enterprise:1.3.0, the same version as dev.dbos:transact".
+If the two versions don't match, launch throws `IllegalStateException` naming both versions and asking you to depend on the same version of both.
 Applications that don't connect to Conductor need no change.
 
 ### System Database Migrations
@@ -73,6 +73,14 @@ A 1.3 application with migrations off, and every 1.3 [`DBOSClient`](./reference/
 Upgrade clients only after a 1.3 application has launched or you have run `dbosctl sysdb migrate`.
 `MigrationManager.MINIMUM_SYSDB_VERSION` is removed; `MigrationManager.latestMigrationVersion()` returns the required version.
 
+### Rolling Upgrades
+
+1.2 and 1.3 servers can share a system database during a rolling upgrade, with these caveats:
+
+- **Application version.** Unless you set it with `withAppVersion`, the application version DBOS computes includes the DBOS version, so it changes with the upgrade. 1.3 servers don't recover workflows that 1.2 servers left `PENDING`, or dequeue workflows that 1.2 servers enqueued, because those keep the old version. Pin the application version across the upgrade, or resume or fork that work once every server runs 1.3.
+- **Ownership.** A 1.3 server fences its writes to a workflow on the execution that owns it, but a 1.2 server doesn't. During the upgrade, a 1.2 server can still write a step for a stale execution of a workflow, and the 1.3 execution that owns the workflow then fails it with `DBOSStepNondeterminismException`.
+- **Schedules.** On hosts not in UTC, schedules without `cronTimezone` run twice while 1.2 and 1.3 servers run together; see [below](#schedules-without-a-time-zone-run-in-utc).
+
 ### Changes That May Require Action
 
 #### Schedules Without a Time Zone Run in UTC
@@ -81,7 +89,16 @@ A [schedule](./tutorials/scheduled-workflows.md) without `cronTimezone` is now r
 In 1.2 the scheduler read it in the JVM's default time zone, while backfill read it in UTC.
 If your hosts aren't in UTC, such a schedule now fires at different times: `0 0 9 * * *` on a host in New York moves from 09:00 New York time to 09:00 UTC.
 To keep the old times, set `withCronTimezone` to the zone you mean.
-During a rolling upgrade, 1.2 and 1.3 servers fire such a schedule at different times, so it runs at both until every server runs 1.3.
+
+Each tick of a schedule runs under a workflow ID built from the tick's time, and that ID also changes on a host not in UTC.
+1.2 built it in the host's time zone and 1.3 builds it in the schedule's zone, UTC without `cronTimezone`.
+So on such a host every schedule without `cronTimezone` gets new tick IDs in 1.3, even one whose firing times don't move, such as `*/5 * * * * *`:
+
+- While 1.2 and 1.3 servers run together, every tick of such a schedule runs twice, once under each ID. A schedule whose firing times move also runs at both sets of times.
+- A 1.3 backfill over ticks that 1.2 already fired runs them again.
+- On the first start after the upgrade, automatic backfill reads the schedule in UTC from a last-fired time recorded in the host's zone, and may enqueue a tick that was never due.
+
+On hosts not in UTC, if your application has such schedules, don't run 1.2 and 1.3 servers together, and don't backfill across the upgrade.
 
 #### Workflows Can't Cancel, Resume, or Delete Themselves
 
@@ -114,15 +131,23 @@ If the factory's `Jdbi` uses the same pool as the system database, as it does by
 #### Other Behavior Changes
 
 - Every server runs a database-side sweep that cancels its application's `ENQUEUED`, `PENDING`, and `DELAYED` workflows once their deadline passes, so a workflow no process is running is cancelled at its deadline. Deadlines, and the release of delayed workflows, now use the database's clock instead of each server's.
-- Only the execution that currently owns a workflow can write its checkpoints. An execution that lost its workflow to a cancellation, resumption, recovery, or timeout stops at its next write and returns the outcome the current owner records. A workflow that records a different result at an already-recorded step fails with `DBOSStepNondeterminismException`.
+- Only the execution that currently owns a workflow can write its checkpoints. An execution that lost its workflow to a cancellation, resumption, recovery, or timeout stops at its next write and returns the outcome the current owner records. If the same execution records a different result at a step it already recorded, the workflow fails with [`DBOSStepNondeterminismException`](./reference/methods.md#dbosstepnondeterminismexception); an execution that no longer owns the workflow gets a conflict instead, and stops.
 - In a nested [`WorkflowOptions`](./reference/workflows-steps.md#workflowoptions) block that sets no ID, a workflow that takes the outer block's ID now uses it up: the next workflow called in the outer block gets an ID of its own instead of the same one.
 - `WorkflowHandle.getResult()` for a workflow whose deadline passed reports what the database records: if the workflow was resumed after timing out, it waits for the resumed run, and if the workflow was deleted, it throws `DBOSNonExistentWorkflowException`.
 
 #### New Record Components
 
-`StartWorkflowOptions`, `EnqueueOptions`, and `WorkflowOptions` gain `workflowIdReusePolicy`, and `DBOSConfig` gains `systemDatabaseIdleTransactionTimeout` and `conductorMetadataOnlyMode`.
-Code that calls their canonical constructors directly must pass the new values.
+`StartWorkflowOptions`, `EnqueueOptions`, `WorkflowOptions`, and the deprecated `DBOSClient.EnqueueOptions` gain `workflowIdReusePolicy`, and `DBOSConfig` gains `systemDatabaseIdleTransactionTimeout` and `conductorMetadataOnlyMode`.
+Code that calls their canonical constructors directly must pass the new values, and code compiled against 1.2 that calls them fails with `NoSuchMethodError`.
 Code that builds them from their other constructors or `DBOSConfig.defaults(...)` and the `with` methods is unaffected.
+
+#### Removed Conductor-Only Classes
+
+1.3 removes these public classes, which existed only for operations that only Conductor runs (workflow export and import, fork-from-failure, and dashboard metrics and listings) and were not part of the `DBOS` or `DBOSClient` API:
+
+- In `dev.dbos.transact.workflow`: `ExportedWorkflow`, `ForkFromFailureOptions`, `GetWorkflowAggregatesInput`, `GetStepAggregatesInput`, `WorkflowAggregateRow`, `StepAggregateRow`, `NotificationInfo`, `WorkflowEvent`, `WorkflowEventHistory`, and `WorkflowStream`.
+- In `dev.dbos.transact.database`: `MetricData`.
+- The Conductor client, `dev.dbos.transact.conductor.Conductor`, and the `dev.dbos.transact.conductor.protocol` package, which move to `dev.dbos:transact-enterprise`.
 
 ---
 

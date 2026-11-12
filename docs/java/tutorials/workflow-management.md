@@ -72,6 +72,8 @@ The difference between rewind and fork is that fork creates a copy of the workfl
 Because the rewound workflow keeps its original ID, other workflows and clients can keep sending messages to it and reading its events and streams.
 Rewinding is useful when other code refers to a workflow by its ID, for example when the ID is an idempotency key derived from an order or request ID.
 
+Rewinding doesn't modify a workflow's child workflows, even those started after the selected step: they keep their IDs, so the rewound workflow gets the existing children back instead of starting new ones. To re-run a child, rewind it separately.
+
 You can only rewind a workflow that is in a terminal state (for example, `SUCCESS`, `ERROR`, or `CANCELLED`); cancel a running workflow before rewinding it.
 Like forking, you can rewind a workflow onto a new application version to "patch" a workflow that failed due to a bug.
 

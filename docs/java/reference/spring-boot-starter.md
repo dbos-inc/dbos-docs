@@ -43,6 +43,10 @@ All properties are in the `dbos.*` namespace.
 | `dbos.datasource.schema` | `String` | `dbos` | Schema for DBOS system tables. |
 | `dbos.datasource.migrate` | `boolean` | `true` | Whether to run database migrations on startup. |
 
+When `dbos.datasource.url` is unset, the starter passes the application's `DataSource` bean to DBOS with [`withDataSource`](./lifecycle.md#dbosconfig), so DBOS doesn't create a pool of its own and doesn't apply its 1-minute [system database idle-transaction timeout](./lifecycle.md#dbosconfig).
+To keep a stalled session from holding a workflow's row lock, set `idle_in_transaction_session_timeout` on that pool yourself, for example with `spring.datasource.hikari.connection-init-sql=SET idle_in_transaction_session_timeout = '1min'`.
+This also applies to your application's own transactions on that pool.
+
 ### DBOS Conductor
 
 | Property | Type | Default | Description |

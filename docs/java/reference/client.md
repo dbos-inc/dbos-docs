@@ -278,7 +278,7 @@ void cancelWorkflows(List<String> workflowIds)
 void cancelWorkflows(List<String> workflowIds, boolean cancelChildren)
 ```
 
-Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow). When `cancelChildren` is `true`, also recursively cancels all descendant workflows.
+Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow). When `cancelChildren` is `true`, also recursively cancels all descendant workflows. A client call isn't made from inside a workflow, so the refusal of a workflow cancelling itself doesn't apply.
 
 ### resumeWorkflow
 
@@ -289,7 +289,7 @@ List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds
 List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds, String queueName)
 ```
 
-Similar to [`dbos.resumeWorkflow`](./methods.md#resumeworkflow).
+Similar to [`dbos.resumeWorkflow`](./methods.md#resumeworkflow). A client call isn't made from inside a workflow, so the refusal of a workflow resuming itself doesn't apply.
 
 ### deleteWorkflow
 
@@ -300,7 +300,7 @@ void deleteWorkflows(List<String> workflowIds)
 void deleteWorkflows(List<String> workflowIds, boolean deleteChildren)
 ```
 
-Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow).
+Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow). A client call isn't made from inside a workflow, so the refusal of a workflow deleting itself doesn't apply.
 
 ### forkWorkflow
 
@@ -309,7 +309,7 @@ Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow).
       String originalWorkflowId, int startStep, ForkOptions options)
 ```
 
-Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow).
+Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow), except that the client doesn't check that the queue exists or that the partition key matches whether the queue is partitioned.
 
 ### rewindWorkflow
 
@@ -319,7 +319,7 @@ Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow).
       String workflowId, int startStep, RewindOptions options)
 ```
 
-Similar to [`dbos.rewindWorkflow`](./methods.md#rewindworkflow).
+Similar to [`dbos.rewindWorkflow`](./methods.md#rewindworkflow), except that the client doesn't check that the queue exists or that the partition key matches whether the queue is partitioned.
 
 :::info
 A client cannot reach your application's databases, so a client rewind does not delete [step factory](./workflows-steps.md#step-factories) transaction checkpoints.

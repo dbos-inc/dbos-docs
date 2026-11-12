@@ -125,10 +125,10 @@ To instead throw an exception when a workflow ID is already in use, set `Workflo
 The call then throws [`DBOSWorkflowIdInUseException`](../reference/methods.md#dbosworkflowidinuseexception), whatever the existing workflow's status, and leaves that workflow unchanged:
 
 ```java
-public String submitOrder(DBOS dbos, Example proxy, String orderId, Order order) {
+public String submitOrder(DBOS dbos, Example proxy, String orderId) {
   try {
     WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
-        () -> proxy.processOrder(order),
+        () -> proxy.workflow(),
         new StartWorkflowOptions()
             .withWorkflowId("order-" + orderId)
             .withWorkflowIdReusePolicy(WorkflowIdReusePolicy.REJECT));

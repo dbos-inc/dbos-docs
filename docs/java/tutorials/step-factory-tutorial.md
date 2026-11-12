@@ -111,6 +111,9 @@ implementation("dev.dbos:transact-jdbi-step-factory:<version>")
 Construct with a `Jdbi` instance and call `inStep` (with return value) or `useStep` (void) inside workflows.
 The lambda receives an open `Handle` — do **not** call `commit` or `close` on it.
 
+If the `Jdbi` was created from the same pool as the DBOS system database, as it is by default with the Spring Boot starter, also pass that pool: `new JdbiStepFactory(dbos, Jdbi.create(dataSource), dataSource)`.
+DBOS then checks that the step's workflow execution still owns the workflow on the step's own connection, instead of taking a second connection from the pool while the step holds one.
+
 ```java
 JdbiStepFactory factory = new JdbiStepFactory(dbos, jdbi);
 

@@ -770,9 +770,10 @@ To rewind a workflow that is still running, [cancel](#cancelworkflow) it first.
 Rewinding a workflow:
 - Clears its recorded output or error.
 - Discards events it set at or after `startStep`, restoring each such event to the last value it set before `startStep` (or removing it if there is none).
-- Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages. A message consumed before the system database reached migration 121 (DBOS Java 1.3) can't be matched to the step that consumed it, so it stays consumed.
+- Deletes messages it consumed at or after `startStep`, as well as any unconsumed messages. A message consumed before the system database reached migration 121 (DBOS Java 1.3), or by a DBOS version that doesn't record the consuming step, such as a 1.2 executor, can't be matched to the step that consumed it, so it stays consumed, and a replayed `recv` past `startStep` waits for a new message instead.
 - Does not modify streamed values. New values are appended to the end of existing streams, but streams closed at or after `startStep` are reopened.
 - Deletes the [step factories'](./workflows-steps.md#step-factories) transaction checkpoints from `startStep` on, so those transactions run again.
+- Does not modify child workflows, even those started at or after `startStep`. They keep their IDs, so the replay gets the existing child back instead of starting a new one. To re-run a child, rewind it separately.
 
 Called from a workflow, the rewind is recorded as a step, so a recovered caller does not rewind its target again.
 
@@ -1004,13 +1005,15 @@ Obtain a `Debouncer` via `dbos.debouncer()`:
 `Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
 
 - **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
-- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): a debounced workflow has no partition key, and partitioned queues don't support deduplication IDs. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
+- **`withQueue(QueueName queue)`** / **`withQueue(String queueName)`**: The queue the user workflow waits and runs on. Without one, it uses the DBOS internal queue. The queue can't be [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): the debouncer enqueues the user workflow without a partition key. `withQueue(Queue queue)` is *(deprecated since 1.1)*.
 - **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
 - **`withPriority(Integer priority)`**: Set the priority for the user workflow. A negative priority throws `IllegalArgumentException` when set. A priority requires a queue: if a priority is set without `withQueue`, `debounce` throws `IllegalArgumentException`.
 - **`withTimeout(Duration timeout)`**: Set a timeout for every user workflow this debouncer starts, timed from when that workflow is dequeued. It takes precedence over a timeout set with [`WorkflowOptions`](./workflows-steps.md#workflowoptions) around the `debounce` call, which applies when this isn't set. A zero or negative timeout throws `IllegalArgumentException` when set.
 - **`withDeduplicationId(String deduplicationId)`** *(deprecated since 1.1)*: Ignored since 1.2. The debounced workflow holds its debounce key as its deduplication ID.
 
 The user workflow never inherits the calling workflow's timeout or deadline, and a deadline set with `WorkflowOptions` around the call is ignored, because the workflow may start long after the call.
+
+The debouncer decides how its workflow starts, so `debounce` inside a [`WorkflowOptions`](./workflows-steps.md#workflowoptions) block that sets `WorkflowIdReusePolicy.REJECT` throws `IllegalArgumentException`. The block's workflow ID is used up by the refused call.
 
 ### debouncer.debounce
 
@@ -1247,6 +1250,30 @@ This covers two different situations, which `sqlState()` distinguishes:
 - **`sqlState()`**: The SQLSTATE of the underlying failure, or `null` if it carried none.
 - **`getCause()`**: The underlying `SQLException`. It is the only level of wrapping, so the database's own exception is always one level down.
 - **`databaseException()`** *(deprecated since 1.1)*: Returns the same object as `getCause()`; use `getCause()` instead.
+
+### DBOSStepNondeterminismException
+
+```java
+public class DBOSStepNondeterminismException extends RuntimeException {
+    String workflowId();  // The ID of the nondeterministic workflow
+    int stepId();         // The step that was recorded twice
+}
+```
+
+Thrown when an execution of a workflow records a step that it already recorded, with a different result.
+Only the execution that owns a workflow can record its steps, so the earlier result is that execution's own: the workflow function is not deterministic.
+The exception is recorded as the workflow's error.
+An execution that has lost its workflow to a cancellation, resumption, recovery, or timeout is instead stopped at its next write, records nothing, and returns the outcome the current owner records.
+
+### DBOSDelayPastLatestInstantException
+
+```java
+public class DBOSDelayPastLatestInstantException extends IllegalArgumentException
+```
+
+Thrown when a workflow is enqueued with a delay that carries the current time past the largest instant that 64-bit epoch milliseconds can hold, so its release time can't be stored.
+Nothing is enqueued.
+Whether a delay does so depends on the clock, so a workflow starting a child records this refusal at its step, and a recovery throws it again.
 
 ### DBOSWorkflowIdInUseException
 
