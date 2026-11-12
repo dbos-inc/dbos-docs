@@ -77,9 +77,21 @@ Upgrade clients only after a 1.3 application has launched or you have run `dbosc
 
 1.2 and 1.3 servers can share a system database during a rolling upgrade, with these caveats:
 
-- **Application version.** Unless you set it with `withAppVersion`, the application version DBOS computes includes the DBOS version, so it changes with the upgrade. 1.3 servers don't recover workflows that 1.2 servers left `PENDING`, or dequeue workflows that 1.2 servers enqueued, because those keep the old version. Pin the application version across the upgrade, or resume or fork that work once every server runs 1.3.
+- **Application version.** Unless you set it with `withAppVersion`, the application version DBOS computes includes the DBOS version, so it changes with the upgrade. 1.3 servers don't recover workflows that 1.2 servers left `PENDING`, or dequeue workflows that 1.2 servers enqueued, because those keep the old version. Resuming that work doesn't change its version. If your 1.2 servers set an application version, keep the same value. If they don't, set 1.3's to the version 1.2 computed (from `listApplicationVersions()` or a workflow's status), or fork that work with `new ForkOptions().withApplicationVersion(...)` naming the 1.3 version.
 - **Ownership.** A 1.3 server fences its writes to a workflow on the execution that owns it, but a 1.2 server doesn't. During the upgrade, a 1.2 server can still write a step for a stale execution of a workflow, and the 1.3 execution that owns the workflow then fails it with `DBOSStepNondeterminismException`.
 - **Schedules.** On hosts not in UTC, schedules without `cronTimezone` run twice while 1.2 and 1.3 servers run together; see [below](#schedules-without-a-time-zone-run-in-utc).
+- **Pausing queues.** Don't pause a queue (a `concurrency` or `workerConcurrency` of 0) until every server runs 1.3. A 1.2 server can't read such a queue: its queue discovery fails on every poll, so it stops seeing new and changed queues and keeps dequeuing the paused queue with the limits it last read.
+
+### Rolling Back to 1.2
+
+The system database needs nothing undone: 1.2 runs against a schema migrated to 125 and ignores the columns 1.3 added. Before you roll back:
+
+- **Remove `dev.dbos:transact-enterprise`.** 1.2 has its Conductor client built in, and `dev.dbos:transact-enterprise` 1.3.0 requires exactly `dev.dbos:transact` 1.3.0.
+- **Unpause your queues.** Raise any `concurrency` or `workerConcurrency` of 0 to at least 1 first, since 1.2 can't read a queue stored with a limit of 0.
+- **Keep the application version**, as on the way up.
+- **Errors only 1.3 has can't be read back by 1.2.** A workflow or step that recorded `DBOSStepNondeterminismException`, `DBOSWorkflowIdInUseException` or `DBOSDelayPastLatestInstantException` fails when 1.2 replays it or reads its result.
+- **Schedules without a time zone change tick IDs again** on hosts not in UTC, with the same caveats as on the way up.
+- **Deadlines go back to 1.2's rules.** 1.2 has no timeout sweep, so a queued or delayed workflow past its deadline waits until it is dequeued.
 
 ### Changes That May Require Action
 
