@@ -118,6 +118,7 @@ This is the programmatic equivalent of the [`dbos migrate`](./cli.md#dbos-migrat
 Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`run_migrations=False`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
 It can be called before or without constructing a DBOS instance.
 May not be called from a workflow.
+On Postgres, concurrent migrations are serialized with a lock. If another process holds the lock for more than 30 seconds, `migrate` raises `DBOSInitializationError` without migrating; retry once the other migration finishes.
 
 **Parameters:**
 - `system_database_url`: The system database to create or migrate. The database is created if it does not exist.
