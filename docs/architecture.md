@@ -58,7 +58,8 @@ Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) wo
 
 It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
-Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).
+Thus, we recommend keeping large objects such as files out of workflow and step inputs and outputs.
+Instead, use external storage ([Python](./python/tutorials/external-storage.md), [TypeScript](./typescript/tutorials/external-storage.md)) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.
 
 ## How Workflow Recovery Works
 

@@ -54,6 +54,9 @@ Instead, either construct the object inside the workflow from parameters passed 
 
 DBOS stores two serialized fields (`inputs` and `output`) for each workflow  and one `output` field for each step. Each of these is stored as a Postgres `TEXT` value which is limited by the maximum field size; currently 1GB. See [Postgres documentation](https://wiki.postgresql.org/wiki/FAQ#What_is_the_maximum_size_for_a_row.2C_a_table.2C_and_a_database.3F).
 
+However, we recommend keeping large objects such as files or datasets out of the system database.
+Instead, use external storage ([Python](./python/tutorials/external-storage.md), [TypeScript](./typescript/tutorials/external-storage.md)) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.
+
 ### Why am I seeing an error that function X was recorded when Y was expected?
 
 This error arises when DBOS is recovering a workflow and attempts to execute step Y, but finds a checkpoint in the database for step X instead.
