@@ -1422,6 +1422,7 @@ interface VersionInfo {
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
+If called from within a workflow, the operation is recorded as a step.
 This query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 ### DBOS.getLatestApplicationVersion
@@ -1432,6 +1433,7 @@ static async DBOS.getLatestApplicationVersion(): Promise<VersionInfo>
 
 Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Throws if no versions are registered.
+If called from within a workflow, the operation is recorded as a step.
 
 ### DBOS.setLatestApplicationVersion
 
@@ -1444,6 +1446,7 @@ static async DBOS.setLatestApplicationVersion(
 
 Promote a version to latest by updating its timestamp to the current time.
 This is useful when rolling back to a previous application version.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `versionName`: The name of the version to promote.

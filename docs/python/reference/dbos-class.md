@@ -117,6 +117,7 @@ Create or migrate the DBOS [system database](../../explanations/system-tables.md
 This is the programmatic equivalent of the [`dbos migrate`](./cli.md#dbos-migrate) command.
 Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`run_migrations=False`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
 It can be called before or without constructing a DBOS instance.
+May not be called from a workflow.
 
 **Parameters:**
 - `system_database_url`: The system database to create or migrate. The database is created if it does not exist.

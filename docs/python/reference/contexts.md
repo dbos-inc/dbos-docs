@@ -970,6 +970,7 @@ QueueConflictResolution = Literal[
 Register a [queue](./queues.md) and persist its configuration to the system database, returning the [`Queue`](./queues.md#class-dbosqueue).
 DBOS must be launched before calling `register_queue`.
 If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
@@ -1050,6 +1051,7 @@ DBOS.list_queues(
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `application_name`: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
@@ -1148,6 +1150,7 @@ DBOS.delete_queue(name: str) -> None
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
+If called from within a workflow, the operation is recorded as a step.
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
@@ -2075,6 +2078,7 @@ class VersionInfo(TypedDict):
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
+If called from within a workflow, the operation is recorded as a step.
 
 ### list_application_versions_async
 
@@ -2092,6 +2096,7 @@ DBOS.get_latest_application_version() -> VersionInfo
 
 Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Raises `DBOSException` if no versions are registered.
+If called from within a workflow, the operation is recorded as a step.
 
 ### get_latest_application_version_async
 
@@ -2113,6 +2118,7 @@ DBOS.set_latest_application_version(
 
 Promote a version to latest by updating its timestamp to the current time.
 This is useful when rolling back to a previous application version.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `version_name`: The name of the version to promote.
