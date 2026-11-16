@@ -39,7 +39,7 @@ If the workflow is suspended, cancelling it means it never wakes.
 
 #### Resuming Workflows
 
-You can resume any `ENQUEUED`, `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
+You can resume any `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
 
 #### Forking Workflows

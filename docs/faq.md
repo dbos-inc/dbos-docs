@@ -24,7 +24,7 @@ When sizing your database for DBOS, we recommend using that number (scaled to yo
 ### Why is my queue stuck?
 
 If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./conductor/workflow-management.md)
-If you need to, you can cancel tasks to remove them from the queue.
+If you need to, you can cancel tasks to free up the queue.
 
 ### Why is my workflow not finishing?
 
