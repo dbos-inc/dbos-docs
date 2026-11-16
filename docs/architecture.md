@@ -122,7 +122,7 @@ When operating DBOS durable workflows in production, we strongly recommend conne
 Conductor is the control plane for your durable workflows, providing:
 
 - [**High availability**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization, scaling to billions of workflows.
 - [**Workflow and queue management**](./conductor/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./conductor/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 - [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
