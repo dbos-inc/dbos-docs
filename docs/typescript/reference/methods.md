@@ -722,7 +722,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 A currently executing step is not interrupted, but it can observe the cancellation through [`DBOS.stepStatus.cancelSignal`](#dbosstepstatus) and stop early.
 
 **Parameters:**
@@ -746,25 +746,27 @@ Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) 
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string,
-  options?: { queueName?: string; shardKey?: string }
+  options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 
 Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to resume.
+- **options.queueName**: Move the resumed workflow to this queue.
+- **options.queuePartitionKey**: Move the resumed workflow to this queue partition.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### DBOS.resumeWorkflows
 
 ```typescript
 DBOS.resumeWorkflows<T>(
   workflowIDs: string[],
-  options?: { queueName?: string; shardKey?: string }
+  options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>[]>
 ```
 
@@ -831,8 +833,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Defaults to the original workflow's application version. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
-- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
-- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+- **queueName**: Enqueue the forked workflow on this queue instead of the original workflow's.
+- **queuePartitionKey**: Enqueue the forked workflow on this queue partition instead of the original workflow's.
 - **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
@@ -874,8 +876,8 @@ Rewinding a workflow:
 - **workflowID**: The ID of the workflow to rewind.
 - **startStep**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to `0`, the first step.
 - **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
-- **queueName**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
-- **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if `queueName` is a partitioned queue.
+- **queueName**: Move the rewound workflow to this queue.
+- **queuePartitionKey**: Move the rewound workflow to this queue partition.
 - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### Workflow Status

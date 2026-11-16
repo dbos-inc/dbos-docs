@@ -66,7 +66,6 @@ If the workflow is executing, it is interrupted at the beginning of its next ste
 **Description:**
 Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `-s, --sys-db-url <string>`: Your DBOS system database URL

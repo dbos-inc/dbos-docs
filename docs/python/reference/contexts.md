@@ -1424,7 +1424,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
@@ -1462,19 +1462,18 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 **Parameters:**
+- `queue_name`: Move the resumed workflow to this queue.
+- `queue_partition_key`: Move the resumed workflow to this queue partition.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### resume_workflow_async
@@ -1488,6 +1487,7 @@ DBOS.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
@@ -1526,7 +1526,7 @@ Raises `DBOSNonExistentWorkflowError` if the workflow identified by `workflow_id
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
-If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+If `queue_name` or `queue_partition_key` is provided, the forked workflow is enqueued on that queue or partition instead of the original workflow's.
 
 If `replacement_children` is provided, it maps original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
@@ -1576,8 +1576,8 @@ Rewinding a workflow:
 - **workflow_id**: The ID of the workflow to rewind.
 - **start_step**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to the first step.
 - **application_version**: The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
-- **queue_name**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
-- **queue_partition_key**: The partition key to enqueue the rewound workflow under, if `queue_name` is a partitioned queue.
+- **queue_name**: Move the rewound workflow to this queue.
+- **queue_partition_key**: Move the rewound workflow to this queue partition.
 - **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### rewind_workflow_async
