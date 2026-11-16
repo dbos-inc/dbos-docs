@@ -1764,6 +1764,18 @@ Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RE
 Rewinding clears the workflow's output, rolls back events it set at or after `start_step`, deletes messages it received at or after `start_step`, and deletes the checkpoints of datasource transactions at or after `start_step`.
 `application_version` behaves as in `fork_workflow`. If `queue_name` or `queue_partition_key` is provided, the rewound workflow is moved to that queue or partition.
 
+### recover_workflows
+
+```python
+DBOS.recover_workflows(
+    executor_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Recover the `PENDING` workflows of the given executors (for example, executors that crashed or were shut down) and return handles to them.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Safe to call more than once. May not be called from within a workflow or step. Use `recover_workflows_async` from async code.
+
 ### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.

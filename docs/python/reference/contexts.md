@@ -1584,6 +1584,30 @@ Rewinding a workflow:
 
 Coroutine version of [`rewind_workflow`](#rewind_workflow).
 
+### recover_workflows
+
+```python
+DBOS.recover_workflows(
+    executor_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Recover the `PENDING` workflows of the given executors, for example executors that crashed or were shut down.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Returns handles to the recovered workflows.
+See [Workflow Recovery](../../production/workflow-recovery.md) for details.
+
+Only recovers workflows belonging to this application.
+Safe to call more than once: a workflow already picked up by a live executor is not recovered again.
+May not be called from within a workflow or step.
+
+**Parameters:**
+- **executor_ids**: The IDs of the executors whose workflows to recover.
+
+### recover_workflows_async
+
+Coroutine version of [`recover_workflows`](#recover_workflows). Returns `List[WorkflowHandleAsync[Any]]`.
+
 ### delete_workflow
 
 ```python

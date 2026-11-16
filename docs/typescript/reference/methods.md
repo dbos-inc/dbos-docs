@@ -880,6 +880,26 @@ Rewinding a workflow:
 - **queuePartitionKey**: Move the rewound workflow to this queue partition.
 - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
+### DBOS.recoverWorkflows
+
+```typescript
+DBOS.recoverWorkflows<T = unknown>(
+  executorIDs: string[]
+): Promise<WorkflowHandle<Awaited<T>>[]>
+```
+
+Recover the `PENDING` workflows of the given executors, for example executors that crashed or were shut down.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Returns handles to the recovered workflows.
+See [Workflow Recovery](../../production/workflow-recovery.md) for details.
+
+Only recovers workflows belonging to this application.
+Safe to call more than once: a workflow already picked up by a live executor is not recovered again.
+Throws if called from within a workflow or step.
+
+**Parameters:**
+- **executorIDs**: The IDs of the executors whose workflows to recover.
+
 ### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
