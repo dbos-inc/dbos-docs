@@ -13,6 +13,23 @@ Where DBOS applications use the [`DBOS` methods](./contexts.md),
 external applications use `DBOSClient` instead.
 :::
 
+### Using a Client in a Workflow
+
+A DBOS application can use a `DBOSClient` to interact with another DBOS application, including from its own workflows.
+When called from workflow code, a client method runs as a checkpointed [step](../tutorials/step-tutorial.md) of the calling workflow.
+If the workflow is recovered or replayed, the method returns its recorded result instead of running again.
+
+Some methods cannot be checkpointed this way and may only be called from a step or outside a workflow.
+They raise a `DBOSException` if called from workflow code:
+
+- [`check_connection`](#check_connection)
+- [`load_external_object`](#load_external_object)
+- [`enqueue_in_transaction`](#enqueue_in_transaction), [`send_in_transaction`](#send_in_transaction), and [`send_bulk_in_transaction`](#send_bulk_in_transaction)
+- [`backfill_schedule`](#backfill_schedule) and [`trigger_schedule`](#trigger_schedule)
+
+From an `async` workflow, use the `_async` variant of each method.
+The synchronous variants raise a `RuntimeError` there instead of blocking the event loop.
+
 ### Constructor
 
 ```python
@@ -69,6 +86,7 @@ client.check_connection() -> None
 
 Verify that the client can reach the system database, raising an exception if it cannot.
 Useful for checking the connection of a client constructed with [`lazy=True`](#constructor), or for verifying at any time that the connection is still healthy.
+May be called from a step or outside a workflow, but not from workflow code.
 
 ### check_connection_async
 
@@ -122,6 +140,7 @@ client.enqueue(
 
 Enqueue a workflow for processing and return a handle to it, similar to [Queue.enqueue](queues.md#enqueue).
 Returns a [WorkflowHandle](./workflow_handles.md#workflowhandle).
+When called from workflow code, the enqueued workflow is recorded as a child of the calling workflow.
 
 When enqueuing a workflow from within a DBOS application, the workflow and queue metadata can be retrieved automatically.
 However, since `DBOSClient` runs outside the DBOS application, the metadata must be specified explicitly.
@@ -230,6 +249,7 @@ The remaining parameters are the same as [enqueue](#enqueue), except that `dupli
 You own the transaction: `enqueue_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
 The returned [WorkflowHandle](./workflow_handles.md#workflowhandle) is created immediately, but the workflow is not enqueued until you commit, so do not call `get_result` on the handle until after the transaction commits.
+May be called from a step or outside a workflow, but not from workflow code.
 
 :::warning
 `conn_or_session` must target the DBOS system database.
@@ -425,6 +445,7 @@ The remaining parameters are the same as [send](#send).
 You own the transaction: `send_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
 The message is not visible to the destination workflow until the transaction commits.
+May be called from a step or outside a workflow, but not from workflow code.
 
 :::warning
 `conn_or_session` must target the DBOS system database.
@@ -541,6 +562,7 @@ See [`send_bulk`](#send_bulk) for the `SendMessage` definition.
 You own the transaction: `send_bulk_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
 The messages are not visible to their destination workflows until the transaction commits.
+May be called from a step or outside a workflow, but not from workflow code.
 
 :::warning
 `conn_or_session` must target the DBOS system database.
@@ -619,7 +641,8 @@ client.read_stream(
 Read values from a stream as a generator.
 This function reads values from a stream identified by the workflow_id and key,
 yielding each value in order until the stream is closed or the workflow terminates.
-Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client reads are never checkpointed.
+Similar to [`DBOS.read_stream`](contexts.md#read_stream).
+When called from workflow code, each value read is checkpointed to the database as a step of the calling workflow, so a replayed workflow re-yields the values it originally read.
 
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
@@ -759,6 +782,7 @@ client.load_external_object(
 
 Load the value an [external object](../tutorials/external-storage.md) reference points to.
 Similar to [`DBOS.load_external_object`](./contexts.md#load_external_object).
+May be called from a step or outside a workflow, but not from workflow code.
 
 ### load_external_object_async
 
@@ -877,6 +901,7 @@ client.retrieve_queue(name: str) -> Optional[Queue]
 
 Retrieve a queue by name from the system database, or `None` if no queue with that name has been registered.
 Similar to [`DBOS.retrieve_queue`](./contexts.md#retrieve_queue).
+Unlike other client methods, `retrieve_queue` is not checkpointed when called from workflow code.
 
 ### retrieve_queue_async
 
@@ -1619,6 +1644,10 @@ client.pause_schedule(name: str) -> None
 Pause the schedule with the given name. A paused schedule does not fire.
 Similar to [`DBOS.pause_schedule`](./contexts.md#pause_schedule).
 
+### pause_schedule_async
+
+Coroutine version of [`pause_schedule`](#pause_schedule).
+
 ### resume_schedule
 
 ```python
@@ -1627,6 +1656,10 @@ client.resume_schedule(name: str) -> None
 
 Resume a paused schedule so it begins firing again.
 Similar to [`DBOS.resume_schedule`](./contexts.md#resume_schedule).
+
+### resume_schedule_async
+
+Coroutine version of [`resume_schedule`](#resume_schedule).
 
 ### apply_schedules
 
@@ -1667,6 +1700,7 @@ client.backfill_schedule(
 Enqueue (on the schedule's `queue_name`, or an internal queue if it has none) all executions of a schedule that would have run between `start` and `end`.
 Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
 Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
+May be called from a step or outside a workflow, but not from workflow code.
 
 ### trigger_schedule
 
@@ -1676,6 +1710,7 @@ client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 
 Immediately enqueue (on the schedule's `queue_name`, or an internal queue if it has none) the scheduled workflow at the current time.
 Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).
+May be called from a step or outside a workflow, but not from workflow code.
 
 ## Version Management
 

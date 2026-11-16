@@ -1767,6 +1767,10 @@ DBOS.pause_schedule(name: str) -> None
 
 Pause the schedule with the given name. A paused schedule does not fire.
 
+### pause_schedule_async
+
+Coroutine version of [`pause_schedule`](#pause_schedule).
+
 ### resume_schedule
 
 ```python
@@ -1774,6 +1778,10 @@ DBOS.resume_schedule(name: str) -> None
 ```
 
 Resume a paused schedule so it begins firing again.
+
+### resume_schedule_async
+
+Coroutine version of [`resume_schedule`](#resume_schedule).
 
 ### apply_schedules
 
