@@ -1785,7 +1785,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 If `cancelChildren` is true, also cancel all child workflows recursively.
 
 ### DBOS.resumeWorkflow
@@ -1793,15 +1793,13 @@ If `cancelChildren` is true, also cancel all child workflows recursively.
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string,
-  options?: { queueName?: string }
+  options?: { queueName?: string; queuePartitionKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+If `queueName` or `queuePartitionKey` is provided, the resumed workflow is moved to that queue or partition.
 Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 ### DBOS.forkWorkflow
@@ -1830,8 +1828,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
-- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
-- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+- **queueName**: Enqueue the forked workflow on this queue instead of the original workflow's.
+- **queuePartitionKey**: Enqueue the forked workflow on this queue partition instead of the original workflow's.
 
 ### DBOS.rewindWorkflow
 
@@ -1851,7 +1849,19 @@ Rewind a workflow to a specific step and re-execute it from that step, keeping i
 Steps with IDs greater than or equal to `startStep` are discarded and re-executed; `startStep` defaults to `0`, re-executing the whole workflow.
 Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
 Rewinding clears the workflow's output, rolls back events it set at or after `startStep`, deletes messages it received at or after `startStep`, and deletes the checkpoints of data source transactions at or after `startStep`.
-`applicationVersion`, `queueName`, and `queuePartitionKey` behave as in `forkWorkflow`.
+`applicationVersion` behaves as in `forkWorkflow`. If `queueName` or `queuePartitionKey` is provided, the rewound workflow is moved to that queue or partition.
+
+### DBOS.recoverWorkflows
+
+```typescript
+DBOS.recoverWorkflows<T = unknown>(
+  executorIDs: string[]
+): Promise<WorkflowHandle<Awaited<T>>[]>
+```
+
+Recover the `PENDING` workflows of the given executors (for example, executors that crashed or were shut down) and return handles to them.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Safe to call more than once. Throws if called from within a workflow or step.
 
 ## Upgrading Workflow Code
 

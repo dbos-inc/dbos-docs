@@ -70,8 +70,8 @@ class DBOSClient {
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
     cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
-    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>>;
-    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
     deleteWorkflow(workflowID: string, deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
     deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,

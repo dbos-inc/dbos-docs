@@ -40,7 +40,6 @@ const workflows = await DBOS.listWorkflows({ attributes: { customer: 'acme' } })
 You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancelWorkflow`](../reference/methods.md#dboscancelworkflow), or through the command line with [`npx dbos workflow cancel`](../reference/cli.md#npx-dbos-workflow-cancel).
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
 
 A step that is executing when its workflow is cancelled is not interrupted, but it can stop early by observing [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus), an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that fires when the workflow is cancelled.
 Pass it to APIs that accept a signal (for example, `fetch`) to cancel the step's underlying operation:
@@ -58,7 +57,6 @@ async function fetchData() {
 You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resumeWorkflow`](../reference/methods.md#dbosresumeworkflow), or through the command line with [`npx dbos workflow resume`](../reference/cli.md#npx-dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 ## Forking Workflows
 

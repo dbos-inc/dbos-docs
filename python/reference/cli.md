@@ -66,7 +66,6 @@ If the workflow is executing, it is interrupted at the beginning of its next ste
 **Description:**
 Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to resume.
@@ -127,6 +126,7 @@ Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`run_migrations=False`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
 You can also run these migrations from code with [`DBOS.migrate`](./dbos-class.md#migrate).
 This command does not migrate the tables used by [datasources](./datasources.md); use [`SQLAlchemyDatasource.migrate`](./datasources.md#sqlalchemydatasourcemigrate) for those.
+On Postgres, if another process is migrating the system database and holds the migration lock for more than 30 seconds, this command fails without migrating; retry once the other migration finishes.
 
 **Arguments:**
 

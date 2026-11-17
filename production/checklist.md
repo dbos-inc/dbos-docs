@@ -36,6 +36,7 @@ You can configure the maximum number of connections a DBOS application can make 
 We do not recommend setting this to less than 5.
 
 **Monitor Database Usage** - A DBOS workflow requires two-three database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome, and optionally one to dequeue it if it was enqueued) plus one additional write per step (to checkpoint the step's outcome).
+The size of each write depends on the size of the checkpointed inputs and outputs, so keep large objects such as files out of them using external storage ([Python](../python/tutorials/external-storage.md), [TypeScript](../typescript/tutorials/external-storage.md)).
 In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
 In practice, if your expected load exceeds 1K workflows or steps per second, you should perform load tests to verify your Postgres database can handle the load or if you need a larger instance.
 If it approaches or exceeds 20K workflows or steps per second, we recommend [sharding](../python/tutorials/sharding.md) workflows across multiple Postgres servers, which scales linearly to over 1M workflows or steps per second.

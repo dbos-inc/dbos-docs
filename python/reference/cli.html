@@ -14,7 +14,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.f32c0534.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.35af3fee.js" defer="defer"></script>
 <script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
@@ -79,8 +79,7 @@ If the workflow is executing, it is interrupted at the beginning of its next ste
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="dbos-workflow-resume">dbos workflow resume<a href="#dbos-workflow-resume" class="hash-link" aria-label="Direct link to dbos workflow resume" title="Direct link to dbos workflow resume" translate="no">​</a></h3>
 <p><strong>Description:</strong>
 Resume a workflow from its last completed step.
-You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an <code>ENQUEUED</code> workflow, bypassing its queue.</p>
+You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.</p>
 <p><strong>Arguments:</strong></p>
 <ul>
 <li class=""><code>&lt;workflow-id&gt;</code>: The ID of the workflow to resume.</li>
@@ -141,7 +140,8 @@ In that case, this command can be run with a privileged user to create all DBOS 
 Use the <code>-r</code> flag to grant a role access to that schema.
 Such an application should also be configured with <a class="" href="/python/reference/configuration#database-connection-settings"><code>run_migrations=False</code></a>, so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
 You can also run these migrations from code with <a class="" href="/python/reference/dbos-class#migrate"><code>DBOS.migrate</code></a>.
-This command does not migrate the tables used by <a class="" href="/python/reference/datasources">datasources</a>; use <a class="" href="/python/reference/datasources#sqlalchemydatasourcemigrate"><code>SQLAlchemyDatasource.migrate</code></a> for those.</p>
+This command does not migrate the tables used by <a class="" href="/python/reference/datasources">datasources</a>; use <a class="" href="/python/reference/datasources#sqlalchemydatasourcemigrate"><code>SQLAlchemyDatasource.migrate</code></a> for those.
+On Postgres, if another process is migrating the system database and holds the migration lock for more than 30 seconds, this command fails without migrating; retry once the other migration finishes.</p>
 <p><strong>Arguments:</strong></p>
 <ul>
 <li class=""><code>-s, --sys-db-url URL</code>: A connection string for your DBOS <a class="" href="/explanations/system-tables">system database</a>, in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.</li>

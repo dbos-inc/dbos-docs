@@ -402,7 +402,7 @@ Cancels one or more workflows. Cancelling sets a workflow's status to `CANCELLED
 ### `dbosctl workflow resume`
 
 **Description:**
-Resumes one or more workflows from their last completed step. If a workflow is enqueued, resuming it bypasses the queue and starts it immediately.
+Resumes one or more workflows from their last completed step.
 
 **Arguments:**
 - `<workflow-id>...`: One or more workflow IDs. A literal `-` reads IDs from stdin.

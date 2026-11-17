@@ -14,7 +14,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.f32c0534.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.35af3fee.js" defer="defer"></script>
 <script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
@@ -25,8 +25,8 @@
 Conductor is the control plane for your durable workflows, providing:</p>
 <ul>
 <li class=""><a class="" href="/conductor/distributed-recovery"><strong>High availability</strong></a>: In a distributed environment with many executors running durable workflows, Conductor automatically detects when a workflow is interrupted (for example, if its executor disconnects or crashes) and recovers the workflow to another healthy executor.</li>
-<li class=""><a class="" href="/conductor/workflow-management"><strong>Workflow and queue observability</strong></a>: Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.</li>
-<li class=""><a class="" href="/conductor/workflow-management"><strong>Workflow and queue management</strong></a>: From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.</li>
+<li class=""><a class="" href="/conductor/workflow-management"><strong>Workflow and queue observability</strong></a>: Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization, scaling to billions of workflows.</li>
+<li class=""><a class="" href="/conductor/workflow-management"><strong>Workflow and queue management</strong></a>: From the Conductor dashboard, you can pause any workflow execution, start any stopped workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.</li>
 <li class=""><a class="" href="/conductor/retention"><strong>Managed Retention Policies</strong></a>: From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.</li>
 <li class=""><a class="" href="/conductor/autoscaling"><strong>Autoscaling and version management</strong></a>: Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.</li>
 <li class=""><a class="" href="/conductor/metrics"><strong>Observability Integrations</strong></a>: Conductor exposes metrics about your applications&#x27; workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.</li>

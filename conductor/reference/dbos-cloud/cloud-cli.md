@@ -459,7 +459,6 @@ Lists all currently enqueued functions in JSON format ordered by recency (most r
 **Description:**
 Cancel a workflow, setting its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
 
 **Arguments:**
 - `[application-name]`: The name of your application
@@ -470,7 +469,6 @@ If the workflow is enqueued, cancelling removes it from the queue.
 **Description:**
 Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `[application-name]`: The name of your application

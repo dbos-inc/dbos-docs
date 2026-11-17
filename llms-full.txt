@@ -814,7 +814,8 @@ Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) wo
 
 It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
-Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).
+Thus, we recommend keeping large objects such as files out of workflow and step inputs and outputs.
+Instead, use external storage ([Python](./python/tutorials/external-storage.md), [TypeScript](./typescript/tutorials/external-storage.md)) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.
 
 ### How Workflow Recovery Works
 
@@ -869,18 +870,23 @@ You can customize the rate and concurrency at which workflows are dequeued and e
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
 For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md), [Java](./java/tutorials/queue-tutorial.md)).
 
-### Operating DBOS in Production with Conductor
+### Operating DBOS in Production with Conductor & Transact Enterprise {#operating-dbos-in-production-with-conductor}
 
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 Conductor is the control plane for your durable workflows, providing:
 
 - [**High availability**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization, scaling to billions of workflows.
 - [**Workflow and queue management**](./conductor/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./conductor/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 - [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./conductor/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
-- [**DBOS Transact Enterprise access**](./explanations/transact-enterprise.md): Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.
+
+Conductor also gives your applications access to [DBOS Transact Enterprise](./explanations/transact-enterprise.md), the commercial extension to the open-source DBOS Transact library, which provides features such as:
+- **Sharding** ([**Python**](./python/tutorials/sharding.md), [**TypeScript**](./typescript/tutorials/sharding.md)): Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
+- **Auto-upgrade** ([**Python**](./python/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**TypeScript**](./typescript/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**Go**](./golang/tutorials/upgrading-workflows.md#auto-upgrading-workflows)): Automatically move workflows from older application versions to the latest version.
+- **Suspending workflows** ([**Python**](./python/tutorials/workflow-tutorial.md#suspending-workflows), [**TypeScript**](./typescript/tutorials/workflow-tutorial.md#suspending-workflows)): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
+- **External storage** ([**Python**](./python/tutorials/external-storage.md), [**TypeScript**](./typescript/tutorials/external-storage.md)): Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
 
 Architecturally, Conductor looks like this:
 
@@ -1811,8 +1817,8 @@ When operating DBOS durable workflows in production, we strongly recommend conne
 Conductor is the control plane for your durable workflows, providing:
 
 - [**High availability**](./distributed-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when a workflow is interrupted (for example, if its executor disconnects or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
-- [**Workflow and queue management**](./workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
+- [**Workflow and queue observability**](./workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization, scaling to billions of workflows.
+- [**Workflow and queue management**](./workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 - [**Autoscaling and version management**](./autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
@@ -3246,7 +3252,6 @@ Lists all currently enqueued functions in JSON format ordered by recency (most r
 **Description:**
 Cancel a workflow, setting its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
 
 **Arguments:**
 - `[application-name]`: The name of your application
@@ -3257,7 +3262,6 @@ If the workflow is enqueued, cancelling removes it from the queue.
 **Description:**
 Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `[application-name]`: The name of your application
@@ -3353,7 +3357,7 @@ It provides:
 
 - [**Application hosting and autoscaling**](./application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
 - [**Managed workflow recovery**](./application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
-- [**Workflow and queue management**](./workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps. Cancel, resume, or fork any workflow execution and manage the tasks in your distributed queues.
+- [**Workflow and queue management**](./workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps, scaling to billions of workflows. Cancel, resume, or fork any workflow execution and manage the tasks in your distributed queues.
 
 ### Deploying Your App to DBOS Cloud
 
@@ -3956,14 +3960,13 @@ You can manage individual workflows directly from the DBOS Console.
 You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`.
 Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued or delayed, cancelling removes it from the queue.
+If the workflow is enqueued or delayed, cancelling it means it is never dequeued.
 If the workflow is suspended, cancelling it means it never wakes.
 
 ##### Resuming Workflows
 
-You can resume any `ENQUEUED`, `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
+You can resume any `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
-If the workflow is enqueued, this bypasses the queue to start it immediately.
 
 ##### Forking Workflows
 
@@ -4380,7 +4383,7 @@ Cancels one or more workflows. Cancelling sets a workflow's status to `CANCELLED
 #### `dbosctl workflow resume`
 
 **Description:**
-Resumes one or more workflows from their last completed step. If a workflow is enqueued, resuming it bypasses the queue and starts it immediately.
+Resumes one or more workflows from their last completed step.
 
 **Arguments:**
 - `<workflow-id>...`: One or more workflow IDs. A literal `-` reads IDs from stdin.
@@ -5899,6 +5902,15 @@ It is always safe to upgrade directly from any past version to any later version
 
 To be notified of new releases, subscribe to the [RSS feed](https://docs.dbos.dev/conductor/self-hosting/release-notes.xml).
 
+### v0.22.0
+
+*November 13, 2026*
+
+- Console users can now save views for each application.
+- Registering an application that is already registered now succeeds instead of returning a conflict, so deploy scripts can safely register their application every time.
+- Workflow charts now include [suspended workflows](../../python/tutorials/workflow-tutorial.md#suspending-workflows), and [autoscaling](../autoscaling.md) no longer keeps an old application version's executors running for its suspended workflows.
+- Faster workflow charts over long time ranges.
+
 ### v0.21.0
 
 *October 30, 2026*
@@ -5998,14 +6010,13 @@ You can manage individual workflows directly from the DBOS Console.
 You can cancel any workflow that has not completed: `PENDING`, `ENQUEUED`, `DELAYED`, or `SUSPENDED`.
 Cancelling a workflow sets its status to `CANCELLED`.
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued or delayed, cancelling removes it from the queue.
+If the workflow is enqueued or delayed, cancelling it means it is never dequeued.
 If the workflow is suspended, cancelling it means it never wakes.
 
 ##### Resuming Workflows
 
-You can resume any `ENQUEUED`, `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
+You can resume any `DELAYED`, `SUSPENDED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
-If the workflow is enqueued, this bypasses the queue to start it immediately.
 
 ##### Forking Workflows
 
@@ -7367,6 +7378,11 @@ In Temporal, you can define a codec to encrypt workflow information before it is
 In DBOS, this is rarely necessary because data is stored **only** in your own database.
 However, if it is necessary to store sensitive data encrypted, you can use a custom serializer ([Python](../python/reference/contexts.md#custom-serialization), [TypeScript](../typescript/reference/configuration.md#custom-serialization)) to encrypt your data before storing it and decrypt it before retrieving it.
 
+### Large Payloads
+
+Temporal limits the size of workflow and activity payloads, so large data is usually stored in blob storage and passed by reference (the "claim check" pattern), often implemented with a custom codec.
+In DBOS, use external storage ([Python](../python/tutorials/external-storage.md), [TypeScript](../typescript/tutorials/external-storage.md)) instead: DBOS keeps large objects in a separate store such as Amazon S3 and checkpoints only a small reference to each one.
+
 ### What's Different in DBOS
 
 #### No Orchestration Server
@@ -8390,7 +8406,7 @@ This table tracks which DBOS system database schema migrations have been applied
 ## DBOS Transact Enterprise
 
 **DBOS Transact Enterprise** is the commercial extension to the open-source (MIT license) DBOS Transact library.
-DBOS Transact Enterprise is not open source; it is licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+DBOS Transact Enterprise is licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
 All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to DBOS Transact Enterprise.
 
 ### Features
@@ -8400,7 +8416,7 @@ DBOS Transact Enterprise provides:
 - **Conductor access**: DBOS Transact Enterprise comes with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
 - **Sharding**: Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
-- **Auto-upgrade**: Automatically moves workflows left on older application versions to the latest version.
+- **Auto-upgrade**: Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
 - **External storage**: Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
 
@@ -8545,7 +8561,7 @@ When sizing your database for DBOS, we recommend using that number (scaled to yo
 #### Why is my queue stuck?
 
 If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./conductor/workflow-management.md)
-If you need to, you can cancel tasks to remove them from the queue.
+If you need to, you can cancel tasks to free up the queue.
 
 #### Why is my workflow not finishing?
 
@@ -8574,6 +8590,9 @@ Instead, either construct the object inside the workflow from parameters passed 
 #### How large can serialized step and workflow outputs be?
 
 DBOS stores two serialized fields (`inputs` and `output`) for each workflow  and one `output` field for each step. Each of these is stored as a Postgres `TEXT` value which is limited by the maximum field size; currently 1GB. See [Postgres documentation](https://wiki.postgresql.org/wiki/FAQ#What_is_the_maximum_size_for_a_row.2C_a_table.2C_and_a_database.3F).
+
+However, we recommend keeping large objects such as files or datasets out of the system database.
+Instead, use external storage ([Python](./python/tutorials/external-storage.md), [TypeScript](./typescript/tutorials/external-storage.md)) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.
 
 #### Why am I seeing an error that function X was recorded when Y was expected?
 
@@ -31268,6 +31287,7 @@ You can configure the maximum number of connections a DBOS application can make 
 We do not recommend setting this to less than 5.
 
 **Monitor Database Usage** - A DBOS workflow requires two-three database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome, and optionally one to dequeue it if it was enqueued) plus one additional write per step (to checkpoint the step's outcome).
+The size of each write depends on the size of the checkpointed inputs and outputs, so keep large objects such as files out of them using external storage ([Python](../python/tutorials/external-storage.md), [TypeScript](../typescript/tutorials/external-storage.md)).
 In [benchmarks](https://www.dbos.dev/blog/one-million-workflows), a DBOS application using a single 16-vCPU Postgres server can sustain a throughput of 20K workflows or steps per second.
 In practice, if your expected load exceeds 1K workflows or steps per second, you should perform load tests to verify your Postgres database can handle the load or if you need a larger instance.
 If it approaches or exceeds 20K workflows or steps per second, we recommend [sharding](../python/tutorials/sharding.md) workflows across multiple Postgres servers, which scales linearly to over 1M workflows or steps per second.
@@ -32654,27 +32674,47 @@ aws rds delete-db-subnet-group --db-subnet-group-name dbos-app-db --region $AWS_
 
 ## Workflow Recovery
 
-When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
-To prevent duplicate work, it is important to detect interruptions promptly and to recover each workflow only once.
-This guide describes how to manage workflow recovery in a production environment.
+When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), the workflow must be recovered so it resumes from its last completed step.
 
-### Managing Recovery
+Each workflow is tagged with the ID of the executor running it.
+To **recover** an executor's workflows, DBOS re-enqueues all of that executor's `PENDING` workflows.
+Any executor running a workflow's application version can then dequeue it and resume it from its last completed step.
+An application only recovers its own workflows, so applications [sharing a system database](../explanations/sharing-a-system-database.md) never recover each other's workflows.
 
-#### Recovery On A Single Server
-
-If hosting an application on a single server without Conductor, each time you restart your application's process, DBOS recovers all workflows that were executing before the restart (all `PENDING` workflows).
-
-#### Recovery in a Distributed Setting
-
-When self-hosting in a distributed setting without Conductor, it is important to manage workflow recovery so that when an executor crashes, restarts, or is shut down, its workflows are recovered.
-You should assign each executor running a DBOS application an executor ID through DBOS configuration.
-Each workflow is tagged with the ID of the executor that started it.
-When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID and owned by that application, so applications [sharing a system database](../explanations/sharing-a-system-database.md) never recover each other's workflows.
-
-#### Recovery With Conductor
+### Recovery With Conductor
 
 If your application is connected to [DBOS Conductor](../conductor/overview.md), workflow recovery is automatic: when Conductor detects that an executor is unhealthy, it signals another executor to recover its workflows.
 See [Distributed Recovery](../conductor/distributed-recovery.md) for details.
+
+### Recovery Without Conductor
+
+When an executor launches, it recovers its own `PENDING` workflows.
+On a single server, this means that each time you restart your application, DBOS recovers all workflows that were executing before the restart.
+
+In a distributed setting, give each executor a unique, stable executor ID through DBOS configuration ([Python](../python/reference/configuration.md#application-settings), [TypeScript](../typescript/reference/configuration.md#application-settings)).
+An executor that restarts with the same ID recovers its own workflows.
+If an executor is gone for good (for example, its host failed or it was scaled down), recover its workflows from any other executor:
+
+**Python**
+
+```python
+handles = DBOS.recover_workflows(["executor-1"])
+```
+
+See [`DBOS.recover_workflows`](../python/reference/contexts.md#recover_workflows).
+
+**TypeScript**
+
+```typescript
+const handles = await DBOS.recoverWorkflows(["executor-1"]);
+```
+
+See [`DBOS.recoverWorkflows`](../typescript/reference/methods.md#dbosrecoverworkflows).
+
+Recovery is safe to repeat: once a live executor dequeues a recovered workflow, the workflow belongs to that executor, so recovering the original executor again does not run it a second time.
+
+Only recover executors you know have stopped.
+If an executor is still running when its workflows are recovered, DBOS detects the [concurrent execution](../explanations/concurrent-executions.md) and records each workflow's outcome exactly once, but steps may execute more than once.
 
 ---
 
@@ -37005,7 +37045,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 If `cancel_children` is `True`, also recursively cancels all child workflows started by this workflow.
 
 #### resume_workflow
@@ -37015,14 +37055,13 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+If `queue_name` or `queue_partition_key` is provided, the resumed workflow is moved to that queue or partition.
 
 #### fork_workflow
 
@@ -37043,7 +37082,7 @@ The specified `start_step` is the step from which the new workflow will start, s
 
 The forked workflow will have a new workflow ID, which can be set with `SetWorkflowID`.
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
-If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+If `queue_name` or `queue_partition_key` is provided, the forked workflow is enqueued on that queue or partition instead of the original workflow's.
 
 #### rewind_workflow
 
@@ -37062,7 +37101,19 @@ Rewind a workflow to a specific step and re-execute it from that step, keeping i
 Steps with IDs greater than or equal to `start_step` are discarded and re-executed; if `start_step` is not provided, the whole workflow re-executes.
 Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
 Rewinding clears the workflow's output, rolls back events it set at or after `start_step`, deletes messages it received at or after `start_step`, and deletes the checkpoints of datasource transactions at or after `start_step`.
-`application_version`, `queue_name`, and `queue_partition_key` behave as in `fork_workflow`.
+`application_version` behaves as in `fork_workflow`. If `queue_name` or `queue_partition_key` is provided, the rewound workflow is moved to that queue or partition.
+
+#### recover_workflows
+
+```python
+DBOS.recover_workflows(
+    executor_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Recover the `PENDING` workflows of the given executors (for example, executors that crashed or were shut down) and return handles to them.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Safe to call more than once. May not be called from within a workflow or step. Use `recover_workflows_async` from async code.
 
 #### Workflow Status
 
@@ -37426,7 +37477,6 @@ If the workflow is executing, it is interrupted at the beginning of its next ste
 **Description:**
 Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to resume.
@@ -37487,6 +37537,7 @@ Use the `-r` flag to grant a role access to that schema.
 Such an application should also be configured with [`run_migrations=False`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
 You can also run these migrations from code with [`DBOS.migrate`](./dbos-class.md#migrate).
 This command does not migrate the tables used by [datasources](./datasources.md); use [`SQLAlchemyDatasource.migrate`](./datasources.md#sqlalchemydatasourcemigrate) for those.
+On Postgres, if another process is migrating the system database and holds the migration lock for more than 30 seconds, this command fails without migrating; retry once the other migration finishes.
 
 **Arguments:**
 
@@ -37566,6 +37617,23 @@ Where DBOS applications use the [`DBOS` methods](./contexts.md),
 external applications use `DBOSClient` instead.
 :::
 
+#### Using a Client in a Workflow
+
+A DBOS application can use a `DBOSClient` to interact with another DBOS application, including from its own workflows.
+When called from workflow code, a client method runs as a checkpointed [step](../tutorials/step-tutorial.md) of the calling workflow.
+If the workflow is recovered or replayed, the method returns its recorded result instead of running again.
+
+Some methods cannot be checkpointed this way and may only be called from a step or outside a workflow.
+They raise a `DBOSException` if called from workflow code:
+
+- [`check_connection`](#check_connection)
+- [`load_external_object`](#load_external_object)
+- [`enqueue_in_transaction`](#enqueue_in_transaction), [`send_in_transaction`](#send_in_transaction), and [`send_bulk_in_transaction`](#send_bulk_in_transaction)
+- [`backfill_schedule`](#backfill_schedule) and [`trigger_schedule`](#trigger_schedule)
+
+From an `async` workflow, use the `_async` variant of each method.
+The synchronous variants raise a `RuntimeError` there instead of blocking the event loop.
+
 #### Constructor
 
 ```python
@@ -37622,6 +37690,7 @@ client.check_connection() -> None
 
 Verify that the client can reach the system database, raising an exception if it cannot.
 Useful for checking the connection of a client constructed with [`lazy=True`](#constructor), or for verifying at any time that the connection is still healthy.
+May be called from a step or outside a workflow, but not from workflow code.
 
 #### check_connection_async
 
@@ -37675,6 +37744,7 @@ client.enqueue(
 
 Enqueue a workflow for processing and return a handle to it, similar to [Queue.enqueue](queues.md#enqueue).
 Returns a [WorkflowHandle](./workflow_handles.md#workflowhandle).
+When called from workflow code, the enqueued workflow is recorded as a child of the calling workflow.
 
 When enqueuing a workflow from within a DBOS application, the workflow and queue metadata can be retrieved automatically.
 However, since `DBOSClient` runs outside the DBOS application, the metadata must be specified explicitly.
@@ -37783,6 +37853,7 @@ The remaining parameters are the same as [enqueue](#enqueue), except that `dupli
 You own the transaction: `enqueue_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
 The returned [WorkflowHandle](./workflow_handles.md#workflowhandle) is created immediately, but the workflow is not enqueued until you commit, so do not call `get_result` on the handle until after the transaction commits.
+May be called from a step or outside a workflow, but not from workflow code.
 
 :::warning
 `conn_or_session` must target the DBOS system database.
@@ -37978,6 +38049,7 @@ The remaining parameters are the same as [send](#send).
 You own the transaction: `send_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
 The message is not visible to the destination workflow until the transaction commits.
+May be called from a step or outside a workflow, but not from workflow code.
 
 :::warning
 `conn_or_session` must target the DBOS system database.
@@ -38094,6 +38166,7 @@ See [`send_bulk`](#send_bulk) for the `SendMessage` definition.
 You own the transaction: `send_bulk_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
 You must commit (or roll back) the transaction yourself.
 The messages are not visible to their destination workflows until the transaction commits.
+May be called from a step or outside a workflow, but not from workflow code.
 
 :::warning
 `conn_or_session` must target the DBOS system database.
@@ -38172,7 +38245,8 @@ client.read_stream(
 Read values from a stream as a generator.
 This function reads values from a stream identified by the workflow_id and key,
 yielding each value in order until the stream is closed or the workflow terminates.
-Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client reads are never checkpointed.
+Similar to [`DBOS.read_stream`](contexts.md#read_stream).
+When called from workflow code, each value read is checkpointed to the database as a step of the calling workflow, so a replayed workflow re-yields the values it originally read.
 
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
@@ -38312,6 +38386,7 @@ client.load_external_object(
 
 Load the value an [external object](../tutorials/external-storage.md) reference points to.
 Similar to [`DBOS.load_external_object`](./contexts.md#load_external_object).
+May be called from a step or outside a workflow, but not from workflow code.
 
 #### load_external_object_async
 
@@ -38430,6 +38505,7 @@ client.retrieve_queue(name: str) -> Optional[Queue]
 
 Retrieve a queue by name from the system database, or `None` if no queue with that name has been registered.
 Similar to [`DBOS.retrieve_queue`](./contexts.md#retrieve_queue).
+Unlike other client methods, `retrieve_queue` is not checkpointed when called from workflow code.
 
 #### retrieve_queue_async
 
@@ -38751,7 +38827,7 @@ client.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 
 **Parameters:**
@@ -38826,19 +38902,19 @@ client.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 
 **Parameters:**
+- `queue_name`: Move the resumed workflow to this queue.
+- `queue_partition_key`: Move the resumed workflow to this queue partition.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### resume_workflow_async
@@ -38848,6 +38924,8 @@ client.resume_workflow_async(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandleAsync[Any]
 ```
 
@@ -38860,6 +38938,7 @@ client.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
@@ -39171,6 +39250,10 @@ client.pause_schedule(name: str) -> None
 Pause the schedule with the given name. A paused schedule does not fire.
 Similar to [`DBOS.pause_schedule`](./contexts.md#pause_schedule).
 
+#### pause_schedule_async
+
+Coroutine version of [`pause_schedule`](#pause_schedule).
+
 #### resume_schedule
 
 ```python
@@ -39179,6 +39262,10 @@ client.resume_schedule(name: str) -> None
 
 Resume a paused schedule so it begins firing again.
 Similar to [`DBOS.resume_schedule`](./contexts.md#resume_schedule).
+
+#### resume_schedule_async
+
+Coroutine version of [`resume_schedule`](#resume_schedule).
 
 #### apply_schedules
 
@@ -39219,6 +39306,7 @@ client.backfill_schedule(
 Enqueue (on the schedule's `queue_name`, or an internal queue if it has none) all executions of a schedule that would have run between `start` and `end`.
 Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
 Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
+May be called from a step or outside a workflow, but not from workflow code.
 
 #### trigger_schedule
 
@@ -39228,6 +39316,7 @@ client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 
 Immediately enqueue (on the schedule's `queue_name`, or an internal queue if it has none) the scheduled workflow at the current time.
 Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).
+May be called from a step or outside a workflow, but not from workflow code.
 
 ### Version Management
 
@@ -40517,6 +40606,7 @@ QueueConflictResolution = Literal[
 Register a [queue](./queues.md) and persist its configuration to the system database, returning the [`Queue`](./queues.md#class-dbosqueue).
 DBOS must be launched before calling `register_queue`.
 If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
@@ -40597,6 +40687,7 @@ DBOS.list_queues(
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `application_name`: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
@@ -40695,6 +40786,7 @@ DBOS.delete_queue(name: str) -> None
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
+If called from within a workflow, the operation is recorded as a step.
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
@@ -40971,7 +41063,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
@@ -41009,19 +41101,18 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 **Parameters:**
+- `queue_name`: Move the resumed workflow to this queue.
+- `queue_partition_key`: Move the resumed workflow to this queue partition.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 #### resume_workflow_async
@@ -41035,6 +41126,7 @@ DBOS.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
@@ -41073,7 +41165,7 @@ Raises `DBOSNonExistentWorkflowError` if the workflow identified by `workflow_id
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
-If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+If `queue_name` or `queue_partition_key` is provided, the forked workflow is enqueued on that queue or partition instead of the original workflow's.
 
 If `replacement_children` is provided, it maps original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
@@ -41123,13 +41215,37 @@ Rewinding a workflow:
 - **workflow_id**: The ID of the workflow to rewind.
 - **start_step**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to the first step.
 - **application_version**: The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
-- **queue_name**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
-- **queue_partition_key**: The partition key to enqueue the rewound workflow under, if `queue_name` is a partitioned queue.
+- **queue_name**: Move the rewound workflow to this queue.
+- **queue_partition_key**: Move the rewound workflow to this queue partition.
 - **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### rewind_workflow_async
 
 Coroutine version of [`rewind_workflow`](#rewind_workflow).
+
+#### recover_workflows
+
+```python
+DBOS.recover_workflows(
+    executor_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Recover the `PENDING` workflows of the given executors, for example executors that crashed or were shut down.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Returns handles to the recovered workflows.
+See [Workflow Recovery](../../production/workflow-recovery.md) for details.
+
+Only recovers workflows belonging to this application.
+Safe to call more than once: a workflow already picked up by a live executor is not recovered again.
+May not be called from within a workflow or step.
+
+**Parameters:**
+- **executor_ids**: The IDs of the executors whose workflows to recover.
+
+#### recover_workflows_async
+
+Coroutine version of [`recover_workflows`](#recover_workflows). Returns `List[WorkflowHandleAsync[Any]]`.
 
 #### delete_workflow
 
@@ -41314,6 +41430,10 @@ DBOS.pause_schedule(name: str) -> None
 
 Pause the schedule with the given name. A paused schedule does not fire.
 
+#### pause_schedule_async
+
+Coroutine version of [`pause_schedule`](#pause_schedule).
+
 #### resume_schedule
 
 ```python
@@ -41321,6 +41441,10 @@ DBOS.resume_schedule(name: str) -> None
 ```
 
 Resume a paused schedule so it begins firing again.
+
+#### resume_schedule_async
+
+Coroutine version of [`resume_schedule`](#resume_schedule).
 
 #### apply_schedules
 
@@ -41590,6 +41714,7 @@ class VersionInfo(TypedDict):
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
+If called from within a workflow, the operation is recorded as a step.
 
 #### list_application_versions_async
 
@@ -41607,6 +41732,7 @@ DBOS.get_latest_application_version() -> VersionInfo
 
 Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Raises `DBOSException` if no versions are registered.
+If called from within a workflow, the operation is recorded as a step.
 
 #### get_latest_application_version_async
 
@@ -41628,6 +41754,7 @@ DBOS.set_latest_application_version(
 
 Promote a version to latest by updating its timestamp to the current time.
 This is useful when rolling back to a previous application version.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `version_name`: The name of the version to promote.
@@ -42455,6 +42582,8 @@ Create or migrate the DBOS [system database](../../explanations/system-tables.md
 This is the programmatic equivalent of the [`dbos migrate`](./cli.md#dbos-migrate) command.
 Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`run_migrations=False`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
 It can be called before or without constructing a DBOS instance.
+May not be called from a workflow.
+On Postgres, concurrent migrations are serialized with a lock. If another process holds the lock for more than 30 seconds, `migrate` raises `DBOSInitializationError` without migrating; retry once the other migration finishes.
 
 **Parameters:**
 - `system_database_url`: The system database to create or migrate. The database is created if it does not exist.
@@ -45753,7 +45882,6 @@ Filtering workflows by attribute is only supported when using a Postgres system 
 You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancel_workflow`](../reference/contexts.md#cancel_workflow), or through the command line with [`dbos workflow cancel`](../reference/cli.md#dbos-workflow-cancel).
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
 
 To cancel an executing async step immediately rather than waiting for it to complete, mark the step as [`preemptible`](../reference/decorators.md#step).
 
@@ -45762,7 +45890,6 @@ To cancel an executing async step immediately rather than waiting for it to comp
 You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resume_workflow`](../reference/contexts.md#resume_workflow), or through the command line with [`dbos workflow resume`](../reference/cli.md#dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 ### Forking Workflows
 
@@ -55933,7 +56060,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 If `cancelChildren` is true, also cancel all child workflows recursively.
 
 #### DBOS.resumeWorkflow
@@ -55941,15 +56068,13 @@ If `cancelChildren` is true, also cancel all child workflows recursively.
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string,
-  options?: { queueName?: string }
+  options?: { queueName?: string; queuePartitionKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+If `queueName` or `queuePartitionKey` is provided, the resumed workflow is moved to that queue or partition.
 Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 #### DBOS.forkWorkflow
@@ -55978,8 +56103,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
-- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
-- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+- **queueName**: Enqueue the forked workflow on this queue instead of the original workflow's.
+- **queuePartitionKey**: Enqueue the forked workflow on this queue partition instead of the original workflow's.
 
 #### DBOS.rewindWorkflow
 
@@ -55999,7 +56124,19 @@ Rewind a workflow to a specific step and re-execute it from that step, keeping i
 Steps with IDs greater than or equal to `startStep` are discarded and re-executed; `startStep` defaults to `0`, re-executing the whole workflow.
 Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
 Rewinding clears the workflow's output, rolls back events it set at or after `startStep`, deletes messages it received at or after `startStep`, and deletes the checkpoints of data source transactions at or after `startStep`.
-`applicationVersion`, `queueName`, and `queuePartitionKey` behave as in `forkWorkflow`.
+`applicationVersion` behaves as in `forkWorkflow`. If `queueName` or `queuePartitionKey` is provided, the rewound workflow is moved to that queue or partition.
+
+#### DBOS.recoverWorkflows
+
+```typescript
+DBOS.recoverWorkflows<T = unknown>(
+  executorIDs: string[]
+): Promise<WorkflowHandle<Awaited<T>>[]>
+```
+
+Recover the `PENDING` workflows of the given executors (for example, executors that crashed or were shut down) and return handles to them.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Safe to call more than once. Throws if called from within a workflow or step.
 
 ### Upgrading Workflow Code
 
@@ -56300,7 +56437,6 @@ If the workflow is executing, it is interrupted at the beginning of its next ste
 **Description:**
 Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `-s, --sys-db-url <string>`: Your DBOS system database URL
@@ -56495,8 +56631,8 @@ class DBOSClient {
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
     cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean; shardKey?: string }): Promise<void>;
-    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>>;
-    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
+    resumeWorkflow<T>(workflowID: string, options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>>;
+    resumeWorkflows<T>(workflowIDs: string[], options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }): Promise<WorkflowHandle<Awaited<T>>[]>;
     deleteWorkflow(workflowID: string, deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
     deleteWorkflows(workflowIDs: string[], deleteChildren?: boolean, options?: { shardKey?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
@@ -57981,6 +58117,7 @@ DBOS.migrate(
 Create or migrate the DBOS [system database](../../explanations/system-tables.md) without launching DBOS.
 This is the programmatic equivalent of the [`npx dbos schema`](./cli.md#npx-dbos-schema) command.
 Run it with a privileged database role (for example, as part of your deployment's migration step), then configure your application with [`runMigrations: false`](./configuration.md#database-connection-settings) so its role needs no DDL privileges.
+May not be called from a workflow.
 
 **Parameters:**
 - **systemDatabaseUrl**: The system database to create or migrate. The database is created if it does not exist.
@@ -58726,7 +58863,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 A currently executing step is not interrupted, but it can observe the cancellation through [`DBOS.stepStatus.cancelSignal`](#dbosstepstatus) and stop early.
 
 **Parameters:**
@@ -58750,25 +58887,27 @@ Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) 
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string,
-  options?: { queueName?: string; shardKey?: string }
+  options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 
 Throws `DBOSNonExistentWorkflowError` if the workflow does not exist.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to resume.
+- **options.queueName**: Move the resumed workflow to this queue.
+- **options.queuePartitionKey**: Move the resumed workflow to this queue partition.
+- **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
 #### DBOS.resumeWorkflows
 
 ```typescript
 DBOS.resumeWorkflows<T>(
   workflowIDs: string[],
-  options?: { queueName?: string; shardKey?: string }
+  options?: { queueName?: string; queuePartitionKey?: string; shardKey?: string }
 ): Promise<WorkflowHandle<Awaited<T>>[]>
 ```
 
@@ -58835,8 +58974,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Defaults to the original workflow's application version. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
-- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
-- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+- **queueName**: Enqueue the forked workflow on this queue instead of the original workflow's.
+- **queuePartitionKey**: Enqueue the forked workflow on this queue partition instead of the original workflow's.
 - **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
@@ -58878,9 +59017,29 @@ Rewinding a workflow:
 - **workflowID**: The ID of the workflow to rewind.
 - **startStep**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to `0`, the first step.
 - **applicationVersion**: The application version on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
-- **queueName**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
-- **queuePartitionKey**: The partition key to enqueue the rewound workflow under, if `queueName` is a partitioned queue.
+- **queueName**: Move the rewound workflow to this queue.
+- **queuePartitionKey**: Move the rewound workflow to this queue partition.
 - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
+
+#### DBOS.recoverWorkflows
+
+```typescript
+DBOS.recoverWorkflows<T = unknown>(
+  executorIDs: string[]
+): Promise<WorkflowHandle<Awaited<T>>[]>
+```
+
+Recover the `PENDING` workflows of the given executors, for example executors that crashed or were shut down.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Returns handles to the recovered workflows.
+See [Workflow Recovery](../../production/workflow-recovery.md) for details.
+
+Only recovers workflows belonging to this application.
+Safe to call more than once: a workflow already picked up by a live executor is not recovered again.
+Throws if called from within a workflow or step.
+
+**Parameters:**
+- **executorIDs**: The IDs of the executors whose workflows to recover.
 
 #### Workflow Status
 
@@ -59402,6 +59561,7 @@ interface VersionInfo {
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
+If called from within a workflow, the operation is recorded as a step.
 This query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 #### DBOS.getLatestApplicationVersion
@@ -59412,6 +59572,7 @@ static async DBOS.getLatestApplicationVersion(): Promise<VersionInfo>
 
 Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Throws if no versions are registered.
+If called from within a workflow, the operation is recorded as a step.
 
 #### DBOS.setLatestApplicationVersion
 
@@ -59424,6 +59585,7 @@ static async DBOS.setLatestApplicationVersion(
 
 Promote a version to latest by updating its timestamp to the current time.
 This is useful when rolling back to a previous application version.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `versionName`: The name of the version to promote.
@@ -59563,6 +59725,7 @@ type QueueConflictResolution =
 Register a queue and persist its configuration to the system database, returning a [`WorkflowQueue`](#class-workflowqueue).
 DBOS must be launched before calling `registerQueue`.
 If the queue already exists in the database, the `onConflict` option controls whether its configuration is overwritten.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - **name**: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
@@ -59619,6 +59782,7 @@ DBOS.listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - **applicationName**: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
@@ -59638,6 +59802,7 @@ DBOS.deleteQueue(name: string): Promise<void>
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
+If called from within a workflow, the operation is recorded as a step.
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
@@ -63119,7 +63284,6 @@ const workflows = await DBOS.listWorkflows({ attributes: { customer: 'acme' } })
 You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancelWorkflow`](../reference/methods.md#dboscancelworkflow), or through the command line with [`npx dbos workflow cancel`](../reference/cli.md#npx-dbos-workflow-cancel).
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
 
 A step that is executing when its workflow is cancelled is not interrupted, but it can stop early by observing [`DBOS.stepStatus.cancelSignal`](../reference/methods.md#dbosstepstatus), an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that fires when the workflow is cancelled.
 Pass it to APIs that accept a signal (for example, `fetch`) to cancel the step's underlying operation:
@@ -63137,7 +63301,6 @@ async function fetchData() {
 You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resumeWorkflow`](../reference/methods.md#dbosresumeworkflow), or through the command line with [`npx dbos workflow resume`](../reference/cli.md#npx-dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 ### Forking Workflows
 

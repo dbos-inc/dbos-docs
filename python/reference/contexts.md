@@ -965,6 +965,7 @@ QueueConflictResolution = Literal[
 Register a [queue](./queues.md) and persist its configuration to the system database, returning the [`Queue`](./queues.md#class-dbosqueue).
 DBOS must be launched before calling `register_queue`.
 If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
@@ -1045,6 +1046,7 @@ DBOS.list_queues(
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `application_name`: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
@@ -1143,6 +1145,7 @@ DBOS.delete_queue(name: str) -> None
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
+If called from within a workflow, the operation is recorded as a step.
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
@@ -1419,7 +1422,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 
 **Parameters:**
 - **workflow_id**: The ID of the workflow to cancel.
@@ -1457,19 +1460,18 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if the workflow does not exist.
 
 **Parameters:**
+- `queue_name`: Move the resumed workflow to this queue.
+- `queue_partition_key`: Move the resumed workflow to this queue partition.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### resume_workflow_async
@@ -1483,6 +1485,7 @@ DBOS.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
@@ -1521,7 +1524,7 @@ Raises `DBOSNonExistentWorkflowError` if the workflow identified by `workflow_id
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
-If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+If `queue_name` or `queue_partition_key` is provided, the forked workflow is enqueued on that queue or partition instead of the original workflow's.
 
 If `replacement_children` is provided, it maps original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
@@ -1571,13 +1574,37 @@ Rewinding a workflow:
 - **workflow_id**: The ID of the workflow to rewind.
 - **start_step**: The step to rewind to. Steps with IDs greater than or equal to this value are discarded and re-executed. Defaults to the first step.
 - **application_version**: The [application version](../tutorials/upgrading-workflows.md) on which the rewound workflow runs. Useful for "patching" a workflow that failed due to a bug in a previous application version. Defaults to the workflow's current version.
-- **queue_name**: The queue on which to enqueue the rewound workflow. Defaults to an internal queue, which dequeues it immediately.
-- **queue_partition_key**: The partition key to enqueue the rewound workflow under, if `queue_name` is a partitioned queue.
+- **queue_name**: Move the rewound workflow to this queue.
+- **queue_partition_key**: Move the rewound workflow to this queue partition.
 - **shard_key**: The workflow's [shard key](../tutorials/sharding.md).
 
 ### rewind_workflow_async
 
 Coroutine version of [`rewind_workflow`](#rewind_workflow).
+
+### recover_workflows
+
+```python
+DBOS.recover_workflows(
+    executor_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Recover the `PENDING` workflows of the given executors, for example executors that crashed or were shut down.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Returns handles to the recovered workflows.
+See [Workflow Recovery](../../production/workflow-recovery.md) for details.
+
+Only recovers workflows belonging to this application.
+Safe to call more than once: a workflow already picked up by a live executor is not recovered again.
+May not be called from within a workflow or step.
+
+**Parameters:**
+- **executor_ids**: The IDs of the executors whose workflows to recover.
+
+### recover_workflows_async
+
+Coroutine version of [`recover_workflows`](#recover_workflows). Returns `List[WorkflowHandleAsync[Any]]`.
 
 ### delete_workflow
 
@@ -1762,6 +1789,10 @@ DBOS.pause_schedule(name: str) -> None
 
 Pause the schedule with the given name. A paused schedule does not fire.
 
+### pause_schedule_async
+
+Coroutine version of [`pause_schedule`](#pause_schedule).
+
 ### resume_schedule
 
 ```python
@@ -1769,6 +1800,10 @@ DBOS.resume_schedule(name: str) -> None
 ```
 
 Resume a paused schedule so it begins firing again.
+
+### resume_schedule_async
+
+Coroutine version of [`resume_schedule`](#resume_schedule).
 
 ### apply_schedules
 
@@ -2038,6 +2073,7 @@ class VersionInfo(TypedDict):
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
+If called from within a workflow, the operation is recorded as a step.
 
 ### list_application_versions_async
 
@@ -2055,6 +2091,7 @@ DBOS.get_latest_application_version() -> VersionInfo
 
 Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Raises `DBOSException` if no versions are registered.
+If called from within a workflow, the operation is recorded as a step.
 
 ### get_latest_application_version_async
 
@@ -2076,6 +2113,7 @@ DBOS.set_latest_application_version(
 
 Promote a version to latest by updating its timestamp to the current time.
 This is useful when rolling back to a previous application version.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - `version_name`: The name of the version to promote.

@@ -1100,6 +1100,11 @@ In Temporal, you can define a codec to encrypt workflow information before it is
 In DBOS, this is rarely necessary because data is stored **only** in your own database.
 However, if it is necessary to store sensitive data encrypted, you can use a custom serializer ([Python](../python/reference/contexts.md#custom-serialization), [TypeScript](../typescript/reference/configuration.md#custom-serialization)) to encrypt your data before storing it and decrypt it before retrieving it.
 
+## Large Payloads
+
+Temporal limits the size of workflow and activity payloads, so large data is usually stored in blob storage and passed by reference (the "claim check" pattern), often implemented with a custom codec.
+In DBOS, use external storage ([Python](../python/tutorials/external-storage.md), [TypeScript](../typescript/tutorials/external-storage.md)) instead: DBOS keeps large objects in a separate store such as Amazon S3 and checkpoints only a small reference to each one.
+
 ## What's Different in DBOS
 
 ### No Orchestration Server

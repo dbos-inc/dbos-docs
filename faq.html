@@ -14,7 +14,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.f32c0534.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.35af3fee.js" defer="defer"></script>
 <script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
 </head>
 <body>
@@ -35,7 +35,7 @@ For example, in <a href="https://www.dbos.dev/blog/one-million-workflows" target
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-is-my-queue-stuck">Why is my queue stuck?<a href="#why-is-my-queue-stuck" class="hash-link" aria-label="Direct link to Why is my queue stuck?" title="Direct link to Why is my queue stuck?" translate="no">​</a></h3>
 <p>If a DBOS queue is stuck (workflows are not moving from <code>ENQUEUED</code> to <code>PENDING</code>), it is likely that either the number of <code>PENDING</code> workflows exceeds the queue&#x27;s global &quot;concurrency&quot; limit or the number of queued workflows in a <code>PENDING</code> state on each worker exceeds the queue&#x27;s &quot;worker concurrency&quot; limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the &quot;Queues&quot; tab of the <a class="" href="/conductor/workflow-management">DBOS Console</a>
-If you need to, you can cancel tasks to remove them from the queue.</p>
+If you need to, you can cancel tasks to free up the queue.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-is-my-workflow-not-finishing">Why is my workflow not finishing?<a href="#why-is-my-workflow-not-finishing" class="hash-link" aria-label="Direct link to Why is my workflow not finishing?" title="Direct link to Why is my workflow not finishing?" translate="no">​</a></h3>
 <p>The most common cause of &quot;stuck&quot; workflows is logic issues: infinite loops, indefinitely waiting for an event, or improper use of async in Python or TypeScript.
 The last is always worth checking when using those languages: any synchronous call anywhere in your program can block your event loop, preventing async operations (such as workflows) from making progress.</p>
@@ -53,6 +53,8 @@ DBOS serializes objects with <a href="https://github.com/flightcontrolhq/superjs
 Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-large-can-serialized-step-and-workflow-outputs-be">How large can serialized step and workflow outputs be?<a href="#how-large-can-serialized-step-and-workflow-outputs-be" class="hash-link" aria-label="Direct link to How large can serialized step and workflow outputs be?" title="Direct link to How large can serialized step and workflow outputs be?" translate="no">​</a></h3>
 <p>DBOS stores two serialized fields (<code>inputs</code> and <code>output</code>) for each workflow  and one <code>output</code> field for each step. Each of these is stored as a Postgres <code>TEXT</code> value which is limited by the maximum field size; currently 1GB. See <a href="https://wiki.postgresql.org/wiki/FAQ#What_is_the_maximum_size_for_a_row.2C_a_table.2C_and_a_database.3F" target="_blank" rel="noopener noreferrer" class="">Postgres documentation</a>.</p>
+<p>However, we recommend keeping large objects such as files or datasets out of the system database.
+Instead, use external storage (<a class="" href="/python/tutorials/external-storage">Python</a>, <a class="" href="/typescript/tutorials/external-storage">TypeScript</a>) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-am-i-seeing-an-error-that-function-x-was-recorded-when-y-was-expected">Why am I seeing an error that function X was recorded when Y was expected?<a href="#why-am-i-seeing-an-error-that-function-x-was-recorded-when-y-was-expected" class="hash-link" aria-label="Direct link to Why am I seeing an error that function X was recorded when Y was expected?" title="Direct link to Why am I seeing an error that function X was recorded when Y was expected?" translate="no">​</a></h3>
 <p>This error arises when DBOS is recovering a workflow and attempts to execute step Y, but finds a checkpoint in the database for step X instead.
 Typically, this occurs because the workflow function is not <strong>deterministic</strong>.
