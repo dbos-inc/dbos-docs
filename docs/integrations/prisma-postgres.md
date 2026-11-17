@@ -15,8 +15,8 @@ The rest of this guide will assume you have a local application.
 
 ### 2. Connect to Your Prisma Postgres Database
 
-Next, open the [Prisma Console](https://console.prisma.io), select a project and a database, click "Connect to your database", then click "Generate new connection string".
-The console shows two connection strings for your database, one pooled and one direct.
+Next, open the [Prisma Console](https://console.prisma.io), select your project and database, and generate a connection string as described in [Connecting to your database](https://www.prisma.io/docs/postgres/database/connecting-to-your-database).
+Prisma Postgres gives you two connection strings for your database, one pooled and one direct.
 
 :::tip
 Make sure you copy the direct connection string, whose host is `db.prisma.io`.
