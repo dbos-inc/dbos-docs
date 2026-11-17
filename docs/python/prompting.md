@@ -1706,7 +1706,7 @@ DBOS.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 If `cancel_children` is `True`, also recursively cancels all child workflows started by this workflow.
 
 ### resume_workflow
@@ -1716,14 +1716,13 @@ DBOS.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+If `queue_name` or `queue_partition_key` is provided, the resumed workflow is moved to that queue or partition.
 
 ### fork_workflow
 
@@ -1744,7 +1743,7 @@ The specified `start_step` is the step from which the new workflow will start, s
 
 The forked workflow will have a new workflow ID, which can be set with `SetWorkflowID`.
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
-If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+If `queue_name` or `queue_partition_key` is provided, the forked workflow is enqueued on that queue or partition instead of the original workflow's.
 
 ### rewind_workflow
 
@@ -1763,7 +1762,19 @@ Rewind a workflow to a specific step and re-execute it from that step, keeping i
 Steps with IDs greater than or equal to `start_step` are discarded and re-executed; if `start_step` is not provided, the whole workflow re-executes.
 Only a workflow in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`) can be rewound; cancel a running workflow first.
 Rewinding clears the workflow's output, rolls back events it set at or after `start_step`, deletes messages it received at or after `start_step`, and deletes the checkpoints of datasource transactions at or after `start_step`.
-`application_version`, `queue_name`, and `queue_partition_key` behave as in `fork_workflow`.
+`application_version` behaves as in `fork_workflow`. If `queue_name` or `queue_partition_key` is provided, the rewound workflow is moved to that queue or partition.
+
+### recover_workflows
+
+```python
+DBOS.recover_workflows(
+    executor_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Recover the `PENDING` workflows of the given executors (for example, executors that crashed or were shut down) and return handles to them.
+Each recovered workflow is re-enqueued, then resumes from its last completed step on an executor running its application version.
+Safe to call more than once. May not be called from within a workflow or step. Use `recover_workflows_async` from async code.
 
 ### Workflow Status
 

@@ -1224,7 +1224,7 @@ client.cancel_workflow(
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+This sets its status to `CANCELLED` and preempts its execution (interrupting it at the beginning of its next step).
 Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 
 **Parameters:**
@@ -1299,19 +1299,19 @@ client.resume_workflow(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> WorkflowHandle[Any]
 ```
 
-Resume a workflow.
-This immediately starts it from its last completed step.
+Resume a workflow from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Raises `DBOSNonExistentWorkflowError` if no workflow with ID `workflow_id` exists.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 
 **Parameters:**
+- `queue_name`: Move the resumed workflow to this queue.
+- `queue_partition_key`: Move the resumed workflow to this queue partition.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
 
 ### resume_workflow_async
@@ -1321,6 +1321,8 @@ client.resume_workflow_async(
     workflow_id: str,
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
+    shard_key: Optional[str] = None,
 ) -> WorkflowHandleAsync[Any]
 ```
 
@@ -1333,6 +1335,7 @@ client.resume_workflows(
     workflow_ids: List[str],
     *,
     queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
     shard_key: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```

@@ -45,6 +45,7 @@ type QueueConflictResolution =
 Register a queue and persist its configuration to the system database, returning a [`WorkflowQueue`](#class-workflowqueue).
 DBOS must be launched before calling `registerQueue`.
 If the queue already exists in the database, the `onConflict` option controls whether its configuration is overwritten.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - **name**: The name of the queue. Must be unique among all queues in the system database, including those of other applications sharing it. Names starting with `_dbos_` are reserved for DBOS.
@@ -101,6 +102,7 @@ DBOS.listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
+If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - **applicationName**: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
@@ -120,6 +122,7 @@ DBOS.deleteQueue(name: string): Promise<void>
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
+If called from within a workflow, the operation is recorded as a step.
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.

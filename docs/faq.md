@@ -24,7 +24,7 @@ When sizing your database for DBOS, we recommend using that number (scaled to yo
 ### Why is my queue stuck?
 
 If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./conductor/workflow-management.md)
-If you need to, you can cancel tasks to remove them from the queue.
+If you need to, you can cancel tasks to free up the queue.
 
 ### Why is my workflow not finishing?
 
@@ -53,6 +53,9 @@ Instead, either construct the object inside the workflow from parameters passed 
 ### How large can serialized step and workflow outputs be?
 
 DBOS stores two serialized fields (`inputs` and `output`) for each workflow  and one `output` field for each step. Each of these is stored as a Postgres `TEXT` value which is limited by the maximum field size; currently 1GB. See [Postgres documentation](https://wiki.postgresql.org/wiki/FAQ#What_is_the_maximum_size_for_a_row.2C_a_table.2C_and_a_database.3F).
+
+However, we recommend keeping large objects such as files or datasets out of the system database.
+Instead, use external storage ([Python](./python/tutorials/external-storage.md), [TypeScript](./typescript/tutorials/external-storage.md)) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.
 
 ### Why am I seeing an error that function X was recorded when Y was expected?
 
