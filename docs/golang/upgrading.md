@@ -3,6 +3,33 @@ sidebar_position: 200
 title: Upgrading
 ---
 
+## Upgrading to v1.9.0
+
+```shell
+go get github.com/dbos-inc/dbos-transact-golang@v1.9.0
+```
+
+If your application imports `go.dbos.dev/dbos-enterprise-go`, upgrade it to the same minor version:
+
+```shell
+go get go.dbos.dev/dbos-enterprise-go@v1.9.0
+```
+
+This release adds system-database migrations (including a `suspend_key` column and new indexes on `workflow_status`), applied by the first `NewContext`; if your application sets `Config.SkipMigrations`, run [`Migrate`](./reference/configuration.md#migrate) first. Changes that may require action:
+
+- **Go 1.26 is required.** The module now declares `go 1.26.0`.
+- **`pgx` is upgraded from v5.10.0 to v5.13.0**, which changes how special characters in connection strings are parsed. In particular, a `+` in a query parameter value of `DatabaseURL` is now read literally, not as a space: encode spaces as `%20`.
+- **`Shutdown` no longer closes a connection pool you supplied.** A pool passed as `Config.SystemDBPool` or `Config.SQLiteSystemDB` now stays open after [`Shutdown`](./reference/dbos-context.md#shutdown), so an application sharing it with DBOS can keep using it: close it yourself once you are done. Pools DBOS creates from `DatabaseURL` are still closed.
+- **The `Context` and `Client` interfaces gained methods.** `Recv` and `Sleep` take variadic options, `Context` adds `GetShardKey`, and `Client` adds `BindShardKey` and `BindShardKeys`. Calls through the package-level functions are unchanged, but mocks and other implementations of these interfaces must be regenerated; see [Testing & Mocking](./tutorials/testing.md).
+- **Prefix filters are literal.** [`WithFilterWorkflowIDPrefix`](./reference/methods.md#withfilterworkflowidprefix) and [`WithScheduleNamePrefixes`](./reference/methods.md#withschedulenameprefixes) no longer treat `_` and `%` in a prefix as wildcards.
+
+New features:
+
+- **Suspending workflows.** A [DBOS Transact Enterprise](../explanations/transact-enterprise.md) feature that suspends a workflow during a long `Sleep` or `Recv`, so it uses no memory, goroutines, or queue capacity until it wakes. Set `Config.SuspendMode`, then pass [`WithSleepSuspend()`](./reference/methods.md#withsleepsuspend) to `Sleep` or [`WithRecvSuspend()`](./reference/methods.md#withrecvsuspend) to `Recv`; the workflow function must return the error they return, which matches the new `ErrWorkflowSuspended`. Suspended workflows have the new `SUSPENDED` status (`WorkflowStatusSuspended`). See [Suspending Workflows](./tutorials/workflow-tutorial.md#suspending-workflows).
+- **Sharding.** A DBOS Transact Enterprise feature that spreads the system database across multiple Postgres servers behind a sharding layer such as Citus or PgDog. Set `Config.Sharding` (and `ClientConfig.Sharding` on clients), then assign every workflow a shard key with [`WithShardKey`](./reference/workflows-steps.md#withshardkey) or [`WithEnqueueShardKey`](./reference/methods.md#withenqueueshardkey), and address existing workflows with [`BindShardKey`](./reference/methods.md#bindshardkey). See [Sharding](./tutorials/sharding.md).
+
+Both features require importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key, `Config.TransactEnterpriseKey` or `ConductorAPIKey` standing in for it; see [DBOS Transact Enterprise](./reference/configuration.md#dbos-transact-enterprise).
+
 ## Upgrading to v1.8.0
 
 ```shell
