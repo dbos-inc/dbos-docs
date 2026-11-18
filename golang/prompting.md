@@ -585,6 +585,18 @@ func exampleWorkflow(ctx dbos.Context, input struct {
 
 ```
 
+To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `SuspendMode: true` in `Config`, `import _ "go.dbos.dev/dbos-enterprise-go"`, and, in production, a Conductor connection).
+Pass `dbos.WithSleepSuspend()` to `Sleep` or `dbos.WithRecvSuspend()` to `Recv`.
+The suspending call returns an error matching `dbos.ErrWorkflowSuspended`, which you MUST return from the workflow function (as is or wrapped with `%w`); never handle or swallow it.
+The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when the sleep ends, a message arrives on the `Recv` topic, or the `Recv` times out.
+Waking is not instant, so only suspend for long waits; a `Sleep` with one second or less left is not suspended, and a `Recv` whose message is already waiting returns it.
+
+```go
+if _, err := dbos.Sleep(ctx, 30*24*time.Hour, dbos.WithSleepSuspend()); err != nil {
+    return "", err // Includes dbos.ErrWorkflowSuspended
+}
+```
+
 ### Concurrent Steps
 
 DBOS provides durable `Go` and `Select` functions to run multiple steps concurrently within a workflow while preserving durability guarantees.
@@ -930,12 +942,13 @@ Each `SendMessage` has `DestinationID`, `Message`, `Topic`, and an optional per-
 ### Recv
 
 ```go
-func Recv[R any](ctx Context, topic string, timeout time.Duration) (R, error)
+func Recv[R any](ctx Context, topic string, timeout time.Duration, opts ...RecvOption) (R, error)
 ```
 
 Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+With `dbos.WithRecvSuspend()`, a `Recv` that has to wait suspends the workflow until a message arrives on its topic or the timeout passes (see Durable Sleep for requirements).
 
 ### Messages Example
 
@@ -1659,6 +1672,29 @@ dbos.Launch(ctx)
 Queues are identified by name; each call to `ListenQueues` replaces the whole listen set (an empty set listens to every queue), and the set may be changed at any time, including after `Launch()`.
 `ListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued.
 
+## Sharding
+
+To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database behind a Postgres sharding layer such as Citus or PgDog (set `Sharding: true` in `Config`, or in `ClientConfig` for a client, and `import _ "go.dbos.dev/dbos-enterprise-go"`).
+On a sharded system database, every workflow lives under a shard key, and a workflow ID is unique only within its shard key:
+
+- You MUST start or enqueue every workflow with a shard key: `dbos.WithShardKey(key)` for `RunWorkflow`, `dbos.WithEnqueueShardKey(key)` for `Enqueue`, and the `ShardKey` field of `ScheduleSpec` for schedules. A shard key must be a non-empty string; setting one on an unsharded system database is an error.
+- A child workflow does NOT inherit its parent's shard key: pass it explicitly. A child under a different shard key than its parent's must be enqueued (`WithQueue`). `dbos.GetShardKey(ctx)` returns the current workflow's shard key.
+- To address an existing workflow by ID (`CancelWorkflow`, `ResumeWorkflow`, `ForkWorkflow`, `GetEvent`, `RetrieveWorkflow`, `GetWorkflowSteps`, `ListWorkflows` by ID, ...), bind its ID to its shard key with `dbos.BindShardKey(ctx, workflowID, key)` (or `dbos.BindShardKeys(ctx, map[string]string{...})` for several) and call the method on the returned context. A workflow handle carries its shard key, and a workflow addresses itself without binding.
+- Send with `dbos.WithSendShardKey(key)` (unless the destination's key is bound on the context); in `SendBulk`, set `SendMessage.ShardKey` on each message.
+- Batch operations (`CancelWorkflows`, `ResumeWorkflows`, `ForkWorkflows`, `DeleteWorkflows`, `SendBulk`) only act on workflows under a single shard key per call.
+- `WorkflowStatus` has `ShardKey` and `ParentShardKey` fields; filter `ListWorkflows` with `WithFilterShardKeys(keys ...string)` or `WithFilterParentShardKeys(keys ...string)`.
+- Not supported on a sharded system database: queue deduplication (`WithDeduplicationID`, `WithEnqueueDeduplicationID`), debouncing, auto-upgrade, `RenameApplication`, `WorkflowIDReusePolicyReject` for a workflow started from inside another workflow, and SQLite or CockroachDB as the system database.
+
+```go
+handle, err := dbos.RunWorkflow(ctx, processOrder, order,
+    dbos.WithQueue(queue),
+    dbos.WithShardKey("tenant-a"),
+)
+
+keyed := dbos.BindShardKey(ctx, workflowID, "tenant-a")
+err = dbos.CancelWorkflow(keyed, workflowID)
+```
+
 # Reference
 
 DBOS has two interfaces: `Client` and `Context`, where `Context` embeds (extends) `Client`.
@@ -1696,6 +1732,8 @@ type Config struct {
     AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false)
     AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
     AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
+    Sharding                  bool           // Use a sharded system database, a DBOS Transact Enterprise feature (default: false)
+    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, a DBOS Transact Enterprise feature (default: false)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
@@ -1707,7 +1745,7 @@ type Config struct {
 }
 ```
 
-DBOS Transact Enterprise features, connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) and auto-upgrade (setting `AutoUpgrade`, or registering a workflow with `WithAutoUpgrade(true)`), require importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`. The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`:
+DBOS Transact Enterprise features, connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud), auto-upgrade (setting `AutoUpgrade`, or registering a workflow with `WithAutoUpgrade(true)`), sharding (setting `Sharding`), and suspend mode (setting `SuspendMode`), require importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`. The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`:
 
 ```go
 import (
@@ -1716,8 +1754,8 @@ import (
 )
 ```
 
-Without it, `NewContext` fails with an initialization error saying what to add. Conductor and auto-upgrade are otherwise configured through `Config` alone.
-Auto-upgrade also needs an entitled DBOS key: `TransactEnterpriseKey` (development only) or, in production, `ConductorAPIKey`, which stands in for it.
+Without it, `NewContext` fails with an initialization error saying what to add. These features are otherwise configured through `Config` alone.
+Auto-upgrade, sharding, and suspend mode also need an entitled DBOS key: `TransactEnterpriseKey` (development only) or, in production, `ConductorAPIKey`, which stands in for it.
 
 For example:
 ```go
@@ -1757,7 +1795,7 @@ Recovery is skipped when Conductor is configured, where Conductor manages recove
 func Shutdown(c Client, timeout time.Duration) error
 ```
 
-Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. Accepts either a `Context` or a standalone `Client`. When you shutdown a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps. Shutting down a standalone client releases its system database connection pool.
+Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. Accepts either a `Context` or a standalone `Client`. When you shutdown a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps. Shutting down a standalone client releases its system database connection pool. `Shutdown` closes only a connection pool DBOS created itself: a pool you supplied (`SystemDBPool` or `SQLiteSystemDB`) is yours to close after `Shutdown` returns.
 
 **Parameters:**
 - **timeout**: The time to wait for DBOS resources to gracefully terminate.
@@ -1860,7 +1898,7 @@ Use `WithPortableSend()` for cross-language messaging.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **opts**: Optional `SendOption` functions (e.g., `WithPortableSend()`, `WithIdempotencyKey(key string)`, `WithSendToForks()`).
+- **opts**: Optional `SendOption` functions (e.g., `WithPortableSend()`, `WithIdempotencyKey(key string)`, `WithSendToForks()`, `WithSendShardKey(key string)`).
 
 Pass `WithIdempotencyKey(key string)` to make a `Send` deliver at most once: the key is combined with the destination workflow ID to form the message's primary key, so retrying a `Send` with the same key inserts the message only once.
 Pass `WithSendToForks()` to also deliver the message to every workflow recursively forked from `destinationID` (forks, forks of forks, and so on) that exists at send time; it applies to `SendBulk` too.
@@ -1875,6 +1913,7 @@ type SendMessage struct {
     Message        any    // The message to send. Must be serializable.
     Topic          string // Optional topic
     IdempotencyKey string // Optional; delivers the message at most once per destination
+    ShardKey       string // The destination's shard key, on a sharded system database
 }
 ```
 
@@ -1882,23 +1921,25 @@ Send many messages in a single transaction; each message carries its own destina
 The batch is atomic: if any destination does not exist, no message is sent.
 Inside a workflow the whole batch is one durable step.
 At most `dbos.MaxSendBulkMessages` (10,000) messages per call, and two messages in one call may not share an idempotency key.
-`WithSendTransaction` and `WithPortableSend` apply to the whole batch; `WithIdempotencyKey` is rejected, set `SendMessage.IdempotencyKey` instead.
+`WithSendTransaction` and `WithPortableSend` apply to the whole batch; `WithIdempotencyKey` and `WithSendShardKey` are rejected, set `SendMessage.IdempotencyKey` and `SendMessage.ShardKey` instead.
 
 ### Recv
 
 ```go
-func Recv[R any](ctx Context, topic string, timeout time.Duration) (R, error)
+func Recv[R any](ctx Context, topic string, timeout time.Duration, opts ...RecvOption) (R, error)
 ```
 
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `Recv` wait for the next message in the queue, returning an error if the wait times out.
+Pass `WithRecvSuspend()` to suspend the workflow while it waits (requires `Config.SuspendMode`); `Recv` then returns an error matching `dbos.ErrWorkflowSuspended`, which the workflow MUST return.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **topic**: A topic queue on which to wait.
 - **timeout**: A timeout duration. If the wait times out, return an error.
+- **opts**: Optional `RecvOption` functions (`WithRecvSuspend()`).
 
 ## Streams
 
@@ -1945,16 +1986,18 @@ Returns immediately with a channel that receives values as they are written to t
 ### Sleep
 
 ```go
-func Sleep(ctx Context, duration time.Duration) (time.Duration, error)
+func Sleep(ctx Context, duration time.Duration, opts ...SleepOption) (time.Duration, error)
 ```
 
 Sleep for the given duration.
 May only be called from within a workflow.
 This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+Pass `WithSleepSuspend()` to suspend the workflow for the sleep (requires `Config.SuspendMode`); `Sleep` then returns an error matching `dbos.ErrWorkflowSuspended`, which the workflow MUST return.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **duration**: The duration to sleep.
+- **opts**: Optional `SleepOption` functions (`WithSleepSuspend()`).
 
 ### RetrieveWorkflow
 
@@ -2103,6 +2146,7 @@ func WithFilterWorkflowIDPrefix(prefix ...string) ListWorkflowsOption
 ```
 
 Filter workflows whose IDs start with the specified prefix.
+Prefixes match literally: `_` and `%` are not wildcards.
 
 #### WithFilterQueuesOnly
 
@@ -2110,7 +2154,7 @@ Filter workflows whose IDs start with the specified prefix.
 func WithFilterQueuesOnly() ListWorkflowsOption
 ```
 
-Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
+Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED`, `PENDING`, `DELAYED`, or `SUSPENDED`).
 
 #### WithFilterCompletedAfter
 
@@ -2168,6 +2212,15 @@ func WithFilterHasParent(hasParent bool) ListWorkflowsOption
 
 Filter workflows by whether they have a parent workflow (true) or not (false).
 
+#### WithFilterShardKeys / WithFilterParentShardKeys
+
+```go
+func WithFilterShardKeys(shardKeys ...string) ListWorkflowsOption
+func WithFilterParentShardKeys(shardKeys ...string) ListWorkflowsOption
+```
+
+Filter workflows living under any of these shard keys, or whose parent workflow does. Requires a sharded system database.
+
 ### GetWorkflowSteps
 
 ```go
@@ -2184,6 +2237,7 @@ type StepInfo struct {
     Output          any    // The output returned by the step (if any)
     Error           error  // The error returned by the step (if any)
     ChildWorkflowID string  // If the step starts or retrieves the result of a workflow, its ID
+    ChildShardKey   string  // That child workflow's shard key; empty on an unsharded system database
 }
 ```
 
@@ -2225,7 +2279,7 @@ func CancelWorkflow(ctx Client, workflowID string, opts ...CancelWorkflowOption)
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step, or waking it immediately if it is in a durable sleep).
 Pass `WithCancelChildren()` to also cancel all the workflow's child workflows, recursively.
-To cancel many workflows in a single database round-trip, use `CancelWorkflows(ctx, workflowIDs []string, opts ...CancelWorkflowOption)`.
+To cancel many workflows in a single database round-trip, use `CancelWorkflows(ctx, workflowIDs []string, opts ...CancelWorkflowOption)` (on a sharded system database, one call only acts on workflows under a single shard key).
 
 **Parameters:**
 - **ctx**: The DBOS client or context.
@@ -2272,6 +2326,7 @@ func ResumeWorkflows[R any](ctx Client, workflowIDs []string, opts ...ResumeWork
 Resume multiple workflows in a single database round-trip.
 Each workflow that exists and is not in a terminal state is re-enqueued; completed or missing workflows are skipped.
 Unlike `ResumeWorkflow`, this function does not return an error when some IDs are missing.
+On a sharded system database, one call only acts on workflows under a single shard key.
 Accepts the same options as `ResumeWorkflow` (e.g., `WithResumeQueue`).
 
 ### RewindWorkflow
@@ -2364,6 +2419,8 @@ type WorkflowStatus struct {
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
     DelayUntil         time.Time          `json:"delay_until"`         // Time before which a DELAYED workflow should not be dequeued
     Attributes         map[string]any     `json:"attributes"`          // Custom key-value attributes attached to the workflow
+    ShardKey           string             `json:"shard_key"`           // Shard key the workflow lives under; empty on an unsharded system database
+    ParentShardKey     string             `json:"parent_shard_key"`    // Shard key of the parent workflow, if any; empty on an unsharded system database
 }
 ```
 
@@ -2378,6 +2435,7 @@ const (
     WorkflowStatusPending                     WorkflowStatusType = "PENDING"                        // Workflow is running or ready to run
     WorkflowStatusEnqueued                    WorkflowStatusType = "ENQUEUED"                       // Workflow is queued and waiting for execution
     WorkflowStatusDelayed                     WorkflowStatusType = "DELAYED"                        // Workflow is delayed and will transition to ENQUEUED after the delay expires
+    WorkflowStatusSuspended                   WorkflowStatusType = "SUSPENDED"                      // Workflow is suspended by Recv or Sleep until a message or its timer re-enqueues it
     WorkflowStatusSuccess                     WorkflowStatusType = "SUCCESS"                        // Workflow completed successfully
     WorkflowStatusError                       WorkflowStatusType = "ERROR"                          // Workflow completed with an error
     WorkflowStatusCancelled                   WorkflowStatusType = "CANCELLED"                      // Workflow was cancelled (manually or due to timeout)
@@ -2421,6 +2479,14 @@ Returns an empty string if the workflow has no authenticated user, and an error 
 
 **Parameters:**
 - **ctx**: The DBOS context.
+
+### GetShardKey
+
+```go
+func GetShardKey(ctx Context) (string, error)
+```
+
+Return the shard key of the current workflow: empty on an unsharded system database. Returns an error if not called from within a workflow context.
 
 Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
@@ -2728,7 +2794,7 @@ func WithWorkflowIDReusePolicy(policy WorkflowIDReusePolicy) WorkflowOption
 
 What to do if a workflow with the ID given by `WithWorkflowID` already exists, whatever its status.
 `dbos.WorkflowIDReusePolicyReturnExisting` (default) returns a handle to the existing workflow without starting a new one; `dbos.WorkflowIDReusePolicyReject` returns an error matching `dbos.ErrWorkflowIDInUse` without starting or modifying anything.
-The reject policy cannot be used with a debouncer.
+The reject policy cannot be used with a debouncer, nor, on a sharded system database, for a workflow started from inside another workflow.
 
 #### WithRunInstance
 
@@ -2754,6 +2820,15 @@ Queued workflows will be dequeued and executed according to the queue's configur
 The queue must be a non-nil `Queue` handle returned by `RegisterQueue`, `RetrieveQueue`, or `ListQueues`; passing `nil` makes the enclosing `RunWorkflow` call return an error.
 To enqueue by name instead (for example, from a standalone client), use `Enqueue`.
 
+#### WithShardKey
+
+```go
+func WithShardKey(key string) WorkflowOption
+```
+
+The shard key the started or enqueued workflow lives under. Required on a sharded system database, and an error on an unsharded one.
+A child workflow does not inherit its parent's shard key: pass it explicitly. A child under a different shard key than its parent's must be enqueued with `WithQueue`.
+
 #### WithDeduplicationID
 
 ```go
@@ -2763,6 +2838,7 @@ func WithDeduplicationID(id string) WorkflowOption
 Set a deduplication ID for this workflow.
 Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
+Not supported on a sharded system database.
 
 #### WithDeduplicationPolicy
 
@@ -3004,6 +3080,8 @@ type Client interface {
     GetWorkflowAggregates(_ Client, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
     GetStepAggregates(_ Client, input GetStepAggregatesInput) ([]StepAggregateRow, error)
     DeleteWorkflows(_ Client, workflowIDs []string, opts ...DeleteWorkflowOption) error
+    BindShardKeys(_ Client, keys map[string]string) Client
+    BindShardKey(_ Client, workflowID, key string) Client
 
     // Queue management
     RegisterQueue(_ Client, name string, options ...QueueOption) (Queue, error)
@@ -3052,6 +3130,7 @@ type ClientConfig struct {
     Logger                 *slog.Logger    // Optional custom logger
     Serializer             Serializer[any] // Optional custom serializer (defaults to JSON)
     SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and migrations (default: 2 minutes)
+    Sharding               bool            // Connect to a sharded system database; requires importing go.dbos.dev/dbos-enterprise-go, but no DBOS Transact Enterprise key
 }
 ```
 
@@ -3112,11 +3191,12 @@ Please see Workflow IDs and Idempotency for more information.
 * `WithEnqueueApplicationVersion(version string)`: The version of your application that should process this workflow.
 If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using `WithoutCancel`). The timeout does not begin until the workflow is dequeued and starts execution.
-* `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
+* `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail. Not supported on a sharded system database.
 * `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `ErrorCodeQueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
 * `WithEnqueueQueuePartitionKey(partitionKey string)`: Set the queue partition key. Required if and only if the target queue is partitioned (registered with at least one partition limit, such as `WithPartitionConcurrency`).
+* `WithEnqueueShardKey(key string)`: The shard key the enqueued workflow lives under. Required on a sharded system database, and an error on an unsharded one. A workflow enqueued from inside another workflow does not inherit its parent's shard key.
 * `WithEnqueuePortableWorkflow()`: Store the enqueued workflow in the cross-language portable JSON format: its input is wrapped in the `PortableWorkflowArgs` envelope as the single positional argument, and the workflow runs as a portable workflow when dequeued. Passing a `PortableWorkflowArgs` input implies this option.
 
 **Example syntax:**

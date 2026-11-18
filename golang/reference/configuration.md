@@ -21,6 +21,8 @@ type Config struct {
     AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false). See Auto-Upgrading Workflows.
     AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
     AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
+    Sharding                  bool           // Use a sharded system database, a DBOS Transact Enterprise feature (default: false). See Sharding.
+    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, a DBOS Transact Enterprise feature (default: false). See Suspending Workflows.
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
@@ -73,7 +75,7 @@ The import registers [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite)
 
 ## DBOS Transact Enterprise
 
-[DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features, [connecting to Conductor](#connecting-to-conductor) and [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), are provided by the `go.dbos.dev/dbos-enterprise-go` module, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+[DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features, [connecting to Conductor](#connecting-to-conductor), [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), [sharding](../tutorials/sharding.md), and [suspending workflows](../tutorials/workflow-tutorial.md#suspending-workflows), are provided by the `go.dbos.dev/dbos-enterprise-go` module, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
 Add it to your application and import it once, anywhere in your program, with a blank import:
 
 ```shell
@@ -89,9 +91,9 @@ import (
 
 The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`, so upgrade both together.
 
-The import registers with DBOS Transact the Conductor client, started on [`Launch`](./dbos-context.md#launch) whenever `ConductorAPIKey` is set or the application runs in [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), and the auto-upgrade pass, run when `AutoUpgrade` is set or a workflow is registered with [`WithAutoUpgrade(true)`](./workflows-steps.md#withautoupgrade).
-Nothing else changes: configure Conductor and auto-upgrade through `Config`, as documented below.
-Without the import, `NewContext` returns an initialization error saying what to add whenever Conductor or auto-upgrade is configured.
+The import registers with DBOS Transact the Conductor client, started on [`Launch`](./dbos-context.md#launch) whenever `ConductorAPIKey` is set or the application runs in [DBOS Cloud](../../conductor/reference/dbos-cloud/deploying-to-cloud.md), the auto-upgrade pass, run when `AutoUpgrade` is set or a workflow is registered with [`WithAutoUpgrade(true)`](./workflows-steps.md#withautoupgrade), the sharded system database, used when `Sharding` is set, and suspend mode, used when `SuspendMode` is set.
+Nothing else changes: configure these features through `Config`, as documented below.
+Without the import, `NewContext` returns an initialization error saying what to add whenever one of them is configured.
 
 ### Connecting to Conductor
 
@@ -110,9 +112,11 @@ When Conductor is configured, `Launch` does not recover this executor's pending 
 - **`AutoUpgrade`**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those registered with [`WithAutoUpgrade(false)`](./workflows-steps.md#withautoupgrade). Requires DBOS Transact Enterprise. Defaults to `false`.
 - **`AutoUpgradeInterval`**: How often to check for workflows to auto-upgrade. Defaults to 30 seconds.
 - **`AutoUpgradeGracePeriod`**: How long the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
+- **`Sharding`**: If `true`, use a [sharded system database](../tutorials/sharding.md), where every workflow lives under a shard key. `DatabaseURL` or `SystemDBPool` must point at your sharding router. Requires DBOS Transact Enterprise. Defaults to `false`.
+- **`SuspendMode`**: If `true`, [`Sleep`](./methods.md#sleep) and [`Recv`](./methods.md#recv) can [suspend a waiting workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of holding it in memory. Requires DBOS Transact Enterprise. Defaults to `false`.
 
-Before auto-upgrade starts, DBOS checks with Conductor that your organization is entitled to it, using `TransactEnterpriseKey` or, when it is unset, `ConductorAPIKey`.
-The check runs in `NewContext` when `AutoUpgrade` is set, or in `Launch` when workflows are enrolled with `WithAutoUpgrade(true)` alone, and fails with an initialization error naming the problem: no key, an invalid key, or an organization whose plan does not include auto-upgrade.
+Before using auto-upgrade, sharding, or suspend mode, DBOS checks with Conductor that your organization is entitled to it, using `TransactEnterpriseKey` or, when it is unset, `ConductorAPIKey`.
+The check runs in `NewContext` when `AutoUpgrade`, `Sharding`, or `SuspendMode` is set, or in `Launch` when workflows are enrolled with `WithAutoUpgrade(true)` alone, and fails with an initialization error naming the problem: no key, an invalid key, or an organization whose plan does not include the feature.
 If you [self-host Conductor](../../conductor/self-hosting/hosting-conductor.md), the check goes to the Conductor at `ConductorURL`; applications running in DBOS Cloud skip it.
 
 ## System database startup
@@ -159,6 +163,7 @@ err := dbos.Migrate(ctx, os.Getenv("ADMIN_DATABASE_URL"), dbos.WithMigrateApplic
 - **`WithMigrateSchema(schema string)`**: The schema holding the DBOS system tables (default `"dbos"`).
 - **`WithMigrateApplicationRole(role string)`**: A Postgres role to grant access to the migrated schema, so an application running under it can launch with `Config.SkipMigrations`. Postgres only.
 - **`WithMigrateLogger(logger *slog.Logger)`**: The logger `Migrate` reports progress to (default `slog.Default()`).
+- **`WithMigrateSharding()`**: Create or migrate a [sharded system database](../tutorials/sharding.md). Requires importing [`go.dbos.dev/dbos-enterprise-go`](#dbos-transact-enterprise).
 
 To run the same SQL yourself, for example from your own migration tooling, `PermissionStatements(schemaName, roleName string) []string` returns the statements granting `roleName` access to the system schema, and `MigrationStatements(schemaName string, from int) ([]string, error)` returns the statements the migrations execute from version `from` onwards.
 [Datasources](./datasources.md#installing-the-datasource-schema) have their own schema and are migrated separately with [`MigrateDataSource`](./datasources.md#migratedatasource).

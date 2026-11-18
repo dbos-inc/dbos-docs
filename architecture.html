@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.35af3fee.js" defer="defer"></script>
-<script src="/assets/js/main.2354d1cf.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.47689faf.js" defer="defer"></script>
+<script src="/assets/js/main.c2d6c0c4.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -127,9 +127,9 @@ Conductor is the control plane for your durable workflows, providing:</p>
 </ul>
 <p>Conductor also gives your applications access to <a class="" href="/explanations/transact-enterprise">DBOS Transact Enterprise</a>, the commercial extension to the open-source DBOS Transact library, which provides features such as:</p>
 <ul>
-<li class=""><strong>Sharding</strong> (<a class="" href="/python/tutorials/sharding"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/sharding"><strong>TypeScript</strong></a>): Horizontally scale DBOS to handle <a href="https://www.dbos.dev/blog/one-million-workflows" target="_blank" rel="noopener noreferrer" class="">over 1M workflows or steps per second</a> with a sharded Postgres system database.</li>
+<li class=""><strong>Sharding</strong> (<a class="" href="/python/tutorials/sharding"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/sharding"><strong>TypeScript</strong></a>, <a class="" href="/golang/tutorials/sharding"><strong>Go</strong></a>): Horizontally scale DBOS to handle <a href="https://www.dbos.dev/blog/one-million-workflows" target="_blank" rel="noopener noreferrer" class="">over 1M workflows or steps per second</a> with a sharded Postgres system database.</li>
 <li class=""><strong>Auto-upgrade</strong> (<a class="" href="/python/tutorials/upgrading-workflows#auto-upgrading-workflows"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/upgrading-workflows#auto-upgrading-workflows"><strong>TypeScript</strong></a>, <a class="" href="/golang/tutorials/upgrading-workflows#auto-upgrading-workflows"><strong>Go</strong></a>): Automatically move workflows from older application versions to the latest version.</li>
-<li class=""><strong>Suspending workflows</strong> (<a class="" href="/python/tutorials/workflow-tutorial#suspending-workflows"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/workflow-tutorial#suspending-workflows"><strong>TypeScript</strong></a>): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.</li>
+<li class=""><strong>Suspending workflows</strong> (<a class="" href="/python/tutorials/workflow-tutorial#suspending-workflows"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/workflow-tutorial#suspending-workflows"><strong>TypeScript</strong></a>, <a class="" href="/golang/tutorials/workflow-tutorial#suspending-workflows"><strong>Go</strong></a>): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.</li>
 <li class=""><strong>External storage</strong> (<a class="" href="/python/tutorials/external-storage"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/external-storage"><strong>TypeScript</strong></a>): Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.</li>
 </ul>
 <p>Architecturally, Conductor looks like this:</p>

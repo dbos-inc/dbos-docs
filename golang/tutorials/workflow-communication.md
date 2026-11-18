@@ -35,12 +35,31 @@ err := dbos.SendBulk(dbosContext, []dbos.SendMessage{
 #### Recv
 
 ```go
-func Recv[R any](ctx Context, topic string, timeout time.Duration) (R, error)
+func Recv[R any](ctx Context, topic string, timeout time.Duration, opts ...RecvOption) (R, error)
 ```
 
 Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+
+If a workflow may wait a long time for a message, you can [suspend it](./workflow-tutorial.md#suspending-workflows) while it waits by passing [`WithRecvSuspend`](../reference/methods.md#withrecvsuspend), so it consumes no resources while waiting.
+`Recv` then returns an error matching `dbos.ErrWorkflowSuspended`, which the workflow function must return:
+
+```go
+func approvalWorkflow(ctx dbos.Context, request string) (string, error) {
+    ... // Ask a reviewer for approval.
+    // Suspend for up to a week while waiting for a decision
+    decision, err := dbos.Recv[string](ctx, "approval", 7*24*time.Hour, dbos.WithRecvSuspend())
+    if err != nil {
+        return "", err // Includes dbos.ErrWorkflowSuspended, which suspends the workflow
+    }
+    return decision, nil
+}
+```
+
+If a message is already waiting, `Recv` returns it immediately.
+Otherwise, the workflow suspends until a message is sent on its topic or the timeout passes.
+Any `Send` on that topic wakes it, including one from a [client](../reference/dbos-context.md#newclient) or a process without suspend mode.
 
 #### Messages Example
 
