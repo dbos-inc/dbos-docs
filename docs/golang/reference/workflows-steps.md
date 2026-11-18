@@ -181,7 +181,7 @@ What to do if a workflow with the ID given by [`WithWorkflowID`](#withworkflowid
 Defaults to `WorkflowIDReusePolicyReturnExisting`.
 
 - `WorkflowIDReusePolicyReturnExisting`: return a handle to the existing workflow without starting a new one. The new input is ignored; `GetResult` returns the recorded result.
-- `WorkflowIDReusePolicyReject`: return an error matching `dbos.ErrWorkflowIDInUse` without starting a new workflow or modifying the existing one. The error's `WorkflowID` and `RecordedName` fields describe the existing workflow. When a workflow starts a child with this policy, the rejection is checkpointed as the child-start step's outcome, so a replay returns it even if the ID has been freed since. Cannot be used with a [debouncer](./queues.md#debouncer).
+- `WorkflowIDReusePolicyReject`: return an error matching `dbos.ErrWorkflowIDInUse` without starting a new workflow or modifying the existing one. The error's `WorkflowID` and `RecordedName` fields describe the existing workflow. When a workflow starts a child with this policy, the rejection is checkpointed as the child-start step's outcome, so a replay returns it even if the ID has been freed since. Cannot be used with a [debouncer](./queues.md#debouncer), nor, on a [sharded system database](../tutorials/sharding.md), for a workflow started from inside another workflow.
 
 ```go
 handle, err := dbos.RunWorkflow(ctx, processOrder, order,
@@ -226,6 +226,7 @@ Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 This behavior can be changed with [`WithDeduplicationPolicy`](#withdeduplicationpolicy).
+Deduplication is not supported on a [sharded system database](../tutorials/sharding.md).
 
 #### WithDeduplicationPolicy
 
@@ -299,6 +300,24 @@ handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
 - Partition keys cannot be used with non-partitioned queues.
 - Partition keys and deduplication IDs cannot be used together.
 :::
+
+#### WithShardKey
+
+```go
+func WithShardKey(key string) WorkflowOption
+```
+
+The [shard key](../tutorials/sharding.md) the started or enqueued workflow lives under.
+Required on a sharded system database, and an error on an unsharded one.
+A child workflow does not inherit its parent's shard key: pass it explicitly.
+A child under a different shard key than its parent's must be enqueued with [`WithQueue`](#withqueue).
+
+```go
+handle, err := dbos.RunWorkflow(ctx, processOrder, order,
+    dbos.WithQueue(queue),
+    dbos.WithShardKey("tenant-a"),
+)
+```
 
 #### WithDelay
 
@@ -595,6 +614,7 @@ type WorkflowHandle[R any] interface {
 WorkflowHandle provides methods to interact with a running or completed workflow.
 The type parameter `R` represents the expected return type of the workflow.
 Handles can be used to wait for workflow completion, check status, and retrieve results. 
+On a [sharded system database](../tutorials/sharding.md), a handle carries its workflow's shard key.
 
 #### WorkflowHandle.GetResult
 
@@ -796,3 +816,4 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 | `ErrorCodeWorkflowPanic` | `ErrWorkflowPanic` | Handle | The workflow function (or a step run with [`Go`](#go)) panicked. DBOS recovers the panic on the goroutine it owns, logs it with its stack, and records it as the workflow's error instead of crashing the process. When the panic value is an `error`, it is wrapped, so `errors.Is`/`errors.As` still reach it. Awaiting the workflow returns this error. |
 | `ErrorCodeStepNondeterminism` | `ErrStepNondeterminism` | Return | This execution recorded a step ID it had already recorded with a different result, so the workflow function is non-deterministic (for example, it ran steps concurrently without [`Go`](#go)). |
 | `ErrorCodeWorkflowIDInUse` | `ErrWorkflowIDInUse` | Handle | A workflow was started with [`WorkflowIDReusePolicyReject`](#withworkflowidreusepolicy) under an ID that already exists. Nothing was started or modified; a rejected child start is checkpointed as the parent's step outcome. |
+| `ErrorCodeWorkflowSuspended` | `ErrWorkflowSuspended` | Return | A `Recv` or `Sleep` called with [`WithRecvSuspend`](./methods.md#withrecvsuspend) or [`WithSleepSuspend`](./methods.md#withsleepsuspend) [suspended the workflow](../tutorials/workflow-tutorial.md#suspending-workflows). Return it, as is or wrapped with `%w`, so the current execution exits; the workflow resumes from its last completed step when it wakes. |
