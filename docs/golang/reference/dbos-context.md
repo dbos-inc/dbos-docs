@@ -43,6 +43,8 @@ type Client interface {
     GetWorkflowAggregates(_ Client, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
     GetStepAggregates(_ Client, input GetStepAggregatesInput) ([]StepAggregateRow, error)
     DeleteWorkflows(_ Client, workflowIDs []string, opts ...DeleteWorkflowOption) error
+    BindShardKeys(_ Client, keys map[string]string) Client
+    BindShardKey(_ Client, workflowID, key string) Client
 
     // Queue management
     RegisterQueue(_ Client, name string, options ...QueueOption) (Queue, error)
@@ -86,16 +88,17 @@ type Context interface {
     RunWorkflow(_ Context, fn WorkflowFunc, input any, opts ...WorkflowOption) (WorkflowHandle[any], error)
     Go(_ Context, fn StepFunc, opts ...StepOption) (<-chan StepOutcome[any], error)
     Select(_ Context, channels []<-chan StepOutcome[any]) (any, error)
-    Recv(_ Context, topic string, timeout time.Duration) (any, error)
+    Recv(_ Context, topic string, timeout time.Duration, opts ...RecvOption) (any, error)
     SetEvent(_ Context, key string, message any, opts ...SetEventOption) error
     WriteStream(_ Context, key string, value any, opts ...WriteStreamOption) error
     CloseStream(_ Context, key string) error
-    Sleep(_ Context, duration time.Duration) (time.Duration, error)
+    Sleep(_ Context, duration time.Duration, opts ...SleepOption) (time.Duration, error)
     Patch(_ Context, patchName string) (bool, error)
     DeprecatePatch(_ Context, patchName string) error
     GetWorkflowID() (string, error)        // Only available within workflows
     GetStepID() (int, error)               // Only available within workflows
     GetAuthenticatedUser() (string, error) // Only available within workflows
+    GetShardKey() (string, error)          // Only available within workflows
 
     // Registration
     ListRegisteredWorkflows(_ Context) []WorkflowRegistryEntry
@@ -126,7 +129,7 @@ type Context interface {
 - **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database. One exception: on the `Context` a step body receives, mutating operations return an error — see [Calling DBOS operations from steps](./workflows-steps.md#calling-dbos-operations-from-steps). When called from workflow code, these operations are checkpointed as steps (`DBOS.*` step names in the workflow's step list).
 - **`Launch()`, workflow registration ([`RegisterWorkflow`](./workflows-steps.md#registerworkflow)), and `SetAlertHandler`** require a `Context`; registration and `SetAlertHandler` must happen before `Launch()`.
 - **Starting workflows (with [`RunWorkflow`](./workflows-steps.md#runworkflow))** requires a launched `Context`.
-- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), [`GetAuthenticatedUser`](./methods.md#getauthenticateduser), [`Patch`](./workflows-steps.md#patch)) can only be called on the `Context` a workflow function receives.
+- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), [`GetAuthenticatedUser`](./methods.md#getauthenticateduser), [`GetShardKey`](./methods.md#getshardkey), [`Patch`](./workflows-steps.md#patch)) can only be called on the `Context` a workflow function receives.
 
 In practice, never call the interface methods directly — call their mirror package-level functions instead. These are strongly typed (generic) and the interface methods are not.
 
@@ -200,6 +203,7 @@ type ClientConfig struct {
     Serializer             Serializer[any] // Optional custom serializer (defaults to JSON). See the serialization reference.
     SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and schema verification (default: 2 minutes)
     SystemDBIdleTransactionTimeout time.Duration // Postgres idle_in_transaction_session_timeout for the connections the client creates (default: 1 minute; negative leaves the server setting)
+    Sharding               bool            // Connect to a sharded system database, which needs go.dbos.dev/dbos-enterprise-go (default: false)
 }
 ```
 
@@ -208,6 +212,7 @@ Startup follows the same rules as `NewContext`, including `SystemDBStartupTimeou
 Unlike `NewContext`, a client never creates or migrates the system database: it verifies the schema instead, and `NewClient` fails if the system database is missing or behind the version this build of DBOS requires.
 Migrate it from the application (`NewContext`) or out of band with the `dbos migrate` [CLI command](./cli.md).
 Like `NewContext`, using a SQLite system database requires registering the SQLite driver with a blank import — see [Using SQLite](./configuration.md#using-sqlite).
+To connect to a [sharded system database](../tutorials/sharding.md), set `Sharding`; this requires importing [`go.dbos.dev/dbos-enterprise-go`](./configuration.md#dbos-transact-enterprise), but not a DBOS Transact Enterprise key.
 
 Because workflows are not registered with a client, operations that take a workflow function reference on a `Context` take a workflow **name** (string) from a client — for example [`Enqueue`](./methods.md#enqueue), or the `WorkflowName` field of [`ScheduleSpec`](./methods.md#schedulespec).
 
@@ -237,6 +242,7 @@ Gracefully shut down a `Context` or a standalone `Client`, waiting for resources
 
 When you shut down a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
 When you shut down a standalone `Client`, its system database connection pool and notification listener are released.
+`Shutdown` closes only a connection pool DBOS created itself: a pool you supplied (`SystemDBPool` or `SQLiteSystemDB`) is yours to close after `Shutdown` returns.
 
 Like `Launch()`, `Shutdown()` must be called on the `Context` returned by `NewContext` (or the `Client` returned by `NewClient`); calling it on a derived context returns an error.
 

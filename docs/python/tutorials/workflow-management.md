@@ -60,7 +60,6 @@ Filtering workflows by attribute is only supported when using a Postgres system 
 You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancel_workflow`](../reference/contexts.md#cancel_workflow), or through the command line with [`dbos workflow cancel`](../reference/cli.md#dbos-workflow-cancel).
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
 
 To cancel an executing async step immediately rather than waiting for it to complete, mark the step as [`preemptible`](../reference/decorators.md#step).
 
@@ -69,7 +68,6 @@ To cancel an executing async step immediately rather than waiting for it to comp
 You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resume_workflow`](../reference/contexts.md#resume_workflow), or through the command line with [`dbos workflow resume`](../reference/cli.md#dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 ## Forking Workflows
 

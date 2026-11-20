@@ -12,6 +12,15 @@ It is always safe to upgrade directly from any past version to any later version
 
 To be notified of new releases, subscribe to the [RSS feed](https://docs.dbos.dev/conductor/self-hosting/release-notes.xml).
 
+## v0.22.0
+
+*November 13, 2026*
+
+- Console users can now save views for each application.
+- Registering an application that is already registered now succeeds instead of returning a conflict, so deploy scripts can safely register their application every time.
+- Workflow charts now include [suspended workflows](../../python/tutorials/workflow-tutorial.md#suspending-workflows), and [autoscaling](../autoscaling.md) no longer keeps an old application version's executors running for its suspended workflows.
+- Faster workflow charts over long time ranges.
+
 ## v0.21.0
 
 *October 30, 2026*

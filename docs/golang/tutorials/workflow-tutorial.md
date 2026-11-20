@@ -241,6 +241,45 @@ func exampleWorkflow(ctx dbos.Context, input struct {
 
 ```
 
+### Suspending Workflows
+
+:::info
+Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+:::
+
+Normally, a workflow stays in memory while it waits in `Sleep` or [`Recv`](./workflow-communication.md#recv).
+If your application has many workflows with long waits, you can instead suspend them, so they use no memory, goroutines, or queue capacity until they wake.
+
+To suspend workflows, set [`SuspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass [`WithSleepSuspend`](../reference/methods.md#withsleepsuspend) to `Sleep` or [`WithRecvSuspend`](../reference/methods.md#withrecvsuspend) to `Recv`:
+
+```go
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
+	AppName:     "my-app-name",
+	DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+	SuspendMode: true,
+})
+
+func sendReminder(ctx dbos.Context, user string) (string, error) {
+	// Sleep suspended for 30 days, then send the reminder
+	if _, err := dbos.Sleep(ctx, 30*24*time.Hour, dbos.WithSleepSuspend()); err != nil {
+		return "", err
+	}
+	return dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+		return sendEmail(stepCtx, user)
+	})
+}
+```
+
+When a workflow suspends, `Sleep` or `Recv` returns an error matching `dbos.ErrWorkflowSuspended`, which the workflow function must return: its current execution exits and its status becomes `SUSPENDED`.
+When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+
+Keep in mind:
+
+- **Return the error from `Sleep` and `Recv`**, as is or wrapped with `%w`. DBOS recognizes it with `errors.Is(err, dbos.ErrWorkflowSuspended)` to end the execution without recording an outcome for the workflow.
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a [handle](../reference/workflows-steps.md#workflowhandle), keeps waiting.
+- **Short sleeps aren't suspended.** A `Sleep` with one second or less left stays in memory, as does a `Recv` whose message has already arrived.
+
 ## Scheduled Workflows
 
 You can schedule workflows to run on a cron expression.

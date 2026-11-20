@@ -58,7 +58,8 @@ Scaling beyond that is possible by [sharding](./python/tutorials/sharding.md) wo
 
 It is worth noting that since DBOS checkpoints workflow inputs and outputs and step outputs, the sizes of its writes are determined by the sizes of your inputs and outputs.
 If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
-Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).
+Thus, we recommend keeping large objects such as files out of workflow and step inputs and outputs.
+Instead, use external storage ([Python](./python/tutorials/external-storage.md), [TypeScript](./typescript/tutorials/external-storage.md)) to keep them in a separate store such as Amazon S3 and checkpoint only a small reference to each one.
 
 ## How Workflow Recovery Works
 
@@ -115,18 +116,23 @@ You can customize the rate and concurrency at which workflows are dequeued and e
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
 For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md), [Java](./java/tutorials/queue-tutorial.md)).
 
-## Operating DBOS in Production with Conductor
+## Operating DBOS in Production with Conductor & Transact Enterprise {#operating-dbos-in-production-with-conductor}
 
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 Conductor is the control plane for your durable workflows, providing:
 
 - [**High availability**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue observability**](./conductor/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization, scaling to billions of workflows.
 - [**Workflow and queue management**](./conductor/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./conductor/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 - [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./conductor/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
-- [**DBOS Transact Enterprise access**](./explanations/transact-enterprise.md): Conductor gives your applications access to DBOS Transact Enterprise features such as sharding, auto-upgrade, suspending workflows, and external storage.
+
+Conductor also gives your applications access to [DBOS Transact Enterprise](./explanations/transact-enterprise.md), the commercial extension to the open-source DBOS Transact library, which provides features such as:
+- **Sharding** ([**Python**](./python/tutorials/sharding.md), [**TypeScript**](./typescript/tutorials/sharding.md), [**Go**](./golang/tutorials/sharding.md)): Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
+- **Auto-upgrade** ([**Python**](./python/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**TypeScript**](./typescript/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**Go**](./golang/tutorials/upgrading-workflows.md#auto-upgrading-workflows)): Automatically move workflows from older application versions to the latest version.
+- **Suspending workflows** ([**Python**](./python/tutorials/workflow-tutorial.md#suspending-workflows), [**TypeScript**](./typescript/tutorials/workflow-tutorial.md#suspending-workflows), [**Go**](./golang/tutorials/workflow-tutorial.md#suspending-workflows)): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
+- **External storage** ([**Python**](./python/tutorials/external-storage.md), [**TypeScript**](./typescript/tutorials/external-storage.md)): Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
 
 Architecturally, Conductor looks like this:
 
