@@ -81,6 +81,7 @@ This file contains links to documentation sections following the llmstxt.org sta
 - [Next.js](https://docs.dbos.dev/integrations/nextjs.md): :::info
 - [OpenAI Agents SDK](https://docs.dbos.dev/integrations/openai-agents.md): You can use DBOS to add durable execution to an agent built with the [OpenAI Agents SDK](https://platform.openai.com/docs/guides/agents-sdk).
 - [Parseable](https://docs.dbos.dev/integrations/parseable.md): [Parseable](https://www.parseable.com/) can ingest OpenTelemetry logs and traces from DBOS application processes as well as [Conductor Metrics](../...
+- [Prisma Postgres](https://docs.dbos.dev/integrations/prisma-postgres.md): Here's how to connect your DBOS application running on your computer or cloud environment to your [Prisma Postgres](https://www.prisma.io/postgres)...
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): [Pydantic AI](https://ai.pydantic.dev/) is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase Edge Functions](https://docs.dbos.dev/integrations/supabase-edge-functions.md): You can use DBOS to add durable workflows, background jobs, or AI agents to your Supabase project.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): :::info
