@@ -130,6 +130,7 @@ Each row represents a different workflow execution.
 - **is_debounced**: Whether this workflow was created by a debouncer.
 - **application_name**: The application that owns this workflow.
 - **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting.
+- **archive_pending**: `TRUE` while a completed workflow is waiting to be copied to the application's [workflow archive](../python/tutorials/workflow-archiving.md), null otherwise. Set only when the application is configured with a workflow archive and the workflow has an application name. Retention in such an application doesn't delete workflows with `archive_pending` set.
 
 ### dbos.workflow_input
 This table stores workflow inputs.

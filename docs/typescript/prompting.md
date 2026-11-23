@@ -2034,6 +2034,15 @@ Prefer storing a `Buffer` or `Uint8Array` for large objects, because they are no
 Outside a workflow, you MUST pass `ownerWorkflowID`.
 Objects are deleted only after their owner workflow has been deleted, by a retention run.
 
+## Workflow Archiving
+
+To keep every completed workflow while retention keeps the system database small, DBOS Transact Enterprise supports workflow archiving (requires `npm install @dbos-inc/dbos-enterprise @duckdb/node-api hyparquet-writer`, plus `@aws-sdk/client-s3 @aws-sdk/lib-storage` for S3 or GCS, and, in production, a Conductor connection).
+Set `workflowArchive: new ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `@dbos-inc/dbos-enterprise`, in every process of the application.
+Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
+To read archived workflows, construct a `ParquetArchive` with the same URI and call `listWorkflows({ limit, ... })`, which lists newest first and requires `limit`, then `getWorkflowStatus`, `listWorkflowSteps`, `getEvents`, `getNotifications`, or `readStream` with a workflow's `workflowID` and `completedAt`.
+`DBOS.importArchivedWorkflow(workflowID, completedAt)` copies an archived workflow back into the system database.
+Archiving isn't supported on a sharded system database or CockroachDB.
+
 ## Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.

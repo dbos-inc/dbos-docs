@@ -1510,6 +1510,15 @@ Prefer storing `bytes` for large objects, because they are not serialized.
 Outside a workflow, you MUST pass `owner_workflow_id`.
 Objects are deleted only after their owner workflow has been deleted, by a retention run.
 
+## Workflow Archiving
+
+To keep every completed workflow while retention keeps the system database small, DBOS Transact Enterprise supports workflow archiving (requires `pip install "dbos[enterprise]" "dbos-enterprise[archive]"` and, in production, a Conductor connection).
+Set `"workflow_archive": ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `dbos_enterprise.archive`, in every process of the application.
+Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
+To read archived workflows, construct a `ParquetArchive` with the same URI and call `list_workflows(limit=..., ...)`, which lists newest first and requires `limit`, then `get_workflow_status`, `list_workflow_steps`, `get_events`, `get_notifications`, or `read_stream` with a workflow's ID and `completed_at`.
+`DBOS.import_archived_workflow(workflow_id, completed_at)` copies an archived workflow back into the system database.
+Archiving isn't supported on a sharded system database or CockroachDB.
+
 ## Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.

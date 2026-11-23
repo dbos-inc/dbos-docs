@@ -805,6 +805,23 @@ DBOS.deleteWorkflows(
 
 Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#dbosdeleteworkflow) but operates on a list of workflow IDs.
 
+### DBOS.importArchivedWorkflow
+
+```typescript
+DBOS.importArchivedWorkflow<T = unknown>(
+  workflowID: string,
+  completedAt: number
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Requires [`workflowArchive`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimportarchivedworkflow) for details.
+
+**Parameters:**
+- **workflowID**: The workflow's ID. It must not already be in the system database.
+- **completedAt**: The archived snapshot to import, as its `WorkflowStatus.completedAt` (epoch milliseconds).
+
 ### DBOS.forkWorkflow
 
 ```typescript
