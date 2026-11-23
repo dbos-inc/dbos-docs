@@ -194,12 +194,6 @@ WHERE rank = 1;
 
 Filter on `completed_date` to read only the partitions you need.
 
-## Limitations
-
-- Workflow archiving isn't supported on a [sharded system database](./sharding.md) or on CockroachDB.
-- Archived workflows are listed newest first only, and can't be filtered by workflow ID prefix.
-- DBOS doesn't delete or change archived files. Rows in the system database changed after a workflow is archived, such as its attributes, aren't archived again unless the workflow completes again.
-
 ## Reference
 
 ### ParquetArchive
