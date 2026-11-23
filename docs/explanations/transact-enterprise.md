@@ -16,7 +16,7 @@ DBOS Transact Enterprise provides:
 - **Auto-upgrade**: Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
 - **External storage**: Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
-- **Workflow archiving**: Copy every completed workflow to Parquet files in object storage, so retention can keep the system database small without losing workflow history (available in [Python](../python/tutorials/workflow-archiving.md) and [TypeScript](../typescript/tutorials/workflow-archiving.md)).
+- **Workflow archiving**: Export a permanent, queryable copy of your workflow history to Parquet files in object storage such as Amazon S3.
 
 ## Installing DBOS Transact Enterprise
 
