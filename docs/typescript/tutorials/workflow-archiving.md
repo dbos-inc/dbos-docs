@@ -8,11 +8,8 @@ toc_max_heading_level: 3
 Workflow archiving is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature, available in Python and TypeScript.
 :::
 
-DBOS keeps workflow history in your system database, and a [retention policy](../../conductor/retention.md) deletes old history to keep that database small.
-With **workflow archiving**, DBOS first copies every completed workflow to [Parquet](https://parquet.apache.org/) files in object storage such as [Amazon S3](https://aws.amazon.com/s3/), so you keep a full, cheap, queryable record of every workflow while the system database holds only recent ones.
-
-Retention then deletes only workflows that have been archived.
-You can query archived workflows from the [DBOS Console](https://console.dbos.dev), read them from your code, import one back into the system database, or query the files directly with tools such as DuckDB, Athena, or Spark.
+Workflow archiving lets you export a permanent copy of your workflow history to an archival format and data store, in particular [Parquet](https://parquet.apache.org/) files in object storage such as [S3](https://aws.amazon.com/s3/).
+Archived workflows are queryable, can be viewed through the [DBOS Console](https://console.dbos.dev), and can be re-imported back into your system database.
 
 ## Setting Up Workflow Archiving
 
@@ -39,18 +36,20 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Configure the archive in every process of your application, including processes that only run some of its workflows.
+You must configure the archive in every process of your application.
+If some processes should mark their workflows for archiving but not write or read the archive themselves, construct their `ParquetArchive` with `activeArchiver: false`.
+These processes don't need DuckDB, hyparquet-writer, or the AWS SDK installed.
+At least one process of the application must be an active archiver.
 
 ### Storage Locations
 
-An archive lives at a URI:
+You configure `ParquetArchive` with a URI, which defines where your archive lives:
 
 - **Amazon S3**: `s3://bucket/prefix`. The archiver writes with the AWS SDK's default credential chain, in the bucket's own region, and reads use DuckDB's credential chain. To use other credentials, pass an `s3Client` for writes and a `duckdbSecret` for reads.
 - **Google Cloud Storage**: `gs://bucket/prefix`, through its S3-compatible API. Writes and reads use an [HMAC key](https://cloud.google.com/storage/docs/authentication/hmackeys) for a service account: `duckdbSecret: { KEY_ID: ..., SECRET: ... }`. To write with other credentials, pass an `s3Client`.
 - **Local directory**: a path such as `/var/lib/dbos-archive`, for development and testing.
 
 Azure Blob Storage isn't supported in TypeScript yet.
-Several applications can share one archive location: each archives only its own workflows.
 
 ## How Archiving Works
 
@@ -65,11 +64,6 @@ If a process crashes before writing, its workflows stay marked and are archived 
 Each archived copy of a workflow is a **snapshot**, identified by the workflow's ID and its `completedAt` time.
 If you [resume](./workflow-management.md) a workflow that was already archived, its next completion is archived as a new snapshot.
 
-Some things are not archived:
-
-- Workflows without an [application name](../../explanations/sharing-a-system-database.md#unowned-rows) are never archived.
-- [External objects](./external-storage.md) are not copied. An archived workflow keeps its references, but they stop working once retention deletes the objects.
-
 ### Archiving and Retention
 
 With archiving configured, a [retention policy](../../conductor/retention.md) deletes only workflows that have been archived, so no workflow history is lost.
@@ -78,19 +72,16 @@ A workflow waiting to be archived is kept until the archiver has copied it.
 :::warning
 Retention keeps unarchived workflows only when it runs in a process configured with your archive.
 Configure the archive in every process of your application.
-If other applications [share your system database](../../explanations/sharing-a-system-database.md), retention they run can delete your workflows before they are archived unless they are configured with an archive too.
+If other applications [share your system database](../../explanations/sharing-a-system-database.md), retention they run can delete your workflows before they are archived unless those other applications are configured with an archive too.
 :::
 
-If some processes should mark their workflows for archiving but not write or read the archive themselves, for example because they have no storage credentials, construct their `ParquetArchive` with `activeArchiver: false`.
-These processes don't need DuckDB, hyparquet-writer, or the AWS SDK installed.
-At least one process of the application must be an active archiver.
 
 ## Reading Archived Workflows
 
 You can query your application's archived workflows from the [DBOS Console](https://console.dbos.dev).
 Conductor sends these queries to your application's active archivers.
 
-From code, construct a `ParquetArchive` with the same URI in any process, not only one that archives, and read from it.
+From code, construct a `ParquetArchive` with the same URI in any process and read from it.
 List archived workflows with [`listWorkflows`](#listworkflows), which takes the same filters as [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows), then read a snapshot's details by its workflow ID and `completedAt`:
 
 ```typescript
@@ -114,16 +105,11 @@ A listing that runs longer than its timeout, 30 seconds by default, throws `Arch
 
 ## Importing an Archived Workflow
 
-To bring an archived workflow back into the system database, for example to [fork](./workflow-management.md) it or inspect it alongside live workflows, call [`DBOS.importArchivedWorkflow`](#dbosimportarchivedworkflow) with its workflow ID and `completedAt`:
+To bring an archived workflow back into the system database, call [`DBOS.importArchivedWorkflow`](#dbosimportarchivedworkflow) with its workflow ID and `completedAt`:
 
 ```typescript
 const handle = await DBOS.importArchivedWorkflow(workflow.workflowID, workflow.completedAt!);
 ```
-
-The imported workflow's `completedAt` is the time of the import, so retention keeps it for its usual period from now.
-It isn't archived again, because the archive already holds it.
-Importing fails if the system database already has a workflow with that ID.
-You can also import an archived workflow with [`DBOSClient.importArchivedWorkflow`](#dbosclientimportarchivedworkflow), or through the [Conductor API](../../conductor/reference/conductor-api.md#workflow-archive).
 
 ## Deploying Workflow Archiving
 
@@ -173,18 +159,6 @@ module.exports = {
 };
 ```
 
-### Storage Permissions
-
-The archiver needs to write objects under the archive's prefix and read its `_layout.json` file.
-On S3, grant it `s3:PutObject`, `s3:GetObject`, `s3:AbortMultipartUpload`, and `s3:ListBucket`.
-Processes that read the archive need `s3:GetObject` and `s3:ListBucket`.
-
-Large files are uploaded in parts.
-If a process is killed mid-upload, S3 keeps the uploaded parts until the upload is aborted, so add a [lifecycle rule](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html) that aborts incomplete multipart uploads after a day.
-
-DBOS never deletes archived files.
-To expire old ones, use your storage's lifecycle rules.
-
 ## Archive Layout
 
 The archive's layout is a stable format, shared by every language, so other tools can query it directly and Python and TypeScript applications can read each other's archives.
@@ -206,7 +180,6 @@ An archive holds a `_layout.json` file and one folder per dataset:
 - **`_layout.json`** records the archive's format version, currently `{"format_version": 1}`. The version changes only if a change can't be made by adding columns. The archiver refuses to write to an archive whose version is newer than it supports.
 - **Partitions**: each dataset is partitioned by `completed_date`, the UTC day of the workflow's completion, as a Hive-style `completed_date=YYYY-MM-DD` folder.
 - **File names**: `part-<first>-<last>-<tag>.parquet`, where `<first>` and `<last>` are the earliest and latest `completedAt` in the file, as 13-digit epoch milliseconds, and `<tag>` is 8 hexadecimal characters. Every dataset's file from one write has the same name, so a workflow's steps, events, messages, and streams are in the files with the same name as its workflow file.
-- **Hidden files**: files whose names start with `.` are uploads in progress. Ignore them.
 
 Times are stored as `TIMESTAMP` columns with microsecond precision in UTC.
 Inputs, outputs, errors, and other values are stored as text, encoded with the serializer named in their row's `serialization` column.
