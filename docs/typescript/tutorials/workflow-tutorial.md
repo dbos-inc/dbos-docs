@@ -286,6 +286,21 @@ await DBOS.launch();
 
 Then pass `{ suspend: true }` to any of the three waits that can suspend: sleeping, waiting for a message, and waiting for another workflow.
 
+When using workflow suspension, keep in mind that:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended.
+- **Suspending throws `DBOSWorkflowSuspendedError`** to exit the execution. If you wrap a suspending call in a `try`/`catch`, rethrow this error; otherwise, your `catch` block runs even though nothing failed:
+
+```typescript
+try {
+  const message = await DBOS.recv("topic", { timeoutSeconds: 3600, suspend: true });
+} catch (e) {
+  if (e instanceof DBOSWorkflowSuspendedError) throw e;
+  // Handle other errors
+}
+```
+
 ### Suspending While Sleeping
 
 Pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) to suspend the workflow until the sleep ends.
@@ -333,20 +348,6 @@ async function publishReportFunction(region: string) {
 const publishReport = DBOS.registerWorkflow(publishReportFunction);
 ```
 
-### Things to Keep in Mind
-
-- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
-- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a handle or a direct call, keeps waiting.
-- **Suspending throws `DBOSWorkflowSuspendedError`** to exit the execution. If you wrap a suspending call in a `try`/`catch`, rethrow this error; otherwise, your `catch` block runs even though nothing failed:
-
-```typescript
-try {
-  const message = await DBOS.recv("topic", { timeoutSeconds: 3600, suspend: true });
-} catch (e) {
-  if (e instanceof DBOSWorkflowSuspendedError) throw e;
-  // Handle other errors
-}
-```
 
 ## Debouncing Workflows
 

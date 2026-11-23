@@ -190,6 +190,12 @@ DBOS(config=config)
 
 Then pass `suspend=True` to any of the three waits that can suspend: sleeping, waiting for a message, and waiting for another workflow.
 
+When using workflow suspension, keep in mind that:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended.
+- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
+
 ### Suspending While Sleeping
 
 Pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) to suspend the workflow until the sleep ends.
@@ -232,12 +238,6 @@ def publish_report(region):
     report = handle.get_result(suspend=True)
     publish(report)
 ```
-
-### Things to Keep in Mind
-
-- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
-- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a [handle](../reference/workflow_handles.md) or a direct call, keeps waiting.
-- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
 
 ## Debouncing Workflows
 
