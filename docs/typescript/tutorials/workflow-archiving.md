@@ -137,14 +137,19 @@ Both are read by every Parquet reader.
 
 Reads use DuckDB, which needs extensions for object storage: `httpfs` and `aws` for S3, and `httpfs` for GCS.
 By default, DuckDB downloads them on first use.
-If your application can't download them at runtime, install them when you build its image and turn downloads off:
+If your application can't download them at runtime, install them when you build its image:
 
 ```shell
 npx dbos-archive-install-extensions --uri s3://my-bucket/dbos-archive
-export DBOS_ARCHIVE_EXTENSION_DOWNLOAD=false
 ```
 
-Pass `--dir` to install them somewhere other than DuckDB's default directory, and set `DBOS_ARCHIVE_EXTENSION_DIRECTORY` (or `extensionDirectory`) to the same directory.
+Then turn downloads off with `allowExtensionDownload`:
+
+```typescript
+new ParquetArchive("s3://my-bucket/dbos-archive", { allowExtensionDownload: false });
+```
+
+Pass `--dir` to install them somewhere other than DuckDB's default directory, and set `extensionDirectory` to the same directory.
 Local archives need no extensions.
 
 ### Concurrent Reads
