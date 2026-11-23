@@ -252,6 +252,7 @@ Each executor that `GET .../executors` lists has a `workflowArchive` field, whic
 | Cancel workflow | `POST .../workflows/{workflowId}/cancel` |
 | Resume workflow | `POST .../workflows/{workflowId}/resume` |
 | Fork workflow | `POST .../workflows/{workflowId}/fork` |
+| Rewind workflow | `POST .../workflows/{workflowId}/rewind` |
 | Delete workflow | `DELETE .../workflows/{workflowId}` |
 | Export workflow | `GET .../workflows/{workflowId}/export` |
 | Import workflow | `POST .../workflows/import` |
@@ -260,7 +261,7 @@ Each executor that `GET .../executors` lists has a `workflowArchive` field, whic
 | Bulk delete | `POST .../workflows/bulk-delete` |
 | Bulk fork from failure | `POST .../workflows/bulk-fork-from-failure` |
 
-The semantics of cancelling, resuming, and forking are described in [Workflow Management](../workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+The semantics of cancelling, resuming, forking, and rewinding are described in [Workflow Management](../workflow-management.md). **Rewind** takes an optional body with `startStep` (defaults to the workflow's first step), `appVersion` (defaults to the version the workflow last ran on), `queueName`, `queuePartitionKey`, and `shardKey` (required on a sharded system database), and returns `204`. The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
 
 ### Workflow archive
 

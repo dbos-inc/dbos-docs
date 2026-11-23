@@ -129,7 +129,8 @@ Each row represents a different workflow execution.
 - **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
 - **is_debounced**: Whether this workflow was created by a debouncer.
 - **application_name**: The application that owns this workflow.
-- **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting.
+- **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting. For a workflow suspended waiting for other workflows' results, an internal key identifying what it awaits.
+- **result_waiter_ids**: The IDs of workflows [suspended](../python/tutorials/workflow-tutorial.md#suspending-workflows) waiting for this workflow's result, null if there are none. When this workflow completes, it wakes them.
 - **archive_pending**: `TRUE` while a completed workflow is waiting to be copied to the application's [workflow archive](../python/tutorials/workflow-archiving.md), null otherwise. Set only when the application is configured with a workflow archive and the workflow has an application name. Retention in such an application doesn't delete workflows with `archive_pending` set.
 
 ### dbos.workflow_input

@@ -266,7 +266,7 @@ static async exampleWorkflow(timeToSleep, task) {
 Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
-Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
+Normally, a workflow stays in memory while it waits in `DBOS.sleep`, in [`DBOS.recv`](./workflow-communication.md#recv), or for another workflow's result.
 If your application has many workflows with long waits, you can instead suspend them, so they use no memory or queue capacity until they wake.
 
 To suspend workflows, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) or [`DBOS.recv`](../reference/methods.md#dbosrecv):
@@ -286,6 +286,23 @@ async function sendReminderFunction(user: string) {
 }
 const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
 ```
+
+A workflow can also suspend while it waits for other workflows to complete.
+Pass `{ suspend: true }` to a handle's [`getResult`](../reference/methods.md#handlegetresult), to [`DBOS.getResult`](../reference/methods.md#dbosgetresult), or to [`DBOS.waitFirst`](../reference/methods.md#dboswaitfirst).
+The workflow wakes when the workflow it awaits completes, whether it succeeds, fails, or is cancelled, or, for `waitFirst`, when the first of the workflows it awaits completes:
+
+```typescript
+async function publishReportFunction(region: string) {
+  const handle = await DBOS.startWorkflow(buildReport, { queueName: "reports" })(region);
+  // Suspend until buildReport completes, then return its result
+  const report = await handle.getResult({ suspend: true });
+  await DBOS.runStep(() => publish(report), { name: "publish" });
+}
+const publishReport = DBOS.registerWorkflow(publishReportFunction);
+```
+
+If an awaited workflow has already completed, the call returns at once without suspending.
+You can only suspend on a result from within a workflow, not from a step or with a [DBOS Client](../reference/client.md) handle, and not on a [sharded system database](./sharding.md) or CockroachDB.
 
 When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
 When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
