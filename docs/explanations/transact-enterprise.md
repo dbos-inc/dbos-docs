@@ -10,7 +10,7 @@ All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to
 
 The DBOS Enterprise Extensions provide:
 
-- **Conductor access**: the Extensions let you connect to the [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
+- **Conductor access**: connect to the [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
 - **Sharding**: Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically move workflows from older application versions to the latest version.
