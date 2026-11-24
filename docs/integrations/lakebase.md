@@ -59,15 +59,20 @@ Then, add this code to your application to configure DBOS to retrieve and use a 
 <summary><strong>Databricks OAuth Authentication</strong></summary>
 
 ```python
-from databricks.sdk import WorkspaceClient
+import os
+
 import psycopg
 import sqlalchemy as sa
+from databricks.sdk import WorkspaceClient
+from dbos import DBOS, DBOSConfig
+
 
 def create_databricks_oauth_engine(database_url: str, lakebase_endpoint: str) -> sa.Engine:
     """
     Create a SQLAlchemy engine that uses Databricks OAuth tokens for authentication.
 
-    Each new connection will fetch a fresh OAuth token from Databricks.
+    Each new connection fetches a fresh OAuth token from Databricks.
+    Connections are replaced after 45 minutes, before their one-hour token expires.
     """
     workspace_client = WorkspaceClient()
 
@@ -75,9 +80,26 @@ def create_databricks_oauth_engine(database_url: str, lakebase_endpoint: str) ->
         token = workspace_client.postgres.generate_database_credential(
             endpoint=lakebase_endpoint
         ).token
-        return psycopg.connect(database_url, password=token)
+        return psycopg.connect(
+            database_url,
+            password=token,
+            # Identify DBOS connections in Lakebase (the name in your connection string takes precedence)
+            fallback_application_name="dbos_transact_lakebase",
+            connect_timeout=10,
+            # End transactions left idle for over 60 seconds, releasing their locks
+            options="-c idle_in_transaction_session_timeout=60000",
+        )
 
-    return sa.create_engine("postgresql+psycopg://", creator=get_connection)
+    # DBOS doesn't apply its default pool settings to an engine you provide, so set them here
+    return sa.create_engine(
+        "postgresql+psycopg://",
+        creator=get_connection,
+        pool_size=20,
+        max_overflow=0,
+        pool_timeout=30,
+        pool_pre_ping=True,
+        pool_recycle=2700,  # 45 minutes
+    )
 
 
 if __name__ == "__main__":
@@ -92,11 +114,11 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 </details>
 
+DBOS doesn't apply its usual connection settings to an engine you provide, so this engine sets them instead: a pool of 20 connections, a check that each connection is alive before use, and timeouts for connecting and for idle transactions.
 
 Next, click "Connect" on your Lakebase console to retrieve connection information for your Lakebase database.
 You should see a screen that looks like this:
@@ -120,6 +142,12 @@ Also, set the `DATABRICKS_LAKEBASE_ENDPOINT` environment variable to your Lakeba
 ```
 export DATABRICKS_LAKEBASE_ENDPOINT="projects/<project-id>/branches/<branch-id>/endpoints/<compute-id>"
 ```
+
+:::tip
+DBOS creates its system tables when it launches, so your Postgres role needs `CREATE` privileges on the database. It does not need to be a superuser.
+To run your application with fewer privileges, create the tables ahead of time as described in [Managing Postgres](../production/checklist.md#managing-postgres).
+For an OAuth role, use a freshly generated token as the password in the connection string you pass to the migration command.
+:::
 
 </LargeTabItem>
 </LargeTabs>
