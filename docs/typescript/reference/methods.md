@@ -121,6 +121,7 @@ static async waitFirst(
 ```typescript
 interface WaitFirstOptions {
   pollingIntervalMs?: number;
+  suspend?: boolean;
 }
 ```
 
@@ -131,6 +132,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty or contains duplicate workflow IDs.
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -540,6 +542,41 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 - **workflowID**: The ID of the workflow whose handle to retrieve.
 - **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
+### DBOS.getResult
+
+```typescript
+DBOS.getResult<T>(
+  workflowID: string,
+  options?: number | GetResultOptions
+): Promise<T | null>
+```
+
+```typescript
+interface GetResultOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
+  shardKey?: string;
+  suspend?: boolean;
+}
+```
+
+Wait for a workflow to complete, then return its result.
+This is similar to calling [`getResult`](#handlegetresult) on a [handle](#workflow-handles), but doesn't require a handle and can time out.
+Called from within a workflow, it runs as a single step.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose result to return.
+- **options**: Options for the wait. A number is shorthand for `timeoutSeconds`.
+  - **timeoutSeconds**: A timeout in seconds. If the workflow doesn't complete before the timeout, return `null`. If not set, wait without a timeout.
+  - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the workflow doesn't complete before the deadline, return `null`.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes or the timeout passes, instead of keeping it in memory. A timeout of at most one second does not suspend. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`.
+
+**Returns:**
+- The result of the workflow, or `null` if the wait times out. Throws the workflow's error if it failed.
+
 ### DBOS.getWorkflowStatus
 
 ```typescript
@@ -804,6 +841,23 @@ DBOS.deleteWorkflows(
 ```
 
 Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#dbosdeleteworkflow) but operates on a list of workflow IDs.
+
+### DBOS.importArchivedWorkflow
+
+```typescript
+DBOS.importArchivedWorkflow<T = unknown>(
+  workflowID: string,
+  completedAt: number
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Requires [`workflowArchive`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimportarchivedworkflow) for details.
+
+**Parameters:**
+- **workflowID**: The workflow's ID. It must not already be in the system database.
+- **completedAt**: The archived snapshot to import, as its `WorkflowStatus.completedAt` (epoch milliseconds).
 
 ### DBOS.forkWorkflow
 
@@ -1480,8 +1534,15 @@ The workflow's [shard key](../tutorials/sharding.md).
 
 ```typescript
 handle.getResult(
-  options?: { pollingIntervalMs?: number }
+  options?: WorkflowHandleGetResultOptions
 ): Promise<R>;
+```
+
+```typescript
+interface WorkflowHandleGetResultOptions {
+  pollingIntervalMs?: number;
+  suspend?: boolean;
+}
 ```
 
 Wait for the workflow to complete, then return its result.
@@ -1489,6 +1550,7 @@ Wait for the workflow to complete, then return its result.
 **Parameters:**
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow), from `DBOS.startWorkflow` with a `queueName`, or from the [DBOS Client](./client.md)), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until this workflow completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Throws outside a workflow, in a step, or on a [DBOS Client](./client.md) handle. Defaults to `false`.
 
 ### handle.getStatus
 
