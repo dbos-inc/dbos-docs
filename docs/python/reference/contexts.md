@@ -204,7 +204,7 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 **Parameters:**
 - `topic`: A topic queue on which to wait.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
-- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
+- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. Defaults to `False`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `None` if the wait times out.
@@ -337,7 +337,7 @@ The `sleep` function should not be used in [coroutine workflows](../tutorials/wo
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
-- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `False`.
+- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. A sleep of at most one second does not suspend. Defaults to `False`.
 
 ### sleep_async
 
@@ -793,7 +793,7 @@ DBOS.store_external_object(
 
 Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
 From workflow code, the upload runs as a step.
-Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions.
 
 **Parameters:**
 - `value`: The value to store. A `bytes` value is stored as is, without serialization.

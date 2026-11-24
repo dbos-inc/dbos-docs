@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 :::info
-Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+Sharding is an [Enterprise Extensions](../../explanations/transact-enterprise.md) feature.
 :::
 
 A DBOS application using a single Postgres system database can run about 1,000 workflows or steps per second per Postgres vCPU, or [20K workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) on a 16-vCPU server.

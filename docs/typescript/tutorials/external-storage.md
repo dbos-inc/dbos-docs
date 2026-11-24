@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 :::info
-External storage is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+External storage is an [Enterprise Extensions](../../explanations/transact-enterprise.md) feature.
 :::
 
 DBOS checkpoints workflow inputs, step outputs, and workflow outputs in your system database, which isn't a good fit for large objects such as files or datasets.
@@ -13,7 +13,7 @@ With **external storage**, you keep large objects in a separate store such as [A
 
 ## Setting Up External Storage
 
-Install DBOS Transact Enterprise and the AWS SDK:
+Install the Enterprise Extensions and the AWS SDK:
 
 ```shell
 npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage

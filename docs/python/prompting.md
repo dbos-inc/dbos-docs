@@ -463,7 +463,7 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
-To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
+To avoid keeping workflows in memory during long waits, use workflow suspend provided by the Enterprise Extensions (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
 Pass `suspend=True` to `DBOS.sleep` or `DBOS.recv` (or their async versions).
 The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
 Waking takes a second or two, so only suspend for long waits.
@@ -1399,7 +1399,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (an Enterprise Extensions feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```python
 config: DBOSConfig = {
@@ -1496,12 +1496,12 @@ Then, once all workflows of the old version are complete (you can use `DBOS.list
 
 ## Sharding
 
-To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`"sharding": True` in `DBOSConfig`).
+To scale beyond a single Postgres system database, the Enterprise Extensions support sharding the system database (`"sharding": True` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
 ## External Storage
 
-To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
+To keep large objects out of the system database, the Enterprise Extensions support external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
 Set `"external_stores": [S3ExternalStore(boto3.client("s3"), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `dbos_enterprise`.
 `DBOS.store_external_object(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
 `DBOS.load_external_object(ref)` returns the value.

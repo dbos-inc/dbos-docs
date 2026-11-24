@@ -543,7 +543,7 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
-To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
+To avoid keeping workflows in memory during long waits, use workflow suspend provided by the Enterprise Extensions (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
 Pass `{ suspend: true }` to `DBOS.sleep` or `DBOS.recv`.
 The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
 Waking takes a second or two, so only suspend for long waits.
@@ -1904,7 +1904,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (an Enterprise Extensions feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```typescript
 DBOS.setConfig({
@@ -2020,12 +2020,12 @@ You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow`
 
 ## Sharding
 
-To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
+To scale beyond a single Postgres system database, the Enterprise Extensions support sharding the system database (`sharding: true` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
 ## External Storage
 
-To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
+To keep large objects out of the system database, the Enterprise Extensions support external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
 Set `externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `@dbos-inc/dbos-enterprise`.
 `DBOS.storeExternalObject(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
 `DBOS.loadExternalObject(ref)` returns the value.

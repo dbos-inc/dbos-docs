@@ -120,7 +120,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **observabilityQueryTimeoutMs**: An optional statement timeout, in milliseconds, applied to the client's observability queries (such as listing workflows, queued workflows, workflow steps, and application versions). A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to `0` or a negative value to disable the timeout. See [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) in the configuration reference.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 - **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
-- **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
+- **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires the Enterprise Extensions.
 
 Example:
 

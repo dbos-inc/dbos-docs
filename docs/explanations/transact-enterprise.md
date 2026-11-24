@@ -1,25 +1,25 @@
 ---
 sidebar_position: 16
-title: DBOS Transact Enterprise
+title: DBOS Enterprise Extensions
 ---
-**DBOS Transact Enterprise** is the commercial extension to the open-source (MIT license) DBOS Transact library.
-DBOS Transact Enterprise is licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
-All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to DBOS Transact Enterprise.
+**Enterprise Extensions** are commercial extensions to the open-source (MIT license) DBOS Transact library.
+These are provided by a separate package licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to this package.
 
 ## Features
 
-DBOS Transact Enterprise provides:
+The Enterprise Extensions provide:
 
-- **Conductor access**: DBOS Transact Enterprise comes with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
+- **Conductor access**: The Enterprise Extensions come with full access to [DBOS Conductor](../conductor/overview.md), the control plane for your durable workflows.
 - **Sharding**: Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Workflow Retention**: Set a retention policy (configurable through the [DBOS Console](../conductor/retention.md)) for how long to retain workflow data.
 - **Auto-upgrade**: Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
 - **External storage**: Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
 
-## Installing DBOS Transact Enterprise
+## Installation
 
-DBOS Transact Enterprise is distributed as a package alongside DBOS Transact:
+The Enterprise Extensions are distributed as a package alongside DBOS Transact:
 
 <Tabs groupId="language" queryString="language">
 
@@ -58,7 +58,7 @@ import _ "go.dbos.dev/dbos-enterprise-go"
 
 Add the `dev.dbos:transact-enterprise` artifact, at exactly the same version as `dev.dbos:transact`.
 DBOS loads it automatically; no code change is needed.
-In Java, DBOS Transact Enterprise provides the connection to Conductor.
+In Java, the Enterprise Extensions package provides the connection to Conductor.
 
 <Tabs groupId="build-tool">
 <TabItem value="gradle" label="Gradle">
@@ -90,12 +90,12 @@ dependencies {
 </TabItem>
 </Tabs>
 
-## DBOS Transact Enterprise Keys
+## Enterprise Extensions Keys
 
-In production, applications using DBOS Transact Enterprise should [connect to Conductor](../conductor/overview.md#connecting-to-conductor).
-Their Conductor key also serves as their DBOS Transact Enterprise key, so you don't need to configure anything else.
+In production, applications using the Enterprise Extensions should [connect to Conductor](../conductor/overview.md#connecting-to-conductor).
+Their Conductor key also serves as their Enterprise Extensions key, so you don't need to configure anything else.
 
-During development, you can use DBOS Transact Enterprise features without connecting to Conductor by setting a DBOS Transact Enterprise key in your DBOS configuration:
+During development, you can use the Enterprise Extensions without connecting to Conductor by setting a key in your DBOS configuration:
 
 <Tabs groupId="language" queryString="language">
 
@@ -136,15 +136,15 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 </TabItem>
 <TabItem value="java" label="Java">
 
-Java needs no DBOS Transact Enterprise key.
-In Java, DBOS Transact Enterprise provides the connection to Conductor, so it needs only your [Conductor key](../conductor/overview.md#connecting-to-conductor).
+Java needs no Enterprise Extensions key.
+In Java, the Enterprise Extensions provide the connection to Conductor, so only the [Conductor key](../conductor/overview.md#connecting-to-conductor) is required.
 
 </TabItem>
 </Tabs>
 
 :::warning
-Use a DBOS Transact Enterprise key without Conductor only for development.
-In production, connect applications using DBOS Transact Enterprise to Conductor.
+Use an Enterprise Extensions key without Conductor only for development.
+In production, connect applications using the Enterprise Extensions to Conductor.
 :::
 
 If you [self-host Conductor](../conductor/self-hosting/hosting-conductor.md), DBOS checks entitlements with the Conductor at your configured Conductor URL instead.

@@ -492,7 +492,7 @@ If no message is waiting, [suspend the workflow](../tutorials/workflow-tutorial.
 `Recv` then returns an error matching `dbos.ErrWorkflowSuspended`, which the workflow function must return.
 The workflow's status becomes `SUSPENDED` until a message arrives on the topic or the timeout expires; it then resumes from its last completed step, where `Recv` returns the message or times out.
 If a message is already waiting, `Recv` returns it without suspending.
-Requires [`SuspendMode`](./configuration.md#dbos-transact-enterprise-settings), a DBOS Transact Enterprise feature; without it, `Recv` returns an error matching `dbos.ErrInvalidOption`.
+Requires [`SuspendMode`](./configuration.md#dbos-transact-enterprise-settings), an Enterprise Extensions feature; without it, `Recv` returns an error matching `dbos.ErrInvalidOption`.
 
 ```go
 message, err := dbos.Recv[string](ctx, "approval", 7*24*time.Hour, dbos.WithRecvSuspend())
@@ -619,7 +619,7 @@ func WithSleepSuspend() SleepOption
 `Sleep` then returns an error matching `dbos.ErrWorkflowSuspended`, which the workflow function must return.
 The workflow's status becomes `SUSPENDED` until the sleep ends; it then resumes from its last completed step.
 A sleep with one second or less left is not suspended and stays in memory.
-Requires [`SuspendMode`](./configuration.md#dbos-transact-enterprise-settings), a DBOS Transact Enterprise feature; without it, `Sleep` returns an error matching `dbos.ErrInvalidOption`.
+Requires [`SuspendMode`](./configuration.md#dbos-transact-enterprise-settings), an Enterprise Extensions feature; without it, `Sleep` returns an error matching `dbos.ErrInvalidOption`.
 
 ```go
 if _, err := dbos.Sleep(ctx, 30*24*time.Hour, dbos.WithSleepSuspend()); err != nil {
@@ -1964,7 +1964,7 @@ A running application would race the rename, creating new work under its old nam
 ## Shard Keys
 
 :::info
-Sharding is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+Sharding is an [Enterprise Extensions](../../explanations/transact-enterprise.md) feature.
 :::
 
 On a [sharded system database](../tutorials/sharding.md), bind workflow IDs to their shard keys on a context to address those workflows by ID.

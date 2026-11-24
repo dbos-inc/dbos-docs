@@ -213,7 +213,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
-  - **suspend**: If `true`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`. When set, `pollingIntervalMs` is ignored.
+  - **suspend**: If `true`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. Defaults to `false`. When set, `pollingIntervalMs` is ignored.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -289,7 +289,7 @@ When called from a workflow (outside of a step), this sleep is durable&mdash;it 
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
 - **options**:
-  - **suspend**: If `true`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `false`.
+  - **suspend**: If `true`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. A sleep of at most one second does not suspend. Defaults to `false`.
 
 ### DBOS.now
 
@@ -452,7 +452,7 @@ interface StoreExternalObjectOptions {
 
 Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
 From workflow code, the upload runs as a step.
-Requires [`externalStores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+Requires [`externalStores`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions.
 
 **Parameters:**
 - **value**: The value to store. A `Uint8Array`, such as a `Buffer`, is stored as is, without serialization, and loads as a `Buffer`.

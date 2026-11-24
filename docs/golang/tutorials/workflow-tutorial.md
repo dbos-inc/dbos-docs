@@ -244,7 +244,7 @@ func exampleWorkflow(ctx dbos.Context, input struct {
 ### Suspending Workflows
 
 :::info
-Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+Suspending workflows is an [Enterprise Extensions](../../explanations/transact-enterprise.md) feature.
 :::
 
 Normally, a workflow stays in memory while it waits in `Sleep` or [`Recv`](./workflow-communication.md#recv).
