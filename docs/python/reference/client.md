@@ -49,6 +49,7 @@ DBOSClient(
     sys_db_idle_transaction_timeout_sec: Optional[float] = None,
     sharding: bool = False,
     external_stores: Optional[Sequence[ExternalStore]] = None,
+    workflow_archive: Optional[WorkflowArchive] = None,
 )
 ```
 **Parameters:**
@@ -66,6 +67,7 @@ DBOSClient(
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
 - `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 - `external_stores`: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
+- `workflow_archive`: Your application's [workflow archive](../tutorials/workflow-archiving.md). Set it so workflows the client cancels are archived, and to import archived workflows. Requires DBOS Transact Enterprise.
 
 **Example syntax:**
 
@@ -1477,6 +1479,19 @@ Similar to [`DBOS.delete_workflows`](./contexts.md#delete_workflows).
 ### delete_workflows_async
 
 Asynchronous version of [`DBOSClient.delete_workflows`](#delete_workflows).
+
+### import_archived_workflow
+
+```python
+client.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHandle[Any]
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Similar to [`DBOS.import_archived_workflow`](./contexts.md#import_archived_workflow). Requires `workflow_archive`.
+
+### import_archived_workflow_async
+
+Asynchronous version of [`DBOSClient.import_archived_workflow`](#import_archived_workflow).
 
 ## Debouncing
 

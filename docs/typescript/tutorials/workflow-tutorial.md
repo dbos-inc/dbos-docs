@@ -260,16 +260,20 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
-### Suspending Workflows
+For long sleeps, you can [suspend the workflow](#suspending-workflows) so it uses no resources while it sleeps.
+
+## Suspending Workflows
 
 :::info
 Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
-Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
-If your application has many workflows with long waits, you can instead suspend them, so they use no memory or queue capacity until they wake.
+Normally, a workflow that is waiting stays in memory, potentially holding queue capacity until the wait ends.
+If your application has many workflows with long waits, you can instead **suspend** them.
+A suspended workflow's execution exits and its status becomes `SUSPENDED`, so it uses no memory or queue capacity.
+When its wait ends, DBOS returns it to the queue it was running on and it resumes from its last completed step, just as it would after a crash.
 
-To suspend workflows, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) or [`DBOS.recv`](../reference/methods.md#dbosrecv):
+To enable suspending, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration:
 
 ```typescript
 DBOS.setConfig({
@@ -278,22 +282,14 @@ DBOS.setConfig({
   suspendMode: true,
 });
 await DBOS.launch();
-
-async function sendReminderFunction(user: string) {
-  // Sleep suspended for 30 days, then send the reminder
-  await DBOS.sleep(30 * 24 * 60 * 60 * 1000, { suspend: true });
-  await DBOS.runStep(() => sendEmail(user), { name: "sendEmail" });
-}
-const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
 ```
 
-When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
-When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+Then pass `{ suspend: true }` to any of the three waits that can suspend: sleeping, waiting for a message, and waiting for another workflow.
 
-Keep in mind:
+When using workflow suspension, keep in mind that:
 
 - **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
-- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a handle or a direct call, keeps waiting.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended.
 - **Suspending throws `DBOSWorkflowSuspendedError`** to exit the execution. If you wrap a suspending call in a `try`/`catch`, rethrow this error; otherwise, your `catch` block runs even though nothing failed:
 
 ```typescript
@@ -304,6 +300,54 @@ try {
   // Handle other errors
 }
 ```
+
+### Suspending While Sleeping
+
+Pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) to suspend the workflow until the sleep ends.
+A sleep of at most one second doesn't suspend.
+
+```typescript
+async function sendReminderFunction(user: string) {
+  // Sleep suspended for 30 days, then send the reminder
+  await DBOS.sleep(30 * 24 * 60 * 60 * 1000, { suspend: true });
+  await DBOS.runStep(() => sendEmail(user), { name: "sendEmail" });
+}
+const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
+```
+
+### Suspending While Waiting for a Message
+
+Pass `{ suspend: true }` to [`DBOS.recv`](../reference/methods.md#dbosrecv) to suspend the workflow until a message arrives on its topic or the timeout passes.
+
+```typescript
+async function processOrderFunction(order: Order) {
+  // Suspend for up to a day waiting for payment confirmation
+  const payment = await DBOS.recv<Payment>("payment", { timeoutSeconds: 24 * 60 * 60, suspend: true });
+  if (payment === null) {
+    await DBOS.runStep(() => cancelOrder(order), { name: "cancelOrder" });
+  } else {
+    await DBOS.runStep(() => shipOrder(order), { name: "shipOrder" });
+  }
+}
+const processOrder = DBOS.registerWorkflow(processOrderFunction);
+```
+
+### Suspending While Waiting for Another Workflow
+
+Pass `{ suspend: true }` to a handle's [`getResult`](../reference/methods.md#handlegetresult), to [`DBOS.getResult`](../reference/methods.md#dbosgetresult), or to [`DBOS.waitFirst`](../reference/methods.md#dboswaitfirst) to suspend the workflow until the workflow it awaits completes, whether it succeeds, fails, or is cancelled.
+For `waitFirst`, the workflow wakes when the first of the workflows it awaits completes, and for `DBOS.getResult` with a timeout, it also wakes when the timeout passes.
+If an awaited workflow has already completed, the call returns at once without suspending.
+
+```typescript
+async function publishReportFunction(region: string) {
+  const handle = await DBOS.startWorkflow(buildReport, { queueName: "reports" })(region);
+  // Suspend until buildReport completes, then return its result
+  const report = await handle.getResult({ suspend: true });
+  await DBOS.runStep(() => publish(report), { name: "publish" });
+}
+const publishReport = DBOS.registerWorkflow(publishReportFunction);
+```
+
 
 ## Debouncing Workflows
 
