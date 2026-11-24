@@ -111,11 +111,13 @@ Conductor answers some requests from its own database and delegates the rest to 
 | Served from | Operations |
 | --- | --- |
 | Conductor's database | Users, organizations, roles, permissions, and API keys; application registration, settings, and executor listing; alerting rules, audit logs, and metrics |
-| Your application | Everything under workflows, queues, and schedules — reads as much as mutations — plus listing application versions and setting the latest one |
+| Your application | Everything under workflows, queues, schedules, and the workflow archive — reads as much as mutations — plus listing application versions and setting the latest one |
 
 Conductor dispatches the second group over the websocket each executor holds open, waits for the reply, and returns it. Those operations therefore need a healthy executor connected for the target application, and they read whatever that executor's system database holds — Conductor neither caches nor mirrors it.
 
 They fail with `503` when the application has no healthy executor connected, and `502` when every healthy executor fails to answer. A `503` from `GET .../workflows` means your application is not connected, not that it has no workflows.
+
+Workflow archive operations go only to executors that read the application's [workflow archive](../../python/tutorials/workflow-archiving.md). They fail with `409` when no healthy executor of the application does.
 
 ## Errors
 
@@ -151,6 +153,7 @@ Common statuses:
 | `401` | Missing, expired, or invalid credentials |
 | `403` | Authenticated, but lacking the required permission |
 | `404` | No such organization, application, or resource — or an operation not registered in this deployment mode |
+| `409` | A workflow archive operation, but no healthy executor of the application reads a workflow archive |
 | `502` / `503` | The application serving this resource failed to answer, or has no healthy executor connected — see [How Operations Are Served](#how-operations-are-served) |
 
 ## Listing and Filtering
@@ -227,6 +230,8 @@ The response contains the key's secret. It is returned **once**, at creation, an
 
 `PATCH .../apps/{appName}` is where an application's tuning settings live: the executor timeout, the global workflow timeout, the [workflow retention thresholds](../retention.md), and private mode.
 
+Each executor that `GET .../executors` lists has a `workflowArchive` field, which is `true` if it serves reads of the application's [workflow archive](#workflow-archive).
+
 :::info
 `GET .../metrics` returns metrics for one application over a time window. If you want to scrape Conductor from Prometheus, Datadog, or Grafana, use the OpenMetrics endpoint described in [Metrics](../metrics.md) instead.
 :::
@@ -247,6 +252,7 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Cancel workflow | `POST .../workflows/{workflowId}/cancel` |
 | Resume workflow | `POST .../workflows/{workflowId}/resume` |
 | Fork workflow | `POST .../workflows/{workflowId}/fork` |
+| Rewind workflow | `POST .../workflows/{workflowId}/rewind` |
 | Delete workflow | `DELETE .../workflows/{workflowId}` |
 | Export workflow | `GET .../workflows/{workflowId}/export` |
 | Import workflow | `POST .../workflows/import` |
@@ -255,7 +261,25 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Bulk delete | `POST .../workflows/bulk-delete` |
 | Bulk fork from failure | `POST .../workflows/bulk-fork-from-failure` |
 
-The semantics of cancelling, resuming, and forking are described in [Workflow Management](../workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+The semantics of cancelling, resuming, forking, and rewinding are described in [Workflow Management](../workflow-management.md). **Rewind** takes an optional body with `startStep` (defaults to the workflow's first step), `appVersion` (defaults to the version the workflow last ran on), `queueName`, `queuePartitionKey`, and `shardKey` (required on a sharded system database), and returns `204`. The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+
+### Workflow archive
+
+| Operation | Endpoint |
+| --- | --- |
+| Search archived workflows | `POST /v2/orgs/{orgName}/apps/{appName}/archive/workflows/search` |
+| Get archived workflow | `GET /v2/orgs/{orgName}/apps/{appName}/archive/workflows/{workflowId}` |
+| List archived steps | `GET .../archive/workflows/{workflowId}/steps` |
+| List archived events | `GET .../archive/workflows/{workflowId}/events` |
+| List archived notifications | `GET .../archive/workflows/{workflowId}/notifications` |
+| List archived streams | `GET .../archive/workflows/{workflowId}/streams` |
+| Import archived workflow | `POST .../archive/workflows/{workflowId}/import` |
+
+These operations read an application's workflow archive, which holds workflows its system database may no longer have. Archiving is configured in your application: see Workflow Archiving for [Python](../../python/tutorials/workflow-archiving.md) or [TypeScript](../../typescript/tutorials/workflow-archiving.md).
+
+- An archived workflow is identified by its ID and the time it completed, so every operation on one takes a required `completedAt` query parameter: the workflow's `completedAt`, as an archive search returns it. A workflow that completed more than once, for example after being resumed, has an archived snapshot for each completion.
+- **Search** returns archived workflows a page at a time, newest completion first, so `limit` is required. It takes the filters of `POST .../workflows/search` except `workflowIdPrefix`, `queuesOnly`, `isFork`, and `sortDesc`. Set `completedAfter` and `completedBefore` to narrow the files a search reads, especially if it times out.
+- **Import** copies an archived workflow back into the system database and returns it. It fails if the system database already has a workflow with that ID, and needs `application.write`; the other operations need `application.read`.
 
 ### Queues
 

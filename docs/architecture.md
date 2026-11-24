@@ -133,6 +133,7 @@ Conductor also gives your applications access to the [Enterprise Extensions](./e
 - **Auto-upgrade** ([**Python**](./python/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**TypeScript**](./typescript/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**Go**](./golang/tutorials/upgrading-workflows.md#auto-upgrading-workflows)): Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows** ([**Python**](./python/tutorials/workflow-tutorial.md#suspending-workflows), [**TypeScript**](./typescript/tutorials/workflow-tutorial.md#suspending-workflows), [**Go**](./golang/tutorials/workflow-tutorial.md#suspending-workflows)): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
 - **External storage** ([**Python**](./python/tutorials/external-storage.md), [**TypeScript**](./typescript/tutorials/external-storage.md)): Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
+- **Workflow archiving** ([**Python**](./python/tutorials/workflow-archiving.md), [**TypeScript**](./typescript/tutorials/workflow-archiving.md)): Export a permanent, queryable copy of your workflow history to Parquet files in object storage such as Amazon S3.
 
 Architecturally, Conductor looks like this:
 

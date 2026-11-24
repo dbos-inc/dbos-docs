@@ -51,6 +51,21 @@ When you fork a workflow, DBOS generates a new workflow with a new workflow ID, 
 
 Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an application version on which the bug is fixed).
 
+#### Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+To do this, click "Rewind" in the workflow's action menu, or select a step in the workflow steps view and click "Rewind" to re-execute from that step.
+You can also choose an application version and queue to re-execute the workflow on.
+
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+Unlike forking, rewinding modifies the original workflow instead of creating a copy, so other code that refers to the workflow by its ID keeps working.
+Rewinding can't be undone, and steps that re-execute repeat their side effects.
+
+You can only rewind a workflow that has completed (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); cancel a running workflow before rewinding it.
+Rewinding requires DBOS Transact Python 3.1.0, TypeScript 5.1.0, or Go 1.5.0 or later.
+For more on rewinding, see Workflow Management for [Python](../python/tutorials/workflow-management.md#rewinding-workflows), [TypeScript](../typescript/tutorials/workflow-management.md#rewinding-workflows), or [Go](../golang/tutorials/workflow-management.md#rewinding-workflows).
+
 ## Exporting Workflows
 
 You can export a workflow from one application to another by clicking the "Export" button in the workflow details panel.

@@ -33,6 +33,7 @@ export interface DBOSConfig {
   sharding?: boolean;
   suspendMode?: boolean;
   externalStores?: ExternalStore[];
+  workflowArchive?: WorkflowArchive;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -83,6 +84,7 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 - **suspendMode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./methods.md#dbossleep) or [`DBOS.recv`](./methods.md#dbosrecv). Requires the Enterprise Extensions. Defaults to `false`.
 - **externalStores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject) must specify one. Requires the Enterprise Extensions.
+- **workflowArchive**: Where to [archive workflows](../tutorials/workflow-archiving.md) as they complete, such as a [`ParquetArchive`](../tutorials/workflow-archiving.md#parquetarchive). Retention then deletes only archived workflows. Not supported on a sharded system database or CockroachDB. Requires the Enterprise Extensions.
 
 ### Database Connection Settings
 

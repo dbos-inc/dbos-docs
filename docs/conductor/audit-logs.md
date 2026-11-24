@@ -114,7 +114,7 @@ The `operation` field, and the `operation` query filter, use these values:
 | Category | Operations |
 | --- | --- |
 | Applications | `application.create`, `application.update`, `application.delete`, `application.set_latest_version` |
-| Workflows | `workflow.cancel`, `workflow.resume`, `workflow.restart`, `workflow.fork`, `workflow.fork_from_failure`, `workflow.delete`, `workflow.import`, `workflow.bulk_cancel`, `workflow.bulk_delete`, `workflow.bulk_resume` |
+| Workflows | `workflow.cancel`, `workflow.resume`, `workflow.fork`, `workflow.rewind`, `workflow.fork_from_failure`, `workflow.delete`, `workflow.import`, `workflow.import_archived`, `workflow.bulk_cancel`, `workflow.bulk_delete`, `workflow.bulk_resume` |
 | Schedules | `schedule.pause`, `schedule.resume`, `schedule.backfill`, `schedule.trigger` |
 | Alerting rules | `alerting_rule.create`, `alerting_rule.delete` |
 | API keys | `token.create`, `token.revoke` |

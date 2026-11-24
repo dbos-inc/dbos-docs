@@ -38,7 +38,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores, workflowArchive}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean, externalStores?: ExternalStore[], workflowArchive?: WorkflowArchive}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -121,6 +121,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 - **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 - **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires the Enterprise Extensions.
+- **workflowArchive**: Your application's [workflow archive](../tutorials/workflow-archiving.md). Set it so workflows the client cancels are archived, and to import archived workflows. Requires the Enterprise Extensions.
 
 Example:
 
@@ -594,6 +595,11 @@ Please see [`DBOS.deleteWorkflow`](./methods.md#dbosdeleteworkflow) for more inf
 
 Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#deleteworkflow) but operates on a list of workflow IDs.
 Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more information.
+
+#### `importArchivedWorkflow`
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it. Requires `workflowArchive`.
+Please see [`DBOS.importArchivedWorkflow`](./methods.md#dbosimportarchivedworkflow) for more information.
 
 ### Queue Management
 

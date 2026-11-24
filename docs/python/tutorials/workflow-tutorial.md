@@ -164,16 +164,20 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
-### Suspending Workflows
+For long sleeps, you can [suspend the workflow](#suspending-workflows) so it uses no resources while it sleeps.
+
+## Suspending Workflows
 
 :::info
 Suspending workflows is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package.
 :::
 
-Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
-If your application has many workflows with long waits, you can instead suspend them, so they use no memory, threads, or queue capacity until they wake.
+Normally, a workflow that is waiting stays in memory, holding a thread and potentially queue capacity until the wait ends.
+If your application has many workflows with long waits, you can instead **suspend** them.
+A suspended workflow's execution exits and its status becomes `SUSPENDED`, so it uses no memory, threads, or queue capacity.
+When its wait ends, DBOS returns it to the queue it was running on and it resumes from its last completed step, just as it would after a crash.
 
-To suspend workflows, set [`suspend_mode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) or [`DBOS.recv`](../reference/contexts.md#recv) (or their async versions):
+To enable suspending, set [`suspend_mode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration:
 
 ```python
 config: DBOSConfig = {
@@ -182,7 +186,22 @@ config: DBOSConfig = {
     "suspend_mode": True,
 }
 DBOS(config=config)
+```
 
+Then pass `suspend=True` to any of the three waits that can suspend: sleeping, waiting for a message, and waiting for another workflow.
+
+When using workflow suspension, keep in mind that:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended.
+- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
+
+### Suspending While Sleeping
+
+Pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) to suspend the workflow until the sleep ends.
+A sleep of at most one second doesn't suspend.
+
+```python
 @DBOS.workflow()
 def send_reminder(user):
     # Sleep suspended for 30 days, then send the reminder
@@ -190,14 +209,35 @@ def send_reminder(user):
     send_email(user)
 ```
 
-When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
-When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+### Suspending While Waiting for a Message
 
-Keep in mind:
+Pass `suspend=True` to [`DBOS.recv`](../reference/contexts.md#recv) to suspend the workflow until a message arrives on its topic or the timeout passes.
 
-- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
-- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a [handle](../reference/workflow_handles.md) or a direct call, keeps waiting.
-- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
+```python
+@DBOS.workflow()
+def process_order(order):
+    # Suspend for up to a day waiting for payment confirmation
+    payment = DBOS.recv("payment", timeout_seconds=24 * 60 * 60, suspend=True)
+    if payment is None:
+        cancel_order(order)
+    else:
+        ship_order(order)
+```
+
+### Suspending While Waiting for Another Workflow
+
+Pass `suspend=True` to a handle's [`get_result`](../reference/workflow_handles.md#get_result), to [`DBOS.get_result`](../reference/contexts.md#get_result), or to [`DBOS.wait_first`](../reference/contexts.md#wait_first) to suspend the workflow until the workflow it awaits completes, whether it succeeds, fails, or is cancelled.
+For `wait_first`, the workflow wakes when the first of the workflows it awaits completes.
+If an awaited workflow has already completed, the call returns at once without suspending.
+
+```python
+@DBOS.workflow()
+def publish_report(region):
+    handle = DBOS.enqueue_workflow("reports", build_report, region)
+    # Suspend until build_report completes, then return its result
+    report = handle.get_result(suspend=True)
+    publish(report)
+```
 
 ## Debouncing Workflows
 
