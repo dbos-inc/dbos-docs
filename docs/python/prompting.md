@@ -1399,7 +1399,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
-Or enable auto-upgrade (an Enterprise Extensions feature, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (part of the Enterprise Extensions package, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```python
 config: DBOSConfig = {

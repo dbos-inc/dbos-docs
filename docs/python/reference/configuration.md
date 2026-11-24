@@ -134,7 +134,7 @@ A system database ahead of the required version is accepted, so a process with m
 
 ### Enterprise Extensions Settings {#dbos-transact-enterprise-settings}
 
-- **transact_enterprise_key**: A key that entitles this application to [Enterprise Extensions](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using the Enterprise Extensions should connect to Conductor by setting `conductor_key`. Enterprise Extensions keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **transact_enterprise_key**: A key that entitles this application to the [Enterprise Extensions](../../explanations/transact-enterprise.md) without connecting to Conductor. **For development only**: in production, applications using the Enterprise Extensions should connect to Conductor by setting `conductor_key`. Enterprise Extensions keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 - **auto_upgrade**: If `True`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those that set `auto_upgrade=False` in [`@DBOS.workflow`](./decorators.md#workflow). Requires the Enterprise Extensions. Defaults to `False`.
 - **auto_upgrade_interval_sec**: How often, in seconds, to check for workflows to auto-upgrade. Defaults to 30 seconds.
 - **auto_upgrade_grace_sec**: How long, in seconds, the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED`, `DELAYED`, and `SUSPENDED` workflows are moved without waiting. Defaults to 0.

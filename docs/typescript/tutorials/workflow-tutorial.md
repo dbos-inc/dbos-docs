@@ -263,7 +263,7 @@ static async exampleWorkflow(timeToSleep, task) {
 ### Suspending Workflows
 
 :::info
-Suspending workflows is an [Enterprise Extensions](../../explanations/transact-enterprise.md) feature.
+Suspending workflows is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package.
 :::
 
 Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).

@@ -20,12 +20,12 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go; see Connecting to Conductor.
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
-    TransactEnterpriseKey     string         // A key entitling this application to Enterprise Extensions features (optional; ConductorAPIKey stands in for it). See Enterprise Extensions.
-    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, an Enterprise Extensions feature (default: false). See Auto-Upgrading Workflows.
+    TransactEnterpriseKey     string         // A key entitling this application to the Enterprise Extensions (optional; ConductorAPIKey stands in for it). See Enterprise Extensions.
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, part of the Enterprise Extensions package (default: false). See Auto-Upgrading Workflows.
     AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
     AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
-    Sharding                  bool           // Use a sharded system database, an Enterprise Extensions feature (default: false). See Sharding.
-    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, an Enterprise Extensions feature (default: false). See Suspending Workflows.
+    Sharding                  bool           // Use a sharded system database, part of the Enterprise Extensions package (default: false). See Sharding.
+    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, part of the Enterprise Extensions package (default: false). See Suspending Workflows.
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
@@ -111,7 +111,7 @@ When Conductor is configured, `Launch` does not recover this executor's pending 
 
 ### Enterprise Extensions Settings {#dbos-transact-enterprise-settings}
 
-- **`TransactEnterpriseKey`**: A key that entitles this application to [Enterprise Extensions](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using the Enterprise Extensions should connect to Conductor by setting `ConductorAPIKey`, which stands in for it. Enterprise Extensions keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **`TransactEnterpriseKey`**: A key that entitles this application to the [Enterprise Extensions](../../explanations/transact-enterprise.md) without connecting to Conductor. **For development only**: in production, applications using the Enterprise Extensions should connect to Conductor by setting `ConductorAPIKey`, which stands in for it. Enterprise Extensions keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
 - **`AutoUpgrade`**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those registered with [`WithAutoUpgrade(false)`](./workflows-steps.md#withautoupgrade). Requires the Enterprise Extensions. Defaults to `false`.
 - **`AutoUpgradeInterval`**: How often to check for workflows to auto-upgrade. Defaults to 30 seconds.
 - **`AutoUpgradeGracePeriod`**: How long the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.

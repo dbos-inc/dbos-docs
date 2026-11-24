@@ -1904,7 +1904,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Or enable auto-upgrade (an Enterprise Extensions feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (part of the Enterprise Extensions package, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```typescript
 DBOS.setConfig({

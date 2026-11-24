@@ -718,7 +718,7 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 })
 ```
 
-Or enable auto-upgrade (an Enterprise Extensions feature, requiring `import _ "go.dbos.dev/dbos-enterprise-go"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (part of the Enterprise Extensions package, requiring `import _ "go.dbos.dev/dbos-enterprise-go"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```go
 dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
@@ -1742,12 +1742,12 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
-    TransactEnterpriseKey     string         // A key entitling this application to Enterprise Extensions features (optional; ConductorAPIKey stands in for it)
-    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, an Enterprise Extensions feature (default: false)
+    TransactEnterpriseKey     string         // A key entitling this application to the Enterprise Extensions (optional; ConductorAPIKey stands in for it)
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, part of the Enterprise Extensions package (default: false)
     AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
     AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
-    Sharding                  bool           // Use a sharded system database, an Enterprise Extensions feature (default: false)
-    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, an Enterprise Extensions feature (default: false)
+    Sharding                  bool           // Use a sharded system database, part of the Enterprise Extensions package (default: false)
+    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, part of the Enterprise Extensions package (default: false)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
@@ -2755,7 +2755,7 @@ Run a workflow registered with `WithInstance` using the matching `WithRunInstanc
 func WithAutoUpgrade(enabled bool) WorkflowRegistrationOption
 ```
 
-Enroll the workflow in, or withdraw it from, auto-upgrade (an Enterprise Extensions feature that moves workflows left on older application versions to the latest one).
+Enroll the workflow in, or withdraw it from, auto-upgrade, which moves workflows left on older application versions to the latest one and is part of the Enterprise Extensions package.
 `WithAutoUpgrade(true)` enrolls the workflow even if `Config.AutoUpgrade` is not set; `WithAutoUpgrade(false)` keeps it out even if it is.
 Without this option, the workflow follows `Config.AutoUpgrade`.
 

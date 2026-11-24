@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 :::info
-External storage is an [Enterprise Extensions](../../explanations/transact-enterprise.md) feature.
+External storage is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package.
 :::
 
 DBOS checkpoints workflow inputs, step outputs, and workflow outputs in your system database, which isn't a good fit for large objects such as files or datasets.
