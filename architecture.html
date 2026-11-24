@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.2e6545f4.js" defer="defer"></script>
-<script src="/assets/js/main.15ec437e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.a14e5069.js" defer="defer"></script>
+<script src="/assets/js/main.c9e75dae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -131,6 +131,7 @@ Conductor is the control plane for your durable workflows, providing:</p>
 <li class=""><strong>Auto-upgrade</strong> (<a class="" href="/python/tutorials/upgrading-workflows#auto-upgrading-workflows"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/upgrading-workflows#auto-upgrading-workflows"><strong>TypeScript</strong></a>, <a class="" href="/golang/tutorials/upgrading-workflows#auto-upgrading-workflows"><strong>Go</strong></a>): Automatically move workflows from older application versions to the latest version.</li>
 <li class=""><strong>Suspending workflows</strong> (<a class="" href="/python/tutorials/workflow-tutorial#suspending-workflows"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/workflow-tutorial#suspending-workflows"><strong>TypeScript</strong></a>, <a class="" href="/golang/tutorials/workflow-tutorial#suspending-workflows"><strong>Go</strong></a>): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.</li>
 <li class=""><strong>External storage</strong> (<a class="" href="/python/tutorials/external-storage"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/external-storage"><strong>TypeScript</strong></a>): Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.</li>
+<li class=""><strong>Workflow archiving</strong> (<a class="" href="/python/tutorials/workflow-archiving"><strong>Python</strong></a>, <a class="" href="/typescript/tutorials/workflow-archiving"><strong>TypeScript</strong></a>): Export a permanent, queryable copy of your workflow history to Parquet files in object storage such as Amazon S3.</li>
 </ul>
 <p>Architecturally, Conductor looks like this:</p>
 <img src="/assets/images/dbos-conductor-architecture-f6f6921a6f3d4415563201cf0150e767.png" alt="DBOS Conductor Architecture" width="750" class="custom-img">

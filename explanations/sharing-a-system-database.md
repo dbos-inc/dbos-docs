@@ -106,6 +106,7 @@ Always set the client's application name if multiple applications share a system
 
 Workflows, queues, schedules, and versions created before upgrading to a DBOS version supporting application names, or created by a client with no application name, are owned by no application.
 Every application treats unowned rows as its own: any application may dequeue an unowned workflow (claiming ownership of it when it does), and every application fires unowned schedules and polls unowned queues.
+Unowned workflows are never [archived](../python/tutorials/workflow-archiving.md): each application archives only the workflows it owns.
 
 :::warning
 

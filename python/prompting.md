@@ -459,6 +459,8 @@ def schedule_task(time_to_sleep, task):
 
 To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
 Pass `suspend=True` to `DBOS.sleep` or `DBOS.recv` (or their async versions).
+A workflow can also suspend while waiting for other workflows: pass `suspend=True` to `handle.get_result`, `DBOS.get_result`, or `DBOS.wait_first` (or their async versions), and it wakes when the awaited workflow (for `wait_first`, the first of them) completes.
+Suspending on a result only works from within a workflow (not a step or a `DBOSClient` handle) and isn't supported on a sharded system database or CockroachDB.
 The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
 Waking takes a second or two, so only suspend for long waits.
 Suspending raises `DBOSWorkflowSuspendedError`, a `BaseException`; you MUST re-raise it if you use a bare `except:` or `except BaseException` around a suspending call.
@@ -1496,6 +1498,15 @@ Prefer storing `bytes` for large objects, because they are not serialized.
 Outside a workflow, you MUST pass `owner_workflow_id`.
 Objects are deleted only after their owner workflow has been deleted, by a retention run.
 
+## Workflow Archiving
+
+To keep every completed workflow while retention keeps the system database small, DBOS Transact Enterprise supports workflow archiving (requires `pip install "dbos[enterprise]" "dbos-enterprise[archive]"` and, in production, a Conductor connection).
+Set `"workflow_archive": ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `dbos_enterprise.archive`, in every process of the application.
+Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
+To read archived workflows, construct a `ParquetArchive` with the same URI and call `list_workflows(limit=..., ...)`, which lists newest first and requires `limit`, then `get_workflow_status`, `list_workflow_steps`, `get_events`, `get_notifications`, or `read_stream` with a workflow's ID and `completed_at`.
+`DBOS.import_archived_workflow(workflow_id, completed_at)` copies an archived workflow back into the system database.
+Archiving isn't supported on a sharded system database or CockroachDB.
+
 ## Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.
@@ -1514,6 +1525,7 @@ Retrieve the ID of the workflow.
 handle.get_result(
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> R
 ```
 
@@ -1521,6 +1533,7 @@ Wait for the workflow to complete, then return its result.
 
 **Parameters:**
 - **polling_interval_sec**: The interval at which DBOS polls the database for the workflow's result. Only used for enqueued workflows or retrieved handles.
+- **suspend**: If `True`, a call from within a workflow that has to wait suspends the calling workflow until this workflow completes (see Durable Sleep for requirements).
 
 #### get_status
 

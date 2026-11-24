@@ -34,6 +34,7 @@ Retrieve the ID of the workflow.
 handle.get_result(
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> R
 ```
 
@@ -41,6 +42,7 @@ Wait for the workflow to complete, then return its result.
 
 **Parameters:**
 - **polling_interval_sec**: The interval at which DBOS polls the database for the workflow's result. Only used for enqueued workflows or retrieved handles.
+- **suspend**: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until this workflow completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Raises an error outside a workflow, in a step, or on a [`DBOSClient`](./client.md) handle. Defaults to `False`.
 
 #### get_status
 
@@ -78,6 +80,7 @@ Retrieve the ID of the workflow. Behaves identically to the [WorkflowHandle](#wo
 handle.get_result(
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, R]
 ```
 

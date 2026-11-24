@@ -887,6 +887,7 @@ Conductor also gives your applications access to [DBOS Transact Enterprise](./ex
 - **Auto-upgrade** ([**Python**](./python/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**TypeScript**](./typescript/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**Go**](./golang/tutorials/upgrading-workflows.md#auto-upgrading-workflows)): Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows** ([**Python**](./python/tutorials/workflow-tutorial.md#suspending-workflows), [**TypeScript**](./typescript/tutorials/workflow-tutorial.md#suspending-workflows), [**Go**](./golang/tutorials/workflow-tutorial.md#suspending-workflows)): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
 - **External storage** ([**Python**](./python/tutorials/external-storage.md), [**TypeScript**](./typescript/tutorials/external-storage.md)): Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
+- **Workflow archiving** ([**Python**](./python/tutorials/workflow-archiving.md), [**TypeScript**](./typescript/tutorials/workflow-archiving.md)): Export a permanent, queryable copy of your workflow history to Parquet files in object storage such as Amazon S3.
 
 Architecturally, Conductor looks like this:
 
@@ -1382,7 +1383,7 @@ The `operation` field, and the `operation` query filter, use these values:
 | Category | Operations |
 | --- | --- |
 | Applications | `application.create`, `application.update`, `application.delete`, `application.set_latest_version` |
-| Workflows | `workflow.cancel`, `workflow.resume`, `workflow.restart`, `workflow.fork`, `workflow.fork_from_failure`, `workflow.delete`, `workflow.import`, `workflow.bulk_cancel`, `workflow.bulk_delete`, `workflow.bulk_resume` |
+| Workflows | `workflow.cancel`, `workflow.resume`, `workflow.fork`, `workflow.rewind`, `workflow.fork_from_failure`, `workflow.delete`, `workflow.import`, `workflow.import_archived`, `workflow.bulk_cancel`, `workflow.bulk_delete`, `workflow.bulk_resume` |
 | Schedules | `schedule.pause`, `schedule.resume`, `schedule.backfill`, `schedule.trigger` |
 | Alerting rules | `alerting_rule.create`, `alerting_rule.delete` |
 | API keys | `token.create`, `token.revoke` |
@@ -2099,7 +2100,7 @@ Changing a member's role replaces their previous role. A member always has exact
 An **API key** authenticates a non-human caller.
 API keys are used by running DBOS applications connecting to Conductor, but can also be used by scripts and CI/CD automation that call the Conductor API.
 Like a role, every API key carries a set of permissions.
-They can also be scoped to specific applications.
+They can also be scoped to specific applications or workspaces.
 
 API keys do not expire, but can be revoked at any time.
 A key can be renamed after creation without changing its secret, from the console, with [`dbosctl api-key rename`](./reference/dbosctl.md#dbosctl-api-key-rename), or through the [Conductor API](./reference/conductor-api.md#roles-permissions-and-api-keys).
@@ -2109,9 +2110,17 @@ A key can be renamed after creation without changing its secret, from the consol
 An API key has two independent restrictions:
 
 - **Permissions** — the set of capabilities the key grants, drawn from the same [permission catalog](#permissions) as roles.
-- **Application scope** — either *all applications* in the organization (org-wide), or a specific list of applications. A key scoped to specific applications is rejected on any request targeting an application outside its list, even if it holds the required permission.
+- **Application scope** limits which applications the key reaches, to one of:
+  - *All applications* in the organization (org-wide).
+  - A specific list of applications.
+  - The applications in a specific list of [workspaces](./reference/dbosctl.md#workspace-commands), including applications moved into those workspaces later. A workspace-scoped key can hold only the `application.read`, `application.write`, `metric.read`, and `websocket.connect` permissions.
+
+  A scoped key is rejected on any request targeting an application outside its scope, even if it holds the required permission.
 
 For example, an API key with only `application.read` scoped to a single application can read that application's workflows and nothing else.
+
+Because a workspace-scoped key follows the workspace rather than the application, [moving an application](./reference/dbosctl.md#dbosctl-app-move) to another workspace changes which keys reach it: keys scoped to its old workspace stop covering it, so executors connecting with them may fail to reconnect, while keys scoped to the application itself keep their access.
+Deleting a workspace revokes any key that is left with no access.
 
 #### Using an API key
 
@@ -2235,11 +2244,13 @@ Conductor answers some requests from its own database and delegates the rest to 
 | Served from | Operations |
 | --- | --- |
 | Conductor's database | Users, organizations, roles, permissions, and API keys; application registration, settings, and executor listing; alerting rules, audit logs, and metrics |
-| Your application | Everything under workflows, queues, and schedules — reads as much as mutations — plus listing application versions and setting the latest one |
+| Your application | Everything under workflows, queues, schedules, and the workflow archive — reads as much as mutations — plus listing application versions and setting the latest one |
 
 Conductor dispatches the second group over the websocket each executor holds open, waits for the reply, and returns it. Those operations therefore need a healthy executor connected for the target application, and they read whatever that executor's system database holds — Conductor neither caches nor mirrors it.
 
 They fail with `503` when the application has no healthy executor connected, and `502` when every healthy executor fails to answer. A `503` from `GET .../workflows` means your application is not connected, not that it has no workflows.
+
+Workflow archive operations go only to executors that read the application's [workflow archive](../../python/tutorials/workflow-archiving.md). They fail with `409` when no healthy executor of the application does.
 
 ### Errors
 
@@ -2275,6 +2286,7 @@ Common statuses:
 | `401` | Missing, expired, or invalid credentials |
 | `403` | Authenticated, but lacking the required permission |
 | `404` | No such organization, application, or resource — or an operation not registered in this deployment mode |
+| `409` | A workflow archive operation, but no healthy executor of the application reads a workflow archive |
 | `502` / `503` | The application serving this resource failed to answer, or has no healthy executor connected — see [How Operations Are Served](#how-operations-are-served) |
 
 ### Listing and Filtering
@@ -2351,6 +2363,8 @@ The response contains the key's secret. It is returned **once**, at creation, an
 
 `PATCH .../apps/{appName}` is where an application's tuning settings live: the executor timeout, the global workflow timeout, the [workflow retention thresholds](../retention.md), and private mode.
 
+Each executor that `GET .../executors` lists has a `workflowArchive` field, which is `true` if it serves reads of the application's [workflow archive](#workflow-archive).
+
 :::info
 `GET .../metrics` returns metrics for one application over a time window. If you want to scrape Conductor from Prometheus, Datadog, or Grafana, use the OpenMetrics endpoint described in [Metrics](../metrics.md) instead.
 :::
@@ -2371,6 +2385,7 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Cancel workflow | `POST .../workflows/{workflowId}/cancel` |
 | Resume workflow | `POST .../workflows/{workflowId}/resume` |
 | Fork workflow | `POST .../workflows/{workflowId}/fork` |
+| Rewind workflow | `POST .../workflows/{workflowId}/rewind` |
 | Delete workflow | `DELETE .../workflows/{workflowId}` |
 | Export workflow | `GET .../workflows/{workflowId}/export` |
 | Import workflow | `POST .../workflows/import` |
@@ -2379,7 +2394,25 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Bulk delete | `POST .../workflows/bulk-delete` |
 | Bulk fork from failure | `POST .../workflows/bulk-fork-from-failure` |
 
-The semantics of cancelling, resuming, and forking are described in [Workflow Management](../workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+The semantics of cancelling, resuming, forking, and rewinding are described in [Workflow Management](../workflow-management.md). **Rewind** takes an optional body with `startStep` (defaults to the workflow's first step), `appVersion` (defaults to the version the workflow last ran on), `queueName`, `queuePartitionKey`, and `shardKey` (required on a sharded system database), and returns `204`. The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+
+#### Workflow archive
+
+| Operation | Endpoint |
+| --- | --- |
+| Search archived workflows | `POST /v2/orgs/{orgName}/apps/{appName}/archive/workflows/search` |
+| Get archived workflow | `GET /v2/orgs/{orgName}/apps/{appName}/archive/workflows/{workflowId}` |
+| List archived steps | `GET .../archive/workflows/{workflowId}/steps` |
+| List archived events | `GET .../archive/workflows/{workflowId}/events` |
+| List archived notifications | `GET .../archive/workflows/{workflowId}/notifications` |
+| List archived streams | `GET .../archive/workflows/{workflowId}/streams` |
+| Import archived workflow | `POST .../archive/workflows/{workflowId}/import` |
+
+These operations read an application's workflow archive, which holds workflows its system database may no longer have. Archiving is configured in your application: see Workflow Archiving for [Python](../../python/tutorials/workflow-archiving.md) or [TypeScript](../../typescript/tutorials/workflow-archiving.md).
+
+- An archived workflow is identified by its ID and the time it completed, so every operation on one takes a required `completedAt` query parameter: the workflow's `completedAt`, as an archive search returns it. A workflow that completed more than once, for example after being resumed, has an archived snapshot for each completion.
+- **Search** returns archived workflows a page at a time, newest completion first, so `limit` is required. It takes the filters of `POST .../workflows/search` except `workflowIdPrefix`, `queuesOnly`, `isFork`, and `sortDesc`. Set `completedAfter` and `completedBefore` to narrow the files a search reads, especially if it times out.
+- **Import** copies an archived workflow back into the system database and returns it. It fails if the system database already has a workflow with that ID, and needs `application.write`; the other operations need `application.read`.
 
 #### Queues
 
@@ -3981,9 +4014,11 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 ## dbosctl CLI Reference
 
-`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-hosted Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
+`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, workspaces, and API keys against DBOS-hosted Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
 
 The [`dbosctl sysdb`](#system-database-commands) commands are the exception: they manage the Postgres [system database](../../explanations/system-tables.md) directly, so they take a database URL rather than a profile.
+
+[`dbosctl license-key create`](#dbosctl-license-key-create) also stands apart: it requests a trial license key for [self-hosted Conductor](../self-hosting/hosting-conductor.md#licensing) from DBOS Cloud, so it needs a DBOS-hosted profile even though the Conductor the key is for is your own.
 
 ### Installation
 
@@ -4043,7 +4078,7 @@ dbosctl app list --profile local
 
 ### Profiles
 
-A profile is a named bundle of connection settings: which Conductor to talk to, how to authenticate, and the default organization and application. Profiles are stored in `config.yaml` under your OS configuration directory — `~/.config/dbos/config.yaml` on Linux, `~/Library/Application Support/dbos/config.yaml` on macOS.
+A profile is a named bundle of connection settings: which Conductor to talk to, how to authenticate, and the default organization, application, and workspace. Profiles are stored in `config.yaml` under your OS configuration directory: `~/.config/dbos/config.yaml` on Linux, `~/Library/Application Support/dbos/config.yaml` on macOS.
 
 A profile must target either DBOS-hosted Conductor (`--managed`) or a self-hosted one (`--url`); the two are mutually exclusive. There are three common shapes:
 
@@ -4071,7 +4106,7 @@ dbosctl logout    # discard the stored token for the current profile
 There are two ways to bypass the login flow:
 
 - **`DBOS_TOKEN`** — a bearer token used as-is for a single invocation.
-- **API keys** — a `dbos_…` key from [`dbosctl api-key create`](#dbosctl-api-key-create) or the console, supplied through `DBOS_TOKEN`. Keys authenticate machine-to-machine calls such as `app list`, but carry no user identity, so `dbosctl whoami` still requires a user login.
+- **API keys** from [`dbosctl api-key create`](#dbosctl-api-key-create) or the console, supplied through `DBOS_TOKEN`. Keys authenticate machine-to-machine calls such as `app list`, but carry no user identity, so `dbosctl whoami` and `dbosctl license-key create` still require a user login.
 
 ### Configuration Precedence
 
@@ -4083,6 +4118,7 @@ Each setting is resolved **flag → environment variable → profile**, so a fla
 | Conductor URL | `--url` | `DBOS_URL` |
 | Organization | `--org` | `DBOS_ORG` |
 | Application | `-a`, `--app` | `DBOS_APP` |
+| Workspace ([`app register`](#dbosctl-app-register) only) | `-w`, `--workspace` | `DBOS_WORKSPACE` |
 | Bearer token | — | `DBOS_TOKEN` |
 | System database ([`sysdb`](#system-database-commands) only) | `-D`, `--db-url` | `DBOS_SYSTEM_DATABASE_URL` |
 | Output format | `-o`, `--output` | — |
@@ -4137,8 +4173,9 @@ Conductor answers some commands itself and forwards the rest to your application
 | | Commands |
 | --- | --- |
 | Forwarded to your application | All `workflow`, `queue`, and `schedule` commands — reads as much as mutations — plus `app versions` and `app set-version` |
-| Answered by Conductor | Everything else except `sysdb`: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
-| Answered by neither | The [`sysdb`](#system-database-commands) commands, which open the system database themselves |
+| Answered by Conductor | Everything else except `license-key` and `sysdb`: the rest of `app`, plus `workspace`, `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+| Answered by DBOS Cloud | [`license-key create`](#dbosctl-license-key-create), which calls DBOS Cloud's own API rather than the Conductor API |
+| Answered by none of these | The [`sysdb`](#system-database-commands) commands, which open the system database themselves |
 
 Commands in the first group fail if the application has no healthy executor connected, so a failure there usually means your application is not running rather than that nothing matched.
 
@@ -4209,6 +4246,7 @@ Creates or updates a profile. Only the flags you pass are changed; fields you do
 - `--auth <string>`: Force bearer authentication without OIDC, for a profile that authenticates with a `dbos_` API key only. The accepted value is `bearer`.
 - `--org <string>`: Organization. Only needed when it cannot be derived from a login, as with an API-key-only profile.
 - `--app <string>`: Default application for this profile.
+- `--workspace <string>`: Workspace that [`dbosctl app register`](#dbosctl-app-register) puts new applications in for this profile.
 
 ---
 
@@ -4217,14 +4255,17 @@ Creates or updates a profile. Only the flags you pass are changed; fields you do
 #### `dbosctl app list`
 
 **Description:**
-Lists the applications in the organization.
+Lists the applications in the organization, with the [workspace](#workspace-commands) each belongs to.
+
+**Arguments:**
+- `-w, --workspace <name>`: List only the applications in this workspace. Unlike the `--workspace` argument to `app register`, this filter is only read from the command line, never from `$DBOS_WORKSPACE` or a profile, so a default workspace never hides the rest of the organization.
 
 ---
 
 #### `dbosctl app get`
 
 **Description:**
-Shows one application's details.
+Shows one application's details, including its workspace.
 
 **Arguments:**
 - `<name>`: The application's name.
@@ -4238,6 +4279,7 @@ Registers an application with Conductor. The name must match the application nam
 
 **Arguments:**
 - `<name>`: The application's name.
+- `-w, --workspace <name>`: The [workspace](#workspace-commands) to register the application in. Overrides `$DBOS_WORKSPACE` and the profile. If none is given, a new application goes into the organization's only workspace; when the organization has more than one, the command fails and asks you to name one.
 - `--private-mode`: Register the application in private mode, so it does not send workflow payload data — inputs, outputs, and events — to Conductor. Omit the flag to take Conductor's default; it can be changed later with [`dbosctl app update`](#dbosctl-app-update).
 
 ---
@@ -4264,6 +4306,24 @@ Deletes an application. Prompts for confirmation when run interactively.
 
 **Arguments:**
 - `<name>`: The application's name.
+- `--force`: Skip the confirmation prompt. Required when running non-interactively.
+
+---
+
+#### `dbosctl app move`
+
+**Description:**
+Moves an application to another [workspace](#workspace-commands) in the same organization. The application keeps its name, history, and connected executors, but the move changes who can reach it:
+
+- API keys scoped to its current workspace stop covering it, so executors that connect with those keys may fail to reconnect.
+- API keys scoped to the application itself keep their access, even if the role of the user who created them does not cover the destination workspace.
+- The destination workspace's access applies to all of the application's existing history, not only to new workflows.
+
+The command prints this warning to standard error, then prompts for confirmation when run interactively. Moving an application to the workspace it is already in changes nothing.
+
+**Arguments:**
+- `<name>`: The application's name.
+- `<workspace>`: The workspace to move it to.
 - `--force`: Skip the confirmation prompt. Required when running non-interactively.
 
 ---
@@ -4307,6 +4367,53 @@ Lists an application's metrics over a time window.
 **Arguments:**
 - `<name>`: The application's name.
 - `--since <duration>`: Report the window ending now and starting this long ago. Defaults to `24h`.
+
+---
+
+### Workspace Commands
+
+A workspace is a named group of applications within an organization.
+Every application belongs to exactly one workspace, and every organization has at least one.
+API keys can be scoped to workspaces with [`dbosctl api-key create --workspace`](#dbosctl-api-key-create), so that a key covers every application in them, including applications moved in later.
+
+#### `dbosctl workspace list`
+
+**Description:**
+Lists the organization's workspaces. Any member of the organization, and any of its API keys, can list them regardless of permissions.
+
+---
+
+#### `dbosctl workspace create`
+
+**Description:**
+Creates an empty workspace. Put applications in it with [`dbosctl app register --workspace`](#dbosctl-app-register) or [`dbosctl app move`](#dbosctl-app-move).
+On DBOS-hosted Conductor, your plan limits how many workspaces an organization can have; self-hosted Conductor has no limit.
+
+**Arguments:**
+- `<name>`: The workspace's name.
+
+---
+
+#### `dbosctl workspace rename`
+
+**Description:**
+Renames a workspace. Its applications stay in it.
+
+**Arguments:**
+- `<name>`: The workspace's current name.
+- `<new-name>`: The workspace's new name.
+
+---
+
+#### `dbosctl workspace delete`
+
+**Description:**
+Deletes an empty workspace.
+Conductor refuses to delete a workspace that still holds applications (move them out first with [`dbosctl app move`](#dbosctl-app-move)) or that is the organization's last workspace.
+API keys scoped to the deleted workspace lose access to it, and any key left with no access at all is revoked.
+
+**Arguments:**
+- `<name>`: The workspace's name.
 
 ---
 
@@ -4503,18 +4610,19 @@ The `token` and `apikey` aliases are accepted in place of `api-key`.
 #### `dbosctl api-key list`
 
 **Description:**
-Lists the organization's API keys. Secrets are not shown.
+Lists the organization's API keys, with the scope of each: the workspaces or applications it covers, or all applications. Secrets are not shown.
 
 ---
 
 #### `dbosctl api-key create`
 
 **Description:**
-Creates an API key and prints its secret. **The secret is shown once and cannot be retrieved afterwards.** By default the key is unscoped; narrow it with `--app` and `--permission`. See [Permissions and API Keys](../permissions.md).
+Creates an API key and prints its secret. **The secret is shown once and cannot be retrieved afterwards.** By default the key covers all applications; narrow it to some applications with `--app` or to some workspaces with `--workspace` (not both), and limit what it can do with `--permission`. See [Permissions and API Keys](../permissions.md).
 
 **Arguments:**
 - `<name>`: A name for the key.
-- `--app <strings>`: Scope the key to these applications. Repeatable; defaults to all applications.
+- `--app <strings>`: Scope the key to these applications. Repeatable or comma-separated; defaults to all applications. Cannot be combined with `--workspace`.
+- `--workspace <strings>`: Scope the key to the applications in these [workspaces](#workspace-commands), including applications moved into them later. Repeatable or comma-separated. Cannot be combined with `--app`. A workspace-scoped key can hold only the `application.read`, `application.write`, `metric.read`, and `websocket.connect` permissions.
 - `--permission <strings>`: Grant these permissions, for example `application.read`. Repeatable.
 
 ---
@@ -4544,6 +4652,30 @@ Deletes an API key, revoking it immediately.
 
 **Description:**
 Lists the permissions that can be granted to an API key or a role.
+
+---
+
+### License Key Commands
+
+#### `dbosctl license-key create`
+
+**Description:**
+Creates a limited-time trial license key for [self-hosted Conductor](../self-hosting/hosting-conductor.md#licensing), issued by DBOS to your organization, and prints it along with when it expires. **The key is shown once and cannot be retrieved afterwards.** Pass it to self-hosted Conductor as `DBOS_CONDUCTOR_LICENSE_KEY`. Your plan may limit how many keys your organization can create.
+
+License keys are issued by DBOS Cloud, not by Conductor, so this command needs a DBOS-hosted profile (one created with `dbosctl config set <name> --managed`) and a user login from [`dbosctl login`](#dbosctl-login). It refuses a `dbos_` API key, whether it comes from `DBOS_TOKEN` or the profile.
+
+The key alone goes to standard output and the expiration notice to standard error, so a script can capture the key directly:
+
+```shell
+export DBOS_CONDUCTOR_LICENSE_KEY=$(dbosctl license-key create --profile managed)
+```
+
+**Arguments:**
+- `--profile <name>`: The DBOS-hosted profile to use. Overrides `$DBOS_PROFILE`.
+- `--org <name>`: The organization to issue the key to. Overrides `$DBOS_ORG` and the profile; defaults to the organization you logged in to.
+- `-o, --output <format>`: `table` (default) prints the key, or `json` prints the full API response, including the key's ID, type, and expiration date.
+
+Of the [common flags](#common-flags), these are the only ones it takes. `--url` and `--app` do not apply, since the request goes to DBOS Cloud rather than to a Conductor.
 
 ---
 
@@ -4730,8 +4862,12 @@ Retention policies only delete the history of completed workflows (workflows wit
 Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams, as well as any objects it owns in external storage.
 Retention runs in the background and deletes history in batches.
 
+If your application [archives workflows](../python/tutorials/workflow-archiving.md) (see also [TypeScript](../typescript/tutorials/workflow-archiving.md)), retention deletes only workflows that have been archived, keeping each workflow until the archiver has copied it.
+This holds only when retention runs in a process configured with the archive, so configure it in every process of your application.
+
 If multiple applications [share a system database](../explanations/sharing-a-system-database.md), retention policies apply to the entire system database, including workflows owned by other applications.
 The most restrictive policy configured by any of these applications therefore applies to all of them, so we recommend configuring the same retention policies for every application that shares a system database.
+If any of these applications archives workflows, configure every one of them with an archive, or retention they run can delete workflows that haven't been archived yet.
 The global timeout applies only to workflows owned by the application for which it is configured.
 
 #### Time Threshold
@@ -6026,6 +6162,21 @@ To do this, open the workflow steps view, select a particular step, and click "F
 When you fork a workflow, DBOS generates a new workflow with a new workflow ID, copies to that workflow the original workflow's inputs and all its steps up to the selected step, then begins executing the new workflow from the selected step.
 
 Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an application version on which the bug is fixed).
+
+##### Rewinding Workflows
+
+You can re-execute a workflow from a specific step, keeping its workflow ID, by **rewinding** it.
+To do this, click "Rewind" in the workflow's action menu, or select a step in the workflow steps view and click "Rewind" to re-execute from that step.
+You can also choose an application version and queue to re-execute the workflow on.
+
+When you rewind a workflow, DBOS discards the workflow's recorded steps from the selected step onward, clears its output, and re-enqueues it.
+The workflow then re-executes from the selected step, replaying the recorded outputs of earlier steps.
+Unlike forking, rewinding modifies the original workflow instead of creating a copy, so other code that refers to the workflow by its ID keeps working.
+Rewinding can't be undone, and steps that re-execute repeat their side effects.
+
+You can only rewind a workflow that has completed (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`); cancel a running workflow before rewinding it.
+Rewinding requires DBOS Transact Python 3.1.0, TypeScript 5.1.0, or Go 1.5.0 or later.
+For more on rewinding, see Workflow Management for [Python](../python/tutorials/workflow-management.md#rewinding-workflows), [TypeScript](../typescript/tutorials/workflow-management.md#rewinding-workflows), or [Go](../golang/tutorials/workflow-management.md#rewinding-workflows).
 
 ### Exporting Workflows
 
@@ -8098,6 +8249,7 @@ Always set the client's application name if multiple applications share a system
 
 Workflows, queues, schedules, and versions created before upgrading to a DBOS version supporting application names, or created by a client with no application name, are owned by no application.
 Every application treats unowned rows as its own: any application may dequeue an unowned workflow (claiming ownership of it when it does), and every application fires unowned schedules and polls unowned queues.
+Unowned workflows are never [archived](../python/tutorials/workflow-archiving.md): each application archives only the workflows it owns.
 
 :::warning
 
@@ -8248,7 +8400,9 @@ Each row represents a different workflow execution.
 - **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
 - **is_debounced**: Whether this workflow was created by a debouncer.
 - **application_name**: The application that owns this workflow.
-- **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting.
+- **suspend_key**: For a workflow suspended in `recv`, the topic on which it is waiting. For a workflow suspended waiting for other workflows' results, an internal key identifying what it awaits.
+- **result_waiter_ids**: The IDs of workflows [suspended](../python/tutorials/workflow-tutorial.md#suspending-workflows) waiting for this workflow's result, null if there are none. When this workflow completes, it wakes them.
+- **archive_pending**: `TRUE` while a completed workflow is waiting to be copied to the application's [workflow archive](../python/tutorials/workflow-archiving.md), null otherwise. Set only when the application is configured with a workflow archive and the workflow has an application name. Retention in such an application doesn't delete workflows with `archive_pending` set.
 
 #### dbos.workflow_input
 This table stores workflow inputs.
@@ -8419,6 +8573,7 @@ DBOS Transact Enterprise provides:
 - **Auto-upgrade**: Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows**: Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.
 - **External storage**: Keep large objects in a separate store such as Amazon S3 and checkpoint only small references to them.
+- **Workflow archiving**: Export a permanent, queryable copy of your workflow history to Parquet files in object storage such as Amazon S3.
 
 ### Installing DBOS Transact Enterprise
 
@@ -36380,6 +36535,8 @@ def schedule_task(time_to_sleep, task):
 
 To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
 Pass `suspend=True` to `DBOS.sleep` or `DBOS.recv` (or their async versions).
+A workflow can also suspend while waiting for other workflows: pass `suspend=True` to `handle.get_result`, `DBOS.get_result`, or `DBOS.wait_first` (or their async versions), and it wakes when the awaited workflow (for `wait_first`, the first of them) completes.
+Suspending on a result only works from within a workflow (not a step or a `DBOSClient` handle) and isn't supported on a sharded system database or CockroachDB.
 The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
 Waking takes a second or two, so only suspend for long waits.
 Suspending raises `DBOSWorkflowSuspendedError`, a `BaseException`; you MUST re-raise it if you use a bare `except:` or `except BaseException` around a suspending call.
@@ -37417,6 +37574,15 @@ Prefer storing `bytes` for large objects, because they are not serialized.
 Outside a workflow, you MUST pass `owner_workflow_id`.
 Objects are deleted only after their owner workflow has been deleted, by a retention run.
 
+### Workflow Archiving
+
+To keep every completed workflow while retention keeps the system database small, DBOS Transact Enterprise supports workflow archiving (requires `pip install "dbos[enterprise]" "dbos-enterprise[archive]"` and, in production, a Conductor connection).
+Set `"workflow_archive": ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `dbos_enterprise.archive`, in every process of the application.
+Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
+To read archived workflows, construct a `ParquetArchive` with the same URI and call `list_workflows(limit=..., ...)`, which lists newest first and requires `limit`, then `get_workflow_status`, `list_workflow_steps`, `get_events`, `get_notifications`, or `read_stream` with a workflow's ID and `completed_at`.
+`DBOS.import_archived_workflow(workflow_id, completed_at)` copies an archived workflow back into the system database.
+Archiving isn't supported on a sharded system database or CockroachDB.
+
 ### Workflow Handle
 
 DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.
@@ -37435,6 +37601,7 @@ Retrieve the ID of the workflow.
 handle.get_result(
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> R
 ```
 
@@ -37442,6 +37609,7 @@ Wait for the workflow to complete, then return its result.
 
 **Parameters:**
 - **polling_interval_sec**: The interval at which DBOS polls the database for the workflow's result. Only used for enqueued workflows or retrieved handles.
+- **suspend**: If `True`, a call from within a workflow that has to wait suspends the calling workflow until this workflow completes (see Durable Sleep for requirements).
 
 ##### get_status
 
@@ -38221,6 +38389,7 @@ DBOSClient(
     sys_db_idle_transaction_timeout_sec: Optional[float] = None,
     sharding: bool = False,
     external_stores: Optional[Sequence[ExternalStore]] = None,
+    workflow_archive: Optional[WorkflowArchive] = None,
 )
 ```
 **Parameters:**
@@ -38238,6 +38407,7 @@ DBOSClient(
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
 - `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 - `external_stores`: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
+- `workflow_archive`: Your application's [workflow archive](../tutorials/workflow-archiving.md). Set it so workflows the client cancels are archived, and to import archived workflows. Requires DBOS Transact Enterprise.
 
 **Example syntax:**
 
@@ -39649,6 +39819,19 @@ Similar to [`DBOS.delete_workflows`](./contexts.md#delete_workflows).
 
 Asynchronous version of [`DBOSClient.delete_workflows`](#delete_workflows).
 
+#### import_archived_workflow
+
+```python
+client.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHandle[Any]
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Similar to [`DBOS.import_archived_workflow`](./contexts.md#import_archived_workflow). Requires `workflow_archive`.
+
+#### import_archived_workflow_async
+
+Asynchronous version of [`DBOSClient.import_archived_workflow`](#import_archived_workflow).
+
 ### Debouncing
 
 Workflows can be [debounced](./contexts.md#debouncing) with the DBOSClient.
@@ -40050,6 +40233,7 @@ class DBOSConfig(TypedDict):
     sharding: Optional[bool]
     suspend_mode: Optional[bool]
     external_stores: Optional[List[ExternalStore]]
+    workflow_archive: Optional[WorkflowArchive]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -40138,6 +40322,7 @@ A system database ahead of the required version is accepted, so a process with m
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
 - **suspend_mode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./contexts.md#sleep) or [`DBOS.recv`](./contexts.md#recv). Requires DBOS Transact Enterprise. Defaults to `False`.
 - **external_stores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.store_external_object`](./contexts.md#store_external_object) must specify one. Requires DBOS Transact Enterprise.
+- **workflow_archive**: Where to [archive workflows](../tutorials/workflow-archiving.md) as they complete, such as a [`ParquetArchive`](../tutorials/workflow-archiving.md#parquetarchive). Retention then deletes only archived workflows. Not supported on a sharded system database or CockroachDB. Requires DBOS Transact Enterprise.
 
 #### Logging and Tracing Settings
 
@@ -40270,6 +40455,7 @@ DBOS.wait_first(
     handles: List[WorkflowHandle[Any]],
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -40279,6 +40465,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 **Parameters:**
 - **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty or contains duplicate workflow IDs.
 - **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
+- **suspend**: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -40289,6 +40476,7 @@ DBOS.wait_first_async(
     handles: List[WorkflowHandleAsync[Any]],
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, WorkflowHandleAsync[Any]]
 ```
 
@@ -40713,6 +40901,7 @@ DBOS.get_result(
     workflow_id: str,
     *,
     shard_key: Optional[str] = None,
+    suspend: bool = False,
 ) -> Optional[Any]
 ```
 
@@ -40721,6 +40910,7 @@ Wait for the workflow identified by `workflow_id` to complete, and return its re
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose result to return.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
+- `suspend`: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 **Returns:**
 - The result of the workflow, or throws an exception if the workflow threw an exception.
@@ -40730,6 +40920,9 @@ Wait for the workflow identified by `workflow_id` to complete, and return its re
 ```python
 DBOS.get_result_async(
     workflow_id: str,
+    *,
+    shard_key: Optional[str] = None,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, Optional[Any]]
 ```
 
@@ -41868,6 +42061,24 @@ Delete multiple workflows and all their associated data. Behaves like [`delete_w
 #### delete_workflows_async
 
 Coroutine version of [`delete_workflows`](#delete_workflows).
+
+#### import_archived_workflow
+
+```python
+DBOS.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHandle[Any]
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Requires [`workflow_archive`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimport_archived_workflow) for details.
+
+**Parameters:**
+- `workflow_id`: The workflow's ID. It must not already be in the system database.
+- `completed_at`: The archived snapshot to import, as its `WorkflowStatus.completed_at` (epoch milliseconds).
+
+#### import_archived_workflow_async
+
+Coroutine version of [`import_archived_workflow`](#import_archived_workflow).
 
 ### Workflow Schedules
 
@@ -43829,6 +44040,7 @@ Retrieve the ID of the workflow.
 handle.get_result(
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> R
 ```
 
@@ -43836,6 +44048,7 @@ Wait for the workflow to complete, then return its result.
 
 **Parameters:**
 - **polling_interval_sec**: The interval at which DBOS polls the database for the workflow's result. Only used for enqueued workflows or retrieved handles.
+- **suspend**: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until this workflow completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Raises an error outside a workflow, in a step, or on a [`DBOSClient`](./client.md) handle. Defaults to `False`.
 
 ##### get_status
 
@@ -43873,6 +44086,7 @@ Retrieve the ID of the workflow. Behaves identically to the [WorkflowHandle](#wo
 handle.get_result(
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, R]
 ```
 
@@ -46142,6 +46356,378 @@ DBOS.set_latest_application_version("1.0.0")
 
 ---
 
+## Workflow Archiving
+
+:::info
+Workflow archiving is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature, available in Python and TypeScript.
+:::
+
+Workflow archiving lets you export a permanent copy of your workflow history to an archival format and data store, in particular [Parquet](https://parquet.apache.org/) files in object storage such as [S3](https://aws.amazon.com/s3/).
+Archived workflows are queryable, can be viewed through the [DBOS Console](https://console.dbos.dev), and can be re-imported back into your system database.
+
+### Setting Up Workflow Archiving
+
+Install DBOS Transact Enterprise with its archive extra, which adds [pyarrow](https://arrow.apache.org/docs/python/) and [DuckDB](https://duckdb.org/):
+
+```shell
+pip install "dbos[enterprise]" "dbos-enterprise[archive]"
+```
+
+Then, set `workflow_archive` in your DBOS configuration to a [`ParquetArchive`](#parquetarchive):
+
+```python
+from dbos import DBOS, DBOSConfig
+from dbos_enterprise.archive import ParquetArchive
+
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "workflow_archive": ParquetArchive("s3://my-bucket/dbos-archive"),
+}
+DBOS(config=config)
+```
+
+You must configure the archive in every process of your application.
+If some processes should mark their workflows for archiving but not write or read the archive themselves, construct their `ParquetArchive` with `active_archiver=False`.
+At least one process of the application must be an active archiver.
+
+#### Storage Locations
+
+You configure `ParquetArchive` with a URI, which defines where your archive lives:
+
+- **Amazon S3**: `s3://bucket/prefix`. The archiver writes with pyarrow's default S3 credentials, and reads use DuckDB's credential chain. To use other credentials, pass a `filesystem` such as `pyarrow.fs.S3FileSystem(region="us-west-2")` for writes and a `duckdb_secret` for reads.
+- **Google Cloud Storage**: `gs://bucket/prefix`. The archiver writes with your application default credentials. Reads need an [HMAC key](https://cloud.google.com/storage/docs/authentication/hmackeys) for a service account: `duckdb_secret={"KEY_ID": ..., "SECRET": ...}`.
+- **Azure Blob Storage**: `abfs://container@account.dfs.core.windows.net/prefix`. Writes use `pyarrow.fs.AzureFileSystem` for the account in the URI, or the `filesystem` you pass. Reads use DuckDB's credential chain for that account, or the `duckdb_secret` you pass.
+- **Local directory**: a path such as `/var/lib/dbos-archive`, for development and testing.
+
+### How Archiving Works
+
+When a workflow reaches a terminal status (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`), DBOS marks it for archiving.
+A background archiver copies marked workflows to the archive, including their inputs and outputs, steps, events, messages, and streams, then clears their marks.
+One process of each application archives at a time, and the others take over if it stops.
+
+The archiver collects completed workflows and writes them out every 10 minutes, every 100,000 workflows, or when a file reaches 128 MB, whichever comes first.
+You can change these limits with `max_flush_interval`, `max_flush_workflows`, and `target_file_bytes`.
+If a process crashes before writing, its workflows stay marked and are archived again later, so a workflow is never lost but may occasionally be archived twice; reads ignore the duplicate.
+
+Each archived copy of a workflow is a **snapshot**, identified by the workflow's ID and its `completed_at` time.
+If you [resume](./workflow-management.md) a workflow that was already archived, its next completion is archived as a new snapshot.
+
+#### Archiving and Retention
+
+With archiving configured, a [retention policy](../../conductor/retention.md) deletes only workflows that have been archived, so no workflow history is lost.
+A workflow waiting to be archived is kept until the archiver has copied it.
+
+:::warning
+Retention keeps unarchived workflows only when it runs in a process configured with your archive.
+Configure the archive in every process of your application.
+If other applications [share your system database](../../explanations/sharing-a-system-database.md), retention they run can delete your workflows before they are archived unless those other applications are configured with an archive too.
+:::
+
+### Reading Archived Workflows
+
+You can query your application's archived workflows from the [DBOS Console](https://console.dbos.dev).
+Conductor sends these queries to your application's active archivers.
+
+From code, construct a `ParquetArchive` with the same URI in any process and read from it.
+List archived workflows with [`list_workflows`](#list_workflows), which takes the same filters as [`DBOS.list_workflows`](../reference/contexts.md#list_workflows), then read a snapshot's details by its workflow ID and `completed_at`:
+
+```python
+archive = ParquetArchive("s3://my-bucket/dbos-archive")
+
+failed = archive.list_workflows(
+    status="ERROR",
+    completed_after="2026-11-01T00:00:00Z",
+    application_name="dbos-app",
+    limit=20,
+)
+for workflow in failed:
+    steps = archive.list_workflow_steps(workflow.workflow_id, workflow.completed_at)
+    events = archive.get_events(workflow.workflow_id, workflow.completed_at)
+```
+
+Archived workflows are listed newest first, a page at a time, so `limit` is required.
+Listing reads as few files as it can, but some filters, such as a lookup by workflow ID, may have to read many: give them a narrow `completed_after` and `completed_before`.
+A listing that runs longer than its timeout, 30 seconds by default, raises `ArchiveQueryTimeoutError`.
+
+### Importing an Archived Workflow
+
+To bring an archived workflow back into the system database, call [`DBOS.import_archived_workflow`](#dbosimport_archived_workflow) with its workflow ID and `completed_at`:
+
+```python
+handle = DBOS.import_archived_workflow(workflow.workflow_id, workflow.completed_at)
+```
+
+### Deploying Workflow Archiving
+
+#### DuckDB Extensions
+
+Reads use DuckDB, which needs extensions for object storage: `httpfs` and `aws` for S3, `httpfs` for GCS, and `azure` for Azure.
+By default, DuckDB downloads them on first use.
+If your application can't download them at runtime, install them when you build its image:
+
+```shell
+python -m dbos_enterprise.archive.install_extensions --uri s3://my-bucket/dbos-archive
+```
+
+Then turn downloads off with `allow_extension_download`:
+
+```python
+ParquetArchive("s3://my-bucket/dbos-archive", allow_extension_download=False)
+```
+
+Pass `--dir` to install them somewhere other than DuckDB's default directory, and set `extension_directory` to the same directory.
+Local archives need no extensions.
+
+### Archive Layout
+
+The archive's layout is a stable format, so other tools can query it directly.
+New versions of DBOS only add columns, never renaming, retyping, or removing them.
+
+An archive holds a `_layout.json` file and one folder per dataset:
+
+```
+<archive root>/
+  _layout.json
+  workflows/completed_date=2026-11-23/part-1795392000123-1795392599877-3fa2c0de.parquet
+  steps/completed_date=2026-11-23/part-1795392000123-1795392599877-3fa2c0de.parquet
+  events/...
+  events_history/...
+  notifications/...
+  streams/...
+```
+
+- **`_layout.json`** records the archive's format version, currently `{"format_version": 1}`. The version changes only if a change can't be made by adding columns. The archiver refuses to write to an archive whose version is newer than it supports.
+- **Partitions**: each dataset is partitioned by `completed_date`, the UTC day of the workflow's completion, as a Hive-style `completed_date=YYYY-MM-DD` folder.
+- **File names**: `part-<first>-<last>-<tag>.parquet`, where `<first>` and `<last>` are the earliest and latest `completed_at` in the file, as 13-digit epoch milliseconds, and `<tag>` is 8 hexadecimal characters. Every dataset's file from one write has the same name, so a workflow's steps, events, messages, and streams are in the files with the same name as its workflow file.
+
+Times are stored as `TIMESTAMP` columns with microsecond precision in UTC.
+Inputs, outputs, errors, and other values are stored as text, encoded with the serializer named in their row's `serialization` column.
+To read them from other tools or languages, use [portable serialization](../reference/contexts.md#serialization-strategy).
+
+#### Datasets
+
+Each workflow snapshot is one row of `workflows`, keyed by `workflow_uuid` and `completed_at`.
+Rows of the other datasets belong to a snapshot through `workflow_uuid` and `snapshot_completed_at`.
+
+| Dataset | Columns |
+| --- | --- |
+| `workflows` | `workflow_uuid`, `completed_at`, `status`, `name`, `class_name`, `config_name`, `authenticated_user`, `assumed_role`, `authenticated_roles` (JSON list), `inputs`, `output`, `error`, `serialization`, `executor_id`, `created_at`, `updated_at`, `application_version`, `application_id`, `application_name`, `recovery_attempts`, `queue_name`, `queue_partition_key`, `priority`, `deduplication_id`, `workflow_timeout_ms`, `workflow_deadline_epoch_ms`, `started_at_epoch_ms`, `delay_until_epoch_ms`, `forked_from`, `was_forked_from`, `parent_workflow_id`, `rate_limited`, `attributes` (JSON object), `schedule_name`, `debounce_deadline_epoch_ms`, `is_debounced`, `archived_at`, `archive_format_version` |
+| `steps` | `workflow_uuid`, `snapshot_completed_at`, `function_id`, `function_name`, `output`, `error`, `serialization`, `child_workflow_id`, `started_at_epoch_ms`, `completed_at_epoch_ms`, `application_name` |
+| `events` | `workflow_uuid`, `snapshot_completed_at`, `key`, `value`, `serialization` |
+| `events_history` | `workflow_uuid`, `snapshot_completed_at`, `key`, `function_id`, `value`, `serialization` |
+| `notifications` | `workflow_uuid`, `snapshot_completed_at`, `created_at_epoch_ms`, `message_uuid`, `topic`, `message`, `serialization`, `consumed`, `consumed_by_function_id` |
+| `streams` | `workflow_uuid`, `snapshot_completed_at`, `key`, `offset`, `value`, `serialization`, `function_id` |
+
+The columns mirror the [system tables](../../explanations/system-tables.md) they are copied from.
+`archived_at` is when the snapshot was archived, and `archive_format_version` is the format version it was written with.
+
+#### Querying the Archive
+
+Query one dataset at a time, with a glob that ends in `*.parquet` so it skips uploads in progress.
+Because a snapshot may occasionally be archived twice, keep one row per snapshot: the one in the file with the greatest name.
+To get each workflow's latest snapshot, keep its row with the greatest `completed_at`.
+For example, with DuckDB:
+
+```sql
+SELECT * EXCLUDE (rank)
+FROM (
+  SELECT *, row_number() OVER (
+    PARTITION BY workflow_uuid ORDER BY completed_at DESC, filename DESC
+  ) AS rank
+  FROM read_parquet(
+    's3://my-bucket/dbos-archive/workflows/*/*.parquet',
+    hive_partitioning = true,
+    filename = true
+  )
+)
+WHERE rank = 1;
+```
+
+Filter on `completed_date` to read only the partitions you need.
+
+### Reference
+
+#### ParquetArchive
+
+```python
+ParquetArchive(
+    uri: str,
+    *,
+    filesystem: Optional[pyarrow.fs.FileSystem] = None,
+    duckdb_secret: Optional[Mapping[str, Any]] = None,
+    duckdb_config: Optional[Mapping[str, Any]] = None,
+    archive_id: Optional[str] = None,
+    target_file_bytes: int = 128 * 1024 * 1024,
+    max_flush_interval: datetime.timedelta = datetime.timedelta(minutes=10),
+    max_flush_workflows: int = 100_000,
+    serializer: Optional[Serializer] = None,
+    allow_extension_download: Optional[bool] = None,
+    extension_directory: Optional[str] = None,
+    query_timeout_sec: Optional[float] = None,
+    active_archiver: bool = True,
+)
+```
+
+A workflow archive in Parquet files.
+Pass one as [`workflow_archive`](../reference/configuration.md#dbos-transact-enterprise-settings) to archive workflows as they complete, or construct one anywhere to read an archive.
+Import it from `dbos_enterprise.archive`.
+
+**Parameters:**
+- `uri`: Where the archive lives: `s3://bucket/prefix`, `gs://bucket/prefix`, `abfs://container@account.dfs.core.windows.net/prefix`, or a local path.
+- `filesystem`: The pyarrow filesystem the archiver writes through, such as `pyarrow.fs.S3FileSystem(region="us-west-2")`. Defaults to pyarrow's own filesystem for the URI, with its default credentials.
+- `duckdb_secret`: The parameters of the [DuckDB secret](https://duckdb.org/docs/stable/configuration/secrets_manager) reads use, such as `{"PROVIDER": "credential_chain", "REGION": "us-west-2"}`. `TYPE` and `SCOPE` come from the URI. Defaults to the credential chain for S3, and for Azure when the URI names an account. GCS needs an HMAC key: `{"KEY_ID": ..., "SECRET": ...}`.
+- `duckdb_config`: DuckDB configuration for reads, applied over `{"threads": 16, "memory_limit": "512MB"}`.
+- `archive_id`: A stable name for this archive. Defaults to the URI.
+- `target_file_bytes`: The size at which the archiver closes a file and starts the next. Defaults to 128 MiB.
+- `max_flush_interval`: The longest the archiver holds completed workflows before writing them out. Defaults to 10 minutes.
+- `max_flush_workflows`: The most completed workflows the archiver holds before writing them out. Defaults to 100,000.
+- `serializer`: The serializer reads decode inputs, outputs, and step results with. Defaults to your application's.
+- `allow_extension_download`: Whether reads may download the [DuckDB extensions](#duckdb-extensions) they need. Defaults to true, unless the `DBOS_ARCHIVE_EXTENSION_DOWNLOAD` environment variable is `0`, `false`, or `no`.
+- `extension_directory`: Where DuckDB installs and loads extensions. Defaults to the `DBOS_ARCHIVE_EXTENSION_DIRECTORY` environment variable, else DuckDB's default.
+- `query_timeout_sec`: The longest a listing may run, in seconds. Zero or less removes the limit. Defaults to your application's [`observability_query_timeout_sec`](../reference/configuration.md), else 30 seconds.
+- `active_archiver`: Whether this process writes and reads the archive. When `False`, the process still marks its completed workflows for archiving, and its retention keeps them until they are archived, but it doesn't write or read the archive and needs no storage credentials. Defaults to `True`.
+
+#### list_workflows
+
+```python
+archive.list_workflows(
+    *,
+    limit: int,
+    offset: Optional[int] = None,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[str | List[str]] = None,
+    name: Optional[str | List[str]] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
+    app_version: Optional[str | List[str]] = None,
+    forked_from: Optional[str | List[str]] = None,
+    parent_workflow_id: Optional[str | List[str]] = None,
+    user: Optional[str | List[str]] = None,
+    queue_name: Optional[str | List[str]] = None,
+    executor_id: Optional[str | List[str]] = None,
+    schedule_name: Optional[str | List[str]] = None,
+    application_name: Optional[str | List[str]] = None,
+    queues_only: bool = False,
+    was_forked_from: Optional[bool] = None,
+    is_fork: Optional[bool] = None,
+    has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+) -> List[WorkflowStatus]
+```
+
+List a page of archived workflows, newest created first.
+Filters work as in [`DBOS.list_workflows`](../reference/contexts.md#list_workflows), except:
+
+- `limit` is required.
+- Each snapshot is filtered on its own, and of a workflow's matching snapshots only the latest is returned.
+- `application_name` defaults to every application whose workflows are in the archive, plus unclaimed ones.
+- `attributes` match by DuckDB's [`json_contains`](https://duckdb.org/docs/stable/data/json/json_functions).
+- `sort_desc=False` and `workflow_id_prefix` aren't supported.
+
+Give lookups by ID or parent, and other rare filters, a narrow `completed_after` and `completed_before`, or the listing may read every file in the archive.
+
+**Raises:**
+- `ArchiveQueryTimeoutError`: If the listing runs longer than `query_timeout_sec`.
+- `ValueError`: If the listing isn't supported, such as `sort_desc=False`.
+
+#### get_workflow_status
+
+```python
+archive.get_workflow_status(
+    workflow_id: str,
+    completed_at: int,
+    *,
+    load_input: bool = True,
+    load_output: bool = True,
+) -> Optional[WorkflowStatus]
+```
+
+Return the archived snapshot of a workflow that completed at `completed_at` (epoch milliseconds, as in `WorkflowStatus.completed_at`), or `None` if the archive has no such snapshot.
+
+#### list_workflow_steps
+
+```python
+archive.list_workflow_steps(
+    workflow_id: str,
+    completed_at: int,
+    *,
+    load_output: bool = True,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+) -> List[StepInfo]
+```
+
+Return the steps of an archived snapshot, by function ID, as [`DBOS.list_workflow_steps`](../reference/contexts.md#list_workflow_steps) returns them.
+
+#### get_events
+
+```python
+archive.get_events(workflow_id: str, completed_at: int) -> Dict[str, Any]
+```
+
+Return the [events](./workflow-communication.md#workflow-events) an archived snapshot had set, by key.
+
+#### get_notifications
+
+```python
+archive.get_notifications(workflow_id: str, completed_at: int) -> List[NotificationInfo]
+```
+
+Return the messages an archived snapshot had been sent, oldest first.
+Each is a dictionary with `topic`, `message`, `created_at_epoch_ms`, and `consumed`.
+
+#### read_stream
+
+```python
+archive.read_stream(workflow_id: str, completed_at: int, key: str) -> Generator[Any, Any, None]
+```
+
+Yield the values an archived snapshot had written to the [stream](./workflow-communication.md#workflow-streaming) `key`, in order.
+
+#### DBOS.import_archived_workflow
+
+```python
+DBOS.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHandle[Any]
+```
+
+Copy an archived snapshot back into the system database and return a handle to it.
+The imported workflow's `completed_at` is the time of the import.
+From workflow code, the import runs as a step.
+`DBOS.import_archived_workflow_async` is its coroutine version.
+
+**Raises:**
+- `DBOSWorkflowArchiveNotConfiguredError`: If no `workflow_archive` is configured.
+- `DBOSNonExistentWorkflowError`: If the archive has no such snapshot.
+- `DBOSWorkflowIDInUseError`: If the system database already has a workflow with this ID.
+
+#### DBOSClient.import_archived_workflow
+
+```python
+client.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHandle[Any]
+```
+
+Like [`DBOS.import_archived_workflow`](#dbosimport_archived_workflow), from a [`DBOSClient`](../reference/client.md) created with `workflow_archive` set to your application's archive.
+`client.import_archived_workflow_async` is its asynchronous version.
+
+#### Errors
+
+Import these from `dbos_enterprise.archive`, except `DBOSWorkflowArchiveNotConfiguredError`, which is in `dbos`.
+
+- `ArchiveQueryTimeoutError`: A listing ran longer than its timeout. Narrow it with `completed_after` and `completed_before`. A subclass of `DBOSQueryTimeoutError`.
+- `ArchiveInactiveError`: A read of an archive constructed with `active_archiver=False`.
+- `ArchiveExtensionMissingError`: A DuckDB extension the archive needs isn't installed, and downloading extensions is turned off.
+- `DBOSWorkflowArchiveNotConfiguredError`: An import with no `workflow_archive` configured.
+
+---
+
 ## Communicating with Workflows(3)
 
 DBOS provides a few different ways to communicate with your workflows.
@@ -46654,16 +47240,20 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
-#### Suspending Workflows
+For long sleeps, you can [suspend the workflow](#suspending-workflows) so it uses no resources while it sleeps.
+
+### Suspending Workflows
 
 :::info
 Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
-Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
-If your application has many workflows with long waits, you can instead suspend them, so they use no memory, threads, or queue capacity until they wake.
+Normally, a workflow that is waiting stays in memory, holding a thread and potentially queue capacity until the wait ends.
+If your application has many workflows with long waits, you can instead **suspend** them.
+A suspended workflow's execution exits and its status becomes `SUSPENDED`, so it uses no memory, threads, or queue capacity.
+When its wait ends, DBOS returns it to the queue it was running on and it resumes from its last completed step, just as it would after a crash.
 
-To suspend workflows, set [`suspend_mode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) or [`DBOS.recv`](../reference/contexts.md#recv) (or their async versions):
+To enable suspending, set [`suspend_mode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration:
 
 ```python
 config: DBOSConfig = {
@@ -46672,7 +47262,22 @@ config: DBOSConfig = {
     "suspend_mode": True,
 }
 DBOS(config=config)
+```
 
+Then pass `suspend=True` to any of the three waits that can suspend: sleeping, waiting for a message, and waiting for another workflow.
+
+When using workflow suspension, keep in mind that:
+
+- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended.
+- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
+
+#### Suspending While Sleeping
+
+Pass `suspend=True` to [`DBOS.sleep`](../reference/contexts.md#sleep) to suspend the workflow until the sleep ends.
+A sleep of at most one second doesn't suspend.
+
+```python
 @DBOS.workflow()
 def send_reminder(user):
     # Sleep suspended for 30 days, then send the reminder
@@ -46680,14 +47285,35 @@ def send_reminder(user):
     send_email(user)
 ```
 
-When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
-When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+#### Suspending While Waiting for a Message
 
-Keep in mind:
+Pass `suspend=True` to [`DBOS.recv`](../reference/contexts.md#recv) to suspend the workflow until a message arrives on its topic or the timeout passes.
 
-- **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
-- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a [handle](../reference/workflow_handles.md) or a direct call, keeps waiting.
-- **Suspending raises `DBOSWorkflowSuspendedError`**, a `BaseException`, to exit the execution. `except Exception` doesn't catch it, but a bare `except:` or `except BaseException` does and must re-raise it.
+```python
+@DBOS.workflow()
+def process_order(order):
+    # Suspend for up to a day waiting for payment confirmation
+    payment = DBOS.recv("payment", timeout_seconds=24 * 60 * 60, suspend=True)
+    if payment is None:
+        cancel_order(order)
+    else:
+        ship_order(order)
+```
+
+#### Suspending While Waiting for Another Workflow
+
+Pass `suspend=True` to a handle's [`get_result`](../reference/workflow_handles.md#get_result), to [`DBOS.get_result`](../reference/contexts.md#get_result), or to [`DBOS.wait_first`](../reference/contexts.md#wait_first) to suspend the workflow until the workflow it awaits completes, whether it succeeds, fails, or is cancelled.
+For `wait_first`, the workflow wakes when the first of the workflows it awaits completes.
+If an awaited workflow has already completed, the call returns at once without suspending.
+
+```python
+@DBOS.workflow()
+def publish_report(region):
+    handle = DBOS.enqueue_workflow("reports", build_report, region)
+    # Suspend until build_report completes, then return its result
+    report = handle.get_result(suspend=True)
+    publish(report)
+```
 
 ### Debouncing Workflows
 
@@ -55384,6 +56010,8 @@ static async exampleWorkflow(timeToSleep, task) {
 
 To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
 Pass `{ suspend: true }` to `DBOS.sleep` or `DBOS.recv`.
+A workflow can also suspend while waiting for other workflows: pass `{ suspend: true }` to `handle.getResult`, `DBOS.getResult`, or `DBOS.waitFirst`, and it wakes when the awaited workflow (for `waitFirst`, the first of them) completes, or when `DBOS.getResult`'s timeout passes.
+Suspending on a result only works from within a workflow (not a step or a `DBOSClient` handle) and isn't supported on a sharded system database or CockroachDB.
 The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when it wakes.
 Waking takes a second or two, so only suspend for long waits.
 Suspending throws `DBOSWorkflowSuspendedError`; you MUST rethrow it if you wrap a suspending call in a `try`/`catch`.
@@ -56366,13 +56994,14 @@ Retrieve the ID of the workflow.
 
 ```typescript
 handle.getResult(
-  options?: { pollingIntervalMs?: number }
+  options?: { pollingIntervalMs?: number; suspend?: boolean }
 ): Promise<R>;
 ```
 
 Wait for the workflow to complete, then return its result.
 The optional `pollingIntervalMs` sets the interval between system database polls while waiting.
 It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow`, from `DBOS.startWorkflow` with a `queueName`, or from the DBOS Client), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
+With `suspend: true`, a call from within a workflow that has to wait suspends the calling workflow until this workflow completes (see Durable Sleep for requirements).
 
 #### handle.getStatus
 
@@ -56861,6 +57490,15 @@ Prefer storing a `Buffer` or `Uint8Array` for large objects, because they are no
 Outside a workflow, you MUST pass `ownerWorkflowID`.
 Objects are deleted only after their owner workflow has been deleted, by a retention run.
 
+### Workflow Archiving
+
+To keep every completed workflow while retention keeps the system database small, DBOS Transact Enterprise supports workflow archiving (requires `npm install @dbos-inc/dbos-enterprise @duckdb/node-api hyparquet-writer`, plus `@aws-sdk/client-s3 @aws-sdk/lib-storage` for S3 or GCS, and, in production, a Conductor connection).
+Set `workflowArchive: new ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `@dbos-inc/dbos-enterprise`, in every process of the application.
+Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
+To read archived workflows, construct a `ParquetArchive` with the same URI and call `listWorkflows({ limit, ... })`, which lists newest first and requires `limit`, then `getWorkflowStatus`, `listWorkflowSteps`, `getEvents`, `getNotifications`, or `readStream` with a workflow's `workflowID` and `completedAt`.
+`DBOS.importArchivedWorkflow(workflowID, completedAt)` copies an archived workflow back into the system database.
+Archiving isn't supported on a sharded system database or CockroachDB.
+
 ### Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
@@ -57164,7 +57802,7 @@ interface ClientEnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName, observabilityQueryTimeoutMs, systemDatabaseIdleTransactionTimeoutMs, sharding, externalStores, workflowArchive}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string, observabilityQueryTimeoutMs?: number, systemDatabaseIdleTransactionTimeoutMs?: number, sharding?: boolean, externalStores?: ExternalStore[], workflowArchive?: WorkflowArchive}): Promise<DBOSClient>
     destroy(): Promise<void>;
     get applicationName(): string | undefined;
 
@@ -57247,6 +57885,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabaseIdleTransactionTimeoutMs**: The Postgres `idle_in_transaction_session_timeout`, in milliseconds, set on the system database connections the client creates. Defaults to 60000 (60 seconds).
 - **sharding**: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 - **externalStores**: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
+- **workflowArchive**: Your application's [workflow archive](../tutorials/workflow-archiving.md). Set it so workflows the client cancels are archived, and to import archived workflows. Requires DBOS Transact Enterprise.
 
 Example:
 
@@ -57721,6 +58360,11 @@ Please see [`DBOS.deleteWorkflow`](./methods.md#dbosdeleteworkflow) for more inf
 Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#deleteworkflow) but operates on a list of workflow IDs.
 Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more information.
 
+##### `importArchivedWorkflow`
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it. Requires `workflowArchive`.
+Please see [`DBOS.importArchivedWorkflow`](./methods.md#dbosimportarchivedworkflow) for more information.
+
 #### Queue Management
 
 ##### `registerQueue`
@@ -58133,6 +58777,7 @@ export interface DBOSConfig {
   sharding?: boolean;
   suspendMode?: boolean;
   externalStores?: ExternalStore[];
+  workflowArchive?: WorkflowArchive;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -58183,6 +58828,7 @@ If you rename an application, transfer ownership of its data with [`npx dbos ren
 - **sharding**: Whether to use a [sharded system database](../tutorials/sharding.md). Defaults to `false`.
 - **suspendMode**: Whether workflows can [suspend](../tutorials/workflow-tutorial.md#suspending-workflows) while waiting in [`DBOS.sleep`](./methods.md#dbossleep) or [`DBOS.recv`](./methods.md#dbosrecv). Requires DBOS Transact Enterprise. Defaults to `false`.
 - **externalStores**: The stores for [external objects](../tutorials/external-storage.md). If there are several, each needs a unique store ID and [`DBOS.storeExternalObject`](./methods.md#dbosstoreexternalobject) must specify one. Requires DBOS Transact Enterprise.
+- **workflowArchive**: Where to [archive workflows](../tutorials/workflow-archiving.md) as they complete, such as a [`ParquetArchive`](../tutorials/workflow-archiving.md#parquetarchive). Retention then deletes only archived workflows. Not supported on a sharded system database or CockroachDB. Requires DBOS Transact Enterprise.
 
 #### Database Connection Settings
 
@@ -58831,6 +59477,7 @@ static async waitFirst(
 ```typescript
 interface WaitFirstOptions {
   pollingIntervalMs?: number;
+  suspend?: boolean;
 }
 ```
 
@@ -58841,6 +59488,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty or contains duplicate workflow IDs.
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -59250,6 +59898,41 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 - **workflowID**: The ID of the workflow whose handle to retrieve.
 - **options.shardKey**: The workflow's [shard key](../tutorials/sharding.md).
 
+#### DBOS.getResult
+
+```typescript
+DBOS.getResult<T>(
+  workflowID: string,
+  options?: number | GetResultOptions
+): Promise<T | null>
+```
+
+```typescript
+interface GetResultOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
+  shardKey?: string;
+  suspend?: boolean;
+}
+```
+
+Wait for a workflow to complete, then return its result.
+This is similar to calling [`getResult`](#handlegetresult) on a [handle](#workflow-handles), but doesn't require a handle and can time out.
+Called from within a workflow, it runs as a single step.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose result to return.
+- **options**: Options for the wait. A number is shorthand for `timeoutSeconds`.
+  - **timeoutSeconds**: A timeout in seconds. If the workflow doesn't complete before the timeout, return `null`. If not set, wait without a timeout.
+  - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the workflow doesn't complete before the deadline, return `null`.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
+  - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes or the timeout passes, instead of keeping it in memory. A timeout of at most one second does not suspend. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`.
+
+**Returns:**
+- The result of the workflow, or `null` if the wait times out. Throws the workflow's error if it failed.
+
 #### DBOS.getWorkflowStatus
 
 ```typescript
@@ -59513,6 +60196,23 @@ DBOS.deleteWorkflows(
 ```
 
 Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#dbosdeleteworkflow) but operates on a list of workflow IDs.
+
+#### DBOS.importArchivedWorkflow
+
+```typescript
+DBOS.importArchivedWorkflow<T = unknown>(
+  workflowID: string,
+  completedAt: number
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Requires [`workflowArchive`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimportarchivedworkflow) for details.
+
+**Parameters:**
+- **workflowID**: The workflow's ID. It must not already be in the system database.
+- **completedAt**: The archived snapshot to import, as its `WorkflowStatus.completedAt` (epoch milliseconds).
 
 #### DBOS.forkWorkflow
 
@@ -60187,8 +60887,15 @@ The workflow's [shard key](../tutorials/sharding.md).
 
 ```typescript
 handle.getResult(
-  options?: { pollingIntervalMs?: number }
+  options?: WorkflowHandleGetResultOptions
 ): Promise<R>;
+```
+
+```typescript
+interface WorkflowHandleGetResultOptions {
+  pollingIntervalMs?: number;
+  suspend?: boolean;
+}
 ```
 
 Wait for the workflow to complete, then return its result.
@@ -60196,6 +60903,7 @@ Wait for the workflow to complete, then return its result.
 **Parameters:**
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow), from `DBOS.startWorkflow` with a `queueName`, or from the [DBOS Client](./client.md)), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until this workflow completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Throws outside a workflow, in a step, or on a [DBOS Client](./client.md) handle. Defaults to `false`.
 
 #### handle.getStatus
 
@@ -63573,6 +64281,395 @@ await DBOS.setLatestApplicationVersion("1.0.0");
 
 ---
 
+## Workflow Archiving(Tutorials)
+
+:::info
+Workflow archiving is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature, available in Python and TypeScript.
+:::
+
+Workflow archiving lets you export a permanent copy of your workflow history to an archival format and data store, in particular [Parquet](https://parquet.apache.org/) files in object storage such as [S3](https://aws.amazon.com/s3/).
+Archived workflows are queryable, can be viewed through the [DBOS Console](https://console.dbos.dev), and can be re-imported back into your system database.
+
+### Setting Up Workflow Archiving
+
+Install DBOS Transact Enterprise, [DuckDB](https://duckdb.org/), and [hyparquet-writer](https://github.com/hyparam/hyparquet-writer).
+For an archive in S3 or Google Cloud Storage, also install the AWS SDK:
+
+```shell
+npm install @dbos-inc/dbos-enterprise @duckdb/node-api hyparquet-writer
+npm install @aws-sdk/client-s3 @aws-sdk/lib-storage
+```
+
+Then, set `workflowArchive` in your DBOS configuration to a [`ParquetArchive`](#parquetarchive):
+
+```typescript
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { ParquetArchive } from "@dbos-inc/dbos-enterprise";
+
+DBOS.setConfig({
+  name: "dbos-app",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  conductorKey: process.env.DBOS_CONDUCTOR_KEY,
+  workflowArchive: new ParquetArchive("s3://my-bucket/dbos-archive"),
+});
+await DBOS.launch();
+```
+
+You must configure the archive in every process of your application.
+If some processes should mark their workflows for archiving but not write or read the archive themselves, construct their `ParquetArchive` with `activeArchiver: false`.
+These processes don't need DuckDB, hyparquet-writer, or the AWS SDK installed.
+At least one process of the application must be an active archiver.
+
+#### Storage Locations
+
+You configure `ParquetArchive` with a URI, which defines where your archive lives:
+
+- **Amazon S3**: `s3://bucket/prefix`. The archiver writes with the AWS SDK's default credential chain, in the bucket's own region, and reads use DuckDB's credential chain. To use other credentials, pass an `s3Client` for writes and a `duckdbSecret` for reads.
+- **Google Cloud Storage**: `gs://bucket/prefix`, through its S3-compatible API. Writes and reads use an [HMAC key](https://cloud.google.com/storage/docs/authentication/hmackeys) for a service account: `duckdbSecret: { KEY_ID: ..., SECRET: ... }`. To write with other credentials, pass an `s3Client`.
+- **Local directory**: a path such as `/var/lib/dbos-archive`, for development and testing.
+
+Azure Blob Storage isn't supported in TypeScript yet.
+
+### How Archiving Works
+
+When a workflow reaches a terminal status (`SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`), DBOS marks it for archiving.
+A background archiver copies marked workflows to the archive, including their inputs and outputs, steps, events, messages, and streams, then clears their marks.
+One process of each application archives at a time, and the others take over if it stops.
+
+The archiver collects completed workflows and writes them out every 10 minutes, every 100,000 workflows, or when a file reaches 128 MB, whichever comes first.
+You can change these limits with `maxFlushIntervalMs`, `maxFlushWorkflows`, and `targetFileBytes`.
+If a process crashes before writing, its workflows stay marked and are archived again later, so a workflow is never lost but may occasionally be archived twice; reads ignore the duplicate.
+
+Each archived copy of a workflow is a **snapshot**, identified by the workflow's ID and its `completedAt` time.
+If you [resume](./workflow-management.md) a workflow that was already archived, its next completion is archived as a new snapshot.
+
+#### Archiving and Retention
+
+With archiving configured, a [retention policy](../../conductor/retention.md) deletes only workflows that have been archived, so no workflow history is lost.
+A workflow waiting to be archived is kept until the archiver has copied it.
+
+:::warning
+Retention keeps unarchived workflows only when it runs in a process configured with your archive.
+Configure the archive in every process of your application.
+If other applications [share your system database](../../explanations/sharing-a-system-database.md), retention they run can delete your workflows before they are archived unless those other applications are configured with an archive too.
+:::
+
+### Reading Archived Workflows
+
+You can query your application's archived workflows from the [DBOS Console](https://console.dbos.dev).
+Conductor sends these queries to your application's active archivers.
+
+From code, construct a `ParquetArchive` with the same URI in any process and read from it.
+List archived workflows with [`listWorkflows`](#listworkflows), which takes the same filters as [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows), then read a snapshot's details by its workflow ID and `completedAt`:
+
+```typescript
+const archive = new ParquetArchive("s3://my-bucket/dbos-archive");
+
+const failed = await archive.listWorkflows({
+  status: "ERROR",
+  completedAfter: "2026-11-01T00:00:00Z",
+  applicationName: "dbos-app",
+  limit: 20,
+});
+for (const workflow of failed) {
+  const steps = await archive.listWorkflowSteps(workflow.workflowID, workflow.completedAt!);
+  const events = await archive.getEvents(workflow.workflowID, workflow.completedAt!);
+}
+```
+
+Archived workflows are listed newest first, a page at a time, so `limit` is required.
+Listing reads as few files as it can, but some filters, such as a lookup by workflow ID, may have to read many: give them a narrow `completedAfter` and `completedBefore`.
+A listing that runs longer than its timeout, 30 seconds by default, throws `ArchiveQueryTimeoutError`.
+
+### Importing an Archived Workflow
+
+To bring an archived workflow back into the system database, call [`DBOS.importArchivedWorkflow`](#dbosimportarchivedworkflow) with its workflow ID and `completedAt`:
+
+```typescript
+const handle = await DBOS.importArchivedWorkflow(workflow.workflowID, workflow.completedAt!);
+```
+
+### Deploying Workflow Archiving
+
+#### Node.js Versions
+
+Workflow archiving requires Node.js 20.19 or later, or 22.12 or later on Node.js 22.
+On Node.js 22.15 and later, archive files are compressed with zstd; on earlier versions, with snappy.
+Both are read by every Parquet reader.
+
+#### DuckDB Extensions
+
+Reads use DuckDB, which needs extensions for object storage: `httpfs` and `aws` for S3, and `httpfs` for GCS.
+By default, DuckDB downloads them on first use.
+If your application can't download them at runtime, install them when you build its image:
+
+```shell
+npx dbos-archive-install-extensions --uri s3://my-bucket/dbos-archive
+```
+
+Then turn downloads off with `allowExtensionDownload`:
+
+```typescript
+new ParquetArchive("s3://my-bucket/dbos-archive", { allowExtensionDownload: false });
+```
+
+Pass `--dir` to install them somewhere other than DuckDB's default directory, and set `extensionDirectory` to the same directory.
+Local archives need no extensions.
+
+#### Concurrent Reads
+
+Each archive read holds one of Node.js's [libuv thread pool](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop#what-code-runs-on-the-worker-pool) threads while it runs, and the pool has four threads by default.
+If your application serves several archive reads at once, for example from the DBOS Console, raise the pool size when starting it so reads don't delay file system and DNS work:
+
+```shell
+UV_THREADPOOL_SIZE=16 node dist/main.js
+```
+
+#### Bundlers
+
+If you bundle your application, mark `@duckdb/node-api` as external, because its native bindings can't be bundled.
+For example, with webpack:
+
+```javascript
+module.exports = {
+  // ...
+  externals: { "@duckdb/node-api": "commonjs @duckdb/node-api" },
+};
+```
+
+### Archive Layout
+
+The archive's layout is a stable format, shared by every language, so other tools can query it directly and Python and TypeScript applications can read each other's archives.
+New versions of DBOS only add columns, never renaming, retyping, or removing them.
+
+An archive holds a `_layout.json` file and one folder per dataset:
+
+```
+<archive root>/
+  _layout.json
+  workflows/completed_date=2026-11-23/part-1795392000123-1795392599877-3fa2c0de.parquet
+  steps/completed_date=2026-11-23/part-1795392000123-1795392599877-3fa2c0de.parquet
+  events/...
+  events_history/...
+  notifications/...
+  streams/...
+```
+
+- **`_layout.json`** records the archive's format version, currently `{"format_version": 1}`. The version changes only if a change can't be made by adding columns. The archiver refuses to write to an archive whose version is newer than it supports.
+- **Partitions**: each dataset is partitioned by `completed_date`, the UTC day of the workflow's completion, as a Hive-style `completed_date=YYYY-MM-DD` folder.
+- **File names**: `part-<first>-<last>-<tag>.parquet`, where `<first>` and `<last>` are the earliest and latest `completedAt` in the file, as 13-digit epoch milliseconds, and `<tag>` is 8 hexadecimal characters. Every dataset's file from one write has the same name, so a workflow's steps, events, messages, and streams are in the files with the same name as its workflow file.
+
+Times are stored as `TIMESTAMP` columns with microsecond precision in UTC.
+Inputs, outputs, errors, and other values are stored as text, encoded with the serializer named in their row's `serialization` column.
+To read them from other tools or languages, use [portable serialization](../reference/methods.md#serialization-strategy).
+
+#### Datasets
+
+Each workflow snapshot is one row of `workflows`, keyed by `workflow_uuid` and `completed_at`.
+Rows of the other datasets belong to a snapshot through `workflow_uuid` and `snapshot_completed_at`.
+
+| Dataset | Columns |
+| --- | --- |
+| `workflows` | `workflow_uuid`, `completed_at`, `status`, `name`, `class_name`, `config_name`, `authenticated_user`, `assumed_role`, `authenticated_roles` (JSON list), `inputs`, `output`, `error`, `serialization`, `executor_id`, `created_at`, `updated_at`, `application_version`, `application_id`, `application_name`, `recovery_attempts`, `queue_name`, `queue_partition_key`, `priority`, `deduplication_id`, `workflow_timeout_ms`, `workflow_deadline_epoch_ms`, `started_at_epoch_ms`, `delay_until_epoch_ms`, `forked_from`, `was_forked_from`, `parent_workflow_id`, `rate_limited`, `attributes` (JSON object), `schedule_name`, `debounce_deadline_epoch_ms`, `is_debounced`, `archived_at`, `archive_format_version` |
+| `steps` | `workflow_uuid`, `snapshot_completed_at`, `function_id`, `function_name`, `output`, `error`, `serialization`, `child_workflow_id`, `started_at_epoch_ms`, `completed_at_epoch_ms`, `application_name` |
+| `events` | `workflow_uuid`, `snapshot_completed_at`, `key`, `value`, `serialization` |
+| `events_history` | `workflow_uuid`, `snapshot_completed_at`, `key`, `function_id`, `value`, `serialization` |
+| `notifications` | `workflow_uuid`, `snapshot_completed_at`, `created_at_epoch_ms`, `message_uuid`, `topic`, `message`, `serialization`, `consumed`, `consumed_by_function_id` |
+| `streams` | `workflow_uuid`, `snapshot_completed_at`, `key`, `offset`, `value`, `serialization`, `function_id` |
+
+The columns mirror the [system tables](../../explanations/system-tables.md) they are copied from.
+`archived_at` is when the snapshot was archived, and `archive_format_version` is the format version it was written with.
+
+#### Querying the Archive
+
+Query one dataset at a time, with a glob that ends in `*.parquet` so it skips uploads in progress.
+Because a snapshot may occasionally be archived twice, keep one row per snapshot: the one in the file with the greatest name.
+To get each workflow's latest snapshot, keep its row with the greatest `completed_at`.
+For example, with DuckDB:
+
+```sql
+SELECT * EXCLUDE (rank)
+FROM (
+  SELECT *, row_number() OVER (
+    PARTITION BY workflow_uuid ORDER BY completed_at DESC, filename DESC
+  ) AS rank
+  FROM read_parquet(
+    's3://my-bucket/dbos-archive/workflows/*/*.parquet',
+    hive_partitioning = true,
+    filename = true
+  )
+)
+WHERE rank = 1;
+```
+
+Filter on `completed_date` to read only the partitions you need.
+
+### Reference
+
+#### ParquetArchive
+
+```typescript
+new ParquetArchive(uri: string, options?: ParquetArchiveOptions)
+```
+
+```typescript
+interface ParquetArchiveOptions {
+  s3Client?: S3Client;
+  duckdbSecret?: Record<string, string | number | boolean>;
+  duckdbConfig?: Record<string, string | number | boolean>;
+  archiveID?: string;
+  targetFileBytes?: number;
+  maxFlushIntervalMs?: number;
+  maxFlushWorkflows?: number;
+  serializer?: DBOSSerializer;
+  allowExtensionDownload?: boolean;
+  extensionDirectory?: string;
+  queryTimeoutMs?: number;
+  activeArchiver?: boolean;
+}
+```
+
+A workflow archive in Parquet files.
+Pass one as [`workflowArchive`](../reference/configuration.md#dbos-transact-enterprise-settings) to archive workflows as they complete, or construct one anywhere to read an archive.
+Import it from `@dbos-inc/dbos-enterprise`.
+An active archive loads DuckDB, hyparquet-writer, and, for S3 and GCS, the AWS SDK when it's constructed, and throws if one isn't installed.
+
+**Parameters:**
+- **uri**: Where the archive lives: `s3://bucket/prefix`, `gs://bucket/prefix`, or a local path.
+- **options**:
+  - **s3Client**: The S3 client the archiver writes an S3 or GCS archive through, such as `new S3Client({ region: "us-west-2" })`. Defaults to the default credential chain in the bucket's region for S3, and for GCS to its S3-compatible API with the HMAC key in `duckdbSecret`.
+  - **duckdbSecret**: The parameters of the [DuckDB secret](https://duckdb.org/docs/stable/configuration/secrets_manager) reads use, such as `{ PROVIDER: "credential_chain", REGION: "us-west-2" }`. `TYPE` and `SCOPE` come from the URI. Defaults to the credential chain for S3. GCS needs an HMAC key: `{ KEY_ID, SECRET }`.
+  - **duckdbConfig**: DuckDB configuration for reads, applied over `{ threads: 16, memory_limit: "512MB" }`.
+  - **archiveID**: A stable name for this archive. Defaults to the URI.
+  - **targetFileBytes**: The size, in bytes, at which the archiver closes a file and starts the next. Defaults to 128 MiB.
+  - **maxFlushIntervalMs**: The longest the archiver holds completed workflows before writing them out, in milliseconds. Defaults to 10 minutes.
+  - **maxFlushWorkflows**: The most completed workflows the archiver holds before writing them out. Defaults to 100,000.
+  - **serializer**: The serializer reads decode inputs, outputs, and step results with. Defaults to your application's.
+  - **allowExtensionDownload**: Whether reads may download the [DuckDB extensions](#duckdb-extensions) they need. Defaults to true, unless the `DBOS_ARCHIVE_EXTENSION_DOWNLOAD` environment variable is `0`, `false`, or `no`.
+  - **extensionDirectory**: Where DuckDB installs and loads extensions. Defaults to the `DBOS_ARCHIVE_EXTENSION_DIRECTORY` environment variable, else DuckDB's default.
+  - **queryTimeoutMs**: The longest a listing may run, in milliseconds. Zero or less removes the limit. Defaults to your application's [`observabilityQueryTimeoutMs`](../reference/configuration.md), else 30 seconds.
+  - **activeArchiver**: Whether this process writes and reads the archive. When `false`, the process still marks its completed workflows for archiving, and its retention keeps them until they are archived, but it doesn't write or read the archive and needs no storage credentials or optional packages. Defaults to `true`.
+
+#### listWorkflows
+
+```typescript
+archive.listWorkflows(input: ArchiveListWorkflowsInput): Promise<WorkflowStatus[]>
+```
+
+List a page of archived workflows, newest created first.
+`ArchiveListWorkflowsInput` takes the filters of [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows), and they work the same way, except:
+
+- `limit` is required.
+- Each snapshot is filtered on its own, and of a workflow's matching snapshots only the latest is returned.
+- `applicationName` defaults to every application whose workflows are in the archive, plus unclaimed ones.
+- `attributes` match by DuckDB's [`json_contains`](https://duckdb.org/docs/stable/data/json/json_functions).
+- `sortDesc: false` isn't supported.
+
+Give lookups by ID or parent, and other rare filters, a narrow `completedAfter` and `completedBefore`, or the listing may read every file in the archive.
+
+**Throws:**
+- `ArchiveQueryTimeoutError`: If the listing runs longer than `queryTimeoutMs`.
+- `UnsupportedArchiveQueryError`: If the listing isn't supported, such as `sortDesc: false`.
+
+#### getWorkflowStatus
+
+```typescript
+archive.getWorkflowStatus(
+  workflowID: string,
+  completedAt: number,
+  options?: { loadInput?: boolean; loadOutput?: boolean }
+): Promise<WorkflowStatus | null>
+```
+
+Return the archived snapshot of a workflow that completed at `completedAt` (epoch milliseconds, as in `WorkflowStatus.completedAt`), or `null` if the archive has no such snapshot.
+`loadInput` and `loadOutput` default to `true`.
+
+#### listWorkflowSteps
+
+```typescript
+archive.listWorkflowSteps(
+  workflowID: string,
+  completedAt: number,
+  options?: { loadOutput?: boolean; limit?: number; offset?: number }
+): Promise<StepInfo[]>
+```
+
+Return the steps of an archived snapshot, by function ID, as [`DBOS.listWorkflowSteps`](../reference/methods.md#dboslistworkflowsteps) returns them.
+
+#### getEvents
+
+```typescript
+archive.getEvents(workflowID: string, completedAt: number): Promise<Record<string, unknown>>
+```
+
+Return the [events](./workflow-communication.md#workflow-events) an archived snapshot had set, by key.
+
+#### getNotifications
+
+```typescript
+archive.getNotifications(workflowID: string, completedAt: number): Promise<ArchivedNotification[]>
+```
+
+```typescript
+interface ArchivedNotification {
+  topic: string | null;
+  message: unknown;
+  createdAtEpochMs: number;
+  consumed: boolean;
+}
+```
+
+Return the messages an archived snapshot had been sent, oldest first.
+
+#### readStream
+
+```typescript
+archive.readStream<T>(workflowID: string, completedAt: number, key: string): AsyncGenerator<T, void, unknown>
+```
+
+Yield the values an archived snapshot had written to the [stream](./workflow-communication.md#workflow-streaming) `key`, in order.
+
+#### DBOS.importArchivedWorkflow
+
+```typescript
+DBOS.importArchivedWorkflow<T = unknown>(
+  workflowID: string,
+  completedAt: number
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Copy an archived snapshot back into the system database and return a handle to it.
+The imported workflow's `completedAt` is the time of the import.
+From workflow code, the import runs as a step.
+
+**Throws:**
+- `DBOSWorkflowArchiveNotConfiguredError`: If no `workflowArchive` is configured.
+- `DBOSNonExistentWorkflowError`: If the archive has no such snapshot.
+- `DBOSWorkflowIDInUseError`: If the system database already has a workflow with this ID.
+
+#### DBOSClient.importArchivedWorkflow
+
+```typescript
+client.importArchivedWorkflow<T = unknown>(
+  workflowID: string,
+  completedAt: number
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Like [`DBOS.importArchivedWorkflow`](#dbosimportarchivedworkflow), from a [`DBOSClient`](../reference/client.md) created with `workflowArchive` set to your application's archive.
+
+#### Errors
+
+Import these from `@dbos-inc/dbos-enterprise`, except `DBOSWorkflowArchiveNotConfiguredError`, which is in `@dbos-inc/dbos-sdk`'s `Error` namespace.
+
+- `ArchiveQueryTimeoutError`: A listing ran longer than its timeout. Narrow it with `completedAfter` and `completedBefore`. A subclass of `DBOSQueryTimeoutError`.
+- `UnsupportedArchiveQueryError`: A read the archive doesn't support, such as an oldest-first listing.
+- `ArchiveInactiveError`: A read of an archive constructed with `activeArchiver: false`. A subclass of `UnsupportedArchiveQueryError`.
+- `ArchiveExtensionMissingError`: A DuckDB extension the archive needs isn't installed, and downloading extensions is turned off.
+- `DBOSWorkflowArchiveNotConfiguredError`: An import with no `workflowArchive` configured.
+
+---
+
 ## Communicating with Workflows(5)
 
 DBOS provides a few different ways to communicate with your workflows.
@@ -64161,16 +65258,20 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
-#### Suspending Workflows
+For long sleeps, you can [suspend the workflow](#suspending-workflows) so it uses no resources while it sleeps.
+
+### Suspending Workflows
 
 :::info
 Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
 :::
 
-Normally, a workflow stays in memory while it waits in `DBOS.sleep` or [`DBOS.recv`](./workflow-communication.md#recv).
-If your application has many workflows with long waits, you can instead suspend them, so they use no memory or queue capacity until they wake.
+Normally, a workflow that is waiting stays in memory, potentially holding queue capacity until the wait ends.
+If your application has many workflows with long waits, you can instead **suspend** them.
+A suspended workflow's execution exits and its status becomes `SUSPENDED`, so it uses no memory or queue capacity.
+When its wait ends, DBOS returns it to the queue it was running on and it resumes from its last completed step, just as it would after a crash.
 
-To suspend workflows, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration, then pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) or [`DBOS.recv`](../reference/methods.md#dbosrecv):
+To enable suspending, set [`suspendMode`](../reference/configuration.md#dbos-transact-enterprise-settings) in your DBOS configuration:
 
 ```typescript
 DBOS.setConfig({
@@ -64179,22 +65280,14 @@ DBOS.setConfig({
   suspendMode: true,
 });
 await DBOS.launch();
-
-async function sendReminderFunction(user: string) {
-  // Sleep suspended for 30 days, then send the reminder
-  await DBOS.sleep(30 * 24 * 60 * 60 * 1000, { suspend: true });
-  await DBOS.runStep(() => sendEmail(user), { name: "sendEmail" });
-}
-const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
 ```
 
-When a workflow suspends, its current execution exits and its status becomes `SUSPENDED`.
-When it wakes, DBOS returns it to the queue it was running on (or to an internal queue if it wasn't enqueued), and it resumes from its last completed step, just as it would after a crash.
+Then pass `{ suspend: true }` to any of the three waits that can suspend: sleeping, waiting for a message, and waiting for another workflow.
 
-Keep in mind:
+When using workflow suspension, keep in mind that:
 
 - **Queue limits apply upon wake.** A suspended workflow doesn't count against its queue's concurrency limits, but when it wakes it must wait for capacity like any other enqueued workflow.
-- **Workflow timeouts and cancellation still apply** while a workflow is suspended. Anything waiting for the workflow's result, such as a handle or a direct call, keeps waiting.
+- **Workflow timeouts and cancellation still apply** while a workflow is suspended.
 - **Suspending throws `DBOSWorkflowSuspendedError`** to exit the execution. If you wrap a suspending call in a `try`/`catch`, rethrow this error; otherwise, your `catch` block runs even though nothing failed:
 
 ```typescript
@@ -64204,6 +65297,53 @@ try {
   if (e instanceof DBOSWorkflowSuspendedError) throw e;
   // Handle other errors
 }
+```
+
+#### Suspending While Sleeping
+
+Pass `{ suspend: true }` to [`DBOS.sleep`](../reference/methods.md#dbossleep) to suspend the workflow until the sleep ends.
+A sleep of at most one second doesn't suspend.
+
+```typescript
+async function sendReminderFunction(user: string) {
+  // Sleep suspended for 30 days, then send the reminder
+  await DBOS.sleep(30 * 24 * 60 * 60 * 1000, { suspend: true });
+  await DBOS.runStep(() => sendEmail(user), { name: "sendEmail" });
+}
+const sendReminder = DBOS.registerWorkflow(sendReminderFunction);
+```
+
+#### Suspending While Waiting for a Message
+
+Pass `{ suspend: true }` to [`DBOS.recv`](../reference/methods.md#dbosrecv) to suspend the workflow until a message arrives on its topic or the timeout passes.
+
+```typescript
+async function processOrderFunction(order: Order) {
+  // Suspend for up to a day waiting for payment confirmation
+  const payment = await DBOS.recv<Payment>("payment", { timeoutSeconds: 24 * 60 * 60, suspend: true });
+  if (payment === null) {
+    await DBOS.runStep(() => cancelOrder(order), { name: "cancelOrder" });
+  } else {
+    await DBOS.runStep(() => shipOrder(order), { name: "shipOrder" });
+  }
+}
+const processOrder = DBOS.registerWorkflow(processOrderFunction);
+```
+
+#### Suspending While Waiting for Another Workflow
+
+Pass `{ suspend: true }` to a handle's [`getResult`](../reference/methods.md#handlegetresult), to [`DBOS.getResult`](../reference/methods.md#dbosgetresult), or to [`DBOS.waitFirst`](../reference/methods.md#dboswaitfirst) to suspend the workflow until the workflow it awaits completes, whether it succeeds, fails, or is cancelled.
+For `waitFirst`, the workflow wakes when the first of the workflows it awaits completes, and for `DBOS.getResult` with a timeout, it also wakes when the timeout passes.
+If an awaited workflow has already completed, the call returns at once without suspending.
+
+```typescript
+async function publishReportFunction(region: string) {
+  const handle = await DBOS.startWorkflow(buildReport, { queueName: "reports" })(region);
+  // Suspend until buildReport completes, then return its result
+  const report = await handle.getResult({ suspend: true });
+  await DBOS.runStep(() => publish(report), { name: "publish" });
+}
+const publishReport = DBOS.registerWorkflow(publishReportFunction);
 ```
 
 ### Debouncing Workflows

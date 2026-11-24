@@ -8,8 +8,12 @@ Retention policies only delete the history of completed workflows (workflows wit
 Deleting a workflow's history also deletes its steps, inputs, outputs, messages, events, and streams, as well as any objects it owns in external storage.
 Retention runs in the background and deletes history in batches.
 
+If your application [archives workflows](../python/tutorials/workflow-archiving.md) (see also [TypeScript](../typescript/tutorials/workflow-archiving.md)), retention deletes only workflows that have been archived, keeping each workflow until the archiver has copied it.
+This holds only when retention runs in a process configured with the archive, so configure it in every process of your application.
+
 If multiple applications [share a system database](../explanations/sharing-a-system-database.md), retention policies apply to the entire system database, including workflows owned by other applications.
 The most restrictive policy configured by any of these applications therefore applies to all of them, so we recommend configuring the same retention policies for every application that shares a system database.
+If any of these applications archives workflows, configure every one of them with an archive, or retention they run can delete workflows that haven't been archived yet.
 The global timeout applies only to workflows owned by the application for which it is configured.
 
 ### Time Threshold

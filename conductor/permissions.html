@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.2e6545f4.js" defer="defer"></script>
-<script src="/assets/js/main.15ec437e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.a14e5069.js" defer="defer"></script>
+<script src="/assets/js/main.c9e75dae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -54,16 +54,28 @@ You can manage custom roles from the <a href="https://console.dbos.dev/settings/
 <p>An <strong>API key</strong> authenticates a non-human caller.
 API keys are used by running DBOS applications connecting to Conductor, but can also be used by scripts and CI/CD automation that call the Conductor API.
 Like a role, every API key carries a set of permissions.
-They can also be scoped to specific applications.</p>
+They can also be scoped to specific applications or workspaces.</p>
 <p>API keys do not expire, but can be revoked at any time.
 A key can be renamed after creation without changing its secret, from the console, with <a class="" href="/conductor/reference/dbosctl#dbosctl-api-key-rename"><code>dbosctl api-key rename</code></a>, or through the <a class="" href="/conductor/reference/conductor-api#roles-permissions-and-api-keys">Conductor API</a>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-application-scope">Permissions and application scope<a href="#permissions-and-application-scope" class="hash-link" aria-label="Direct link to Permissions and application scope" title="Direct link to Permissions and application scope" translate="no">​</a></h3>
 <p>An API key has two independent restrictions:</p>
 <ul>
-<li class=""><strong>Permissions</strong> — the set of capabilities the key grants, drawn from the same <a href="#permissions" class="">permission catalog</a> as roles.</li>
-<li class=""><strong>Application scope</strong> — either <em>all applications</em> in the organization (org-wide), or a specific list of applications. A key scoped to specific applications is rejected on any request targeting an application outside its list, even if it holds the required permission.</li>
+<li class="">
+<p><strong>Permissions</strong> — the set of capabilities the key grants, drawn from the same <a href="#permissions" class="">permission catalog</a> as roles.</p>
+</li>
+<li class="">
+<p><strong>Application scope</strong> limits which applications the key reaches, to one of:</p>
+<ul>
+<li class=""><em>All applications</em> in the organization (org-wide).</li>
+<li class="">A specific list of applications.</li>
+<li class="">The applications in a specific list of <a class="" href="/conductor/reference/dbosctl#workspace-commands">workspaces</a>, including applications moved into those workspaces later. A workspace-scoped key can hold only the <code>application.read</code>, <code>application.write</code>, <code>metric.read</code>, and <code>websocket.connect</code> permissions.</li>
+</ul>
+<p>A scoped key is rejected on any request targeting an application outside its scope, even if it holds the required permission.</p>
+</li>
 </ul>
 <p>For example, an API key with only <code>application.read</code> scoped to a single application can read that application&#x27;s workflows and nothing else.</p>
+<p>Because a workspace-scoped key follows the workspace rather than the application, <a class="" href="/conductor/reference/dbosctl#dbosctl-app-move">moving an application</a> to another workspace changes which keys reach it: keys scoped to its old workspace stop covering it, so executors connecting with them may fail to reconnect, while keys scoped to the application itself keep their access.
+Deleting a workspace revokes any key that is left with no access.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="using-an-api-key">Using an API key<a href="#using-an-api-key" class="hash-link" aria-label="Direct link to Using an API key" title="Direct link to Using an API key" translate="no">​</a></h3>
 <p>Supply the key to your DBOS application to connect it to Conductor, as described in <a class="" href="/conductor/overview#connecting-to-conductor">Connecting to Conductor</a>.</p>
 <p>You can also use an API key to authenticate HTTP calls to the Conductor API (for example the <a class="" href="/conductor/metrics">metrics endpoint</a>), passing the key as a bearer token:</p>

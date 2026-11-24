@@ -61,6 +61,7 @@ DBOS.wait_first(
     handles: List[WorkflowHandle[Any]],
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> WorkflowHandle[Any]
 ```
 
@@ -70,6 +71,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 **Parameters:**
 - **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty or contains duplicate workflow IDs.
 - **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
+- **suspend**: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -80,6 +82,7 @@ DBOS.wait_first_async(
     handles: List[WorkflowHandleAsync[Any]],
     *,
     polling_interval_sec: float = 1.0,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, WorkflowHandleAsync[Any]]
 ```
 
@@ -504,6 +507,7 @@ DBOS.get_result(
     workflow_id: str,
     *,
     shard_key: Optional[str] = None,
+    suspend: bool = False,
 ) -> Optional[Any]
 ```
 
@@ -512,6 +516,7 @@ Wait for the workflow identified by `workflow_id` to complete, and return its re
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose result to return.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
+- `suspend`: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `False`.
 
 **Returns:**
 - The result of the workflow, or throws an exception if the workflow threw an exception.
@@ -521,6 +526,9 @@ Wait for the workflow identified by `workflow_id` to complete, and return its re
 ```python
 DBOS.get_result_async(
     workflow_id: str,
+    *,
+    shard_key: Optional[str] = None,
+    suspend: bool = False,
 ) -> Coroutine[Any, Any, Optional[Any]]
 ```
 
@@ -1659,6 +1667,24 @@ Delete multiple workflows and all their associated data. Behaves like [`delete_w
 ### delete_workflows_async
 
 Coroutine version of [`delete_workflows`](#delete_workflows).
+
+### import_archived_workflow
+
+```python
+DBOS.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHandle[Any]
+```
+
+Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
+Requires [`workflow_archive`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimport_archived_workflow) for details.
+
+**Parameters:**
+- `workflow_id`: The workflow's ID. It must not already be in the system database.
+- `completed_at`: The archived snapshot to import, as its `WorkflowStatus.completed_at` (epoch milliseconds).
+
+### import_archived_workflow_async
+
+Coroutine version of [`import_archived_workflow`](#import_archived_workflow).
 
 ## Workflow Schedules
 

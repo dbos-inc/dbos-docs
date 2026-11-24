@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.2e6545f4.js" defer="defer"></script>
-<script src="/assets/js/main.15ec437e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.a14e5069.js" defer="defer"></script>
+<script src="/assets/js/main.c9e75dae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -27,8 +27,11 @@ This is useful for managing the database disk usage of workflow history.</p>
 <p>Retention policies only delete the history of completed workflows (workflows with status <code>SUCCESS</code>, <code>ERROR</code>, <code>CANCELLED</code>, or <code>MAX_RECOVERY_ATTEMPTS_EXCEEDED</code>); workflows that are still running, enqueued, delayed, or suspended are never deleted.
 Deleting a workflow&#x27;s history also deletes its steps, inputs, outputs, messages, events, and streams, as well as any objects it owns in external storage.
 Retention runs in the background and deletes history in batches.</p>
+<p>If your application <a class="" href="/python/tutorials/workflow-archiving">archives workflows</a> (see also <a class="" href="/typescript/tutorials/workflow-archiving">TypeScript</a>), retention deletes only workflows that have been archived, keeping each workflow until the archiver has copied it.
+This holds only when retention runs in a process configured with the archive, so configure it in every process of your application.</p>
 <p>If multiple applications <a class="" href="/explanations/sharing-a-system-database">share a system database</a>, retention policies apply to the entire system database, including workflows owned by other applications.
 The most restrictive policy configured by any of these applications therefore applies to all of them, so we recommend configuring the same retention policies for every application that shares a system database.
+If any of these applications archives workflows, configure every one of them with an archive, or retention they run can delete workflows that haven&#x27;t been archived yet.
 The global timeout applies only to workflows owned by the application for which it is configured.</p>
 <img src="/assets/images/retention-conductor-d8ba1157c564f4e907a998c9f7a99c37.png" alt="Retention Page" width="1000" class="custom-img">
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="time-threshold">Time Threshold<a href="#time-threshold" class="hash-link" aria-label="Direct link to Time Threshold" title="Direct link to Time Threshold" translate="no">​</a></h3>

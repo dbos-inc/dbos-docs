@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.2e6545f4.js" defer="defer"></script>
-<script src="/assets/js/main.15ec437e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.a14e5069.js" defer="defer"></script>
+<script src="/assets/js/main.c9e75dae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -105,7 +105,9 @@ Each row represents a different workflow execution.</p>
 <li class=""><strong>debounce_deadline_epoch_ms</strong>: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.</li>
 <li class=""><strong>is_debounced</strong>: Whether this workflow was created by a debouncer.</li>
 <li class=""><strong>application_name</strong>: The application that owns this workflow.</li>
-<li class=""><strong>suspend_key</strong>: For a workflow suspended in <code>recv</code>, the topic on which it is waiting.</li>
+<li class=""><strong>suspend_key</strong>: For a workflow suspended in <code>recv</code>, the topic on which it is waiting. For a workflow suspended waiting for other workflows&#x27; results, an internal key identifying what it awaits.</li>
+<li class=""><strong>result_waiter_ids</strong>: The IDs of workflows <a class="" href="/python/tutorials/workflow-tutorial#suspending-workflows">suspended</a> waiting for this workflow&#x27;s result, null if there are none. When this workflow completes, it wakes them.</li>
+<li class=""><strong>archive_pending</strong>: <code>TRUE</code> while a completed workflow is waiting to be copied to the application&#x27;s <a class="" href="/python/tutorials/workflow-archiving">workflow archive</a>, null otherwise. Set only when the application is configured with a workflow archive and the workflow has an application name. Retention in such an application doesn&#x27;t delete workflows with <code>archive_pending</code> set.</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="dbosworkflow_input">dbos.workflow_input<a href="#dbosworkflow_input" class="hash-link" aria-label="Direct link to dbos.workflow_input" title="Direct link to dbos.workflow_input" translate="no">​</a></h3>
 <p>This table stores workflow inputs.

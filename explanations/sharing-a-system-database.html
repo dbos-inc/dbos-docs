@@ -14,8 +14,8 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.4ce2962e.css">
-<script src="/assets/js/runtime~main.2e6545f4.js" defer="defer"></script>
-<script src="/assets/js/main.15ec437e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.a14e5069.js" defer="defer"></script>
+<script src="/assets/js/main.c9e75dae.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -49,7 +49,8 @@ See <a class="" href="/explanations/portable-workflows">Cross-Language Interacti
 Always set the client&#x27;s application name if multiple applications share a system database.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="unowned-rows">Unowned Rows<a href="#unowned-rows" class="hash-link" aria-label="Direct link to Unowned Rows" title="Direct link to Unowned Rows" translate="no">​</a></h2>
 <p>Workflows, queues, schedules, and versions created before upgrading to a DBOS version supporting application names, or created by a client with no application name, are owned by no application.
-Every application treats unowned rows as its own: any application may dequeue an unowned workflow (claiming ownership of it when it does), and every application fires unowned schedules and polls unowned queues.</p>
+Every application treats unowned rows as its own: any application may dequeue an unowned workflow (claiming ownership of it when it does), and every application fires unowned schedules and polls unowned queues.
+Unowned workflows are never <a class="" href="/python/tutorials/workflow-archiving">archived</a>: each application archives only the workflows it owns.</p>
 <div class="theme-admonition theme-admonition-warning admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>warning</div><div class="admonitionContent_BuS1"><p>To ensure no rows are unowned, always pass an application name to your clients when interacting with a system database shared by multiple applications</p></div></div>
 <p>Before adding a second application to a system database, explicitly transfer ownership of any unowned rows to the first application:</p>
 <div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#f8f8f2"><span class="token plain">dbosctl sysdb rename-application </span><span class="token parameter variable" style="color:#f8f8f2">--to</span><span class="token plain"> my-app --adopt-unclaimed-rows</span><br></div></code></pre></div></div>

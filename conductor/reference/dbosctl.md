@@ -1,8 +1,10 @@
 # dbosctl CLI Reference
 
-> `dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-hosted Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
+> `dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, workspaces, and API keys against DBOS-hosted Conductor or a [self-hosted Conductor](../self-hosting/hosting-conductor.md), with the target selected by a named **profile**.
 
 The [`dbosctl sysdb`](#system-database-commands) commands are the exception: they manage the Postgres [system database](../../explanations/system-tables.md) directly, so they take a database URL rather than a profile.
+
+[`dbosctl license-key create`](#dbosctl-license-key-create) also stands apart: it requests a trial license key for [self-hosted Conductor](../self-hosting/hosting-conductor.md#licensing) from DBOS Cloud, so it needs a DBOS-hosted profile even though the Conductor the key is for is your own.
 
 ## Installation
 
@@ -62,7 +64,7 @@ dbosctl app list --profile local
 
 ## Profiles
 
-A profile is a named bundle of connection settings: which Conductor to talk to, how to authenticate, and the default organization and application. Profiles are stored in `config.yaml` under your OS configuration directory — `~/.config/dbos/config.yaml` on Linux, `~/Library/Application Support/dbos/config.yaml` on macOS.
+A profile is a named bundle of connection settings: which Conductor to talk to, how to authenticate, and the default organization, application, and workspace. Profiles are stored in `config.yaml` under your OS configuration directory: `~/.config/dbos/config.yaml` on Linux, `~/Library/Application Support/dbos/config.yaml` on macOS.
 
 A profile must target either DBOS-hosted Conductor (`--managed`) or a self-hosted one (`--url`); the two are mutually exclusive. There are three common shapes:
 
@@ -90,7 +92,7 @@ dbosctl logout    # discard the stored token for the current profile
 There are two ways to bypass the login flow:
 
 - **`DBOS_TOKEN`** — a bearer token used as-is for a single invocation.
-- **API keys** — a `dbos_…` key from [`dbosctl api-key create`](#dbosctl-api-key-create) or the console, supplied through `DBOS_TOKEN`. Keys authenticate machine-to-machine calls such as `app list`, but carry no user identity, so `dbosctl whoami` still requires a user login.
+- **API keys** from [`dbosctl api-key create`](#dbosctl-api-key-create) or the console, supplied through `DBOS_TOKEN`. Keys authenticate machine-to-machine calls such as `app list`, but carry no user identity, so `dbosctl whoami` and `dbosctl license-key create` still require a user login.
 
 ## Configuration Precedence
 
@@ -102,6 +104,7 @@ Each setting is resolved **flag → environment variable → profile**, so a fla
 | Conductor URL | `--url` | `DBOS_URL` |
 | Organization | `--org` | `DBOS_ORG` |
 | Application | `-a`, `--app` | `DBOS_APP` |
+| Workspace ([`app register`](#dbosctl-app-register) only) | `-w`, `--workspace` | `DBOS_WORKSPACE` |
 | Bearer token | — | `DBOS_TOKEN` |
 | System database ([`sysdb`](#system-database-commands) only) | `-D`, `--db-url` | `DBOS_SYSTEM_DATABASE_URL` |
 | Output format | `-o`, `--output` | — |
@@ -156,8 +159,9 @@ Conductor answers some commands itself and forwards the rest to your application
 | | Commands |
 | --- | --- |
 | Forwarded to your application | All `workflow`, `queue`, and `schedule` commands — reads as much as mutations — plus `app versions` and `app set-version` |
-| Answered by Conductor | Everything else except `sysdb`: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
-| Answered by neither | The [`sysdb`](#system-database-commands) commands, which open the system database themselves |
+| Answered by Conductor | Everything else except `license-key` and `sysdb`: the rest of `app`, plus `workspace`, `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+| Answered by DBOS Cloud | [`license-key create`](#dbosctl-license-key-create), which calls DBOS Cloud's own API rather than the Conductor API |
+| Answered by none of these | The [`sysdb`](#system-database-commands) commands, which open the system database themselves |
 
 Commands in the first group fail if the application has no healthy executor connected, so a failure there usually means your application is not running rather than that nothing matched.
 
@@ -228,6 +232,7 @@ Creates or updates a profile. Only the flags you pass are changed; fields you do
 - `--auth <string>`: Force bearer authentication without OIDC, for a profile that authenticates with a `dbos_` API key only. The accepted value is `bearer`.
 - `--org <string>`: Organization. Only needed when it cannot be derived from a login, as with an API-key-only profile.
 - `--app <string>`: Default application for this profile.
+- `--workspace <string>`: Workspace that [`dbosctl app register`](#dbosctl-app-register) puts new applications in for this profile.
 
 ---
 
@@ -236,14 +241,17 @@ Creates or updates a profile. Only the flags you pass are changed; fields you do
 ### `dbosctl app list`
 
 **Description:**
-Lists the applications in the organization.
+Lists the applications in the organization, with the [workspace](#workspace-commands) each belongs to.
+
+**Arguments:**
+- `-w, --workspace <name>`: List only the applications in this workspace. Unlike the `--workspace` argument to `app register`, this filter is only read from the command line, never from `$DBOS_WORKSPACE` or a profile, so a default workspace never hides the rest of the organization.
 
 ---
 
 ### `dbosctl app get`
 
 **Description:**
-Shows one application's details.
+Shows one application's details, including its workspace.
 
 **Arguments:**
 - `<name>`: The application's name.
@@ -257,6 +265,7 @@ Registers an application with Conductor. The name must match the application nam
 
 **Arguments:**
 - `<name>`: The application's name.
+- `-w, --workspace <name>`: The [workspace](#workspace-commands) to register the application in. Overrides `$DBOS_WORKSPACE` and the profile. If none is given, a new application goes into the organization's only workspace; when the organization has more than one, the command fails and asks you to name one.
 - `--private-mode`: Register the application in private mode, so it does not send workflow payload data — inputs, outputs, and events — to Conductor. Omit the flag to take Conductor's default; it can be changed later with [`dbosctl app update`](#dbosctl-app-update).
 
 ---
@@ -283,6 +292,24 @@ Deletes an application. Prompts for confirmation when run interactively.
 
 **Arguments:**
 - `<name>`: The application's name.
+- `--force`: Skip the confirmation prompt. Required when running non-interactively.
+
+---
+
+### `dbosctl app move`
+
+**Description:**
+Moves an application to another [workspace](#workspace-commands) in the same organization. The application keeps its name, history, and connected executors, but the move changes who can reach it:
+
+- API keys scoped to its current workspace stop covering it, so executors that connect with those keys may fail to reconnect.
+- API keys scoped to the application itself keep their access, even if the role of the user who created them does not cover the destination workspace.
+- The destination workspace's access applies to all of the application's existing history, not only to new workflows.
+
+The command prints this warning to standard error, then prompts for confirmation when run interactively. Moving an application to the workspace it is already in changes nothing.
+
+**Arguments:**
+- `<name>`: The application's name.
+- `<workspace>`: The workspace to move it to.
 - `--force`: Skip the confirmation prompt. Required when running non-interactively.
 
 ---
@@ -326,6 +353,53 @@ Lists an application's metrics over a time window.
 **Arguments:**
 - `<name>`: The application's name.
 - `--since <duration>`: Report the window ending now and starting this long ago. Defaults to `24h`.
+
+---
+
+## Workspace Commands
+
+A workspace is a named group of applications within an organization.
+Every application belongs to exactly one workspace, and every organization has at least one.
+API keys can be scoped to workspaces with [`dbosctl api-key create --workspace`](#dbosctl-api-key-create), so that a key covers every application in them, including applications moved in later.
+
+### `dbosctl workspace list`
+
+**Description:**
+Lists the organization's workspaces. Any member of the organization, and any of its API keys, can list them regardless of permissions.
+
+---
+
+### `dbosctl workspace create`
+
+**Description:**
+Creates an empty workspace. Put applications in it with [`dbosctl app register --workspace`](#dbosctl-app-register) or [`dbosctl app move`](#dbosctl-app-move).
+On DBOS-hosted Conductor, your plan limits how many workspaces an organization can have; self-hosted Conductor has no limit.
+
+**Arguments:**
+- `<name>`: The workspace's name.
+
+---
+
+### `dbosctl workspace rename`
+
+**Description:**
+Renames a workspace. Its applications stay in it.
+
+**Arguments:**
+- `<name>`: The workspace's current name.
+- `<new-name>`: The workspace's new name.
+
+---
+
+### `dbosctl workspace delete`
+
+**Description:**
+Deletes an empty workspace.
+Conductor refuses to delete a workspace that still holds applications (move them out first with [`dbosctl app move`](#dbosctl-app-move)) or that is the organization's last workspace.
+API keys scoped to the deleted workspace lose access to it, and any key left with no access at all is revoked.
+
+**Arguments:**
+- `<name>`: The workspace's name.
 
 ---
 
@@ -522,18 +596,19 @@ The `token` and `apikey` aliases are accepted in place of `api-key`.
 ### `dbosctl api-key list`
 
 **Description:**
-Lists the organization's API keys. Secrets are not shown.
+Lists the organization's API keys, with the scope of each: the workspaces or applications it covers, or all applications. Secrets are not shown.
 
 ---
 
 ### `dbosctl api-key create`
 
 **Description:**
-Creates an API key and prints its secret. **The secret is shown once and cannot be retrieved afterwards.** By default the key is unscoped; narrow it with `--app` and `--permission`. See [Permissions and API Keys](../permissions.md).
+Creates an API key and prints its secret. **The secret is shown once and cannot be retrieved afterwards.** By default the key covers all applications; narrow it to some applications with `--app` or to some workspaces with `--workspace` (not both), and limit what it can do with `--permission`. See [Permissions and API Keys](../permissions.md).
 
 **Arguments:**
 - `<name>`: A name for the key.
-- `--app <strings>`: Scope the key to these applications. Repeatable; defaults to all applications.
+- `--app <strings>`: Scope the key to these applications. Repeatable or comma-separated; defaults to all applications. Cannot be combined with `--workspace`.
+- `--workspace <strings>`: Scope the key to the applications in these [workspaces](#workspace-commands), including applications moved into them later. Repeatable or comma-separated. Cannot be combined with `--app`. A workspace-scoped key can hold only the `application.read`, `application.write`, `metric.read`, and `websocket.connect` permissions.
 - `--permission <strings>`: Grant these permissions, for example `application.read`. Repeatable.
 
 ---
@@ -563,6 +638,30 @@ Deletes an API key, revoking it immediately.
 
 **Description:**
 Lists the permissions that can be granted to an API key or a role.
+
+---
+
+## License Key Commands
+
+### `dbosctl license-key create`
+
+**Description:**
+Creates a limited-time trial license key for [self-hosted Conductor](../self-hosting/hosting-conductor.md#licensing), issued by DBOS to your organization, and prints it along with when it expires. **The key is shown once and cannot be retrieved afterwards.** Pass it to self-hosted Conductor as `DBOS_CONDUCTOR_LICENSE_KEY`. Your plan may limit how many keys your organization can create.
+
+License keys are issued by DBOS Cloud, not by Conductor, so this command needs a DBOS-hosted profile (one created with `dbosctl config set <name> --managed`) and a user login from [`dbosctl login`](#dbosctl-login). It refuses a `dbos_` API key, whether it comes from `DBOS_TOKEN` or the profile.
+
+The key alone goes to standard output and the expiration notice to standard error, so a script can capture the key directly:
+
+```shell
+export DBOS_CONDUCTOR_LICENSE_KEY=$(dbosctl license-key create --profile managed)
+```
+
+**Arguments:**
+- `--profile <name>`: The DBOS-hosted profile to use. Overrides `$DBOS_PROFILE`.
+- `--org <name>`: The organization to issue the key to. Overrides `$DBOS_ORG` and the profile; defaults to the organization you logged in to.
+- `-o, --output <format>`: `table` (default) prints the key, or `json` prints the full API response, including the key's ID, type, and expiration date.
+
+Of the [common flags](#common-flags), these are the only ones it takes. `--url` and `--app` do not apply, since the request goes to DBOS Cloud rather than to a Conductor.
 
 ---
 

@@ -69,7 +69,7 @@ Changing a member's role replaces their previous role. A member always has exact
 An **API key** authenticates a non-human caller.
 API keys are used by running DBOS applications connecting to Conductor, but can also be used by scripts and CI/CD automation that call the Conductor API.
 Like a role, every API key carries a set of permissions.
-They can also be scoped to specific applications.
+They can also be scoped to specific applications or workspaces.
 
 API keys do not expire, but can be revoked at any time.
 A key can be renamed after creation without changing its secret, from the console, with [`dbosctl api-key rename`](./reference/dbosctl.md#dbosctl-api-key-rename), or through the [Conductor API](./reference/conductor-api.md#roles-permissions-and-api-keys).
@@ -79,9 +79,17 @@ A key can be renamed after creation without changing its secret, from the consol
 An API key has two independent restrictions:
 
 - **Permissions** — the set of capabilities the key grants, drawn from the same [permission catalog](#permissions) as roles.
-- **Application scope** — either *all applications* in the organization (org-wide), or a specific list of applications. A key scoped to specific applications is rejected on any request targeting an application outside its list, even if it holds the required permission.
+- **Application scope** limits which applications the key reaches, to one of:
+  - *All applications* in the organization (org-wide).
+  - A specific list of applications.
+  - The applications in a specific list of [workspaces](./reference/dbosctl.md#workspace-commands), including applications moved into those workspaces later. A workspace-scoped key can hold only the `application.read`, `application.write`, `metric.read`, and `websocket.connect` permissions.
+
+  A scoped key is rejected on any request targeting an application outside its scope, even if it holds the required permission.
 
 For example, an API key with only `application.read` scoped to a single application can read that application's workflows and nothing else.
+
+Because a workspace-scoped key follows the workspace rather than the application, [moving an application](./reference/dbosctl.md#dbosctl-app-move) to another workspace changes which keys reach it: keys scoped to its old workspace stop covering it, so executors connecting with them may fail to reconnect, while keys scoped to the application itself keep their access.
+Deleting a workspace revokes any key that is left with no access.
 
 ### Using an API key
 
