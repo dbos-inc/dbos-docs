@@ -74,7 +74,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 **Parameters:**
 - **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty or contains duplicate workflow IDs.
 - **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
-- **suspend**: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. Defaults to `False`.
+- **suspend**: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Defaults to `False`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -207,7 +207,7 @@ The `recv` function should not be used in [coroutine workflows](../tutorials/wor
 **Parameters:**
 - `topic`: A topic queue on which to wait.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
-- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. Defaults to `False`.
+- `suspend`: If `True`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Defaults to `False`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `None` if the wait times out.
@@ -340,7 +340,7 @@ The `sleep` function should not be used in [coroutine workflows](../tutorials/wo
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
-- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. A sleep of at most one second does not suspend. Defaults to `False`.
+- `suspend`: If `True`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. A sleep of at most one second does not suspend. Defaults to `False`.
 
 ### sleep_async
 
@@ -520,7 +520,7 @@ Wait for the workflow identified by `workflow_id` to complete, and return its re
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose result to return.
 - `shard_key`: The workflow's [shard key](../tutorials/sharding.md).
-- `suspend`: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions. Defaults to `False`.
+- `suspend`: If `True`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes, instead of keeping it in memory. Requires [`suspend_mode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Defaults to `False`.
 
 **Returns:**
 - The result of the workflow, or throws an exception if the workflow threw an exception.
@@ -801,7 +801,7 @@ DBOS.store_external_object(
 
 Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
 From workflow code, the upload runs as a step.
-Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions.
+Requires [`external_stores`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions.
 
 **Parameters:**
 - `value`: The value to store. A `bytes` value is stored as is, without serialization.
@@ -1680,7 +1680,7 @@ DBOS.import_archived_workflow(workflow_id: str, completed_at: int) -> WorkflowHa
 ```
 
 Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
-Requires [`workflow_archive`](./configuration.md#dbos-transact-enterprise-settings) and the Enterprise Extensions.
+Requires [`workflow_archive`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions.
 See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimport_archived_workflow) for details.
 
 **Parameters:**

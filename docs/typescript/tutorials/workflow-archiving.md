@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 :::info
-Workflow archiving is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package, available in Python and TypeScript.
+Workflow archiving is part of the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package, available in Python and TypeScript.
 :::
 
 Workflow archiving lets you export a permanent copy of your workflow history to an archival format and data store, in particular [Parquet](https://parquet.apache.org/) files in object storage such as [S3](https://aws.amazon.com/s3/).
@@ -13,7 +13,7 @@ Archived workflows are queryable, can be viewed through the [DBOS Console](https
 
 ## Setting Up Workflow Archiving
 
-Install the Enterprise Extensions, [DuckDB](https://duckdb.org/), and [hyparquet-writer](https://github.com/hyparam/hyparquet-writer).
+Install the DBOS Enterprise Extensions, [DuckDB](https://duckdb.org/), and [hyparquet-writer](https://github.com/hyparam/hyparquet-writer).
 For an archive in S3 or Google Cloud Storage, also install the AWS SDK:
 
 ```shell

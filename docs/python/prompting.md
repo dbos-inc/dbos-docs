@@ -463,7 +463,7 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
-To avoid keeping workflows in memory during long waits, use workflow suspend provided by the Enterprise Extensions (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
+To avoid keeping workflows in memory during long waits, use workflow suspend provided by the DBOS Enterprise Extensions (requires `"suspend_mode": True` in `DBOSConfig`, `pip install "dbos[enterprise]"`, and, in production, a Conductor connection).
 Pass `suspend=True` to `DBOS.sleep` or `DBOS.recv` (or their async versions).
 A workflow can also suspend while waiting for other workflows: pass `suspend=True` to `handle.get_result`, `DBOS.get_result`, or `DBOS.wait_first` (or their async versions), and it wakes when the awaited workflow (for `wait_first`, the first of them) completes.
 Suspending on a result only works from within a workflow (not a step or a `DBOSClient` handle) and isn't supported on a sharded system database or CockroachDB.
@@ -1401,7 +1401,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
-Or enable auto-upgrade (part of the Enterprise Extensions package, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (part of the DBOS Enterprise Extensions package, requiring `pip install "dbos[enterprise]"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```python
 config: DBOSConfig = {
@@ -1498,12 +1498,12 @@ Then, once all workflows of the old version are complete (you can use `DBOS.list
 
 ## Sharding
 
-To scale beyond a single Postgres system database, the Enterprise Extensions support sharding the system database (`"sharding": True` in `DBOSConfig`).
+To scale beyond a single Postgres system database, the DBOS Enterprise Extensions package supports sharding the system database (`"sharding": True` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `SetShardKey`, and methods that address a workflow by ID take a `shard_key` parameter.
 
 ## External Storage
 
-To keep large objects out of the system database, the Enterprise Extensions support external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
+To keep large objects out of the system database, the DBOS Enterprise Extensions support external storage (requires `pip install "dbos[enterprise]" boto3` and, in production, a Conductor connection).
 Set `"external_stores": [S3ExternalStore(boto3.client("s3"), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `dbos_enterprise`.
 `DBOS.store_external_object(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
 `DBOS.load_external_object(ref)` returns the value.
@@ -1514,7 +1514,7 @@ Objects are deleted only after their owner workflow has been deleted, by a reten
 
 ## Workflow Archiving
 
-To keep every completed workflow while retention keeps the system database small, the Enterprise Extensions support workflow archiving (requires `pip install "dbos[enterprise]" "dbos-enterprise[archive]"` and, in production, a Conductor connection).
+To keep every completed workflow while retention keeps the system database small, the DBOS Enterprise Extensions support workflow archiving (requires `pip install "dbos[enterprise]" "dbos-enterprise[archive]"` and, in production, a Conductor connection).
 Set `"workflow_archive": ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `dbos_enterprise.archive`, in every process of the application.
 Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
 To read archived workflows, construct a `ParquetArchive` with the same URI and call `list_workflows(limit=..., ...)`, which lists newest first and requires `limit`, then `get_workflow_status`, `list_workflow_steps`, `get_events`, `get_notifications`, or `read_stream` with a workflow's ID and `completed_at`.

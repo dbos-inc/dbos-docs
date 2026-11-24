@@ -42,7 +42,7 @@ There are two ways to do this:
    })
    ```
 
-   Auto-upgrade is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
+   Auto-upgrade is part of the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package; see [Auto-Upgrading Workflows](#auto-upgrading-workflows) for details.
 
 For example, let's say our original workflow is:
 
@@ -177,8 +177,8 @@ Once all workflows with patch markers are complete, the patch may be safely remo
 ### Auto-Upgrading Workflows
 
 :::info
-Auto-upgrade is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package.
-It requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [Enterprise Extensions](../reference/configuration.md#dbos-transact-enterprise).
+Auto-upgrade is part of the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package.
+It requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Enterprise Extensions](../reference/configuration.md#dbos-transact-enterprise).
 :::
 
 With auto-upgrade, each deployment of your code has its own [application version](#versioning), and DBOS automatically moves workflows left on older versions to the latest version, where your patched code completes them.

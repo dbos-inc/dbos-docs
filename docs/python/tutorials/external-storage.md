@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 :::info
-External storage is part of the [Enterprise Extensions](../../explanations/transact-enterprise.md) package.
+External storage is part of the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package.
 :::
 
 DBOS checkpoints workflow inputs, step outputs, and workflow outputs in your system database, which isn't a good fit for large objects such as files or datasets.
@@ -13,7 +13,7 @@ With **external storage**, you keep large objects in a separate store such as [A
 
 ## Setting Up External Storage
 
-Install the Enterprise Extensions and `boto3`:
+Install the DBOS Enterprise Extensions and `boto3`:
 
 ```shell
 pip install "dbos[enterprise]" boto3
