@@ -589,7 +589,7 @@ func exampleWorkflow(ctx dbos.Context, input struct {
 
 ```
 
-To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `SuspendMode: true` in `Config`, `import _ "go.dbos.dev/dbos-enterprise-go"`, and, in production, a Conductor connection).
+To avoid keeping workflows in memory during long waits, use workflow suspend provided by the DBOS Enterprise Extensions (requires `SuspendMode: true` in `Config`, `import _ "go.dbos.dev/dbos-enterprise-go"`, and, in production, a Conductor connection).
 Pass `dbos.WithSleepSuspend()` to `Sleep` or `dbos.WithRecvSuspend()` to `Recv`.
 The suspending call returns an error matching `dbos.ErrWorkflowSuspended`, which you MUST return from the workflow function (as is or wrapped with `%w`); never handle or swallow it.
 The workflow's execution exits, its status becomes `SUSPENDED`, and it resumes from its last completed step when the sleep ends, a message arrives on the `Recv` topic, or the `Recv` times out.
@@ -718,7 +718,7 @@ dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 })
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `import _ "go.dbos.dev/dbos-enterprise-go"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (part of the DBOS Enterprise Extensions package, requiring `import _ "go.dbos.dev/dbos-enterprise-go"` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```go
 dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
@@ -1688,7 +1688,7 @@ Queues are identified by name; each call to `ListenQueues` replaces the whole li
 
 ## Sharding
 
-To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database behind a Postgres sharding layer such as Citus or PgDog (set `Sharding: true` in `Config`, or in `ClientConfig` for a client, and `import _ "go.dbos.dev/dbos-enterprise-go"`).
+To scale beyond a single Postgres system database, the DBOS Enterprise Extensions package supports sharding the system database behind a Postgres sharding layer such as Citus or PgDog (set `Sharding: true` in `Config`, or in `ClientConfig` for a client, and `import _ "go.dbos.dev/dbos-enterprise-go"`).
 On a sharded system database, every workflow lives under a shard key, and a workflow ID is unique only within its shard key:
 
 - You MUST start or enqueue every workflow with a shard key: `dbos.WithShardKey(key)` for `RunWorkflow`, `dbos.WithEnqueueShardKey(key)` for `Enqueue`, and the `ShardKey` field of `ScheduleSpec` for schedules. A shard key must be a non-empty string; setting one on an unsharded system database is an error.
@@ -1742,12 +1742,12 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
-    TransactEnterpriseKey     string         // A key entitling this application to DBOS Transact Enterprise features (optional; ConductorAPIKey stands in for it)
-    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false)
+    TransactEnterpriseKey     string         // A key entitling this application to the DBOS Enterprise Extensions (optional; ConductorAPIKey stands in for it)
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, part of the DBOS Enterprise Extensions package (default: false)
     AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
     AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
-    Sharding                  bool           // Use a sharded system database, a DBOS Transact Enterprise feature (default: false)
-    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, a DBOS Transact Enterprise feature (default: false)
+    Sharding                  bool           // Use a sharded system database, part of the DBOS Enterprise Extensions package (default: false)
+    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, part of the DBOS Enterprise Extensions package (default: false)
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
@@ -1759,7 +1759,7 @@ type Config struct {
 }
 ```
 
-DBOS Transact Enterprise features, connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud), auto-upgrade (setting `AutoUpgrade`, or registering a workflow with `WithAutoUpgrade(true)`), sharding (setting `Sharding`), and suspend mode (setting `SuspendMode`), require importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`. The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`:
+DBOS Enterprise Extensions features, connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud), auto-upgrade (setting `AutoUpgrade`, or registering a workflow with `WithAutoUpgrade(true)`), sharding (setting `Sharding`), and suspend mode (setting `SuspendMode`), require importing `go.dbos.dev/dbos-enterprise-go` once, anywhere in the program, after `go get go.dbos.dev/dbos-enterprise-go`. The module must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`:
 
 ```go
 import (
@@ -2755,7 +2755,7 @@ Run a workflow registered with `WithInstance` using the matching `WithRunInstanc
 func WithAutoUpgrade(enabled bool) WorkflowRegistrationOption
 ```
 
-Enroll the workflow in, or withdraw it from, auto-upgrade (a DBOS Transact Enterprise feature that moves workflows left on older application versions to the latest one).
+Enroll the workflow in, or withdraw it from, auto-upgrade, which moves workflows left on older application versions to the latest one and is part of the DBOS Enterprise Extensions package.
 `WithAutoUpgrade(true)` enrolls the workflow even if `Config.AutoUpgrade` is not set; `WithAutoUpgrade(false)` keeps it out even if it is.
 Without this option, the workflow follows `Config.AutoUpgrade`.
 
@@ -3150,7 +3150,7 @@ type ClientConfig struct {
     Logger                 *slog.Logger    // Optional custom logger
     Serializer             Serializer[any] // Optional custom serializer (defaults to JSON)
     SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and migrations (default: 2 minutes)
-    Sharding               bool            // Connect to a sharded system database; requires importing go.dbos.dev/dbos-enterprise-go, but no DBOS Transact Enterprise key
+    Sharding               bool            // Connect to a sharded system database; requires importing go.dbos.dev/dbos-enterprise-go, but no DBOS Enterprise Extensions key
 }
 ```
 

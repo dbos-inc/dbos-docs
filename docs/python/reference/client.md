@@ -66,8 +66,8 @@ DBOSClient(
 - `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 - `sys_db_idle_transaction_timeout_sec`: The Postgres `idle_in_transaction_session_timeout`, in seconds, set on the system database connections the client creates. Defaults to 60 seconds.
 - `sharding`: Whether to connect to a [sharded system database](../tutorials/sharding.md). Defaults to `False`.
-- `external_stores`: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires DBOS Transact Enterprise.
-- `workflow_archive`: Your application's [workflow archive](../tutorials/workflow-archiving.md). Set it so workflows the client cancels are archived, and to import archived workflows. Requires DBOS Transact Enterprise.
+- `external_stores`: The stores for [external objects](../tutorials/external-storage.md), matching your application's. Requires the DBOS Enterprise Extensions.
+- `workflow_archive`: Your application's [workflow archive](../tutorials/workflow-archiving.md). Set it so workflows the client cancels are archived, and to import archived workflows. Requires the DBOS Enterprise Extensions.
 
 **Example syntax:**
 

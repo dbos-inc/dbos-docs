@@ -543,7 +543,7 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
-To avoid keeping workflows in memory during long waits, DBOS Transact Enterprise can suspend them (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
+To avoid keeping workflows in memory during long waits, use workflow suspend provided by the DBOS Enterprise Extensions (requires `suspendMode: true` in `DBOSConfig`, `npm install @dbos-inc/dbos-enterprise`, and, in production, a Conductor connection).
 Pass `{ suspend: true }` to `DBOS.sleep` or `DBOS.recv`.
 A workflow can also suspend while waiting for other workflows: pass `{ suspend: true }` to `handle.getResult`, `DBOS.getResult`, or `DBOS.waitFirst`, and it wakes when the awaited workflow (for `waitFirst`, the first of them) completes, or when `DBOS.getResult`'s timeout passes.
 Suspending on a result only works from within a workflow (not a step or a `DBOSClient` handle) and isn't supported on a sharded system database or CockroachDB.
@@ -1907,7 +1907,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Or enable auto-upgrade (a DBOS Transact Enterprise feature, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
+Or enable auto-upgrade (part of the DBOS Enterprise Extensions package, requiring `npm install @dbos-inc/dbos-enterprise` and, in production, a Conductor connection): each deployment gets its own application version, and DBOS automatically moves workflows left on older versions (`ENQUEUED`, `DELAYED`, `SUSPENDED`, and `PENDING`) to the latest version, where the patched code completes them:
 
 ```typescript
 DBOS.setConfig({
@@ -2023,12 +2023,12 @@ You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow`
 
 ## Sharding
 
-To scale beyond a single Postgres system database, DBOS Transact Enterprise supports sharding the system database (`sharding: true` in `DBOSConfig`).
+To scale beyond a single Postgres system database, the DBOS Enterprise Extensions package supports sharding the system database (`sharding: true` in `DBOSConfig`).
 On a sharded system database, every workflow must be started or enqueued under a shard key set with `DBOS.withShardKey`, and methods that address a workflow by ID take a `shardKey` option.
 
 ## External Storage
 
-To keep large objects out of the system database, DBOS Transact Enterprise supports external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
+To keep large objects out of the system database, the DBOS Enterprise Extensions support external storage (requires `npm install @dbos-inc/dbos-enterprise @aws-sdk/client-s3 @aws-sdk/lib-storage` and, in production, a Conductor connection).
 Set `externalStores: [new S3ExternalStore(new S3Client({}), "my-bucket")]` in `DBOSConfig`, importing `S3ExternalStore` from `@dbos-inc/dbos-enterprise`.
 `DBOS.storeExternalObject(value)` uploads a value and returns a small `ExternalObjectRef`, which you can return from a step or workflow or pass as a workflow input.
 `DBOS.loadExternalObject(ref)` returns the value.
@@ -2039,7 +2039,7 @@ Objects are deleted only after their owner workflow has been deleted, by a reten
 
 ## Workflow Archiving
 
-To keep every completed workflow while retention keeps the system database small, DBOS Transact Enterprise supports workflow archiving (requires `npm install @dbos-inc/dbos-enterprise @duckdb/node-api hyparquet-writer`, plus `@aws-sdk/client-s3 @aws-sdk/lib-storage` for S3 or GCS, and, in production, a Conductor connection).
+To keep every completed workflow while retention keeps the system database small, the DBOS Enterprise Extensions support workflow archiving (requires `npm install @dbos-inc/dbos-enterprise @duckdb/node-api hyparquet-writer`, plus `@aws-sdk/client-s3 @aws-sdk/lib-storage` for S3 or GCS, and, in production, a Conductor connection).
 Set `workflowArchive: new ParquetArchive("s3://my-bucket/dbos-archive")` in `DBOSConfig`, importing `ParquetArchive` from `@dbos-inc/dbos-enterprise`, in every process of the application.
 Completed workflows are then copied to Parquet files, and retention deletes only archived workflows.
 To read archived workflows, construct a `ParquetArchive` with the same URI and call `listWorkflows({ limit, ... })`, which lists newest first and requires `limit`, then `getWorkflowStatus`, `listWorkflowSteps`, `getEvents`, `getNotifications`, or `readStream` with a workflow's `workflowID` and `completedAt`.

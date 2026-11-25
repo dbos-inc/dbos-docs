@@ -212,7 +212,7 @@ Startup follows the same rules as `NewContext`, including `SystemDBStartupTimeou
 Unlike `NewContext`, a client never creates or migrates the system database: it verifies the schema instead, and `NewClient` fails if the system database is missing or behind the version this build of DBOS requires.
 Migrate it from the application (`NewContext`) or out of band with the `dbos migrate` [CLI command](./cli.md).
 Like `NewContext`, using a SQLite system database requires registering the SQLite driver with a blank import — see [Using SQLite](./configuration.md#using-sqlite).
-To connect to a [sharded system database](../tutorials/sharding.md), set `Sharding`; this requires importing [`go.dbos.dev/dbos-enterprise-go`](./configuration.md#dbos-transact-enterprise), but not a DBOS Transact Enterprise key.
+To connect to a [sharded system database](../tutorials/sharding.md), set `Sharding`; this requires importing [`go.dbos.dev/dbos-enterprise-go`](./configuration.md#dbos-transact-enterprise), but not a DBOS Enterprise Extensions key.
 
 Because workflows are not registered with a client, operations that take a workflow function reference on a `Context` take a workflow **name** (string) from a client — for example [`Enqueue`](./methods.md#enqueue), or the `WorkflowName` field of [`ScheduleSpec`](./methods.md#schedulespec).
 

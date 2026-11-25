@@ -116,7 +116,7 @@ You can customize the rate and concurrency at which workflows are dequeued and e
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
 For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md), [Java](./java/tutorials/queue-tutorial.md)).
 
-## Operating DBOS in Production with Conductor & Transact Enterprise {#operating-dbos-in-production-with-conductor}
+## Running in Production with Conductor and the DBOS Enterprise Extensions {#operating-dbos-in-production-with-conductor}
 
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 Conductor is the control plane for your durable workflows, providing:
@@ -128,7 +128,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Autoscaling and version management**](./conductor/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./conductor/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 
-Conductor also gives your applications access to [DBOS Transact Enterprise](./explanations/transact-enterprise.md), the commercial extension to the open-source DBOS Transact library, which provides features such as:
+Conductor also gives your applications access to the [DBOS Enterprise Extensions](./explanations/transact-enterprise.md) package which provides advanced features such as:
 - **Sharding** ([**Python**](./python/tutorials/sharding.md), [**TypeScript**](./typescript/tutorials/sharding.md), [**Go**](./golang/tutorials/sharding.md)): Horizontally scale DBOS to handle [over 1M workflows or steps per second](https://www.dbos.dev/blog/one-million-workflows) with a sharded Postgres system database.
 - **Auto-upgrade** ([**Python**](./python/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**TypeScript**](./typescript/tutorials/upgrading-workflows.md#auto-upgrading-workflows), [**Go**](./golang/tutorials/upgrading-workflows.md#auto-upgrading-workflows)): Automatically move workflows from older application versions to the latest version.
 - **Suspending workflows** ([**Python**](./python/tutorials/workflow-tutorial.md#suspending-workflows), [**TypeScript**](./typescript/tutorials/workflow-tutorial.md#suspending-workflows), [**Go**](./golang/tutorials/workflow-tutorial.md#suspending-workflows)): Suspend workflows during long sleeps or waits for messages, so they use no resources until they wake.

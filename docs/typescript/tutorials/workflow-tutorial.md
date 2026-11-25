@@ -265,7 +265,7 @@ For long sleeps, you can [suspend the workflow](#suspending-workflows) so it use
 ## Suspending Workflows
 
 :::info
-Suspending workflows is a [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature.
+Suspending workflows is part of the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package.
 :::
 
 Normally, a workflow that is waiting stays in memory, potentially holding queue capacity until the wait ends.

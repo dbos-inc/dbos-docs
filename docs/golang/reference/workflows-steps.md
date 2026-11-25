@@ -108,10 +108,10 @@ dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
 func WithAutoUpgrade(enabled bool) WorkflowRegistrationOption
 ```
 
-Enroll the workflow in, or withdraw it from, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows): the [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) feature that moves workflows left on older application versions to the latest one.
+Enroll the workflow in, or withdraw it from, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), which moves workflows left on older application versions to the latest one and is part of the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package.
 A workflow registered with `WithAutoUpgrade(true)` is auto-upgraded even if [`Config.AutoUpgrade`](./configuration.md#dbos-transact-enterprise-settings) is not set, and a workflow registered with `WithAutoUpgrade(false)` is never auto-upgraded.
 Without this option, the workflow follows `Config.AutoUpgrade`.
-Enrolling a workflow requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Transact Enterprise](./configuration.md#dbos-transact-enterprise).
+Enrolling a workflow requires importing `go.dbos.dev/dbos-enterprise-go` and an entitled DBOS key; see [DBOS Enterprise Extensions](./configuration.md#dbos-transact-enterprise).
 
 ```go
 dbos.RegisterWorkflow(ctx, processOrder, dbos.WithAutoUpgrade(true))

@@ -20,12 +20,12 @@ type Config struct {
     ConductorAPIKey           string         // DBOS Conductor API key (optional). Setting it requires importing go.dbos.dev/dbos-enterprise-go; see Connecting to Conductor.
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
     ConductorMetadataOnlyMode bool           // Send only workflow metadata to Conductor, never workflow data (default: false)
-    TransactEnterpriseKey     string         // A key entitling this application to DBOS Transact Enterprise features (optional; ConductorAPIKey stands in for it). See DBOS Transact Enterprise.
-    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, a DBOS Transact Enterprise feature (default: false). See Auto-Upgrading Workflows.
+    TransactEnterpriseKey     string         // A key entitling this application to the DBOS Enterprise Extensions (optional; ConductorAPIKey stands in for it). See DBOS Enterprise Extensions.
+    AutoUpgrade               bool           // Auto-upgrade this application's workflows to the latest application version, part of the DBOS Enterprise Extensions package (default: false). See Auto-Upgrading Workflows.
     AutoUpgradeInterval       time.Duration  // Time between two auto-upgrade passes (default: 30s)
     AutoUpgradeGracePeriod    time.Duration  // How long the latest application version must have been the latest before auto-upgrade moves PENDING workflows to it (default: 0)
-    Sharding                  bool           // Use a sharded system database, a DBOS Transact Enterprise feature (default: false). See Sharding.
-    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, a DBOS Transact Enterprise feature (default: false). See Suspending Workflows.
+    Sharding                  bool           // Use a sharded system database, part of the DBOS Enterprise Extensions package (default: false). See Sharding.
+    SuspendMode               bool           // Let Recv and Sleep suspend a waiting workflow instead of holding it in memory, part of the DBOS Enterprise Extensions package (default: false). See Suspending Workflows.
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Deprecated: pins the application version to "PATCHING_ENABLED". Patch and DeprecatePatch no longer require it; set ApplicationVersion instead.
@@ -76,9 +76,9 @@ import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
 Without it, `NewContext` (or `NewClient`) fails at startup with an error naming this import.
 The import registers [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite), a pure-Go driver requiring no cgo.
 
-## DBOS Transact Enterprise
+## DBOS Enterprise Extensions {#dbos-transact-enterprise}
 
-[DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features, [connecting to Conductor](#connecting-to-conductor), [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), [sharding](../tutorials/sharding.md), and [suspending workflows](../tutorials/workflow-tutorial.md#suspending-workflows), are provided by the `go.dbos.dev/dbos-enterprise-go` module, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
+[DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) features, [connecting to Conductor](#connecting-to-conductor), [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows), [sharding](../tutorials/sharding.md), and [suspending workflows](../tutorials/workflow-tutorial.md#suspending-workflows), are provided by the `go.dbos.dev/dbos-enterprise-go` module, licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
 Add it to your application and import it once, anywhere in your program, with a blank import:
 
 ```shell
@@ -109,14 +109,16 @@ Connecting an application to [DBOS Conductor](../../conductor/overview.md) requi
 
 When Conductor is configured, `Launch` does not recover this executor's pending workflows itself; [Conductor drives recovery](../../conductor/distributed-recovery.md).
 
-### DBOS Transact Enterprise Settings
+### DBOS Enterprise Extensions Settings {#dbos-transact-enterprise-settings}
 
-- **`TransactEnterpriseKey`**: A key that entitles this application to [DBOS Transact Enterprise](../../explanations/transact-enterprise.md) features without connecting to Conductor. **For development only**: in production, applications using DBOS Transact Enterprise should connect to Conductor by setting `ConductorAPIKey`, which stands in for it. DBOS Transact Enterprise keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
-- **`AutoUpgrade`**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those registered with [`WithAutoUpgrade(false)`](./workflows-steps.md#withautoupgrade). Requires DBOS Transact Enterprise. Defaults to `false`.
+All of the following settings require the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) package.
+
+- **`TransactEnterpriseKey`**: A key that entitles this application to the [DBOS Enterprise Extensions](../../explanations/transact-enterprise.md) without connecting to Conductor. **For development only**: in production, applications using the DBOS Enterprise Extensions should connect to Conductor by setting `ConductorAPIKey`, which stands in for it. DBOS Enterprise Extensions keys are Conductor API keys, which can be created from the [DBOS Console](https://console.dbos.dev).
+- **`AutoUpgrade`**: If `true`, [auto-upgrade](../tutorials/upgrading-workflows.md#auto-upgrading-workflows) all workflows in this application, except those registered with [`WithAutoUpgrade(false)`](./workflows-steps.md#withautoupgrade). Defaults to `false`.
 - **`AutoUpgradeInterval`**: How often to check for workflows to auto-upgrade. Defaults to 30 seconds.
 - **`AutoUpgradeGracePeriod`**: How long the latest application version must have been the latest before auto-upgrade moves `PENDING` workflows to it, giving processes running older versions time to complete them. `ENQUEUED` and `DELAYED` workflows are moved without waiting. Defaults to 0.
-- **`Sharding`**: If `true`, use a [sharded system database](../tutorials/sharding.md), where every workflow lives under a shard key. `DatabaseURL` or `SystemDBPool` must point at your sharding router. Requires DBOS Transact Enterprise. Defaults to `false`.
-- **`SuspendMode`**: If `true`, [`Sleep`](./methods.md#sleep) and [`Recv`](./methods.md#recv) can [suspend a waiting workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of holding it in memory. Requires DBOS Transact Enterprise. Defaults to `false`.
+- **`Sharding`**: If `true`, use a [sharded system database](../tutorials/sharding.md), where every workflow lives under a shard key. `DatabaseURL` or `SystemDBPool` must point at your sharding router. Defaults to `false`.
+- **`SuspendMode`**: If `true`, [`Sleep`](./methods.md#sleep) and [`Recv`](./methods.md#recv) can [suspend a waiting workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of holding it in memory. Defaults to `false`.
 
 Before using auto-upgrade, sharding, or suspend mode, DBOS checks with Conductor that your organization is entitled to it, using `TransactEnterpriseKey` or, when it is unset, `ConductorAPIKey`.
 The check runs in `NewContext` when `AutoUpgrade`, `Sharding`, or `SuspendMode` is set, or in `Launch` when workflows are enrolled with `WithAutoUpgrade(true)` alone, and fails with an initialization error naming the problem: no key, an invalid key, or an organization whose plan does not include the feature.

@@ -132,7 +132,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty or contains duplicate workflow IDs.
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
-  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the first of the workflows completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Defaults to `false`.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -215,7 +215,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
-  - **suspend**: If `true`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`. When set, `pollingIntervalMs` is ignored.
+  - **suspend**: If `true`, a `recv` that has to wait [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Defaults to `false`. When set, `pollingIntervalMs` is ignored.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -291,7 +291,7 @@ When called from a workflow (outside of a step), this sleep is durable&mdash;it 
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
 - **options**:
-  - **suspend**: If `true`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. A sleep of at most one second does not suspend. Defaults to `false`.
+  - **suspend**: If `true`, the sleep [suspends the workflow](../tutorials/workflow-tutorial.md#suspending-workflows) instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. A sleep of at most one second does not suspend. Defaults to `false`.
 
 ### DBOS.now
 
@@ -454,7 +454,7 @@ interface StoreExternalObjectOptions {
 
 Upload a value to an [external store](../tutorials/external-storage.md) and return a reference to it.
 From workflow code, the upload runs as a step.
-Requires [`externalStores`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+Requires [`externalStores`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions.
 
 **Parameters:**
 - **value**: The value to store. A `Uint8Array`, such as a `Buffer`, is stored as is, without serialization, and loads as a `Buffer`.
@@ -572,7 +572,7 @@ Called from within a workflow, it runs as a single step.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the workflow doesn't complete before the deadline, return `null`.
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
   - **shardKey**: The workflow's [shard key](../tutorials/sharding.md).
-  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes or the timeout passes, instead of keeping it in memory. A timeout of at most one second does not suspend. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Defaults to `false`.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until the awaited workflow completes or the timeout passes, instead of keeping it in memory. A timeout of at most one second does not suspend. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Defaults to `false`.
 
 **Returns:**
 - The result of the workflow, or `null` if the wait times out. Throws the workflow's error if it failed.
@@ -852,7 +852,7 @@ DBOS.importArchivedWorkflow<T = unknown>(
 ```
 
 Copy a workflow from the [workflow archive](../tutorials/workflow-archiving.md) back into the system database and return a handle to it.
-Requires [`workflowArchive`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise.
+Requires [`workflowArchive`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions.
 See the [workflow archiving reference](../tutorials/workflow-archiving.md#dbosimportarchivedworkflow) for details.
 
 **Parameters:**
@@ -1550,7 +1550,7 @@ Wait for the workflow to complete, then return its result.
 **Parameters:**
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow), from `DBOS.startWorkflow` with a `queueName`, or from the [DBOS Client](./client.md)), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
-  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until this workflow completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and DBOS Transact Enterprise. Throws outside a workflow, in a step, or on a [DBOS Client](./client.md) handle. Defaults to `false`.
+  - **suspend**: If `true`, a call from within a workflow that has to wait [suspends the calling workflow](../tutorials/workflow-tutorial.md#suspending-workflows) until this workflow completes, instead of keeping it in memory. Requires [`suspendMode`](./configuration.md#dbos-transact-enterprise-settings) and the DBOS Enterprise Extensions. Throws outside a workflow, in a step, or on a [DBOS Client](./client.md) handle. Defaults to `false`.
 
 ### handle.getStatus
 
