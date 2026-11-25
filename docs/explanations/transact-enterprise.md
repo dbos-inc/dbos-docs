@@ -2,7 +2,7 @@
 sidebar_position: 16
 title: DBOS Enterprise Extensions
 ---
-**The DBOS Enterprise Extensions** are a set of premium features that enhance the open-source (MIT license) DBOS Transact library.
+**The DBOS Enterprise Extensions** are a set of advanced features that enhance the open-source (MIT license) DBOS Transact library.
 They are provided by a separate package licensed under the [DBOS Conductor Software License](https://www.dbos.dev/conductor-license).
 All [commercial DBOS plans](https://www.dbos.dev/dbos-pricing) include access to this package.
 
